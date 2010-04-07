@@ -1,0 +1,45 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.dataone</groupId>
+  <artifactId>d1-java</artifactId>
+  <packaging>jar</packaging>
+  <version>0.0.1</version>
+  <name>DataONE Java Client Library</name>
+  <url>http://dataone.org</url>
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+    	<groupId>org.dataone</groupId>
+    	<artifactId>dataone-service-api</artifactId>
+    	<version>0.1.0</version>
+    </dependency>
+    <dependency>
+    	<groupId>net.sf.jsignature.io-tools</groupId>
+    	<artifactId>easystream</artifactId>
+    	<version>1.2.5</version>
+    </dependency>
+  </dependencies>
+  <build>
+      <plugins>
+          <plugin>
+              <groupId>com.mycila.maven-license-plugin</groupId>
+              <artifactId>maven-license-plugin</artifactId>
+              <configuration>
+                  <header>src/license-header.txt</header>
+              </configuration>
+          </plugin>
+      </plugins>
+  </build>
+  <licenses>
+    <license>
+      <name>GNU General Public License (GPL), Version 2.0</name>
+      <url>LICENSE.txt</url>
+    </license>
+  </licenses>
+</project>
