@@ -22,13 +22,17 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.util.Date;
 
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMultipart;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -37,6 +41,7 @@ import org.apache.commons.io.IOUtils;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.IdentifierNotUnique;
 import org.dataone.service.exceptions.InsufficientResources;
+import org.dataone.service.exceptions.InvalidCredentials;
 import org.dataone.service.exceptions.InvalidRequest;
 import org.dataone.service.exceptions.InvalidSystemMetadata;
 import org.dataone.service.exceptions.InvalidToken;
@@ -56,6 +61,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+
+import com.gc.iotools.stream.is.InputStreamFromOutputStream;
 
 /**
  * The D1Client class represents a client-side implementation of the DataONE
@@ -105,7 +112,74 @@ public class D1Client implements MemberNodeCrud {
             ServiceFailure, NotAuthorized, IdentifierNotUnique,
             UnsupportedType, InsufficientResources, InvalidSystemMetadata,
             NotImplemented {
-        throw new NotImplemented(1000, "Method not yet implemented.");
+        
+        String resource = RESOURCE_OBJECTS + "/" + guid.getIdentifier();
+        InputStream is = null;
+        
+        // Create a multipart message containing the data and sysmeta
+        final MimeMultipart mmp = new MimeMultipart();
+        try {
+            MimeBodyPart objectPart = new MimeBodyPart();
+            objectPart.addHeaderLine("Content-Transfer-Encoding: base64");
+            objectPart.setFileName("object");
+            DataSource ds = new InputStreamDataSource("object", object);
+            DataHandler dh = new DataHandler(ds);
+            objectPart.setDataHandler(dh);
+            String sysmetaXml = sysmeta.serialize(SystemMetadata.FMT_XML);
+            InputStream sysmetaStream = IOUtils.toInputStream(sysmetaXml);
+            MimeBodyPart sysmetaPart = new MimeBodyPart(sysmetaStream);
+            sysmetaPart.setFileName("systemmetadata");
+            mmp.addBodyPart(sysmetaPart);
+            mmp.addBodyPart(objectPart);
+        } catch (MessagingException e) {
+            throw new ServiceFailure(1190, "Failed constructing mime message on client create()...");
+        }
+        
+        
+        // write the mmp to an InputStream and pass it to SendRequest in last param
+        final InputStreamFromOutputStream<String> multipartStream = 
+            new InputStreamFromOutputStream<String>() {
+            @Override
+            public String produce(final OutputStream dataSink) throws Exception {
+                mmp.writeTo(dataSink);
+                IOUtils.closeQuietly(dataSink);
+                return "Completed";
+            }
+        };
+        ResponseData rd = sendRequest(resource, POST, null, 
+                mmp.getContentType(), multipartStream);
+        
+        // Handle any errors that were generated
+        int code = rd.getCode();
+        if (code  != HttpURLConnection.HTTP_OK ) {
+            InputStream errorStream = rd.getErrorStream();
+            try {
+                deserializeAndThrowException(errorStream);                
+            } catch (InvalidToken e) {
+                throw e;
+            } catch (ServiceFailure e) {
+                throw e;
+            } catch (NotAuthorized e) {
+                throw e;
+            } catch (IdentifierNotUnique e) {
+                throw e;
+            } catch (UnsupportedType e) {
+                throw e;
+            } catch (InsufficientResources e) {
+                throw e;
+            } catch (InvalidSystemMetadata e) {
+                throw e;
+            } catch (NotImplemented e) {
+                throw e;
+            } catch (BaseException e) {
+                throw new ServiceFailure(1000, 
+                        "Method threw improper exception: " + e.getMessage());
+            }
+        } else {
+            is = rd.getContentStream();
+        }
+        
+        return guid;
     }
 
     public IdentifierType delete(AuthToken token, IdentifierType guid)
@@ -129,7 +203,22 @@ public class D1Client implements MemberNodeCrud {
         int code = rd.getCode();
         if (code  != HttpURLConnection.HTTP_OK ) {
             InputStream errorStream = rd.getErrorStream();
-            deserializeAndThrowException(errorStream);            
+            try {
+                deserializeAndThrowException(errorStream);                
+            } catch (InvalidToken e) {
+                throw e;
+            } catch (ServiceFailure e) {
+                throw e;
+            } catch (NotAuthorized e) {
+                throw e;
+            } catch (NotFound e) {
+                throw e;
+            } catch (NotImplemented e) {
+                throw e;
+            } catch (BaseException e) {
+                throw new ServiceFailure(1000, 
+                        "Method threw improper exception: " + e.getMessage());
+            }        
         } else {
             is = rd.getContentStream();
         }
@@ -171,7 +260,7 @@ public class D1Client implements MemberNodeCrud {
     }
     
     private ResponseData sendRequest(String resource, String method, 
-            String urlParamaters, String contentType, Reader dataStream) 
+            String urlParamaters, String contentType, InputStream dataStream) 
         throws ServiceFailure {
         
         ResponseData resData = new ResponseData();
@@ -228,7 +317,9 @@ public class D1Client implements MemberNodeCrud {
     }
     
     private void deserializeAndThrowException(InputStream errorStream) 
-        throws NotFound, ServiceFailure {
+        throws NotFound, InvalidToken, ServiceFailure, NotAuthorized, 
+        NotFound, IdentifierNotUnique, UnsupportedType, InsufficientResources, 
+        InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest {
         BaseException b = null;
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         Document doc;
@@ -238,12 +329,22 @@ public class D1Client implements MemberNodeCrud {
             doc = db.parse(errorStream);
             Element root = doc.getDocumentElement();
             root.normalize();
+            System.out.println(root.toString());
             int code = getIntAttribute(root, "errorCode");
             int detailCode = getIntAttribute(root, "detailCode");
             String description = getTextValue(root, "description");
             switch (code) {
+            case 400:
+                throw new InvalidRequest(detailCode, description);
+            case 401:
+                throw new InvalidCredentials(detailCode, description);
             case 404:
                 throw new NotFound(detailCode, description);
+            case 409:
+                throw new IdentifierNotUnique(detailCode, description);
+            case 500:
+                throw new ServiceFailure(detailCode, description);
+            // TODO: Handle other exception codes properly
             default:
                 throw new ServiceFailure(detailCode, description);
             }
@@ -260,7 +361,7 @@ public class D1Client implements MemberNodeCrud {
                     "Service failed, but error message not parsed correctly.");
         }        
     }
-
+    
     /**
      * Take a xml element and the tag name, return the text content of the child element.
      */

@@ -4,7 +4,7 @@
   <groupId>org.dataone</groupId>
   <artifactId>d1-java</artifactId>
   <packaging>jar</packaging>
-  <version>0.0.1</version>
+  <version>0.0.2</version>
   <name>DataONE Java Client Library</name>
   <url>http://dataone.org</url>
   <dependencies>
@@ -17,16 +17,40 @@
     <dependency>
     	<groupId>org.dataone</groupId>
     	<artifactId>dataone-service-api</artifactId>
-    	<version>0.1.0</version>
+    	<version>0.2.0</version>
     </dependency>
     <dependency>
     	<groupId>net.sf.jsignature.io-tools</groupId>
     	<artifactId>easystream</artifactId>
     	<version>1.2.5</version>
     </dependency>
+    <dependency>
+    	<groupId>javax.mail</groupId>
+    	<artifactId>mail</artifactId>
+    	<version>1.4.1</version>
+    </dependency>
+    <dependency>
+    	<groupId>org.slf4j</groupId>
+    	<artifactId>slf4j-api</artifactId>
+    	<version>1.5.11</version>
+    </dependency>
+    <dependency>
+    	<groupId>org.slf4j</groupId>
+    	<artifactId>slf4j-simple</artifactId>
+    	<version>1.5.11</version>
+    </dependency>
   </dependencies>
   <build>
       <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>2.0.2</version>
+            <configuration>
+              <source>1.6</source>
+              <target>1.6</target>
+            </configuration>
+          </plugin>
           <plugin>
               <groupId>com.mycila.maven-license-plugin</groupId>
               <artifactId>maven-license-plugin</artifactId>

@@ -18,20 +18,31 @@
 
 package org.dataone.client;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.SimpleTimeZone;
+import java.util.TimeZone;
 
 import junit.framework.TestCase;
 
 import org.apache.commons.io.IOUtils;
-import org.dataone.service.exceptions.BaseException;
+import org.dataone.service.exceptions.IdentifierNotUnique;
+import org.dataone.service.exceptions.InsufficientResources;
+import org.dataone.service.exceptions.InvalidSystemMetadata;
 import org.dataone.service.exceptions.InvalidToken;
 import org.dataone.service.exceptions.NotAuthorized;
-import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
+import org.dataone.service.exceptions.UnsupportedType;
 import org.dataone.service.types.AuthToken;
 import org.dataone.service.types.IdentifierType;
+import org.dataone.service.types.SystemMetadata;
 
 /**
  * Test the DataONE Java client methods.
@@ -46,6 +57,7 @@ public class D1ClientTest extends TestCase {
     // rather than hardcoding test assumptions here
     private static final String DOC_TEXT = "Biomass and growth of 20-year-old stands of Scots pine datasets";   
     private static final String id = "knb:nceas:100:7";
+    private static final String prefix = "knb:testid:";
     private static final String bogusId = "foobarbaz214";
     
     private D1Client d1 = null;
@@ -55,8 +67,49 @@ public class D1ClientTest extends TestCase {
         d1 = new D1Client(contextUrl);
     }
 
+    public void testAFileWrite() {
+        try {
+            File newFile = new File("/tmp/somefilelarge");
+            OutputStream out = new FileOutputStream(newFile);
+            String fakedata = "This is fake data.\n";
+            InputStream fd = IOUtils.toInputStream(fakedata);
+            long len = IOUtils.copyLarge(fd, out);
+            out.flush();
+            fd.close();
+            out.close();
+            assertTrue(len > 0);
+        } catch (IOException ioe) {
+            fail("File was not written:" + ioe.getMessage());
+        }
+    }
+
     public void testCreate() {
         assertTrue(1==1);
+        AuthToken token = new AuthToken("public");
+        String idString = prefix + generateTimeString();
+        IdentifierType guid = new IdentifierType(idString);
+        InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
+        SystemMetadata sysmeta = new SystemMetadata(guid, null, 0, null, null, null);
+        try {
+            IdentifierType rGuid = d1.create(token, guid, objectStream, sysmeta);
+            assertEquals(guid.getIdentifier(), rGuid.getIdentifier());
+        } catch (InvalidToken e) {
+            fail(e.getMessage());
+        } catch (ServiceFailure e) {
+            fail(e.getMessage());
+        } catch (NotAuthorized e) {
+            fail(e.getMessage());
+        } catch (IdentifierNotUnique e) {
+            fail(e.getMessage());
+        } catch (UnsupportedType e) {
+            fail(e.getMessage());
+        } catch (InsufficientResources e) {
+            fail(e.getMessage());
+        } catch (InvalidSystemMetadata e) {
+            fail(e.getMessage());
+        } catch (NotImplemented e) {
+            fail(e.getMessage());
+        }
     }
 
     public void testDelete() {
@@ -66,7 +119,7 @@ public class D1ClientTest extends TestCase {
     public void testDescribe() {
         assertTrue(1==1);
     }
-
+/*
     public void testGet() {
         try {
             AuthToken token = new AuthToken("public");
@@ -112,7 +165,7 @@ public class D1ClientTest extends TestCase {
             fail(e.getDescription());
         }
     }
-    
+    */
     public void testGetChecksumAuthTokenIdentifierType() {
         assertTrue(1==1);
     }
@@ -131,5 +184,28 @@ public class D1ClientTest extends TestCase {
 
     public void testUpdate() {
         assertTrue(1==1);
+    }
+
+    /** Generate a timestamp for use in IDs. */
+    private String generateTimeString()
+    {
+        StringBuffer guid = new StringBuffer();
+
+        // Create a calendar to get the date formatted properly
+        String[] ids = TimeZone.getAvailableIDs(-8 * 60 * 60 * 1000);
+        SimpleTimeZone pdt = new SimpleTimeZone(-8 * 60 * 60 * 1000, ids[0]);
+        pdt.setStartRule(Calendar.APRIL, 1, Calendar.SUNDAY, 2 * 60 * 60 * 1000);
+        pdt.setEndRule(Calendar.OCTOBER, -1, Calendar.SUNDAY, 2 * 60 * 60 * 1000);
+        Calendar calendar = new GregorianCalendar(pdt);
+        Date trialTime = new Date();
+        calendar.setTime(trialTime);
+        guid.append(calendar.get(Calendar.YEAR));
+        guid.append(calendar.get(Calendar.DAY_OF_YEAR));
+        guid.append(calendar.get(Calendar.HOUR_OF_DAY));
+        guid.append(calendar.get(Calendar.MINUTE));
+        guid.append(calendar.get(Calendar.SECOND));
+        guid.append(calendar.get(Calendar.MILLISECOND));
+
+        return guid.toString();
     }
 }
