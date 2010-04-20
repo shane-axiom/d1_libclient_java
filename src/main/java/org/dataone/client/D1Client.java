@@ -18,6 +18,8 @@
 
 package org.dataone.client;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -54,9 +56,13 @@ import org.dataone.service.mn.MemberNodeCrud;
 import org.dataone.service.types.AuthToken;
 import org.dataone.service.types.Checksum;
 import org.dataone.service.types.DescribeResponse;
-import org.dataone.service.types.IdentifierType;
+import org.dataone.service.types.Identifier;
 import org.dataone.service.types.LogRecordSet;
 import org.dataone.service.types.SystemMetadata;
+import org.jibx.runtime.BindingDirectory;
+import org.jibx.runtime.IBindingFactory;
+import org.jibx.runtime.IMarshallingContext;
+import org.jibx.runtime.JiBXException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -107,13 +113,13 @@ public class D1Client implements MemberNodeCrud {
         this.contextRootUrl = contextRootUrl;
     }
     
-    public IdentifierType create(AuthToken token, IdentifierType guid,
+    public Identifier create(AuthToken token, Identifier guid,
             InputStream object, SystemMetadata sysmeta) throws InvalidToken,
             ServiceFailure, NotAuthorized, IdentifierNotUnique,
             UnsupportedType, InsufficientResources, InvalidSystemMetadata,
             NotImplemented {
         
-        String resource = RESOURCE_OBJECTS + "/" + guid.getIdentifier();
+        String resource = RESOURCE_OBJECTS + "/" + guid.getValue();
         InputStream is = null;
         
         // Create a multipart message containing the data and sysmeta
@@ -125,14 +131,23 @@ public class D1Client implements MemberNodeCrud {
             DataSource ds = new InputStreamDataSource("object", object);
             DataHandler dh = new DataHandler(ds);
             objectPart.setDataHandler(dh);
-            String sysmetaXml = sysmeta.serialize(SystemMetadata.FMT_XML);
-            InputStream sysmetaStream = IOUtils.toInputStream(sysmetaXml);
-            MimeBodyPart sysmetaPart = new MimeBodyPart(sysmetaStream);
+            
+            ByteArrayInputStream sysmetaStream = serializeSystemMetadata(sysmeta);
+       
+            MimeBodyPart sysmetaPart = new MimeBodyPart();
+            sysmetaPart.addHeaderLine("Content-Transfer-Encoding: base64");
             sysmetaPart.setFileName("systemmetadata");
+            DataSource smDs = new InputStreamDataSource("systemmetadata", sysmetaStream);
+            DataHandler smDh = new DataHandler(smDs);
+            sysmetaPart.setDataHandler(smDh);
+            
             mmp.addBodyPart(sysmetaPart);
             mmp.addBodyPart(objectPart);
         } catch (MessagingException e) {
             throw new ServiceFailure(1190, "Failed constructing mime message on client create()...");
+        } catch (JiBXException e) {
+            e.printStackTrace(System.out);
+            throw new InvalidSystemMetadata(1180, "Failed to marshal SystemMetadata.");
         }
         
         
@@ -182,22 +197,22 @@ public class D1Client implements MemberNodeCrud {
         return guid;
     }
 
-    public IdentifierType delete(AuthToken token, IdentifierType guid)
+    public Identifier delete(AuthToken token, Identifier guid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
             NotImplemented {
         throw new NotImplemented(1000, "Method not yet implemented.");
     }
 
-    public DescribeResponse describe(AuthToken token, IdentifierType guid)
+    public DescribeResponse describe(AuthToken token, Identifier guid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
             NotImplemented {
         throw new NotImplemented(1000, "Method not yet implemented.");
     }
 
-    public InputStream get(AuthToken token, IdentifierType guid)
+    public InputStream get(AuthToken token, Identifier guid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
             NotImplemented {
-        String resource = RESOURCE_OBJECTS + "/" + guid.getIdentifier();
+        String resource = RESOURCE_OBJECTS + "/" + guid.getValue();
         InputStream is = null;
         ResponseData rd = sendRequest(resource, GET, null, null, null);
         int code = rd.getCode();
@@ -226,13 +241,13 @@ public class D1Client implements MemberNodeCrud {
         return is;
     }
 
-    public Checksum getChecksum(AuthToken token, IdentifierType guid)
+    public Checksum getChecksum(AuthToken token, Identifier guid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
             InvalidRequest, NotImplemented {
         throw new NotImplemented(1000, "Method not yet implemented.");
     }
 
-    public Checksum getChecksum(AuthToken token, IdentifierType guid,
+    public Checksum getChecksum(AuthToken token, Identifier guid,
             String checksumAlgorithm) throws InvalidToken, ServiceFailure,
             NotAuthorized, NotFound, InvalidRequest, NotImplemented {
         throw new NotImplemented(1000, "Method not yet implemented.");
@@ -244,14 +259,14 @@ public class D1Client implements MemberNodeCrud {
         throw new NotImplemented(1000, "Method not yet implemented.");
     }
 
-    public SystemMetadata getSystemMetadata(AuthToken token, IdentifierType guid)
+    public SystemMetadata getSystemMetadata(AuthToken token, Identifier guid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
             InvalidRequest, NotImplemented {
         throw new NotImplemented(1000, "Method not yet implemented.");
     }
 
-    public IdentifierType update(AuthToken token, IdentifierType guid,
-            InputStream object, IdentifierType obsoletedGuid,
+    public Identifier update(AuthToken token, Identifier guid,
+            InputStream object, Identifier obsoletedGuid,
             SystemMetadata sysmeta) throws InvalidToken, ServiceFailure,
             NotAuthorized, IdentifierNotUnique, UnsupportedType,
             InsufficientResources, NotFound, InvalidSystemMetadata,
@@ -335,7 +350,11 @@ public class D1Client implements MemberNodeCrud {
             String description = getTextValue(root, "description");
             switch (code) {
             case 400:
-                throw new InvalidRequest(detailCode, description);
+                if (detailCode == 1180) {
+                    throw new InvalidSystemMetadata(1180, description);
+                } else {
+                    throw new InvalidRequest(detailCode, description);
+                }
             case 401:
                 throw new InvalidCredentials(detailCode, description);
             case 404:
@@ -379,6 +398,18 @@ public class D1Client implements MemberNodeCrud {
     private int getIntAttribute(Element e, String attName) {
         String attText = e.getAttribute(attName);
         return Integer.parseInt(attText);
+    }
+
+    private ByteArrayInputStream serializeSystemMetadata(SystemMetadata sysmeta)
+            throws JiBXException {
+        IBindingFactory bfact =
+            BindingDirectory.getFactory(SystemMetadata.class);
+        IMarshallingContext mctx = bfact.createMarshallingContext();
+        ByteArrayOutputStream sysmetaOut = new ByteArrayOutputStream();
+        mctx.marshalDocument(sysmeta, "UTF-8", null, sysmetaOut);
+        ByteArrayInputStream sysmetaStream = 
+            new ByteArrayInputStream(sysmetaOut.toByteArray());
+        return sysmetaStream;
     }
 
     protected class ResponseData {

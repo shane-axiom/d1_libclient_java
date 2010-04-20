@@ -32,16 +32,23 @@ import java.util.TimeZone;
 import junit.framework.TestCase;
 
 import org.apache.commons.io.IOUtils;
+import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.IdentifierNotUnique;
 import org.dataone.service.exceptions.InsufficientResources;
 import org.dataone.service.exceptions.InvalidSystemMetadata;
 import org.dataone.service.exceptions.InvalidToken;
 import org.dataone.service.exceptions.NotAuthorized;
+import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.exceptions.UnsupportedType;
 import org.dataone.service.types.AuthToken;
-import org.dataone.service.types.IdentifierType;
+import org.dataone.service.types.Checksum;
+import org.dataone.service.types.ChecksumAlgorithm;
+import org.dataone.service.types.Identifier;
+import org.dataone.service.types.NodeReference;
+import org.dataone.service.types.ObjectFormat;
+import org.dataone.service.types.Principal;
 import org.dataone.service.types.SystemMetadata;
 
 /**
@@ -87,12 +94,14 @@ public class D1ClientTest extends TestCase {
         assertTrue(1==1);
         AuthToken token = new AuthToken("public");
         String idString = prefix + generateTimeString();
-        IdentifierType guid = new IdentifierType(idString);
+        Identifier guid = new Identifier();
+        guid.setValue(idString);
         InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
-        SystemMetadata sysmeta = new SystemMetadata(guid, null, 0, null, null, null);
+        SystemMetadata sysmeta = generateSystemMetadata(guid);
+
         try {
-            IdentifierType rGuid = d1.create(token, guid, objectStream, sysmeta);
-            assertEquals(guid.getIdentifier(), rGuid.getIdentifier());
+            Identifier rGuid = d1.create(token, guid, objectStream, sysmeta);
+            assertEquals(guid.getValue(), rGuid.getValue());
         } catch (InvalidToken e) {
             fail(e.getMessage());
         } catch (ServiceFailure e) {
@@ -119,11 +128,12 @@ public class D1ClientTest extends TestCase {
     public void testDescribe() {
         assertTrue(1==1);
     }
-/*
+
     public void testGet() {
         try {
             AuthToken token = new AuthToken("public");
-            IdentifierType guid = new IdentifierType(id);
+            Identifier guid = new Identifier();
+            guid.setValue(id);
             InputStream data = d1.get(token, guid);
             assertNotNull(data);
             String str = IOUtils.toString(data);
@@ -148,7 +158,8 @@ public class D1ClientTest extends TestCase {
     public void testGetNotFound() {
         try {
             AuthToken token = new AuthToken("public");
-            IdentifierType guid = new IdentifierType(bogusId);
+            Identifier guid = new Identifier();
+            guid.setValue(bogusId);
             InputStream data = d1.get(token, guid);
             fail("NotFound exception should have been thrown for non-existent ID.");
         } catch (InvalidToken e) {
@@ -165,7 +176,7 @@ public class D1ClientTest extends TestCase {
             fail(e.getDescription());
         }
     }
-    */
+    
     public void testGetChecksumAuthTokenIdentifierType() {
         assertTrue(1==1);
     }
@@ -207,5 +218,33 @@ public class D1ClientTest extends TestCase {
         guid.append(calendar.get(Calendar.MILLISECOND));
 
         return guid.toString();
+    }
+
+    /** Generate a SystemMetadata object with bogus data. */
+    private SystemMetadata generateSystemMetadata(Identifier guid) {
+        SystemMetadata sysmeta = new SystemMetadata();
+        sysmeta.setIdentifier(guid);
+        sysmeta.setObjectFormat(ObjectFormat.TEXT_CSV);
+        sysmeta.setSize(12);
+        Principal submitter = new Principal();
+        String dn = "uid=jones,o=NCEAS,dc=ecoinformatics,dc=org";
+        submitter.setValue(dn);
+        sysmeta.setSubmitter(submitter);
+        Principal rightsHolder = new Principal();
+        rightsHolder.setValue(dn);
+        sysmeta.setRightsHolder(rightsHolder);
+        sysmeta.setDateSysMetadataModified(new Date());
+        sysmeta.setDateUploaded(new Date());
+        NodeReference originMemberNode = new NodeReference();
+        originMemberNode.setValue("mn1");
+        sysmeta.setOriginMemberNode(originMemberNode);
+        NodeReference authoritativeMemberNode = new NodeReference();
+        authoritativeMemberNode.setValue("mn1");
+        sysmeta.setAuthoritativeMemberNode(authoritativeMemberNode);
+        Checksum checksum = new Checksum();
+        checksum.setValue("4d6537f48d2967725bfcc7a9f0d5094ce4088e0975fcd3f1a361f15f46e49f83");
+        checksum.setAlgorithm(ChecksumAlgorithm.SH_A256);
+        sysmeta.setChecksum(checksum);
+        return sysmeta;
     }
 }

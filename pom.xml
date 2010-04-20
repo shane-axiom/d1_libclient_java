@@ -15,11 +15,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-    	<groupId>org.dataone</groupId>
-    	<artifactId>dataone-service-api</artifactId>
-    	<version>0.2.0</version>
-    </dependency>
-    <dependency>
     	<groupId>net.sf.jsignature.io-tools</groupId>
     	<artifactId>easystream</artifactId>
     	<version>1.2.5</version>
@@ -38,6 +33,13 @@
     	<groupId>org.slf4j</groupId>
     	<artifactId>slf4j-simple</artifactId>
     	<version>1.5.11</version>
+    </dependency>
+    <dependency>
+    	<groupId>org.dataone</groupId>
+    	<artifactId>dataone-service-api</artifactId>
+    	<version>0.3.0</version>
+    	<type>jar</type>
+    	<scope>compile</scope>
     </dependency>
   </dependencies>
   <build>
