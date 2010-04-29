@@ -74,30 +74,14 @@ public class D1ClientTest extends TestCase {
         d1 = new D1Client(contextUrl);
     }
 
-    public void testAFileWrite() {
-        try {
-            File newFile = new File("/tmp/somefilelarge");
-            OutputStream out = new FileOutputStream(newFile);
-            String fakedata = "This is fake data.\n";
-            InputStream fd = IOUtils.toInputStream(fakedata);
-            long len = IOUtils.copyLarge(fd, out);
-            out.flush();
-            fd.close();
-            out.close();
-            assertTrue(len > 0);
-        } catch (IOException ioe) {
-            fail("File was not written:" + ioe.getMessage());
-        }
-    }
-
-    public void testCreate() {
+    public void testCreateData() {
         assertTrue(1==1);
         AuthToken token = new AuthToken("public");
-        String idString = prefix + generateTimeString();
+        String idString = prefix + TestUtilities.generateIdentifier();
         Identifier guid = new Identifier();
         guid.setValue(idString);
         InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
-        SystemMetadata sysmeta = generateSystemMetadata(guid);
+        SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
 
         try {
             Identifier rGuid = d1.create(token, guid, objectStream, sysmeta);
@@ -121,6 +105,38 @@ public class D1ClientTest extends TestCase {
         }
     }
 
+    public void testCreateScienceMetadata() {
+        assertTrue(1==1);
+        AuthToken token = new AuthToken("public");
+        String idString = prefix + TestUtilities.generateIdentifier();
+        Identifier guid = new Identifier();
+        guid.setValue(idString);
+        String scimeta = generateScienceMetadata(guid);
+        InputStream objectStream = IOUtils.toInputStream(scimeta);
+        SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.EML_2_1_0);
+
+        try {
+            Identifier rGuid = d1.create(token, guid, objectStream, sysmeta);
+            assertEquals(guid.getValue(), rGuid.getValue());
+        } catch (InvalidToken e) {
+            fail(e.getMessage());
+        } catch (ServiceFailure e) {
+            fail(e.getMessage());
+        } catch (NotAuthorized e) {
+            fail(e.getMessage());
+        } catch (IdentifierNotUnique e) {
+            fail(e.getMessage());
+        } catch (UnsupportedType e) {
+            fail(e.getMessage());
+        } catch (InsufficientResources e) {
+            fail(e.getMessage());
+        } catch (InvalidSystemMetadata e) {
+            fail(e.getMessage());
+        } catch (NotImplemented e) {
+            fail(e.getMessage());
+        }
+    }
+    
     public void testDelete() {
         assertTrue(1==1);
     }
@@ -197,34 +213,34 @@ public class D1ClientTest extends TestCase {
         assertTrue(1==1);
     }
 
-    /** Generate a timestamp for use in IDs. */
-    private String generateTimeString()
-    {
-        StringBuffer guid = new StringBuffer();
-
-        // Create a calendar to get the date formatted properly
-        String[] ids = TimeZone.getAvailableIDs(-8 * 60 * 60 * 1000);
-        SimpleTimeZone pdt = new SimpleTimeZone(-8 * 60 * 60 * 1000, ids[0]);
-        pdt.setStartRule(Calendar.APRIL, 1, Calendar.SUNDAY, 2 * 60 * 60 * 1000);
-        pdt.setEndRule(Calendar.OCTOBER, -1, Calendar.SUNDAY, 2 * 60 * 60 * 1000);
-        Calendar calendar = new GregorianCalendar(pdt);
-        Date trialTime = new Date();
-        calendar.setTime(trialTime);
-        guid.append(calendar.get(Calendar.YEAR));
-        guid.append(calendar.get(Calendar.DAY_OF_YEAR));
-        guid.append(calendar.get(Calendar.HOUR_OF_DAY));
-        guid.append(calendar.get(Calendar.MINUTE));
-        guid.append(calendar.get(Calendar.SECOND));
-        guid.append(calendar.get(Calendar.MILLISECOND));
-
-        return guid.toString();
-    }
+//    /** Generate a timestamp for use in IDs. */
+//    private String generateTimeString()
+//    {
+//        StringBuffer guid = new StringBuffer();
+//
+//        // Create a calendar to get the date formatted properly
+//        String[] ids = TimeZone.getAvailableIDs(-8 * 60 * 60 * 1000);
+//        SimpleTimeZone pdt = new SimpleTimeZone(-8 * 60 * 60 * 1000, ids[0]);
+//        pdt.setStartRule(Calendar.APRIL, 1, Calendar.SUNDAY, 2 * 60 * 60 * 1000);
+//        pdt.setEndRule(Calendar.OCTOBER, -1, Calendar.SUNDAY, 2 * 60 * 60 * 1000);
+//        Calendar calendar = new GregorianCalendar(pdt);
+//        Date trialTime = new Date();
+//        calendar.setTime(trialTime);
+//        guid.append(calendar.get(Calendar.YEAR));
+//        guid.append(calendar.get(Calendar.DAY_OF_YEAR));
+//        guid.append(calendar.get(Calendar.HOUR_OF_DAY));
+//        guid.append(calendar.get(Calendar.MINUTE));
+//        guid.append(calendar.get(Calendar.SECOND));
+//        guid.append(calendar.get(Calendar.MILLISECOND));
+//
+//        return guid.toString();
+//    }
 
     /** Generate a SystemMetadata object with bogus data. */
-    private SystemMetadata generateSystemMetadata(Identifier guid) {
+    private static SystemMetadata generateSystemMetadata(Identifier guid, ObjectFormat objectFormat) {
         SystemMetadata sysmeta = new SystemMetadata();
         sysmeta.setIdentifier(guid);
-        sysmeta.setObjectFormat(ObjectFormat.TEXT_CSV);
+        sysmeta.setObjectFormat(objectFormat);
         sysmeta.setSize(12);
         Principal submitter = new Principal();
         String dn = "uid=jones,o=NCEAS,dc=ecoinformatics,dc=org";
@@ -246,5 +262,17 @@ public class D1ClientTest extends TestCase {
         checksum.setAlgorithm(ChecksumAlgorithm.SH_A256);
         sysmeta.setChecksum(checksum);
         return sysmeta;
+    }
+    
+    /** Generate a science metadata object for testing. */
+    private static String generateScienceMetadata(Identifier guid) {
+        String accessBlock = TestUtilities.getAccessBlock("public", true, true,
+                false, false, false);
+        String emldoc = TestUtilities.generateEmlDocument(
+                "Test identifier manager", 
+                TestUtilities.EML2_1_0, null,
+                null, "http://fake.example.com/somedata", null,
+                accessBlock, null, null, null, null);
+        return emldoc;
     }
 }
