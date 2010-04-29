@@ -60,7 +60,7 @@ public class D1ClientTest extends TestCase {
     // TODO: move these hardcoded properties out to a test configuration
     protected static String contextUrl = "http://localhost:8080/knb/";  
     
-    // TODO: use the create() and insert() methods to create predicatable test data,
+    // TODO: use the create() and insert() methods to create predictable test data,
     // rather than hardcoding test assumptions here
     private static final String DOC_TEXT = "Biomass and growth of 20-year-old stands of Scots pine datasets";   
     private static final String id = "knb:nceas:100:7";
@@ -176,7 +176,7 @@ public class D1ClientTest extends TestCase {
             fail(e.getDescription());
         }
     }
-    
+
     public void testGetChecksumAuthTokenIdentifierType() {
         assertTrue(1==1);
     }
