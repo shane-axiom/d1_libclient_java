@@ -169,6 +169,16 @@ public class D1Client implements MemberNodeCrud {
         if (code  != HttpURLConnection.HTTP_OK ) {
             InputStream errorStream = rd.getErrorStream();
             try {
+                /*byte[] b = new byte[1024];
+                int numread = errorStream.read(b, 0, 1024);
+                StringBuffer sb = new StringBuffer();
+                while(numread != -1)
+                {
+                    sb.append(new String(b, 0, numread));
+                    numread = errorStream.read(b, 0, 1024);
+                }
+                
+                System.out.println("ERROR: " + sb.toString());*/
                 deserializeAndThrowException(errorStream);                
             } catch (InvalidToken e) {
                 throw e;
@@ -189,7 +199,10 @@ public class D1Client implements MemberNodeCrud {
             } catch (BaseException e) {
                 throw new ServiceFailure(1000, 
                         "Method threw improper exception: " + e.getMessage());
-            }
+            } /*catch (IOException e) {
+                System.out.println("io exception: " + e.getMessage());
+            }*/
+            
         } else {
             is = rd.getContentStream();
         }

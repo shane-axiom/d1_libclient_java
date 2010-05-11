@@ -62,7 +62,7 @@ public class D1ClientTest extends TestCase {
     
     // TODO: use the create() and insert() methods to create predictable test data,
     // rather than hardcoding test assumptions here
-    private static final String DOC_TEXT = "Biomass and growth of 20-year-old stands of Scots pine datasets";   
+    private static final String DOC_TEXT = "<surName>Smith</surName>";   
     private static final String id = "knb:nceas:100:7";
     private static final String prefix = "knb:testid:";
     private static final String bogusId = "foobarbaz214";
@@ -74,6 +74,10 @@ public class D1ClientTest extends TestCase {
         d1 = new D1Client(contextUrl);
     }
 
+    /*
+     * test creation of data.  this also tests get() since it
+     * is used to verify the inserted metadata
+     */
     public void testCreateData() {
         assertTrue(1==1);
         AuthToken token = new AuthToken("public");
@@ -82,13 +86,15 @@ public class D1ClientTest extends TestCase {
         guid.setValue(idString);
         InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
         SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
+        Identifier rGuid = null;
 
         try {
-            Identifier rGuid = d1.create(token, guid, objectStream, sysmeta);
+            rGuid = d1.create(token, guid, objectStream, sysmeta);
             assertEquals(guid.getValue(), rGuid.getValue());
         } catch (InvalidToken e) {
             fail(e.getMessage());
         } catch (ServiceFailure e) {
+            e.printStackTrace();
             fail(e.getMessage());
         } catch (NotAuthorized e) {
             fail(e.getMessage());
@@ -103,8 +109,32 @@ public class D1ClientTest extends TestCase {
         } catch (NotImplemented e) {
             fail(e.getMessage());
         }
+        
+        try {
+            InputStream data = d1.get(token, rGuid);
+            assertNotNull(data);
+            String str = IOUtils.toString(data);
+            assertTrue(str.indexOf("x,y,z\n1,2,3\n") != -1);
+            data.close();
+        } catch (InvalidToken e) {
+            fail(e.getDescription());
+        } catch (ServiceFailure e) {
+            fail(e.getDescription());
+        } catch (NotAuthorized e) {
+            fail(e.getDescription());
+        } catch (NotFound e) {
+            fail(e.getDescription());
+        } catch (NotImplemented e) {
+            fail(e.getDescription());
+        } catch (IOException e) {
+            fail("get() test failed while closing data stream. " + e.getMessage());
+        }
     }
 
+    /**
+     * test creation of science metadata.  this also tests get() since it
+     * is used to verify the inserted metadata
+     */
     public void testCreateScienceMetadata() {
         assertTrue(1==1);
         AuthToken token = new AuthToken("public");
@@ -114,9 +144,10 @@ public class D1ClientTest extends TestCase {
         String scimeta = generateScienceMetadata(guid);
         InputStream objectStream = IOUtils.toInputStream(scimeta);
         SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.EML_2_1_0);
-
+        Identifier rGuid = null;
+        
         try {
-            Identifier rGuid = d1.create(token, guid, objectStream, sysmeta);
+            rGuid = d1.create(token, guid, objectStream, sysmeta);
             assertEquals(guid.getValue(), rGuid.getValue());
         } catch (InvalidToken e) {
             fail(e.getMessage());
@@ -135,22 +166,10 @@ public class D1ClientTest extends TestCase {
         } catch (NotImplemented e) {
             fail(e.getMessage());
         }
-    }
-    
-    public void testDelete() {
-        assertTrue(1==1);
-    }
-
-    public void testDescribe() {
-        assertTrue(1==1);
-    }
-
-    public void testGet() {
+        
+        
         try {
-            AuthToken token = new AuthToken("public");
-            Identifier guid = new Identifier();
-            guid.setValue(id);
-            InputStream data = d1.get(token, guid);
+            InputStream data = d1.get(token, rGuid);
             assertNotNull(data);
             String str = IOUtils.toString(data);
             assertTrue(str.indexOf(DOC_TEXT) != -1);
@@ -169,7 +188,14 @@ public class D1ClientTest extends TestCase {
             fail("get() test failed while closing data stream. " + e.getMessage());
         }
     }
+    
+    public void testDelete() {
+        assertTrue(1==1);
+    }
 
+    public void testDescribe() {
+        assertTrue(1==1);
+    }
     
     public void testGetNotFound() {
         try {
