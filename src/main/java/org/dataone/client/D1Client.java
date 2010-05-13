@@ -113,6 +113,9 @@ public class D1Client implements MemberNodeCrud {
         this.contextRootUrl = contextRootUrl;
     }
     
+    /**
+     * create a resource with the specified guid
+     */
     public Identifier create(AuthToken token, Identifier guid,
             InputStream object, SystemMetadata sysmeta) throws InvalidToken,
             ServiceFailure, NotAuthorized, IdentifierNotUnique,
@@ -123,33 +126,7 @@ public class D1Client implements MemberNodeCrud {
         InputStream is = null;
         
         // Create a multipart message containing the data and sysmeta
-        final MimeMultipart mmp = new MimeMultipart();
-        try {
-            MimeBodyPart objectPart = new MimeBodyPart();
-            objectPart.addHeaderLine("Content-Transfer-Encoding: base64");
-            objectPart.setFileName("object");
-            DataSource ds = new InputStreamDataSource("object", object);
-            DataHandler dh = new DataHandler(ds);
-            objectPart.setDataHandler(dh);
-            
-            ByteArrayInputStream sysmetaStream = serializeSystemMetadata(sysmeta);
-       
-            MimeBodyPart sysmetaPart = new MimeBodyPart();
-            sysmetaPart.addHeaderLine("Content-Transfer-Encoding: base64");
-            sysmetaPart.setFileName("systemmetadata");
-            DataSource smDs = new InputStreamDataSource("systemmetadata", sysmetaStream);
-            DataHandler smDh = new DataHandler(smDs);
-            sysmetaPart.setDataHandler(smDh);
-            
-            mmp.addBodyPart(sysmetaPart);
-            mmp.addBodyPart(objectPart);
-        } catch (MessagingException e) {
-            throw new ServiceFailure(1190, "Failed constructing mime message on client create()...");
-        } catch (JiBXException e) {
-            e.printStackTrace(System.out);
-            throw new InvalidSystemMetadata(1180, "Failed to marshal SystemMetadata.");
-        }
-        
+        final MimeMultipart mmp = createMimeMultipart(object, sysmeta);
         
         // write the mmp to an InputStream and pass it to SendRequest in last param
         final InputStreamFromOutputStream<String> multipartStream = 
@@ -209,19 +186,105 @@ public class D1Client implements MemberNodeCrud {
         
         return guid;
     }
+    
+    /**
+     * update a resource with the specified guid. 
+     */
+    public Identifier update(AuthToken token, Identifier guid,
+            InputStream object, Identifier obsoletedGuid,
+            SystemMetadata sysmeta) throws InvalidToken, ServiceFailure,
+            NotAuthorized, IdentifierNotUnique, UnsupportedType,
+            InsufficientResources, NotFound, InvalidSystemMetadata,
+            NotImplemented {
+        
+        String resource = RESOURCE_OBJECTS + "/" + guid.getValue();
+        InputStream is = null;
+        
+        // Create a multipart message containing the data and sysmeta
+        final MimeMultipart mmp = createMimeMultipart(object, sysmeta);
+        
+        // write the mmp to an InputStream and pass it to SendRequest in last param
+        final InputStreamFromOutputStream<String> multipartStream = 
+            new InputStreamFromOutputStream<String>() {
+            @Override
+            public String produce(final OutputStream dataSink) throws Exception {
+                mmp.writeTo(dataSink);
+                IOUtils.closeQuietly(dataSink);
+                return "Completed";
+            }
+        };
+        
+        String urlParams = "obsoletedGuid=" + obsoletedGuid.getValue();
+        ResponseData rd = sendRequest(resource, PUT, urlParams, 
+                mmp.getContentType(), multipartStream);
+        
+        // Handle any errors that were generated
+        int code = rd.getCode();
+        if (code  != HttpURLConnection.HTTP_OK ) {
+            InputStream errorStream = rd.getErrorStream();
+            try {
+                /*byte[] b = new byte[1024];
+                int numread = errorStream.read(b, 0, 1024);
+                StringBuffer sb = new StringBuffer();
+                while(numread != -1)
+                {
+                    sb.append(new String(b, 0, numread));
+                    numread = errorStream.read(b, 0, 1024);
+                }
+                
+                System.out.println("ERROR: " + sb.toString());*/
+                deserializeAndThrowException(errorStream);                
+            } catch (InvalidToken e) {
+                throw e;
+            } catch (ServiceFailure e) {
+                throw e;
+            } catch (NotAuthorized e) {
+                throw e;
+            } catch (IdentifierNotUnique e) {
+                throw e;
+            } catch (UnsupportedType e) {
+                throw e;
+            } catch (InsufficientResources e) {
+                throw e;
+            } catch (InvalidSystemMetadata e) {
+                throw e;
+            } catch (NotImplemented e) {
+                throw e;
+            } catch (BaseException e) {
+                throw new ServiceFailure(1000, 
+                        "Method threw improper exception: " + e.getMessage());
+            } /*catch (IOException e) {
+                System.out.println("io exception: " + e.getMessage());
+            }*/
+            
+        } else {
+            is = rd.getContentStream();
+        }
+        
+        return guid;
+    }
 
+    /**
+     * delete a resource with the specified guid.  NOT IMPLEMENTED.
+     */
     public Identifier delete(AuthToken token, Identifier guid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
             NotImplemented {
         throw new NotImplemented(1000, "Method not yet implemented.");
     }
 
+    /**
+     * describe a resource with the specified guid.  NOT IMPLEMENTED.
+     */
     public DescribeResponse describe(AuthToken token, Identifier guid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
             NotImplemented {
         throw new NotImplemented(1000, "Method not yet implemented.");
     }
 
+    /**
+     * get the resource with the specified guid
+     */
     public InputStream get(AuthToken token, Identifier guid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
             NotImplemented {
@@ -253,40 +316,81 @@ public class D1Client implements MemberNodeCrud {
 
         return is;
     }
-
-    public Checksum getChecksum(AuthToken token, Identifier guid)
-            throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
-            InvalidRequest, NotImplemented {
-        throw new NotImplemented(1000, "Method not yet implemented.");
-    }
-
-    public Checksum getChecksum(AuthToken token, Identifier guid,
-            String checksumAlgorithm) throws InvalidToken, ServiceFailure,
-            NotAuthorized, NotFound, InvalidRequest, NotImplemented {
-        throw new NotImplemented(1000, "Method not yet implemented.");
-    }
-
-    public LogRecordSet getLogRecords(AuthToken token, Date fromDate,
-            Date toDate) throws InvalidToken, ServiceFailure, NotAuthorized,
-            InvalidRequest, NotImplemented {
-        throw new NotImplemented(1000, "Method not yet implemented.");
-    }
-
+    
+    /**
+     * get the system metadata from a resource with the specified guid.  NOT IMPLEMENTED.
+     */
     public SystemMetadata getSystemMetadata(AuthToken token, Identifier guid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
             InvalidRequest, NotImplemented {
         throw new NotImplemented(1000, "Method not yet implemented.");
     }
 
-    public Identifier update(AuthToken token, Identifier guid,
-            InputStream object, Identifier obsoletedGuid,
-            SystemMetadata sysmeta) throws InvalidToken, ServiceFailure,
-            NotAuthorized, IdentifierNotUnique, UnsupportedType,
-            InsufficientResources, NotFound, InvalidSystemMetadata,
-            NotImplemented {
+    /**
+     * get the checksum from a resource with the specified guid.  NOT IMPLEMENTED.
+     */
+    public Checksum getChecksum(AuthToken token, Identifier guid)
+            throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
+            InvalidRequest, NotImplemented {
+        throw new NotImplemented(1000, "Method not yet implemented.");
+    }
+
+    /**
+     * get the checksum from a resource with the specified guid.  NOT IMPLEMENTED.
+     */
+    public Checksum getChecksum(AuthToken token, Identifier guid,
+            String checksumAlgorithm) throws InvalidToken, ServiceFailure,
+            NotAuthorized, NotFound, InvalidRequest, NotImplemented {
+        throw new NotImplemented(1000, "Method not yet implemented.");
+    }
+
+    /**
+     * get the log recoreds from a resource with the specified guid.  NOT IMPLEMENTED.
+     */
+    public LogRecordSet getLogRecords(AuthToken token, Date fromDate,
+            Date toDate) throws InvalidToken, ServiceFailure, NotAuthorized,
+            InvalidRequest, NotImplemented {
         throw new NotImplemented(1000, "Method not yet implemented.");
     }
     
+    /**
+     * create a mime multipart message from object and sysmeta
+     */
+    private MimeMultipart createMimeMultipart(InputStream object, SystemMetadata sysmeta)
+      throws ServiceFailure, InvalidSystemMetadata
+    {
+        final MimeMultipart mmp = new MimeMultipart();
+        try {
+            MimeBodyPart objectPart = new MimeBodyPart();
+            objectPart.addHeaderLine("Content-Transfer-Encoding: base64");
+            objectPart.setFileName("object");
+            DataSource ds = new InputStreamDataSource("object", object);
+            DataHandler dh = new DataHandler(ds);
+            objectPart.setDataHandler(dh);
+            
+            ByteArrayInputStream sysmetaStream = serializeSystemMetadata(sysmeta);
+       
+            MimeBodyPart sysmetaPart = new MimeBodyPart();
+            sysmetaPart.addHeaderLine("Content-Transfer-Encoding: base64");
+            sysmetaPart.setFileName("systemmetadata");
+            DataSource smDs = new InputStreamDataSource("systemmetadata", sysmetaStream);
+            DataHandler smDh = new DataHandler(smDs);
+            sysmetaPart.setDataHandler(smDh);
+            
+            mmp.addBodyPart(sysmetaPart);
+            mmp.addBodyPart(objectPart);
+            return mmp;
+        } catch (MessagingException e) {
+            throw new ServiceFailure(1190, "Failed constructing mime message on client create()...");
+        } catch (JiBXException e) {
+            e.printStackTrace(System.out);
+            throw new InvalidSystemMetadata(1180, "Failed to marshal SystemMetadata.");
+        }
+    }
+    
+    /**
+     * send a request to the resource
+     */
     private ResponseData sendRequest(String resource, String method, 
             String urlParamaters, String contentType, InputStream dataStream) 
         throws ServiceFailure {

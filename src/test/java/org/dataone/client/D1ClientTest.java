@@ -73,8 +73,59 @@ public class D1ClientTest extends TestCase {
         super.setUp();
         d1 = new D1Client(contextUrl);
     }
+    
+    /**
+     * test the update of a resource
+     */
+    public void testUpdate() 
+    {
+        try 
+        {
+            //create a document
+            AuthToken token = new AuthToken("public");
+            String idString = prefix + TestUtilities.generateIdentifier();
+            Identifier guid = new Identifier();
+            guid.setValue(idString);
+            InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
+            SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
+            Identifier rGuid = d1.create(token, guid, objectStream, sysmeta);
+            assertEquals(guid.getValue(), rGuid.getValue());
+            System.out.println("create success, id returned is " + rGuid.getValue());
+            
+            //get the document
+            InputStream data = d1.get(token, rGuid);
+            assertNotNull(data);
+            String str = IOUtils.toString(data);
+            assertTrue(str.indexOf("x,y,z\n1,2,3\n") != -1);
+            data.close();
+            
+            //alter the document
+            Identifier newguid = new Identifier();
+            newguid.setValue(prefix + TestUtilities.generateIdentifier());
+            str = str.replaceAll("x", "a");
+            objectStream = IOUtils.toInputStream(str);
+            SystemMetadata updatedSysmeta = generateSystemMetadata(newguid, ObjectFormat.TEXT_CSV);
+            
+            //update the document
+            Identifier nGuid = d1.update(token, newguid, objectStream, rGuid, updatedSysmeta);
+            System.out.println("updated success, id returned is " + nGuid.getValue());
+                
+            //perform tests
+            data = d1.get(token, nGuid);
+            assertNotNull(data);
+            str = IOUtils.toString(data);
+            assertTrue(str.indexOf("a,y,z\n1,2,3\n") != -1);
+            data.close();
+            
+        } 
+        catch(Exception e)
+        {
+            e.printStackTrace();
+            fail("Error in testUpdate: " + e.getMessage());
+        }
+    }
 
-    /*
+    /**
      * test creation of data.  this also tests get() since it
      * is used to verify the inserted metadata
      */
@@ -232,10 +283,6 @@ public class D1ClientTest extends TestCase {
     }
 
     public void testGetSystemMetadata() {
-        assertTrue(1==1);
-    }
-
-    public void testUpdate() {
         assertTrue(1==1);
     }
 
