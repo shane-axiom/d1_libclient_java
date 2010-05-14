@@ -62,6 +62,7 @@ import org.dataone.service.types.SystemMetadata;
 import org.jibx.runtime.BindingDirectory;
 import org.jibx.runtime.IBindingFactory;
 import org.jibx.runtime.IMarshallingContext;
+import org.jibx.runtime.IUnmarshallingContext;
 import org.jibx.runtime.JiBXException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -95,6 +96,8 @@ public class D1Client implements MemberNodeCrud {
 
     /** API OBJECTS Resource which handles with document operations*/
     public static final String RESOURCE_OBJECTS = "object";
+    /** API META Resource which handles SystemMetadata operations*/
+    public static final String RESOURCE_META = "meta";
     /** API SESSION Resource which handles with user session operations*/
     public static final String RESOURCE_SESSION = "session";
     /** API IDENTIFIER Resource which controls object unique identifier operations*/
@@ -263,23 +266,49 @@ public class D1Client implements MemberNodeCrud {
         
         return guid;
     }
-
+    
     /**
-     * delete a resource with the specified guid.  NOT IMPLEMENTED.
+     * get the system metadata from a resource with the specified guid.  NOT IMPLEMENTED.
      */
-    public Identifier delete(AuthToken token, Identifier guid)
+    public SystemMetadata getSystemMetadata(AuthToken token, Identifier guid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
-            NotImplemented {
-        throw new NotImplemented(1000, "Method not yet implemented.");
-    }
-
-    /**
-     * describe a resource with the specified guid.  NOT IMPLEMENTED.
-     */
-    public DescribeResponse describe(AuthToken token, Identifier guid)
-            throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
-            NotImplemented {
-        throw new NotImplemented(1000, "Method not yet implemented.");
+            InvalidRequest, NotImplemented {
+                
+        String resource = RESOURCE_META + "/" + guid.getValue();
+        System.out.println("resource: " + resource);
+        InputStream is = null;
+        ResponseData rd = sendRequest(resource, GET, null, null, null);
+        int code = rd.getCode();
+        if (code  != HttpURLConnection.HTTP_OK ) {
+            InputStream errorStream = rd.getErrorStream();
+            try {
+                deserializeAndThrowException(errorStream);                
+            } catch (InvalidToken e) {
+                throw e;
+            } catch (ServiceFailure e) {
+                throw e;
+            } catch (NotAuthorized e) {
+                throw e;
+            } catch (NotFound e) {
+                throw e;
+            } catch (NotImplemented e) {
+                throw e;
+            } catch (BaseException e) {
+                throw new ServiceFailure(1000, 
+                        "Method threw improper exception: " + e.getMessage());
+            }        
+        } else {
+            is = rd.getContentStream();
+        }
+        
+        try
+        {
+            return deserializeSystemMetadata(is);
+        }
+        catch(Exception e)
+        {
+            throw new ServiceFailure(1090, "Could not deserialize the systemMetadata: " + e.getMessage());
+        }
     }
 
     /**
@@ -318,11 +347,20 @@ public class D1Client implements MemberNodeCrud {
     }
     
     /**
-     * get the system metadata from a resource with the specified guid.  NOT IMPLEMENTED.
+     * delete a resource with the specified guid.  NOT IMPLEMENTED.
      */
-    public SystemMetadata getSystemMetadata(AuthToken token, Identifier guid)
+    public Identifier delete(AuthToken token, Identifier guid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
-            InvalidRequest, NotImplemented {
+            NotImplemented {
+        throw new NotImplemented(1000, "Method not yet implemented.");
+    }
+
+    /**
+     * describe a resource with the specified guid.  NOT IMPLEMENTED.
+     */
+    public DescribeResponse describe(AuthToken token, Identifier guid)
+            throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
+            NotImplemented {
         throw new NotImplemented(1000, "Method not yet implemented.");
     }
 
@@ -409,6 +447,7 @@ public class D1Client implements MemberNodeCrud {
         URL u = null;
         InputStream content = null;
         try {
+            System.out.println("restURL: " + restURL);
             u = new URL(restURL);
             connection = (HttpURLConnection) u.openConnection();
             if (contentType!=null) {
@@ -442,6 +481,7 @@ public class D1Client implements MemberNodeCrud {
             resData.setCode(404);
             resData.setErrorStream(connection.getErrorStream());
         } catch (IOException e) {
+            e.printStackTrace();
             throw new ServiceFailure(0, restURL + " " + e.getMessage());
         }
         
@@ -527,6 +567,15 @@ public class D1Client implements MemberNodeCrud {
         ByteArrayInputStream sysmetaStream = 
             new ByteArrayInputStream(sysmetaOut.toByteArray());
         return sysmetaStream;
+    }
+    
+    private SystemMetadata deserializeSystemMetadata(InputStream is)
+      throws JiBXException
+    {
+        IBindingFactory bfact = BindingDirectory.getFactory(SystemMetadata.class);
+        IUnmarshallingContext uctx = bfact.createUnmarshallingContext();
+        SystemMetadata m = (SystemMetadata) uctx.unmarshalDocument(is, null);
+        return m;
     }
 
     protected class ResponseData {

@@ -75,6 +75,35 @@ public class D1ClientTest extends TestCase {
     }
     
     /**
+     * get a systemMetadata resource
+     */
+    public void testGetSystemMetadata()
+    {
+        try
+        {
+            //create a document
+            AuthToken token = new AuthToken("public");
+            String idString = prefix + TestUtilities.generateIdentifier();
+            Identifier guid = new Identifier();
+            guid.setValue(idString);
+            InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
+            SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
+            Identifier rGuid = d1.create(token, guid, objectStream, sysmeta);
+            assertEquals(guid.getValue(), rGuid.getValue());
+            System.out.println("create success, id returned is " + rGuid.getValue());
+            
+            //get the system metadata
+            SystemMetadata sm = d1.getSystemMetadata(token, rGuid);
+            assertTrue(guid.getValue().equals(sm.getIdentifier().getValue()));
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+            fail("Error in getSystemMetadata: " + e.getMessage());
+        }
+    }
+    
+    /**
      * test the update of a resource
      */
     public void testUpdate() 
@@ -279,10 +308,6 @@ public class D1ClientTest extends TestCase {
     }
 
     public void testGetLogRecords() {
-        assertTrue(1==1);
-    }
-
-    public void testGetSystemMetadata() {
         assertTrue(1==1);
     }
 
