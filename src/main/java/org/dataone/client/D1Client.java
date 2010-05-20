@@ -53,12 +53,7 @@ import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.exceptions.UnsupportedType;
 import org.dataone.service.mn.MemberNodeCrud;
-import org.dataone.service.types.AuthToken;
-import org.dataone.service.types.Checksum;
-import org.dataone.service.types.DescribeResponse;
-import org.dataone.service.types.Identifier;
-import org.dataone.service.types.LogRecordSet;
-import org.dataone.service.types.SystemMetadata;
+import org.dataone.service.types.*;
 import org.jibx.runtime.BindingDirectory;
 import org.jibx.runtime.IBindingFactory;
 import org.jibx.runtime.IMarshallingContext;
@@ -114,6 +109,160 @@ public class D1Client implements MemberNodeCrud {
      */ 
     public D1Client(String contextRootUrl){
         this.contextRootUrl = contextRootUrl;
+    }
+    
+    /**
+     * set the access perms for a document
+     * @param token
+     * @param id
+     * @param principal
+     * @param permission
+     * @param permissionType
+     * @param permissionOrder
+     */
+    public void setAccess(AuthToken token, Identifier id, String principal, String permission,
+            String permissionType, String permissionOrder)
+      throws ServiceFailure
+    {
+        String params = "guid=" + id.getValue() + "&principal=" + principal + 
+          "&permission=" + permission + "&permissionType=" + permissionType +
+          "&permissionOrder=" + permissionOrder + "&sessionid=" + token.getToken() +
+          "&op=setaccess&setsystemmetadata=true";
+        String resource = RESOURCE_SESSION + "/";
+        ResponseData rd = sendRequest(resource, POST, params, null, null);
+        int code = rd.getCode();
+        if(code != HttpURLConnection.HTTP_OK)
+        {
+            throw new ServiceFailure("1000", "Error setting acces on document");
+        }
+        
+        //also set the system metadata to the same perms
+        
+    }
+    
+    /**
+     * login and get an AuthToken
+     * @param username
+     * @param password
+     * @return
+     * @throws ServiceFailure
+     */
+    public AuthToken login(String username, String password)
+      throws ServiceFailure
+    {
+        String params = "username=" + username + "&password=" + password +
+          "&qformat=xml&op=login";
+        String resource = RESOURCE_SESSION + "/";
+        
+        ResponseData rd = sendRequest(resource, POST, params, null, null);
+        String sessionid = null;
+        
+        int code = rd.getCode();
+        if(code != HttpURLConnection.HTTP_OK)
+        { //deal with the error
+            throw new ServiceFailure("1000", "Error logging in.");
+        }
+        else
+        {
+            try
+            {
+                InputStream is = rd.getContentStream();
+                byte[] b = new byte[1024];
+                int numread = is.read(b, 0, 1024);
+                StringBuffer sb = new StringBuffer();
+                while(numread != -1)
+                {
+                    sb.append(new String(b, 0, numread));
+                    numread = is.read(b, 0, 1024);
+                }
+
+                String response = sb.toString();
+                //System.out.println("response from login: " + response);
+                int successIndex = response.indexOf("<sessionId>");
+                if(successIndex != -1)
+                {
+                    sessionid = response.substring(
+                            response.indexOf("<sessionId>") + "<sessionId>".length(), 
+                            response.indexOf("</sessionId>"));
+                    //System.out.println("sessionid in d1client: " + sessionid);
+                }
+                else
+                {
+                    throw new ServiceFailure("1000", "Error authenticating: " + 
+                            response.substring(response.indexOf("<error>") + "<error>".length(), 
+                                    response.indexOf("</error>")));
+                }
+            }
+            catch(Exception e)
+            {
+                throw new ServiceFailure("1000", "Error getting response from metacat: " + e.getMessage());
+            }
+        }
+        
+        return new AuthToken(sessionid);
+    }
+    
+    public ObjectList listObjects(AuthToken token, Date startTime, Date endTime, 
+            ObjectFormat objectFormat, boolean replicaStatus, int start, int count)
+      throws NotAuthorized, InvalidRequest, NotImplemented, ServiceFailure, InvalidToken
+    {
+        InputStream is = null;
+        String resource = RESOURCE_OBJECTS + "/";
+        String params = "";
+        if(startTime != null)
+        {
+            params += "startTime=" + startTime; 
+        }
+        if(endTime != null)
+        {
+            params += addAmp(params);
+            params += "endTime=" + endTime;
+        }
+        if(objectFormat != null)
+        {
+            params += addAmp(params);
+            params += "objectFormat=" + objectFormat;
+        }
+        params += addAmp(params);
+        params += "replicaStatus=" + replicaStatus;
+        params += "&";
+        params += "start=" + start;
+        params += "&";
+        params += "count=" + count;
+        params += "&sessionid=" + token.getToken();
+        
+        ResponseData rd = sendRequest(resource, GET, params, 
+                null, null);
+        int code = rd.getCode();
+        if (code  != HttpURLConnection.HTTP_OK ) {
+            InputStream errorStream = rd.getErrorStream();
+            try {
+                deserializeAndThrowException(errorStream);                
+            } catch (InvalidToken e) {
+                throw e;
+            } catch (ServiceFailure e) {
+                throw e;
+            } catch (NotAuthorized e) {
+                throw e;
+            } catch (NotImplemented e) {
+                throw e;
+            } catch (BaseException e) {
+                throw new ServiceFailure("1000", 
+                        "Method threw improper exception: " + e.getMessage());
+            } 
+            
+        } else {
+            is = rd.getContentStream();
+        }
+        
+        try
+        {
+            return deserializeObjectList(is);
+        }
+        catch(Exception e)
+        {
+            throw new ServiceFailure("500", "Could not deserialize the ObjectList: " + e.getMessage());
+        }
     }
     
     /**
@@ -177,7 +326,7 @@ public class D1Client implements MemberNodeCrud {
             } catch (NotImplemented e) {
                 throw e;
             } catch (BaseException e) {
-                throw new ServiceFailure(1000, 
+                throw new ServiceFailure("1000", 
                         "Method threw improper exception: " + e.getMessage());
             } /*catch (IOException e) {
                 System.out.println("io exception: " + e.getMessage());
@@ -226,16 +375,6 @@ public class D1Client implements MemberNodeCrud {
         if (code  != HttpURLConnection.HTTP_OK ) {
             InputStream errorStream = rd.getErrorStream();
             try {
-                /*byte[] b = new byte[1024];
-                int numread = errorStream.read(b, 0, 1024);
-                StringBuffer sb = new StringBuffer();
-                while(numread != -1)
-                {
-                    sb.append(new String(b, 0, numread));
-                    numread = errorStream.read(b, 0, 1024);
-                }
-                
-                System.out.println("ERROR: " + sb.toString());*/
                 deserializeAndThrowException(errorStream);                
             } catch (InvalidToken e) {
                 throw e;
@@ -254,11 +393,9 @@ public class D1Client implements MemberNodeCrud {
             } catch (NotImplemented e) {
                 throw e;
             } catch (BaseException e) {
-                throw new ServiceFailure(1000, 
+                throw new ServiceFailure("1000", 
                         "Method threw improper exception: " + e.getMessage());
-            } /*catch (IOException e) {
-                System.out.println("io exception: " + e.getMessage());
-            }*/
+            }
             
         } else {
             is = rd.getContentStream();
@@ -275,7 +412,6 @@ public class D1Client implements MemberNodeCrud {
             InvalidRequest, NotImplemented {
                 
         String resource = RESOURCE_META + "/" + guid.getValue();
-        System.out.println("resource: " + resource);
         InputStream is = null;
         ResponseData rd = sendRequest(resource, GET, null, null, null);
         int code = rd.getCode();
@@ -294,7 +430,7 @@ public class D1Client implements MemberNodeCrud {
             } catch (NotImplemented e) {
                 throw e;
             } catch (BaseException e) {
-                throw new ServiceFailure(1000, 
+                throw new ServiceFailure("1000", 
                         "Method threw improper exception: " + e.getMessage());
             }        
         } else {
@@ -307,7 +443,7 @@ public class D1Client implements MemberNodeCrud {
         }
         catch(Exception e)
         {
-            throw new ServiceFailure(1090, "Could not deserialize the systemMetadata: " + e.getMessage());
+            throw new ServiceFailure("1090", "Could not deserialize the systemMetadata: " + e.getMessage());
         }
     }
 
@@ -336,7 +472,7 @@ public class D1Client implements MemberNodeCrud {
             } catch (NotImplemented e) {
                 throw e;
             } catch (BaseException e) {
-                throw new ServiceFailure(1000, 
+                throw new ServiceFailure("1000", 
                         "Method threw improper exception: " + e.getMessage());
             }        
         } else {
@@ -352,7 +488,7 @@ public class D1Client implements MemberNodeCrud {
     public Identifier delete(AuthToken token, Identifier guid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
             NotImplemented {
-        throw new NotImplemented(1000, "Method not yet implemented.");
+        throw new NotImplemented("1000", "Method not yet implemented.");
     }
 
     /**
@@ -361,7 +497,7 @@ public class D1Client implements MemberNodeCrud {
     public DescribeResponse describe(AuthToken token, Identifier guid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
             NotImplemented {
-        throw new NotImplemented(1000, "Method not yet implemented.");
+        throw new NotImplemented("1000", "Method not yet implemented.");
     }
 
     /**
@@ -370,7 +506,7 @@ public class D1Client implements MemberNodeCrud {
     public Checksum getChecksum(AuthToken token, Identifier guid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
             InvalidRequest, NotImplemented {
-        throw new NotImplemented(1000, "Method not yet implemented.");
+        throw new NotImplemented("1000", "Method not yet implemented.");
     }
 
     /**
@@ -379,7 +515,7 @@ public class D1Client implements MemberNodeCrud {
     public Checksum getChecksum(AuthToken token, Identifier guid,
             String checksumAlgorithm) throws InvalidToken, ServiceFailure,
             NotAuthorized, NotFound, InvalidRequest, NotImplemented {
-        throw new NotImplemented(1000, "Method not yet implemented.");
+        throw new NotImplemented("1000", "Method not yet implemented.");
     }
 
     /**
@@ -388,7 +524,21 @@ public class D1Client implements MemberNodeCrud {
     public LogRecordSet getLogRecords(AuthToken token, Date fromDate,
             Date toDate) throws InvalidToken, ServiceFailure, NotAuthorized,
             InvalidRequest, NotImplemented {
-        throw new NotImplemented(1000, "Method not yet implemented.");
+        throw new NotImplemented("1000", "Method not yet implemented.");
+    }
+    
+    /**
+     * add ampersand to a param list if needed
+     * @param params
+     * @return
+     */
+    private String addAmp(String params)
+    {
+        if(params != null && !params.trim().equals(""))
+        {
+            params += "&";
+        }
+        return params;
     }
     
     /**
@@ -419,10 +569,10 @@ public class D1Client implements MemberNodeCrud {
             mmp.addBodyPart(objectPart);
             return mmp;
         } catch (MessagingException e) {
-            throw new ServiceFailure(1190, "Failed constructing mime message on client create()...");
+            throw new ServiceFailure("1190", "Failed constructing mime message on client create()...");
         } catch (JiBXException e) {
             e.printStackTrace(System.out);
-            throw new InvalidSystemMetadata(1180, "Failed to marshal SystemMetadata.");
+            throw new InvalidSystemMetadata("1180", "Failed to marshal SystemMetadata.");
         }
     }
     
@@ -447,7 +597,7 @@ public class D1Client implements MemberNodeCrud {
         URL u = null;
         InputStream content = null;
         try {
-            System.out.println("restURL: " + restURL);
+            //System.out.println("restURL: " + restURL);
             u = new URL(restURL);
             connection = (HttpURLConnection) u.openConnection();
             if (contentType!=null) {
@@ -474,15 +624,15 @@ public class D1Client implements MemberNodeCrud {
                 resData.setErrorStream(connection.getErrorStream());
             }
         } catch (MalformedURLException e) {
-            throw new ServiceFailure(0, restURL + " " + e.getMessage());
+            throw new ServiceFailure("1000", restURL + " " + e.getMessage());
         } catch (ProtocolException e) {
-            throw new ServiceFailure(0, restURL + " " + e.getMessage());
+            throw new ServiceFailure("1000", restURL + " " + e.getMessage());
         } catch (FileNotFoundException e) {
             resData.setCode(404);
             resData.setErrorStream(connection.getErrorStream());
         } catch (IOException e) {
             e.printStackTrace();
-            throw new ServiceFailure(0, restURL + " " + e.getMessage());
+            throw new ServiceFailure("1000", restURL + " " + e.getMessage());
         }
         
         return resData;     
@@ -501,14 +651,14 @@ public class D1Client implements MemberNodeCrud {
             doc = db.parse(errorStream);
             Element root = doc.getDocumentElement();
             root.normalize();
-            System.out.println(root.toString());
+            //System.out.println(root.toString());
             int code = getIntAttribute(root, "errorCode");
-            int detailCode = getIntAttribute(root, "detailCode");
+            String detailCode = root.getAttribute("detailCode");
             String description = getTextValue(root, "description");
             switch (code) {
             case 400:
-                if (detailCode == 1180) {
-                    throw new InvalidSystemMetadata(1180, description);
+                if (detailCode.equals("1180")) {
+                    throw new InvalidSystemMetadata("1180", description);
                 } else {
                     throw new InvalidRequest(detailCode, description);
                 }
@@ -533,7 +683,7 @@ public class D1Client implements MemberNodeCrud {
         }
         
         if (parseFailed) {
-            throw new ServiceFailure(1000, 
+            throw new ServiceFailure("1000", 
                     "Service failed, but error message not parsed correctly.");
         }        
     }
@@ -576,6 +726,15 @@ public class D1Client implements MemberNodeCrud {
         IUnmarshallingContext uctx = bfact.createUnmarshallingContext();
         SystemMetadata m = (SystemMetadata) uctx.unmarshalDocument(is, null);
         return m;
+    }
+    
+    private ObjectList deserializeObjectList(InputStream is)
+      throws JiBXException
+    {
+        IBindingFactory bfact = BindingDirectory.getFactory(ObjectList.class);
+        IUnmarshallingContext uctx = bfact.createUnmarshallingContext();
+        ObjectList ol = (ObjectList) uctx.unmarshalDocument(is, null);
+        return ol;
     }
 
     protected class ResponseData {

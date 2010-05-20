@@ -18,16 +18,8 @@
 
 package org.dataone.client;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.SimpleTimeZone;
-import java.util.TimeZone;
+import java.io.*;
+import java.util.*;
 
 import junit.framework.TestCase;
 
@@ -42,14 +34,9 @@ import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.exceptions.UnsupportedType;
-import org.dataone.service.types.AuthToken;
-import org.dataone.service.types.Checksum;
-import org.dataone.service.types.ChecksumAlgorithm;
-import org.dataone.service.types.Identifier;
-import org.dataone.service.types.NodeReference;
-import org.dataone.service.types.ObjectFormat;
-import org.dataone.service.types.Principal;
-import org.dataone.service.types.SystemMetadata;
+import org.dataone.service.types.*;
+
+
 
 /**
  * Test the DataONE Java client methods.
@@ -72,6 +59,53 @@ public class D1ClientTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
         d1 = new D1Client(contextUrl);
+    }
+    
+    /**
+     * list objects with specified params
+     */
+    public void testListObjects()
+    {
+        try
+        {
+            String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
+            //AuthToken token = d1.login(principal, "kepler");
+            AuthToken token = new AuthToken("public");
+            //create a document we know is in the system
+            String idString = prefix + TestUtilities.generateIdentifier();
+            Identifier guid = new Identifier();
+            guid.setValue(idString);
+            InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
+            SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
+            Identifier rGuid = d1.create(token, guid, objectStream, sysmeta);
+            assertEquals(guid.getValue(), rGuid.getValue());
+            //make the inserted documents public
+            d1.setAccess(token, rGuid, "public", "read", "allow", "allowFirst");
+            
+            //get the objectList and make sure our created doc is in it
+            ObjectList ol = d1.listObjects(token, null, null, null, false, 0, 1000);
+            boolean isThere = false;
+            assertTrue(ol.sizeObjectInfoList() > 0);
+            //System.out.println("ol size: " + ol.sizeObjectInfoList());
+            //System.out.println("guid: " + guid.getValue());
+            for(int i=0; i<ol.sizeObjectInfoList(); i++)
+            {
+                ObjectInfo oi = ol.getObjectInfo(i);
+                //System.out.println("oiid: " + oi.getIdentifier().getValue());
+                if(oi.getIdentifier().getValue().trim().equals(guid.getValue().trim()))
+                {
+                    isThere = true;
+                    assertTrue(oi.getChecksum().getValue().equals(sysmeta.getChecksum().getValue()));
+                    break;
+                }
+            }
+            
+            assertTrue(isThere);
+        }
+        catch(Exception e)
+        {
+            fail("Could not list objects: " + e.getMessage());
+        }
     }
     
     /**
