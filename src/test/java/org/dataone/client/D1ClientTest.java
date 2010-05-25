@@ -68,9 +68,10 @@ public class D1ClientTest extends TestCase {
     {
         try
         {
+            System.out.println("Testing listObjects");
             String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
-            //AuthToken token = d1.login(principal, "kepler");
-            AuthToken token = new AuthToken("public");
+            AuthToken token = d1.login(principal, "kepler");
+            //AuthToken token = new AuthToken("public");
             //create a document we know is in the system
             String idString = prefix + TestUtilities.generateIdentifier();
             Identifier guid = new Identifier();
@@ -78,6 +79,7 @@ public class D1ClientTest extends TestCase {
             InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
             SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
             Identifier rGuid = d1.create(token, guid, objectStream, sysmeta);
+            System.out.println("doc inserted with guid: " + rGuid.getValue());
             assertEquals(guid.getValue(), rGuid.getValue());
             //make the inserted documents public
             d1.setAccess(token, rGuid, "public", "read", "allow", "allowFirst");
