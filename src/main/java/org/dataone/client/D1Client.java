@@ -65,6 +65,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import com.gc.iotools.stream.is.InputStreamFromOutputStream;
+import org.dataone.service.mn.MemberNodeReplication;
 
 /**
  * The D1Client class represents a client-side implementation of the DataONE
@@ -74,7 +75,7 @@ import com.gc.iotools.stream.is.InputStreamFromOutputStream;
  * 
  * @author Matthew Jones
  */
-public class D1Client implements MemberNodeCrud {
+public class D1Client implements MemberNodeCrud, MemberNodeReplication {
     
     /** HTTP Verb GET*/
     public static final String GET = "GET";
@@ -109,7 +110,9 @@ public class D1Client implements MemberNodeCrud {
      */ 
     public D1Client(String contextRootUrl){
         this.contextRootUrl = contextRootUrl;
+        System.out.print("initialization");
     }
+    public D1Client() {System.out.print("initialization");}
     
     /**
      * set the access perms for a document
@@ -201,10 +204,8 @@ public class D1Client implements MemberNodeCrud {
         
         return new AuthToken(sessionid);
     }
-    
-    public ObjectList listObjects(AuthToken token, Date startTime, Date endTime, 
-            ObjectFormat objectFormat, boolean replicaStatus, int start, int count)
-      throws NotAuthorized, InvalidRequest, NotImplemented, ServiceFailure, InvalidToken
+    @Override
+    public ObjectList listObjects(AuthToken token, Date startTime, Date endTime, ObjectFormat objectFormat, boolean replicaStatus, int start, int count) throws NotAuthorized, InvalidRequest, NotImplemented, ServiceFailure, InvalidToken
     {
         InputStream is = null;
         String resource = RESOURCE_OBJECTS + "/";
@@ -750,6 +751,8 @@ public class D1Client implements MemberNodeCrud {
         return ol;
     }
 
+
+
     protected class ResponseData {
         private int code;
         private InputStream contentStream;
@@ -802,4 +805,13 @@ public class D1Client implements MemberNodeCrud {
         }
         
     }
+
+    public String getContextRootUrl() {
+        return contextRootUrl;
+    }
+
+    public void setContextRootUrl(String contextRootUrl) {
+        this.contextRootUrl = contextRootUrl;
+    }
+    
 }
