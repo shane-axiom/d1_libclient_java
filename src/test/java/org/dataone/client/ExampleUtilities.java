@@ -35,7 +35,7 @@ import java.util.Vector;
 /**
  * Utilities that are useful for generating test data.
  */
-public class TestUtilities {
+public class ExampleUtilities {
 	    
 	protected final static String EML2_0_0 = "EML2_0_0";
 	protected final static String EML2_0_1 = "EML2_0_1";
@@ -287,7 +287,7 @@ public class TestUtilities {
 	 * @return a String identifier based on the current date and time
 	 */
 	protected static String generateIdentifier() {
-		return TestUtilities.generateTimeString();
+		return ExampleUtilities.generateTimeString();
 	}
 	
     /** Generate a timestamp for use in IDs. */
