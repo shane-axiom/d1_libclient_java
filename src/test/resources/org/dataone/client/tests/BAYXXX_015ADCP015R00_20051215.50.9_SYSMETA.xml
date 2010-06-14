@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<d1:systemMetadata xmlns:common="http://dataone.org/service/types/common/0.1"
+ xmlns:d1="http://dataone.org/service/types/SystemMetadata/0.1"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://dataone.org/service/types/SystemMetadata/0.1 file:/home/rwaltz/Projects/NetBeans/DataONE-CnPrototype/DataONE-CnDomain/src/main/resources/org/dataone/service/resources/schema/systemmetadata.xsd">
+    <identifier>BAYXXX_015ADCP015R00_20051215.50.9</identifier>
+    <objectFormat>eml://ecoinformatics.org/eml-2.0.1</objectFormat>
+    <size>34543</size>
+    <submitter>Dr. Libe Washburn</submitter>
+    <rightsHolder>Partnership for Interdisciplinary Studies of Coastal Oceans (PISCO)</rightsHolder>
+    <describes>BAYXXX_015ADCP015R00_20051215.40</describes>
+    <checksum algorithm="MD5">884f1452814899d7ba988d187491f493</checksum>
+    <embargoExpires>2010-05-04T12:13:51.0Z</embargoExpires>
+    <accessRule rule="allow" service="read" principal="public"/>
+    <replicationPolicy replicationAllowed="true" numberReplicas="2">
+        <preferredMemberNode>MN2</preferredMemberNode>
+        <blockedMemberNode>MN2341</blockedMemberNode>
+    </replicationPolicy>
+    <dateUploaded>2010-05-04T12:13:51.0Z</dateUploaded>
+    <dateSysMetadataModified>2010-05-04T15:13:51.0Z</dateSysMetadataModified>
+    <originMemberNode>MN1</originMemberNode>
+    <authoritativeMemberNode>MN1</authoritativeMemberNode>
+</d1:systemMetadata>
