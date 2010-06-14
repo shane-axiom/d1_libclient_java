@@ -20,8 +20,11 @@ package org.dataone.client;
 
 import java.io.*;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import junit.framework.TestCase;
+import org.junit.*;
+import static org.junit.Assert.*;
 
 import org.apache.commons.io.IOUtils;
 import org.dataone.service.exceptions.BaseException;
@@ -35,6 +38,11 @@ import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.exceptions.UnsupportedType;
 import org.dataone.service.types.*;
+import org.jibx.runtime.BindingDirectory;
+import org.jibx.runtime.IBindingFactory;
+import org.jibx.runtime.IMarshallingContext;
+import org.jibx.runtime.IUnmarshallingContext;
+import org.jibx.runtime.JiBXException;
 
 
 
@@ -42,25 +50,26 @@ import org.dataone.service.types.*;
  * Test the DataONE Java client methods.
  * @author Matthew Jones
  */
-public class D1ClientTest extends TestCase {
+public class D1ClientTest  {
 
     // TODO: move these hardcoded properties out to a test configuration
-    protected static String contextUrl = "http://localhost:8080/knb/";  
-    
+    //protected static String contextUrl = "http://localhost:8080/knb/";
+    protected static String contextUrl = "http://mn-rpw/mn/";
+
     // TODO: use the create() and insert() methods to create predictable test data,
     // rather than hardcoding test assumptions here
-    private static final String DOC_TEXT = "<surName>Smith</surName>";   
+    private static final String DOC_TEXT = "<surName>Smith</surName>";
     private static final String id = "knb:nceas:100:7";
     private static final String prefix = "knb:testid:";
     private static final String bogusId = "foobarbaz214";
-    
+
     private D1Client d1 = null;
-    
-    protected void setUp() throws Exception {
-        super.setUp();
+
+    @Before  public void setUp() throws Exception {
+ //       super.setUp();
         d1 = new D1Client(contextUrl);
     }
-    
+
     private void printHeader(String methodName)
     {
         System.out.println("***************** running test for " + methodName + " *****************");
@@ -69,16 +78,18 @@ public class D1ClientTest extends TestCase {
     /**
      * list objects with specified params
      */
+    @Test
     public void testListObjects()
     {
         printHeader("testListObjects");
         try
         {
+
             String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
-            AuthToken token = d1.login(principal, "kepler");
+             AuthToken token = d1.login(principal, "kepler");
             //AuthToken token = new AuthToken("public");
             //create a document we know is in the system
-            String idString = prefix + TestUtilities.generateIdentifier();
+           String idString = prefix + ExampleUtilities.generateIdentifier();
             Identifier guid = new Identifier();
             guid.setValue(idString);
             InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
@@ -90,7 +101,7 @@ public class D1ClientTest extends TestCase {
             
             //make the inserted documents public
             d1.setAccess(token, rGuid, "public", "read", "allow", "allowFirst");
-            
+
             //get the objectList and make sure our created doc is in it
             ObjectList ol = d1.listObjects(token, null, null, null, false, 0, 1000);
             boolean isThere = false;
@@ -109,7 +120,7 @@ public class D1ClientTest extends TestCase {
                     break;
                 }
             }
-            
+
             assertTrue(isThere);
         }
         catch(Exception e)
@@ -118,10 +129,11 @@ public class D1ClientTest extends TestCase {
             fail("Could not list objects: " + e.getMessage());
         }
     }
-    
+
     /**
      * get a systemMetadata resource
      */
+//    @Test
     public void testGetSystemMetadata()
     {
         printHeader("testGetSystemMetadata");
@@ -130,7 +142,7 @@ public class D1ClientTest extends TestCase {
             //create a document
             String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
             AuthToken token = d1.login(principal, "kepler");
-            String idString = prefix + TestUtilities.generateIdentifier();
+            String idString = prefix + ExampleUtilities.generateIdentifier();
             Identifier guid = new Identifier();
             guid.setValue(idString);
             InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
@@ -138,7 +150,7 @@ public class D1ClientTest extends TestCase {
             Identifier rGuid = d1.create(token, guid, objectStream, sysmeta);
             assertEquals(guid.getValue(), rGuid.getValue());
             //System.out.println("create success, id returned is " + rGuid.getValue());
-            
+
             //get the system metadata
             SystemMetadata sm = d1.getSystemMetadata(token, rGuid);
             assertTrue(guid.getValue().equals(sm.getIdentifier().getValue()));
@@ -149,19 +161,21 @@ public class D1ClientTest extends TestCase {
             fail("Error in getSystemMetadata: " + e.getMessage());
         }
     }
-    
+
     /**
      * test the update of a resource
      */
-    public void testUpdate() 
+//    @Test
+    public void testUpdate()
     {
+
         printHeader("testUpdate");
         try 
         {
             //create a document
             String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
             AuthToken token = d1.login(principal, "kepler");
-            String idString = prefix + TestUtilities.generateIdentifier();
+            String idString = prefix + ExampleUtilities.generateIdentifier();
             Identifier guid = new Identifier();
             guid.setValue(idString);
             InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
@@ -169,33 +183,33 @@ public class D1ClientTest extends TestCase {
             Identifier rGuid = d1.create(token, guid, objectStream, sysmeta);
             assertEquals(guid.getValue(), rGuid.getValue());
             //System.out.println("create success, id returned is " + rGuid.getValue());
-            
+
             //get the document
             InputStream data = d1.get(token, rGuid);
             assertNotNull(data);
             String str = IOUtils.toString(data);
             assertTrue(str.indexOf("x,y,z\n1,2,3\n") != -1);
             data.close();
-            
+
             //alter the document
             Identifier newguid = new Identifier();
-            newguid.setValue(prefix + TestUtilities.generateIdentifier());
+            newguid.setValue(prefix + ExampleUtilities.generateIdentifier());
             str = str.replaceAll("x", "a");
             objectStream = IOUtils.toInputStream(str);
             SystemMetadata updatedSysmeta = generateSystemMetadata(newguid, ObjectFormat.TEXT_CSV);
-            
+
             //update the document
             Identifier nGuid = d1.update(token, newguid, objectStream, rGuid, updatedSysmeta);
             //System.out.println("updated success, id returned is " + nGuid.getValue());
-                
+
             //perform tests
             data = d1.get(token, nGuid);
             assertNotNull(data);
             str = IOUtils.toString(data);
             assertTrue(str.indexOf("a,y,z\n1,2,3\n") != -1);
             data.close();
-            
-        } 
+
+        }
         catch(Exception e)
         {
             e.printStackTrace();
@@ -207,6 +221,7 @@ public class D1ClientTest extends TestCase {
      * test creation of data.  this also tests get() since it
      * is used to verify the inserted metadata
      */
+//    @Test
     public void testCreateData() {
         printHeader("testCreateData");
         try
@@ -214,7 +229,7 @@ public class D1ClientTest extends TestCase {
             assertTrue(1==1);
             String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
             AuthToken token = d1.login(principal, "kepler");
-            String idString = prefix + TestUtilities.generateIdentifier();
+            String idString = prefix + ExampleUtilities.generateIdentifier();
             Identifier guid = new Identifier();
             guid.setValue(idString);
             InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
@@ -268,19 +283,88 @@ public class D1ClientTest extends TestCase {
             fail("unexpected exception: " + e.getMessage());
         }
     }
+    /**
+     * test creation of data.  this also tests get() since it
+     * is used to verify the inserted metadata
+     */
+//    @Test
+    public void testFailedCreateData() {
+        assertTrue(1==1);
+        AuthToken token = new AuthToken("public");
 
+        InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/BAYXXX_015ADCP015R00_20051215.50.9.xml");
+        SystemMetadata sysmeta = getSystemMetadata("/org/dataone/client/tests/BAYXXX_015ADCP015R00_20051215.50.9_SYSMETA.xml");
+        Identifier guid = sysmeta.getIdentifier();
+        Identifier rGuid = new Identifier();
+        try {
+            rGuid = d1.create(token, guid, objectStream, sysmeta);
+            assertEquals(guid.getValue(), rGuid.getValue());
+        } catch (InvalidToken e) {
+            e.printStackTrace();
+            fail(e.serialize(e.FMT_XML));
+        } catch (ServiceFailure e) {
+            e.printStackTrace();
+            fail(e.serialize(e.FMT_XML));
+        } catch (NotAuthorized e) {
+            e.printStackTrace();
+            fail(e.serialize(e.FMT_XML));
+        } catch (IdentifierNotUnique e) {
+            e.printStackTrace();
+            fail(e.serialize(e.FMT_XML));
+        } catch (UnsupportedType e) {
+            e.printStackTrace();
+            fail(e.serialize(e.FMT_XML));
+        } catch (InsufficientResources e) {
+            e.printStackTrace();
+            fail(e.serialize(e.FMT_XML));
+        } catch (InvalidSystemMetadata e) {
+            e.printStackTrace();
+            fail(e.serialize(e.FMT_XML));
+        } catch (NotImplemented e) {
+            e.printStackTrace();
+            fail(e.serialize(e.FMT_XML));
+        }
+
+        try {
+            InputStream data = d1.get(token, rGuid);
+            assertNotNull(data);
+            String str = IOUtils.toString(data);
+            assertTrue(str.indexOf("BAYXXX_015ADCP015R00_20051215.40") != -1);
+            data.close();
+        } catch (InvalidToken e) {
+            e.printStackTrace();
+            fail(e.serialize(e.FMT_XML));
+        } catch (ServiceFailure e) {
+            e.printStackTrace();
+            fail(e.serialize(e.FMT_XML));
+        } catch (NotAuthorized e) {
+            e.printStackTrace();
+            fail(e.serialize(e.FMT_XML));
+        } catch (NotFound e) {
+            e.printStackTrace();
+            fail(e.serialize(e.FMT_XML));
+        } catch (NotImplemented e) {
+            e.printStackTrace();
+            fail(e.serialize(e.FMT_XML));
+        } catch (IOException e) {
+            e.printStackTrace();
+            fail("get() test failed while closing data stream. " + e.getMessage());
+        }
+    }
     /**
      * test creation of science metadata.  this also tests get() since it
      * is used to verify the inserted metadata
      */
+//    @Test
     public void testCreateScienceMetadata() {
+
         try
         {
             printHeader("testCreateScienceMetadata");
             assertTrue(1==1);
             String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
             AuthToken token = d1.login(principal, "kepler");
-            String idString = prefix + TestUtilities.generateIdentifier();
+            String idString = prefix + ExampleUtilities.generateIdentifier();
             Identifier guid = new Identifier();
             guid.setValue(idString);
             String scimeta = generateScienceMetadata(guid);
@@ -335,15 +419,16 @@ public class D1ClientTest extends TestCase {
             fail("Unexpected exception: " + e.getMessage());
         }
     }
-    
+    @Test
     public void testDelete() {
         assertTrue(1==1);
     }
-
+    @Test
     public void testDescribe() {
         assertTrue(1==1);
     }
-    
+
+//    @Test
     public void testGetNotFound() {
         try {
             printHeader("testGetNotFound");
@@ -367,15 +452,15 @@ public class D1ClientTest extends TestCase {
             fail(e.getDescription());
         }
     }
-
+    @Test
     public void testGetChecksumAuthTokenIdentifierType() {
         assertTrue(1==1);
     }
-
+    @Test
     public void testGetChecksumAuthTokenIdentifierTypeString() {
         assertTrue(1==1);
     }
-
+    @Test
     public void testGetLogRecords() {
         assertTrue(1==1);
     }
@@ -407,16 +492,43 @@ public class D1ClientTest extends TestCase {
         sysmeta.setChecksum(checksum);
         return sysmeta;
     }
-    
+
     /** Generate a science metadata object for testing. */
     private static String generateScienceMetadata(Identifier guid) {
-        String accessBlock = TestUtilities.getAccessBlock("public", true, true,
+        String accessBlock = ExampleUtilities.getAccessBlock("public", true, true,
                 false, false, false);
-        String emldoc = TestUtilities.generateEmlDocument(
-                "Test identifier manager", 
-                TestUtilities.EML2_1_0, null,
+        String emldoc = ExampleUtilities.generateEmlDocument(
+                "Test identifier manager",
+                ExampleUtilities.EML2_1_0, null,
                 null, "http://fake.example.com/somedata", null,
                 accessBlock, null, null, null, null);
         return emldoc;
+    }
+    public SystemMetadata getSystemMetadata(String metadataResourcePath)  {
+
+        SystemMetadata  systemMetadata = null;
+        InputStream inputStream = null;
+        try {
+            IBindingFactory bfact =
+                    BindingDirectory.getFactory(org.dataone.service.types.SystemMetadata.class);
+
+            IMarshallingContext mctx = bfact.createMarshallingContext();
+            IUnmarshallingContext uctx = bfact.createUnmarshallingContext();
+
+            inputStream = this.getClass().getResourceAsStream(metadataResourcePath);
+
+            systemMetadata = (SystemMetadata) uctx.unmarshalDocument(inputStream, null);
+
+        } catch (JiBXException ex) {
+            ex.printStackTrace();
+            systemMetadata = null;
+        } finally {
+            try {
+                inputStream.close();
+            } catch (IOException ex) {
+               ex.printStackTrace();
+            }
+        }
+        return systemMetadata;
     }
 }
