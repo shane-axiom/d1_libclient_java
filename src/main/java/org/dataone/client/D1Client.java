@@ -129,7 +129,7 @@ public class D1Client implements MemberNodeCrud {
           "&permissionOrder=" + permissionOrder + "&sessionid=" + token.getToken() +
           "&op=setaccess&setsystemmetadata=true";
         String resource = RESOURCE_SESSION + "/";
-        ResponseData rd = sendRequest(resource, POST, params, null, null);
+        ResponseData rd = sendRequest(token, resource, POST, params, null, null);
         int code = rd.getCode();
         if(code != HttpURLConnection.HTTP_OK)
         {
@@ -154,7 +154,7 @@ public class D1Client implements MemberNodeCrud {
           "&qformat=xml&op=login";
         String resource = RESOURCE_SESSION + "/";
         
-        ResponseData rd = sendRequest(resource, POST, params, null, null);
+        ResponseData rd = sendRequest(null, resource, POST, params, null, null);
         String sessionid = null;
         
         int code = rd.getCode();
@@ -177,14 +177,14 @@ public class D1Client implements MemberNodeCrud {
                 }
 
                 String response = sb.toString();
-                //System.out.println("response from login: " + response);
+                ////System.out.println("response from login: " + response);
                 int successIndex = response.indexOf("<sessionId>");
                 if(successIndex != -1)
                 {
                     sessionid = response.substring(
                             response.indexOf("<sessionId>") + "<sessionId>".length(), 
                             response.indexOf("</sessionId>"));
-                    //System.out.println("sessionid in d1client: " + sessionid);
+                    ////System.out.println("sessionid in d1client: " + sessionid);
                 }
                 else
                 {
@@ -231,7 +231,7 @@ public class D1Client implements MemberNodeCrud {
         params += "count=" + count;
         params += "&sessionid=" + token.getToken();
         
-        ResponseData rd = sendRequest(resource, GET, params, 
+        ResponseData rd = sendRequest(token, resource, GET, params, 
                 null, null);
         int code = rd.getCode();
         if (code  != HttpURLConnection.HTTP_OK ) {
@@ -290,7 +290,7 @@ public class D1Client implements MemberNodeCrud {
                 return "Completed";
             }
         };
-        ResponseData rd = sendRequest(resource, POST, null, 
+        ResponseData rd = sendRequest(token, resource, POST, null, 
                 mmp.getContentType(), multipartStream);
         
         // Handle any errors that were generated
@@ -298,7 +298,7 @@ public class D1Client implements MemberNodeCrud {
         if (code  != HttpURLConnection.HTTP_OK ) {
             InputStream errorStream = rd.getErrorStream();
             try {
-                /*byte[] b = new byte[1024];
+                byte[] b = new byte[1024];
                 int numread = errorStream.read(b, 0, 1024);
                 StringBuffer sb = new StringBuffer();
                 while(numread != -1)
@@ -307,7 +307,7 @@ public class D1Client implements MemberNodeCrud {
                     numread = errorStream.read(b, 0, 1024);
                 }
                 
-                System.out.println("ERROR: " + sb.toString());*/
+                //System.out.println("ERROR: " + sb.toString());
                 deserializeAndThrowException(errorStream);                
             } catch (InvalidToken e) {
                 throw e;
@@ -328,9 +328,9 @@ public class D1Client implements MemberNodeCrud {
             } catch (BaseException e) {
                 throw new ServiceFailure("1000", 
                         "Method threw improper exception: " + e.getMessage());
-            } /*catch (IOException e) {
+            } catch (IOException e) {
                 System.out.println("io exception: " + e.getMessage());
-            }*/
+            }
             
         } else {
             is = rd.getContentStream();
@@ -367,7 +367,7 @@ public class D1Client implements MemberNodeCrud {
         };
         
         String urlParams = "obsoletedGuid=" + obsoletedGuid.getValue();
-        ResponseData rd = sendRequest(resource, PUT, urlParams, 
+        ResponseData rd = sendRequest(token, resource, PUT, urlParams, 
                 mmp.getContentType(), multipartStream);
         
         // Handle any errors that were generated
@@ -413,7 +413,7 @@ public class D1Client implements MemberNodeCrud {
                 
         String resource = RESOURCE_META + "/" + guid.getValue();
         InputStream is = null;
-        ResponseData rd = sendRequest(resource, GET, null, null, null);
+        ResponseData rd = sendRequest(token, resource, GET, null, null, null);
         int code = rd.getCode();
         if (code  != HttpURLConnection.HTTP_OK ) {
             InputStream errorStream = rd.getErrorStream();
@@ -455,7 +455,7 @@ public class D1Client implements MemberNodeCrud {
             NotImplemented {
         String resource = RESOURCE_OBJECTS + "/" + guid.getValue();
         InputStream is = null;
-        ResponseData rd = sendRequest(resource, GET, null, null, null);
+        ResponseData rd = sendRequest(token, resource, GET, null, null, null);
         int code = rd.getCode();
         if (code  != HttpURLConnection.HTTP_OK ) {
             InputStream errorStream = rd.getErrorStream();
@@ -579,7 +579,7 @@ public class D1Client implements MemberNodeCrud {
     /**
      * send a request to the resource
      */
-    private ResponseData sendRequest(String resource, String method, 
+    private ResponseData sendRequest(AuthToken token, String resource, String method, 
             String urlParamaters, String contentType, InputStream dataStream) 
         throws ServiceFailure {
         
@@ -593,11 +593,24 @@ public class D1Client implements MemberNodeCrud {
                 restURL += "?";
             restURL += urlParamaters; 
         }
+        
+        if(token != null)
+        {
+            if(restURL.indexOf("?") == -1)
+            {
+                restURL += "?sessionid=" + token.getToken();
+            }
+            else
+            {
+                restURL += "&sessionid=" + token.getToken();
+            }
+        }
 
         URL u = null;
         InputStream content = null;
         try {
-            //System.out.println("restURL: " + restURL);
+            System.out.println("restURL: " + restURL);
+            System.out.println("method: " + method);
             u = new URL(restURL);
             connection = (HttpURLConnection) u.openConnection();
             if (contentType!=null) {
@@ -651,7 +664,7 @@ public class D1Client implements MemberNodeCrud {
             doc = db.parse(errorStream);
             Element root = doc.getDocumentElement();
             root.normalize();
-            //System.out.println(root.toString());
+            ////System.out.println(root.toString());
             int code = getIntAttribute(root, "errorCode");
             String detailCode = root.getAttribute("detailCode");
             String description = getTextValue(root, "description");
