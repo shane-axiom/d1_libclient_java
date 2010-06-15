@@ -53,8 +53,8 @@ import org.jibx.runtime.JiBXException;
 public class D1ClientTest  {
 
     // TODO: move these hardcoded properties out to a test configuration
-    //protected static String contextUrl = "http://localhost:8080/knb/";
-    protected static String contextUrl = "http://mn-rpw/mn/";
+    protected static String contextUrl = "http://localhost:8080/knb/";
+    //protected static String contextUrl = "http://mn-rpw/mn/";
 
     // TODO: use the create() and insert() methods to create predictable test data,
     // rather than hardcoding test assumptions here
@@ -84,7 +84,6 @@ public class D1ClientTest  {
         printHeader("testListObjects");
         try
         {
-
             String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
              AuthToken token = d1.login(principal, "kepler");
             //AuthToken token = new AuthToken("public");
@@ -115,7 +114,7 @@ public class D1ClientTest  {
                 if(oi.getIdentifier().getValue().trim().equals(guid.getValue().trim()))
                 {
                     isThere = true;
-                    //System.out.println("oi.checksum: " + oi.getChecksum().getValue() + "   sm.checksum: " + sysmeta.getChecksum().getValue());
+                    System.out.println("oi.checksum: " + oi.getChecksum().getValue() + "   sm.checksum: " + sysmeta.getChecksum().getValue());
                     //assertTrue(oi.getChecksum().getValue().equals(sysmeta.getChecksum().getValue()));
                     break;
                 }
