@@ -65,14 +65,49 @@ public class D1ClientTest  {
 
     private D1Client d1 = null;
 
-    @Before  public void setUp() throws Exception {
+    @Before  
+    public void setUp() throws Exception {
  //       super.setUp();
         d1 = new D1Client(contextUrl);
     }
 
     private void printHeader(String methodName)
     {
-        System.out.println("***************** running test for " + methodName + " *****************");
+        System.out.println("\n***************** running test for " + methodName + " *****************");
+    }
+    
+    /**
+     * test the getLogRecords call
+     */
+    @Test
+    public void testGetLogRecords()
+    {
+        try
+        {
+            Date start = new Date();
+            String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
+            AuthToken token = d1.login(principal, "kepler");
+            
+            String idString = prefix + ExampleUtilities.generateIdentifier();
+            Identifier guid = new Identifier();
+            guid.setValue(idString);
+            InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
+            SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
+            
+            Identifier rGuid = d1.create(token, guid, objectStream, sysmeta);
+            
+            assertEquals(guid.getValue(), rGuid.getValue());
+            
+            Date end = new Date();
+            Log log = d1.getLogRecords(token, start, end, Event.CREATE);
+            assertTrue(log.sizeLogEntryList() == 2);
+            
+        } 
+        catch(Exception e)
+        {
+            fail("testGetLogRecords threw an unexpected exception: " + e.getMessage());
+        }
+        
     }
     
     /**
@@ -85,10 +120,10 @@ public class D1ClientTest  {
         try
         {
             String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
-             AuthToken token = d1.login(principal, "kepler");
+            AuthToken token = d1.login(principal, "kepler");
             //AuthToken token = new AuthToken("public");
             //create a document we know is in the system
-           String idString = prefix + ExampleUtilities.generateIdentifier();
+            String idString = prefix + ExampleUtilities.generateIdentifier();
             Identifier guid = new Identifier();
             guid.setValue(idString);
             InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
@@ -132,7 +167,7 @@ public class D1ClientTest  {
     /**
      * get a systemMetadata resource
      */
-//    @Test
+    @Test
     public void testGetSystemMetadata()
     {
         printHeader("testGetSystemMetadata");
@@ -164,7 +199,7 @@ public class D1ClientTest  {
     /**
      * test the update of a resource
      */
-//    @Test
+    @Test
     public void testUpdate()
     {
 
@@ -220,7 +255,7 @@ public class D1ClientTest  {
      * test creation of data.  this also tests get() since it
      * is used to verify the inserted metadata
      */
-//    @Test
+    @Test
     public void testCreateData() {
         printHeader("testCreateData");
         try
@@ -286,7 +321,7 @@ public class D1ClientTest  {
      * test creation of data.  this also tests get() since it
      * is used to verify the inserted metadata
      */
-//    @Test
+    //@Test
     public void testFailedCreateData() {
         assertTrue(1==1);
         AuthToken token = new AuthToken("public");
@@ -354,7 +389,7 @@ public class D1ClientTest  {
      * test creation of science metadata.  this also tests get() since it
      * is used to verify the inserted metadata
      */
-//    @Test
+    @Test
     public void testCreateScienceMetadata() {
 
         try
@@ -418,16 +453,18 @@ public class D1ClientTest  {
             fail("Unexpected exception: " + e.getMessage());
         }
     }
+    
     @Test
     public void testDelete() {
         assertTrue(1==1);
     }
+    
     @Test
     public void testDescribe() {
         assertTrue(1==1);
     }
 
-//    @Test
+    @Test
     public void testGetNotFound() {
         try {
             printHeader("testGetNotFound");
@@ -451,16 +488,14 @@ public class D1ClientTest  {
             fail(e.getDescription());
         }
     }
+    
     @Test
     public void testGetChecksumAuthTokenIdentifierType() {
         assertTrue(1==1);
     }
+    
     @Test
     public void testGetChecksumAuthTokenIdentifierTypeString() {
-        assertTrue(1==1);
-    }
-    @Test
-    public void testGetLogRecords() {
         assertTrue(1==1);
     }
 
@@ -503,6 +538,12 @@ public class D1ClientTest  {
                 accessBlock, null, null, null, null);
         return emldoc;
     }
+    
+    /**
+     * get system metadata
+     * @param metadataResourcePath
+     * @return
+     */
     public SystemMetadata getSystemMetadata(String metadataResourcePath)  {
 
         SystemMetadata  systemMetadata = null;

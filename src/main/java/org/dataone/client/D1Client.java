@@ -98,6 +98,8 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
     public static final String RESOURCE_SESSION = "session";
     /** API IDENTIFIER Resource which controls object unique identifier operations*/
     public static final String RESOURCE_IDENTIFIER = "identifier";
+    /** API LOG  controls logging events*/
+    public static final String RESOURCE_LOG = "log";
     
     /** The session identifier for the session */
     //private String sessionId;
@@ -204,6 +206,23 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
         
         return new AuthToken(sessionid);
     }
+    
+    /**
+     * list objects in the system
+     * @param token
+     * @param startTime
+     * @param endTime
+     * @param objectFormat
+     * @param replicaStatus
+     * @param start
+     * @param count
+     * @return
+     * @throws NotAuthorized
+     * @throws InvalidRequest
+     * @throws NotImplemented
+     * @throws ServiceFailure
+     * @throws InvalidToken
+     */
     @Override
     public ObjectList listObjects(AuthToken token, Date startTime, Date endTime, ObjectFormat objectFormat, boolean replicaStatus, int start, int count) throws NotAuthorized, InvalidRequest, NotImplemented, ServiceFailure, InvalidToken
     {
@@ -212,6 +231,7 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
         String params = "";
         if(startTime != null)
         {
+            
             params += "startTime=" + startTime; 
         }
         if(endTime != null)
@@ -520,12 +540,73 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
     }
 
     /**
-     * get the log recoreds from a resource with the specified guid.  NOT IMPLEMENTED.
+     * get the log records from a resource with the specified guid.
      */
-    public LogRecordSet getLogRecords(AuthToken token, Date fromDate,
-            Date toDate) throws InvalidToken, ServiceFailure, NotAuthorized,
-            InvalidRequest, NotImplemented {
-        throw new NotImplemented("1000", "Method not yet implemented.");
+    public Log getLogRecords(AuthToken token, Date fromDate,
+            Date toDate, Event event) throws InvalidToken, ServiceFailure, 
+            NotAuthorized, InvalidRequest, NotImplemented 
+    {
+        String resource = RESOURCE_LOG + "?";
+        String params = null;
+        if(fromDate != null)
+        {
+            params = "fromDate=" + fromDate.getTime();
+        }
+        if(toDate != null)
+        {
+            if(params != null)
+            {
+                params += "&toDate=" + toDate.getTime();
+            }
+            else
+            {
+                params = "toDate=" + toDate.getTime();
+            }
+        }
+        if(event != null)
+        {
+            if(params != null)
+            {
+                params += "&event=" + event.toString();
+            }
+            else
+            {
+                params = "event=" + event.toString();
+            }
+        }
+        
+        InputStream is = null;
+        ResponseData rd = sendRequest(token, resource, GET, params, null, null);
+        int code = rd.getCode();
+        if (code  != HttpURLConnection.HTTP_OK ) {
+            InputStream errorStream = rd.getErrorStream();
+            try {
+                deserializeAndThrowException(errorStream);                
+            } catch (InvalidToken e) {
+                throw e;
+            } catch (ServiceFailure e) {
+                throw e;
+            } catch (NotAuthorized e) {
+                throw e;
+            } catch (NotImplemented e) {
+                throw e;
+            } catch (BaseException e) {
+                throw new ServiceFailure("1000", 
+                        "Method threw improper exception: " + e.getMessage());
+            }        
+        } else {
+            is = rd.getContentStream();
+        }
+        
+        try
+        {
+            return (Log)deserializeServiceType(Log.class, is);
+        }
+        catch(Exception e)
+        {
+            throw new ServiceFailure("1090", "Could not deserialize the Log: " + e.getMessage());
+        }
+        
     }
     
     /**
@@ -593,6 +674,10 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
             if (restURL.indexOf("?") == -1)             
                 restURL += "?";
             restURL += urlParamaters; 
+            if(restURL.indexOf(" ") != -1)
+            {
+                restURL = restURL.replaceAll("\\s", "%20");
+            }
         }
         
         if(token != null)
@@ -723,11 +808,18 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
 
     private ByteArrayInputStream serializeSystemMetadata(SystemMetadata sysmeta)
             throws JiBXException {
-        IBindingFactory bfact =
+        
+        /*IBindingFactory bfact =
             BindingDirectory.getFactory(SystemMetadata.class);
         IMarshallingContext mctx = bfact.createMarshallingContext();
         ByteArrayOutputStream sysmetaOut = new ByteArrayOutputStream();
         mctx.marshalDocument(sysmeta, "UTF-8", null, sysmetaOut);
+        ByteArrayInputStream sysmetaStream = 
+            new ByteArrayInputStream(sysmetaOut.toByteArray());
+        return sysmetaStream;*/
+        
+        ByteArrayOutputStream sysmetaOut = new ByteArrayOutputStream();
+        serializeServiceType(SystemMetadata.class, sysmeta, sysmetaOut);
         ByteArrayInputStream sysmetaStream = 
             new ByteArrayInputStream(sysmetaOut.toByteArray());
         return sysmetaStream;
@@ -736,22 +828,44 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
     private SystemMetadata deserializeSystemMetadata(InputStream is)
       throws JiBXException
     {
-        IBindingFactory bfact = BindingDirectory.getFactory(SystemMetadata.class);
-        IUnmarshallingContext uctx = bfact.createUnmarshallingContext();
-        SystemMetadata m = (SystemMetadata) uctx.unmarshalDocument(is, null);
-        return m;
+        return (SystemMetadata)deserializeServiceType(SystemMetadata.class, is);
     }
     
     private ObjectList deserializeObjectList(InputStream is)
       throws JiBXException
     {
-        IBindingFactory bfact = BindingDirectory.getFactory(ObjectList.class);
-        IUnmarshallingContext uctx = bfact.createUnmarshallingContext();
-        ObjectList ol = (ObjectList) uctx.unmarshalDocument(is, null);
-        return ol;
+        return (ObjectList)deserializeServiceType(ObjectList.class, is);
     }
 
-
+    /**
+     * serialize an object of type to out
+     * @param type the class of the object to serialize (i.e. SystemMetadata.class)
+     * @param object the object to serialize
+     * @param out the stream to serialize it to
+     * @throws JiBXException
+     */
+    private void serializeServiceType(Class type, Object object, OutputStream out)
+      throws JiBXException
+    {
+        IBindingFactory bfact = BindingDirectory.getFactory(type);
+        IMarshallingContext mctx = bfact.createMarshallingContext();
+        mctx.marshalDocument(object, "UTF-8", null, out);
+    }
+    
+    /**
+     * deserialize an object of type from is
+     * @param type the class of the object to serialize (i.e. SystemMetadata.class)
+     * @param is the stream to deserialize from
+     * @throws JiBXException
+     */
+    private Object deserializeServiceType(Class type, InputStream is)
+      throws JiBXException
+    {
+        IBindingFactory bfact = BindingDirectory.getFactory(type);
+        IUnmarshallingContext uctx = bfact.createUnmarshallingContext();
+        Object o = (Object) uctx.unmarshalDocument(is, null);
+        return o;
+    }
 
     protected class ResponseData {
         private int code;
