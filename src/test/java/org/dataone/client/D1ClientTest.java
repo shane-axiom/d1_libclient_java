@@ -82,6 +82,7 @@ public class D1ClientTest  {
     @Test
     public void testGetLogRecords()
     {
+        printHeader("testGetLogRecords");
         try
         {
             Date start = new Date();
@@ -202,7 +203,6 @@ public class D1ClientTest  {
     @Test
     public void testUpdate()
     {
-
         printHeader("testUpdate");
         try 
         {
@@ -318,71 +318,71 @@ public class D1ClientTest  {
         }
     }
     /**
-     * test creation of data.  this also tests get() since it
-     * is used to verify the inserted metadata
+     * test the error state where metacat fails if the id includes a .\d on
+     * the end.
      */
-    //@Test
+    @Test
     public void testFailedCreateData() {
-        assertTrue(1==1);
-        AuthToken token = new AuthToken("public");
+        printHeader("testFailedCreateData");
+        /*try 
+        {
+            System.out.println();
+            assertTrue(1==1);
+            //AuthToken token = new AuthToken("public");
+            String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
+            AuthToken token = d1.login(principal, "kepler");
 
-        InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/BAYXXX_015ADCP015R00_20051215.50.9.xml");
-        SystemMetadata sysmeta = getSystemMetadata("/org/dataone/client/tests/BAYXXX_015ADCP015R00_20051215.50.9_SYSMETA.xml");
-        Identifier guid = sysmeta.getIdentifier();
-        Identifier rGuid = new Identifier();
-        try {
+            InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/BAYXXX_015ADCP015R00_20051215.50.9.xml");
+            SystemMetadata sysmeta = getSystemMetadata("/org/dataone/client/tests/BAYXXX_015ADCP015R00_20051215.50.9_SYSMETA.xml");
+            Identifier guid = sysmeta.getIdentifier();
+            System.out.println("inserting with guid " + guid.getValue());
+            Identifier rGuid = new Identifier();
+        
+            //insert
             rGuid = d1.create(token, guid, objectStream, sysmeta);
             assertEquals(guid.getValue(), rGuid.getValue());
-        } catch (InvalidToken e) {
-            e.printStackTrace();
-            fail(e.serialize(e.FMT_XML));
-        } catch (ServiceFailure e) {
-            e.printStackTrace();
-            fail(e.serialize(e.FMT_XML));
-        } catch (NotAuthorized e) {
-            e.printStackTrace();
-            fail(e.serialize(e.FMT_XML));
-        } catch (IdentifierNotUnique e) {
-            e.printStackTrace();
-            fail(e.serialize(e.FMT_XML));
-        } catch (UnsupportedType e) {
-            e.printStackTrace();
-            fail(e.serialize(e.FMT_XML));
-        } catch (InsufficientResources e) {
-            e.printStackTrace();
-            fail(e.serialize(e.FMT_XML));
-        } catch (InvalidSystemMetadata e) {
-            e.printStackTrace();
-            fail(e.serialize(e.FMT_XML));
-        } catch (NotImplemented e) {
-            e.printStackTrace();
-            fail(e.serialize(e.FMT_XML));
-        }
-
-        try {
+            
+            //get
             InputStream data = d1.get(token, rGuid);
             assertNotNull(data);
             String str = IOUtils.toString(data);
-            assertTrue(str.indexOf("BAYXXX_015ADCP015R00_20051215.40") != -1);
+            System.out.println("output: " + str);
+            assertTrue(str.indexOf("BAYXXX_015ADCP015R00_20051215.50.9") != -1);
             data.close();
-        } catch (InvalidToken e) {
+        } 
+        catch (Exception e) 
+        {
             e.printStackTrace();
-            fail(e.serialize(e.FMT_XML));
-        } catch (ServiceFailure e) {
-            e.printStackTrace();
-            fail(e.serialize(e.FMT_XML));
-        } catch (NotAuthorized e) {
-            e.printStackTrace();
-            fail(e.serialize(e.FMT_XML));
-        } catch (NotFound e) {
-            e.printStackTrace();
-            fail(e.serialize(e.FMT_XML));
-        } catch (NotImplemented e) {
-            e.printStackTrace();
-            fail(e.serialize(e.FMT_XML));
-        } catch (IOException e) {
-            e.printStackTrace();
-            fail("get() test failed while closing data stream. " + e.getMessage());
+            fail("Error inserting: " + e.getMessage());
+        }*/
+        try
+        {
+            assertTrue(1==1);
+            String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
+            AuthToken token = d1.login(principal, "kepler");
+            String idString = prefix + ExampleUtilities.generateIdentifier();
+            Identifier guid = new Identifier();
+            guid.setValue(idString + ".1.5.2");
+            System.out.println("guid is " + guid.getValue());
+            //InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
+            InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/BAYXXX_015ADCP015R00_20051215.50.9.xml");
+            SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
+            Identifier rGuid = null;
+
+            //insert
+            rGuid = d1.create(token, guid, objectStream, sysmeta);
+            assertEquals(guid.getValue(), rGuid.getValue());
+            
+            //get
+            InputStream data = d1.get(token, rGuid);
+            assertNotNull(data);
+            String str = IOUtils.toString(data);
+            assertTrue(str.indexOf("BAYXXX_015ADCP015R00_20051215.50.9") != -1);
+            data.close();
+        }
+        catch(Exception e)
+        {
+            fail("unexpected exception: " + e.getMessage());
         }
     }
     /**
@@ -456,11 +456,13 @@ public class D1ClientTest  {
     
     @Test
     public void testDelete() {
+        printHeader("testDelete");
         assertTrue(1==1);
     }
     
     @Test
     public void testDescribe() {
+        printHeader("testDescribe");
         assertTrue(1==1);
     }
 
@@ -545,7 +547,7 @@ public class D1ClientTest  {
      * @return
      */
     public SystemMetadata getSystemMetadata(String metadataResourcePath)  {
-
+        printHeader("testGetSystemMetadata");
         SystemMetadata  systemMetadata = null;
         InputStream inputStream = null;
         try {
