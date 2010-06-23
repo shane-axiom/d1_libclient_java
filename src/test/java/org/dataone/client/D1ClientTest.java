@@ -54,6 +54,7 @@ public class D1ClientTest  {
 
     // TODO: move these hardcoded properties out to a test configuration
     protected static String contextUrl = "http://localhost:8080/knb/";
+    //protected static String contextUrl = "http://knb-mn.ecoinformatics.org/knb/";
     //protected static String contextUrl = "http://mn-rpw/mn/";
 
     // TODO: use the create() and insert() methods to create predictable test data,
@@ -222,7 +223,7 @@ public class D1ClientTest  {
             InputStream data = d1.get(token, rGuid);
             assertNotNull(data);
             String str = IOUtils.toString(data);
-            assertTrue(str.indexOf("x,y,z\n1,2,3\n") != -1);
+            assertTrue(str.indexOf("x,y,z\n1,2,3") != -1);
             data.close();
 
             //alter the document
@@ -240,7 +241,7 @@ public class D1ClientTest  {
             data = d1.get(token, nGuid);
             assertNotNull(data);
             str = IOUtils.toString(data);
-            assertTrue(str.indexOf("a,y,z\n1,2,3\n") != -1);
+            assertTrue(str.indexOf("a,y,z\n1,2,3") != -1);
             data.close();
 
         }
@@ -296,7 +297,7 @@ public class D1ClientTest  {
                 InputStream data = d1.get(token, rGuid);
                 assertNotNull(data);
                 String str = IOUtils.toString(data);
-                assertTrue(str.indexOf("x,y,z\n1,2,3\n") != -1);
+                assertTrue(str.indexOf("x,y,z\n1,2,3") != -1);
                 data.close();
             } catch (InvalidToken e) {
                 fail(e.getDescription());
@@ -401,8 +402,7 @@ public class D1ClientTest  {
             String idString = prefix + ExampleUtilities.generateIdentifier();
             Identifier guid = new Identifier();
             guid.setValue(idString);
-            String scimeta = generateScienceMetadata(guid);
-            InputStream objectStream = IOUtils.toInputStream(scimeta);
+            InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-luq.76.2.xml");
             SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.EML_2_1_0);
             Identifier rGuid = null;
 
@@ -432,7 +432,7 @@ public class D1ClientTest  {
                 InputStream data = d1.get(token, rGuid);
                 assertNotNull(data);
                 String str = IOUtils.toString(data);
-                assertTrue(str.indexOf(DOC_TEXT) != -1);
+                assertTrue(str.indexOf("<shortName>LUQMetadata76</shortName>") != -1);
                 data.close();
             } catch (InvalidToken e) {
                 fail(e.getDescription());

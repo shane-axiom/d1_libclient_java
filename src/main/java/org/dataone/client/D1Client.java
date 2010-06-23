@@ -29,6 +29,9 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.CountDownLatch;
 
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
@@ -112,9 +115,8 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
      */ 
     public D1Client(String contextRootUrl){
         this.contextRootUrl = contextRootUrl;
-        System.out.print("initialization");
     }
-    public D1Client() {System.out.print("initialization");}
+    public D1Client() {}
     
     /**
      * set the access perms for a document
@@ -182,14 +184,12 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
                 }
 
                 String response = sb.toString();
-                ////System.out.println("response from login: " + response);
                 int successIndex = response.indexOf("<sessionId>");
                 if(successIndex != -1)
                 {
                     sessionid = response.substring(
                             response.indexOf("<sessionId>") + "<sessionId>".length(), 
                             response.indexOf("</sessionId>"));
-                    ////System.out.println("sessionid in d1client: " + sessionid);
                 }
                 else
                 {
@@ -300,17 +300,17 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
         
         // Create a multipart message containing the data and sysmeta
         final MimeMultipart mmp = createMimeMultipart(object, sysmeta);
-        
-        // write the mmp to an InputStream and pass it to SendRequest in last param
         final InputStreamFromOutputStream<String> multipartStream = 
-            new InputStreamFromOutputStream<String>() {
+            new InputStreamFromOutputStream<String>() 
+        {
             @Override
             public String produce(final OutputStream dataSink) throws Exception {
                 mmp.writeTo(dataSink);
                 IOUtils.closeQuietly(dataSink);
-                return "Completed";
+                return "Complete";
             }
         };
+        
         ResponseData rd = sendRequest(token, resource, POST, null, 
                 mmp.getContentType(), multipartStream);
         
@@ -634,6 +634,7 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
             MimeBodyPart objectPart = new MimeBodyPart();
             objectPart.addHeaderLine("Content-Transfer-Encoding: base64");
             objectPart.setFileName("object");
+            
             DataSource ds = new InputStreamDataSource("object", object);
             DataHandler dh = new DataHandler(ds);
             objectPart.setDataHandler(dh);
@@ -656,6 +657,27 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
             e.printStackTrace(System.out);
             throw new InvalidSystemMetadata("1180", "Failed to marshal SystemMetadata.");
         }
+    }
+    
+    private String streamToString(InputStream is)
+    throws Exception
+    {
+        byte b[] = new byte[1024];
+        int numread = is.read(b, 0, 1024);
+        String response = new String();
+        while(numread != -1)
+        {
+            response += new String(b, 0, numread);
+            numread = is.read(b, 0, 1024);
+        }
+        return response;
+    }
+
+    private InputStream stringToStream(String s)
+    throws Exception
+    {
+        ByteArrayInputStream bais = new ByteArrayInputStream(s.getBytes());
+        return bais;
     }
     
     /**
@@ -706,6 +728,7 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
             connection.setDoOutput(true);
             connection.setDoInput(true);
             connection.setRequestMethod(method);
+            connection.connect();
             
             if (!method.equals(GET)) {
                 if (dataStream != null) {
@@ -750,7 +773,6 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
             doc = db.parse(errorStream);
             Element root = doc.getDocumentElement();
             root.normalize();
-            ////System.out.println(root.toString());
             int code = getIntAttribute(root, "errorCode");
             String detailCode = root.getAttribute("detailCode");
             String description = getTextValue(root, "description");
