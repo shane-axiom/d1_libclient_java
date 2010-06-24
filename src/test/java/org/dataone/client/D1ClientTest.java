@@ -102,6 +102,7 @@ public class D1ClientTest  {
             
             Date end = new Date();
             Log log = d1.getLogRecords(token, start, end, Event.CREATE);
+            System.out.println("log size: " + log.sizeLogEntryList());
             assertTrue(log.sizeLogEntryList() == 2);
             
         } 
