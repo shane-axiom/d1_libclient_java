@@ -157,11 +157,12 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
     public AuthToken login(String username, String password)
       throws ServiceFailure
     {
-        String params = "username=" + username + "&password=" + password +
-          "&qformat=xml&op=login";
+        String postData = "username=" + username + "&password=" + password;
+        String params = "qformat=xml&op=login";
         String resource = RESOURCE_SESSION + "/";
         
-        ResponseData rd = sendRequest(null, resource, POST, params, null, null);
+        ResponseData rd = sendRequest(null, resource, POST, params, null, 
+            new ByteArrayInputStream(postData.getBytes()));
         String sessionid = null;
         
         int code = rd.getCode();
