@@ -117,9 +117,11 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
     /**
      * Constructor to create a new instance. 
      */ 
-    public D1Client(String contextRootUrl){
+    public D1Client(String contextRootUrl)
+    {
         this.contextRootUrl = contextRootUrl;
     }
+    
     public D1Client() {}
     
     /**
