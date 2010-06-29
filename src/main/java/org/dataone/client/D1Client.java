@@ -28,6 +28,8 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -104,6 +106,8 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
     /** API LOG  controls logging events*/
     public static final String RESOURCE_LOG = "log";
     
+    private static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss'Z'");
+    
     /** The session identifier for the session */
     //private String sessionId;
     
@@ -133,7 +137,7 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
     {
         String params = "guid=" + id.getValue() + "&principal=" + principal + 
           "&permission=" + permission + "&permissionType=" + permissionType +
-          "&permissionOrder=" + permissionOrder + "&sessionid=" + token.getToken() +
+          "&permissionOrder=" + permissionOrder +
           "&op=setaccess&setsystemmetadata=true";
         String resource = RESOURCE_SESSION + "/";
         ResponseData rd = sendRequest(token, resource, POST, params, null, null);
@@ -230,15 +234,16 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
         InputStream is = null;
         String resource = RESOURCE_OBJECTS + "/";
         String params = "";
+        
         if(startTime != null)
         {
             
-            params += "startTime=" + startTime; 
+            params += "startTime=" + dateFormat.format(startTime); 
         }
         if(endTime != null)
         {
             params += addAmp(params);
-            params += "endTime=" + endTime;
+            params += "endTime=" + dateFormat.format(endTime);
         }
         if(objectFormat != null)
         {
@@ -251,7 +256,6 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
         params += "start=" + start;
         params += "&";
         params += "count=" + count;
-        params += "&sessionid=" + token.getToken();
         
         ResponseData rd = sendRequest(token, resource, GET, params, 
                 null, null);
@@ -551,17 +555,17 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
         String params = null;
         if(fromDate != null)
         {
-            params = "fromDate=" + fromDate.getTime();
+            params = "fromDate=" + dateFormat.format(fromDate);
         }
         if(toDate != null)
         {
             if(params != null)
             {
-                params += "&toDate=" + toDate.getTime();
+                params += "&toDate=" + dateFormat.format(toDate);
             }
             else
             {
-                params = "toDate=" + toDate.getTime();
+                params = "toDate=" + dateFormat.format(toDate);
             }
         }
         if(event != null)

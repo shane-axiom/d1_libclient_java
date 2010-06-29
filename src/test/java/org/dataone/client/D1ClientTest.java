@@ -100,9 +100,10 @@ public class D1ClientTest  {
             
             assertEquals(guid.getValue(), rGuid.getValue());
             
+            Thread.sleep(1000);
             Date end = new Date();
             Log log = d1.getLogRecords(token, start, end, Event.CREATE);
-            System.out.println("log size: " + log.sizeLogEntryList());
+            //System.out.println("log size: " + log.sizeLogEntryList());
             assertTrue(log.sizeLogEntryList() == 2);
             
         } 
@@ -122,6 +123,7 @@ public class D1ClientTest  {
         printHeader("testListObjects");
         try
         {
+            Date date1 = new Date();
             String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
             AuthToken token = d1.login(principal, "kepler");
             //AuthToken token = new AuthToken("public");
@@ -152,13 +154,34 @@ public class D1ClientTest  {
                 if(oi.getIdentifier().getValue().trim().equals(guid.getValue().trim()))
                 {
                     isThere = true;
-                    System.out.println("oi.checksum: " + oi.getChecksum().getValue() + "   sm.checksum: " + sysmeta.getChecksum().getValue());
-                    //assertTrue(oi.getChecksum().getValue().equals(sysmeta.getChecksum().getValue()));
+                    //System.out.println("oi.checksum: " + oi.getChecksum().getValue() + 
+                    //        "   sm.checksum: " + sysmeta.getChecksum().getValue());
                     break;
                 }
             }
 
             assertTrue(isThere);
+            
+            idString = prefix + ExampleUtilities.generateIdentifier();
+            guid = new Identifier();
+            guid.setValue(idString);
+            objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
+            sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
+            
+            rGuid = d1.create(token, guid, objectStream, sysmeta);
+            
+            assertEquals(guid.getValue(), rGuid.getValue());
+            
+            //make the inserted documents public
+            d1.setAccess(token, rGuid, "public", "read", "allow", "allowFirst");
+            //sleep for a second before taking the second time stamp so we 
+            //don't have problems with server timing
+            Thread.sleep(1000);
+            
+            Date date2 = new Date();
+            
+            ObjectList ol2 = d1.listObjects(token, date1, date2, null, false, 1, 1);
+            assertTrue(ol2.sizeObjectInfoList() == 1);
         }
         catch(Exception e)
         {
