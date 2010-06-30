@@ -53,8 +53,8 @@ import org.jibx.runtime.JiBXException;
 public class D1ClientTest  {
 
     // TODO: move these hardcoded properties out to a test configuration
-    protected static String contextUrl = "http://localhost:8080/knb/";
-    //protected static String contextUrl = "http://knb-mn.ecoinformatics.org/knb/";
+    //protected static String contextUrl = "http://localhost:8080/knb/";
+    protected static String contextUrl = "http://knb-mn.ecoinformatics.org/knb/";
     //protected static String contextUrl = "http://mn-rpw/mn/";
 
     // TODO: use the create() and insert() methods to create predictable test data,
@@ -86,7 +86,7 @@ public class D1ClientTest  {
         printHeader("testGetLogRecords");
         try
         {
-            Date start = new Date();
+            Date start = new Date(System.currentTimeMillis() - 500000);
             String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
             AuthToken token = d1.login(principal, "kepler");
             
@@ -104,7 +104,8 @@ public class D1ClientTest  {
             assertEquals(guid.getValue(), rGuid.getValue());
             
             //get the logs for the last minute
-            Date end = new Date(System.currentTimeMillis() + 60000);
+            Date end = new Date(System.currentTimeMillis() + 500000);
+            System.out.println("start: " + start + " end: " + end);
             Log log = d1.getLogRecords(token, start, end, Event.CREATE);
             System.out.println("log size: " + log.sizeLogEntryList());
             boolean isfound = false;
@@ -140,7 +141,7 @@ public class D1ClientTest  {
         printHeader("testListObjects");
         try
         {
-            Date date1 = new Date(System.currentTimeMillis());
+            Date date1 = new Date(System.currentTimeMillis() - 1000000);
             String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
             AuthToken token = d1.login(principal, "kepler");
             //AuthToken token = new AuthToken("public");
@@ -194,10 +195,22 @@ public class D1ClientTest  {
             //sleep for a second before taking the second time stamp so we 
             //don't have problems with server timing
             
-            Date date2 = new Date(System.currentTimeMillis() + 60000);
+            Date date2 = new Date(System.currentTimeMillis() + 1000000);
             
-            ObjectList ol2 = d1.listObjects(token, date1, date2, null, false, 1, 1);
-            assertTrue(ol2.sizeObjectInfoList() == 1);
+            ObjectList ol2 = d1.listObjects(token, date1, date2, null, false, 0, 1000);
+            //assertTrue(ol2.sizeObjectInfoList() == 1);
+            boolean isthere = false;
+            for(int i=0; i<ol2.sizeObjectInfoList(); i++)
+            {
+                ObjectInfo oi = ol2.getObjectInfo(i);
+                if(oi.getIdentifier().getValue().equals(rGuid.getValue()))
+                {
+                    isthere = true;
+                    break;
+                }
+            }
+            System.out.println("isthere: " + isthere);
+            assertTrue(isthere);
         }
         catch(Exception e)
         {

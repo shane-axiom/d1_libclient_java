@@ -106,7 +106,7 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
     /** API LOG  controls logging events*/
     public static final String RESOURCE_LOG = "log";
     
-    private static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss'Z'");
+    private static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
     
     /** The session identifier for the session */
     //private String sessionId;
