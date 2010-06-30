@@ -97,14 +97,31 @@ public class D1ClientTest  {
             SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
             
             Identifier rGuid = d1.create(token, guid, objectStream, sysmeta);
-            
+            InputStream data = d1.get(token, rGuid);
+            String str = IOUtils.toString(data);
+            //System.out.println("str: " + str);
+            assertTrue(str.indexOf("x,y,z") != -1);
             assertEquals(guid.getValue(), rGuid.getValue());
             
-            Thread.sleep(5000);
-            Date end = new Date();
+            //get the logs for the last minute
+            Date end = new Date(System.currentTimeMillis() + 60000);
             Log log = d1.getLogRecords(token, start, end, Event.CREATE);
-            //System.out.println("log size: " + log.sizeLogEntryList());
-            assertTrue(log.sizeLogEntryList() == 2);
+            System.out.println("log size: " + log.sizeLogEntryList());
+            boolean isfound = false;
+            for(int i=0; i<log.sizeLogEntryList(); i++)
+            { //check to see if our create event is in the log
+                LogEntry le = log.getLogEntry(i);
+                System.out.println("le: " + le.getIdentifier().getValue());
+                System.out.println("rGuid: " + rGuid.getValue());
+                if(le.getIdentifier().getValue().equals(rGuid.getValue()))
+                {
+                    isfound = true;
+                    System.out.println("log record found");
+                    break;
+                }
+            }
+            System.out.println("isfound: " + isfound);
+            assertTrue(isfound);
             
         } 
         catch(Exception e)
@@ -123,7 +140,7 @@ public class D1ClientTest  {
         printHeader("testListObjects");
         try
         {
-            Date date1 = new Date();
+            Date date1 = new Date(System.currentTimeMillis());
             String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
             AuthToken token = d1.login(principal, "kepler");
             //AuthToken token = new AuthToken("public");
@@ -176,9 +193,8 @@ public class D1ClientTest  {
             d1.setAccess(token, rGuid, "public", "read", "allow", "allowFirst");
             //sleep for a second before taking the second time stamp so we 
             //don't have problems with server timing
-            Thread.sleep(5000);
             
-            Date date2 = new Date();
+            Date date2 = new Date(System.currentTimeMillis() + 60000);
             
             ObjectList ol2 = d1.listObjects(token, date1, date2, null, false, 1, 1);
             assertTrue(ol2.sizeObjectInfoList() == 1);
@@ -193,7 +209,7 @@ public class D1ClientTest  {
     /**
      * get a systemMetadata resource
      */
-    //@Test
+    @Test
     public void testGetSystemMetadata()
     {
         printHeader("testGetSystemMetadata");
@@ -225,7 +241,7 @@ public class D1ClientTest  {
     /**
      * test the update of a resource
      */
-    //@Test
+    @Test
     public void testUpdate()
     {
         printHeader("testUpdate");
@@ -280,7 +296,7 @@ public class D1ClientTest  {
      * test creation of data.  this also tests get() since it
      * is used to verify the inserted metadata
      */
-    //@Test
+    @Test
     public void testCreateData() {
         printHeader("testCreateData");
         try
@@ -346,7 +362,7 @@ public class D1ClientTest  {
      * test the error state where metacat fails if the id includes a .\d on
      * the end.
      */
-    //@Test
+    @Test
     public void testFailedCreateData() {
         printHeader("testFailedCreateData");
         /*try 
@@ -414,7 +430,7 @@ public class D1ClientTest  {
      * test creation of science metadata.  this also tests get() since it
      * is used to verify the inserted metadata
      */
-    //@Test
+    @Test
     public void testCreateScienceMetadata() {
 
         try
@@ -478,19 +494,19 @@ public class D1ClientTest  {
         }
     }
     
-    //@Test
+    @Test
     public void testDelete() {
         printHeader("testDelete");
         assertTrue(1==1);
     }
     
-    //@Test
+    @Test
     public void testDescribe() {
         printHeader("testDescribe");
         assertTrue(1==1);
     }
 
-    //@Test
+    @Test
     public void testGetNotFound() {
         try {
             printHeader("testGetNotFound");
@@ -515,12 +531,12 @@ public class D1ClientTest  {
         }
     }
     
-    //@Test
+    @Test
     public void testGetChecksumAuthTokenIdentifierType() {
         assertTrue(1==1);
     }
     
-    //@Test
+    @Test
     public void testGetChecksumAuthTokenIdentifierTypeString() {
         assertTrue(1==1);
     }
