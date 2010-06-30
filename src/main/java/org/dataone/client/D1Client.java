@@ -239,26 +239,37 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
         
         if(startTime != null)
         {
-            
             params += "startTime=" + dateFormat.format(startTime); 
         }
+        
         if(endTime != null)
         {
-            params += addAmp(params);
+            if(!params.equals(""))
+            {
+                params += "&";
+            }
             params += "endTime=" + dateFormat.format(endTime);
         }
+        
         if(objectFormat != null)
         {
-            params += addAmp(params);
+            if(!params.equals(""))
+            {
+                params += "&";
+            }
             params += "objectFormat=" + objectFormat;
         }
-        params += addAmp(params);
+        
+        if(!params.equals(""))
+        {
+            params += "&";
+        }
         params += "replicaStatus=" + replicaStatus;
         params += "&";
         params += "start=" + start;
         params += "&";
         params += "count=" + count;
-        
+                
         ResponseData rd = sendRequest(token, resource, GET, params, 
                 null, null);
         int code = rd.getCode();
