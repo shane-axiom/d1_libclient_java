@@ -53,8 +53,8 @@ import org.jibx.runtime.JiBXException;
 public class D1ClientTest  {
 
     // TODO: move these hardcoded properties out to a test configuration
-    //protected static String contextUrl = "http://localhost:8080/knb/";
-    protected static String contextUrl = "http://knb-mn.ecoinformatics.org/knb/";
+    protected static String contextUrl = "http://localhost:8080/knb/";
+    //protected static String contextUrl = "http://knb-mn.ecoinformatics.org/knb/";
     //protected static String contextUrl = "http://mn-rpw/mn/";
     //protected static String contextUrl = "http://cn-dev.dataone.org/knb/";
 
@@ -113,8 +113,8 @@ public class D1ClientTest  {
             for(int i=0; i<log.sizeLogEntryList(); i++)
             { //check to see if our create event is in the log
                 LogEntry le = log.getLogEntry(i);
-                System.out.println("le: " + le.getIdentifier().getValue());
-                System.out.println("rGuid: " + rGuid.getValue());
+                //System.out.println("le: " + le.getIdentifier().getValue());
+                //System.out.println("rGuid: " + rGuid.getValue());
                 if(le.getIdentifier().getValue().equals(rGuid.getValue()))
                 {
                     isfound = true;
@@ -188,19 +188,34 @@ public class D1ClientTest  {
             sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
             
             rGuid = d1.create(token, guid, objectStream, sysmeta);
+            System.out.println("inserted doc with id " + rGuid.getValue());
             
             assertEquals(guid.getValue(), rGuid.getValue());
             
             //make the inserted documents public
             d1.setAccess(token, rGuid, "public", "read", "allow", "allowFirst");
-            //sleep for a second before taking the second time stamp so we 
-            //don't have problems with server timing
             
             Date date2 = new Date(System.currentTimeMillis() + 1000000);
             
             ObjectList ol2 = d1.listObjects(token, date1, date2, null, false, 0, 1000);
             //assertTrue(ol2.sizeObjectInfoList() == 1);
             boolean isthere = false;
+            for(int i=0; i<ol2.sizeObjectInfoList(); i++)
+            {
+                ObjectInfo oi = ol2.getObjectInfo(i);
+                if(oi.getIdentifier().getValue().equals(rGuid.getValue()))
+                {
+                    isthere = true;
+                    break;
+                }
+            }
+            System.out.println("isthere: " + isthere);
+            assertTrue(isthere);
+            
+            //test with a public token.  should get the same result since both docs are public
+            token = new AuthToken("public");
+            ol2 = d1.listObjects(token, null, null, null, false, 0, 1000);
+            isthere = false;
             for(int i=0; i<ol2.sizeObjectInfoList(); i++)
             {
                 ObjectInfo oi = ol2.getObjectInfo(i);
@@ -440,6 +455,56 @@ public class D1ClientTest  {
             fail("unexpected exception: " + e.getMessage());
         }
     }
+    
+    /**
+     * test various create and get scenarios with different access rules
+     */
+    @Test
+    public void testGet() 
+    {
+        printHeader("testGet");
+        try
+        {
+            //create a document
+            String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
+            AuthToken token = d1.login(principal, "kepler");
+            String idString = prefix + ExampleUtilities.generateIdentifier();
+            Identifier guid = new Identifier();
+            guid.setValue(idString);
+            //InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-luq.76.2.xml");
+            InputStream objectStream = IOUtils.toInputStream("<?xml version=\"1.0\"?><test></test>");
+            SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.EML_2_1_0);
+            Identifier rGuid = null;
+            rGuid = d1.create(token, guid, objectStream, sysmeta);
+            assertEquals(guid.getValue(), rGuid.getValue());
+            
+            //try to get it as public.  this should fail
+            AuthToken publicToken = new AuthToken("public");
+            //this test is commented out because of this issue:
+            //https://trac.dataone.org/ticket/706
+            /*try
+            {
+                InputStream data = d1.get(publicToken, rGuid);
+                System.out.println("data: " + IOUtils.toString(data));
+                fail("Should have thrown an exception.  Public can't get this doc yet.");
+                
+            }
+            catch(Exception e)
+            {
+                
+            }*/
+            
+            //change the perms, then try to get it again
+            d1.setAccess(token, rGuid, "public", "read", "allow", "allowFirst");
+            InputStream data = d1.get(publicToken, rGuid);
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+            fail("Unexpected error in testGet: " + e.getMessage());
+        }
+    }
+    
     /**
      * test creation of science metadata.  this also tests get() since it
      * is used to verify the inserted metadata

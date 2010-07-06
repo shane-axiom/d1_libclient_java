@@ -755,8 +755,18 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
                 }
             }
             
-            content = connection.getInputStream();
-            resData.setContentStream(content);
+            try
+            {
+                content = connection.getInputStream();
+                resData.setContentStream(content);
+            }
+            catch(IOException ioe)
+            {
+                System.out.println("tried to get content and failed.  getting error stream instead");
+                content = connection.getErrorStream();
+                //resData.setContentStream(content);
+            }
+            
             int code = connection.getResponseCode();
             resData.setCode(code);
             if (code != HttpURLConnection.HTTP_OK) {
