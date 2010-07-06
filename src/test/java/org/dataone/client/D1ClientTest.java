@@ -56,6 +56,7 @@ public class D1ClientTest  {
     //protected static String contextUrl = "http://localhost:8080/knb/";
     protected static String contextUrl = "http://knb-mn.ecoinformatics.org/knb/";
     //protected static String contextUrl = "http://mn-rpw/mn/";
+    //protected static String contextUrl = "http://cn-dev.dataone.org/knb/";
 
     // TODO: use the create() and insert() methods to create predictable test data,
     // rather than hardcoding test assumptions here
