@@ -53,8 +53,8 @@ import org.jibx.runtime.JiBXException;
 public class D1ClientTest  {
 
     // TODO: move these hardcoded properties out to a test configuration
-    protected static String contextUrl = "http://localhost:8080/knb/";
-    //protected static String contextUrl = "http://knb-mn.ecoinformatics.org/knb/";
+    //protected static String contextUrl = "http://localhost:8080/knb/";
+    protected static String contextUrl = "http://knb-mn.ecoinformatics.org/knb/";
     //protected static String contextUrl = "http://mn-rpw/mn/";
     //protected static String contextUrl = "http://cn-dev.dataone.org/knb/";
 
