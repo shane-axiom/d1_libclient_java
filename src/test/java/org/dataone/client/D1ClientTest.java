@@ -53,8 +53,8 @@ import org.jibx.runtime.JiBXException;
 public class D1ClientTest  {
 
     // TODO: move these hardcoded properties out to a test configuration
-    //protected static String contextUrl = "http://localhost:8080/knb/";
-    protected static String contextUrl = "http://knb-mn.ecoinformatics.org/knb/";
+    protected static String contextUrl = "http://localhost:8080/knb/";
+    //protected static String contextUrl = "http://knb-mn.ecoinformatics.org/knb/";
     //protected static String contextUrl = "http://mn-rpw/mn/";
     //protected static String contextUrl = "http://cn-dev.dataone.org/knb/";
 
@@ -129,6 +129,7 @@ public class D1ClientTest  {
         } 
         catch(Exception e)
         {
+            e.printStackTrace();
             fail("testGetLogRecords threw an unexpected exception: " + e.getMessage());
         }
         
@@ -240,7 +241,7 @@ public class D1ClientTest  {
     /**
      * get a systemMetadata resource
      */
-    @Test
+    //@Test
     public void testGetSystemMetadata()
     {
         printHeader("testGetSystemMetadata");
@@ -272,7 +273,7 @@ public class D1ClientTest  {
     /**
      * test the update of a resource
      */
-    @Test
+    //@Test
     public void testUpdate()
     {
         printHeader("testUpdate");
@@ -327,7 +328,7 @@ public class D1ClientTest  {
      * test creation of data.  this also tests get() since it
      * is used to verify the inserted metadata
      */
-    @Test
+    //@Test
     public void testCreateData() {
         printHeader("testCreateData");
         try
@@ -393,7 +394,7 @@ public class D1ClientTest  {
      * test the error state where metacat fails if the id includes a .\d on
      * the end.
      */
-    @Test
+    //@Test
     public void testFailedCreateData() {
         printHeader("testFailedCreateData");
         /*try 
@@ -461,7 +462,7 @@ public class D1ClientTest  {
     /**
      * test various create and get scenarios with different access rules
      */
-    @Test
+    //@Test
     public void testGet() 
     {
         printHeader("testGet");
@@ -511,7 +512,7 @@ public class D1ClientTest  {
      * test creation of science metadata.  this also tests get() since it
      * is used to verify the inserted metadata
      */
-    @Test
+    //@Test
     public void testCreateScienceMetadata() {
 
         try
@@ -575,19 +576,19 @@ public class D1ClientTest  {
         }
     }
     
-    @Test
+    //@Test
     public void testDelete() {
         printHeader("testDelete");
         assertTrue(1==1);
     }
     
-    @Test
+    //@Test
     public void testDescribe() {
         printHeader("testDescribe");
         assertTrue(1==1);
     }
 
-    @Test
+    //@Test
     public void testGetNotFound() {
         try {
             printHeader("testGetNotFound");
@@ -612,12 +613,12 @@ public class D1ClientTest  {
         }
     }
     
-    @Test
+    //@Test
     public void testGetChecksumAuthTokenIdentifierType() {
         assertTrue(1==1);
     }
     
-    @Test
+    //@Test
     public void testGetChecksumAuthTokenIdentifierTypeString() {
         assertTrue(1==1);
     }

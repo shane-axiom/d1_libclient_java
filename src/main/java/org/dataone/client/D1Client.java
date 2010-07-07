@@ -29,8 +29,11 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CountDownLatch;
@@ -231,7 +234,10 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
      * @throws InvalidToken
      */
     @Override
-    public ObjectList listObjects(AuthToken token, Date startTime, Date endTime, ObjectFormat objectFormat, boolean replicaStatus, int start, int count) throws NotAuthorized, InvalidRequest, NotImplemented, ServiceFailure, InvalidToken
+    public ObjectList listObjects(AuthToken token, Date startTime, Date endTime, 
+            ObjectFormat objectFormat, boolean replicaStatus, int start, 
+            int count) throws NotAuthorized, InvalidRequest, NotImplemented, 
+            ServiceFailure, InvalidToken
     {
         InputStream is = null;
         String resource = RESOURCE_OBJECTS + "/";
@@ -239,7 +245,19 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
         
         if(startTime != null)
         {
-            params += "startTime=" + dateFormat.format(startTime); 
+            System.out.println("startTime: " + startTime);
+//            try
+//            {
+//                startTime = convertDateToGMT(startTime);
+//            }
+//            catch(ParseException pe)
+//            {
+//                System.out.println("ERROR: Could not convert the date to GMT: " + pe.getMessage());
+//            }
+            
+            System.out.println("startTime in GMT: " + convertDateToGMT(startTime));
+            //params += "startTime=" + dateFormat.format(startTime);
+            params += "startTime=" + convertDateToGMT(startTime);
         }
         
         if(endTime != null)
@@ -248,7 +266,16 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
             {
                 params += "&";
             }
-            params += "endTime=" + dateFormat.format(endTime);
+//            try
+//            {
+//              endTime = convertDateToGMT(endTime);
+//            }
+//            catch(ParseException pe)
+//            {
+//                System.out.println("ERROR: Could not convert the date to GMT: " + pe.getMessage());
+//            }
+            //params += "endTime=" + dateFormat.format(endTime);
+            params += "endTime=" + convertDateToGMT(endTime);
         }
         
         if(objectFormat != null)
@@ -302,6 +329,19 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
         {
             throw new ServiceFailure("500", "Could not deserialize the ObjectList: " + e.getMessage());
         }
+    }
+    
+    /**
+     * convert a date to GMT
+     * @param d
+     * @return
+     */
+    private String convertDateToGMT(Date d)
+    {
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT-0"));
+        String s = dateFormat.format(d);
+        return s;
     }
     
     /**
@@ -568,17 +608,20 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
         String params = null;
         if(fromDate != null)
         {
-            params = "fromDate=" + dateFormat.format(fromDate);
+            //params = "fromDate=" + dateFormat.format(fromDate);
+            params = "fromDate=" + convertDateToGMT(fromDate);
         }
         if(toDate != null)
         {
             if(params != null)
             {
-                params += "&toDate=" + dateFormat.format(toDate);
+                //params += "&toDate=" + dateFormat.format(toDate);
+                params += "&toDate=" + convertDateToGMT(toDate);
             }
             else
             {
-                params = "toDate=" + dateFormat.format(toDate);
+                //params = "toDate=" + dateFormat.format(toDate);
+                params += "toDate=" + convertDateToGMT(toDate);
             }
         }
         if(event != null)
@@ -735,8 +778,14 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
         URL u = null;
         InputStream content = null;
         try {
+            
+            if(restURL.indexOf("+") != -1)
+            {
+                restURL = restURL.replaceAll("\\+", "%2b");
+            }
             System.out.println("restURL: " + restURL);
             System.out.println("method: " + method);
+            
             u = new URL(restURL);
             connection = (HttpURLConnection) u.openConnection();
             if (contentType!=null) {
