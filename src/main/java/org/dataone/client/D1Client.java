@@ -245,18 +245,6 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
         
         if(startTime != null)
         {
-            System.out.println("startTime: " + startTime);
-//            try
-//            {
-//                startTime = convertDateToGMT(startTime);
-//            }
-//            catch(ParseException pe)
-//            {
-//                System.out.println("ERROR: Could not convert the date to GMT: " + pe.getMessage());
-//            }
-            
-            System.out.println("startTime in GMT: " + convertDateToGMT(startTime));
-            //params += "startTime=" + dateFormat.format(startTime);
             params += "startTime=" + convertDateToGMT(startTime);
         }
         
@@ -266,15 +254,7 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
             {
                 params += "&";
             }
-//            try
-//            {
-//              endTime = convertDateToGMT(endTime);
-//            }
-//            catch(ParseException pe)
-//            {
-//                System.out.println("ERROR: Could not convert the date to GMT: " + pe.getMessage());
-//            }
-            //params += "endTime=" + dateFormat.format(endTime);
+            
             params += "endTime=" + convertDateToGMT(endTime);
         }
         
