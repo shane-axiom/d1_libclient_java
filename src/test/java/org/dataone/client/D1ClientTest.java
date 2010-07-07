@@ -85,6 +85,7 @@ public class D1ClientTest  {
     public void testGetLogRecords()
     {
         printHeader("testGetLogRecords");
+        System.out.println("current time is: " + new Date());
         try
         {
             Date start = new Date(System.currentTimeMillis() - 500000);
@@ -140,6 +141,7 @@ public class D1ClientTest  {
     public void testListObjects()
     {
         printHeader("testListObjects");
+        System.out.println("current time is: " + new Date());
         try
         {
             Date date1 = new Date(System.currentTimeMillis() - 1000000);
