@@ -66,16 +66,45 @@ public class D1ClientTest  {
     private static final String bogusId = "foobarbaz214";
 
     private D1Client d1 = null;
+    private List<Node> nodeList = null;
+    private boolean useNodeList = true;
 
-    @Before  
-    public void setUp() throws Exception {
- //       super.setUp();
-        d1 = new D1Client(contextUrl);
-    }
-
-    private void printHeader(String methodName)
+    @Before
+    public void setUp() throws Exception 
     {
-        System.out.println("\n***************** running test for " + methodName + " *****************");
+        InputStream nodeRegStream = this.getClass().getResourceAsStream("/org/dataone/client/nodeRegistry.xml");
+        NodeRegistry nr = null;
+        try 
+        {
+            IBindingFactory bfact = BindingDirectory.getFactory(NodeRegistry.class);
+            IUnmarshallingContext uctx = bfact.createUnmarshallingContext();
+            nr = (NodeRegistry) uctx.unmarshalDocument(nodeRegStream, null);
+        } 
+        catch (JiBXException e) 
+        {
+            e.printStackTrace();
+            throw new ServiceFailure("1190", "Failed to deserialize NodeRegistry: " + e.getMessage());
+        }   
+        
+        if(nr != null)
+        {
+            nodeList = nr.getNodes();
+            
+        }
+        
+        if(nodeList == null || nodeList.size() == 0)
+        {
+            nodeList = new Vector<Node>();
+            Node n = new Node();
+            n.setBaseURL(contextUrl);
+            nodeList.add(n);
+        }
+        
+        /*System.out.println("nodes to test on:");
+        for(int i=0; i<nodeList.size(); i++)
+        {
+            System.out.println(i + ": " + nodeList.get(i).getBaseURL());
+        }*/
     }
     
     /**
@@ -84,55 +113,59 @@ public class D1ClientTest  {
     @Test
     public void testGetLogRecords()
     {
-        printHeader("testGetLogRecords");
-        System.out.println("current time is: " + new Date());
-        try
-        {
-            Date start = new Date(System.currentTimeMillis() - 500000);
-            String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
-            AuthToken token = d1.login(principal, "kepler");
-            
-            String idString = prefix + ExampleUtilities.generateIdentifier();
-            Identifier guid = new Identifier();
-            guid.setValue(idString);
-            InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
-            SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
-            
-            Identifier rGuid = d1.create(token, guid, objectStream, sysmeta);
-            InputStream data = d1.get(token, rGuid);
-            String str = IOUtils.toString(data);
-            //System.out.println("str: " + str);
-            assertTrue(str.indexOf("x,y,z") != -1);
-            assertEquals(guid.getValue(), rGuid.getValue());
-            
-            //get the logs for the last minute
-            Date end = new Date(System.currentTimeMillis() + 500000);
-            System.out.println("start: " + start + " end: " + end);
-            Log log = d1.getLogRecords(token, start, end, Event.CREATE);
-            System.out.println("log size: " + log.sizeLogEntryList());
-            boolean isfound = false;
-            for(int i=0; i<log.sizeLogEntryList(); i++)
-            { //check to see if our create event is in the log
-                LogEntry le = log.getLogEntry(i);
-                //System.out.println("le: " + le.getIdentifier().getValue());
-                //System.out.println("rGuid: " + rGuid.getValue());
-                if(le.getIdentifier().getValue().equals(rGuid.getValue()))
-                {
-                    isfound = true;
-                    System.out.println("log record found");
-                    break;
-                }
-            }
-            System.out.println("isfound: " + isfound);
-            assertTrue(isfound);
-            
-        } 
-        catch(Exception e)
-        {
-            e.printStackTrace();
-            fail("testGetLogRecords threw an unexpected exception: " + e.getMessage());
-        }
-        
+       for(int j=0; j<nodeList.size(); j++)
+       {
+           d1 = new D1Client(nodeList.get(j).getBaseURL());
+           
+           printHeader("testGetLogRecords - node " + nodeList.get(j).getBaseURL());
+           System.out.println("current time is: " + new Date());
+           try
+           {
+               Date start = new Date(System.currentTimeMillis() - 500000);
+               String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
+               AuthToken token = d1.login(principal, "kepler");
+
+               String idString = prefix + ExampleUtilities.generateIdentifier();
+               Identifier guid = new Identifier();
+               guid.setValue(idString);
+               InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
+               SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
+
+               Identifier rGuid = d1.create(token, guid, objectStream, sysmeta);
+               InputStream data = d1.get(token, rGuid);
+               String str = IOUtils.toString(data);
+               //System.out.println("str: " + str);
+               assertTrue(str.indexOf("x,y,z") != -1);
+               assertEquals(guid.getValue(), rGuid.getValue());
+
+               //get the logs for the last minute
+               Date end = new Date(System.currentTimeMillis() + 500000);
+               System.out.println("start: " + start + " end: " + end);
+               Log log = d1.getLogRecords(token, start, end, Event.CREATE);
+               System.out.println("log size: " + log.sizeLogEntryList());
+               boolean isfound = false;
+               for(int i=0; i<log.sizeLogEntryList(); i++)
+               { //check to see if our create event is in the log
+                   LogEntry le = log.getLogEntry(i);
+                   //System.out.println("le: " + le.getIdentifier().getValue());
+                   //System.out.println("rGuid: " + rGuid.getValue());
+                   if(le.getIdentifier().getValue().equals(rGuid.getValue()))
+                   {
+                       isfound = true;
+                       System.out.println("log record found");
+                       break;
+                   }
+               }
+               System.out.println("isfound: " + isfound);
+               assertTrue(isfound);
+
+           } 
+           catch(Exception e)
+           {
+               e.printStackTrace();
+               fail("testGetLogRecords threw an unexpected exception: " + e.getMessage());
+           }
+       }
     }
     
     /**
@@ -141,100 +174,105 @@ public class D1ClientTest  {
     @Test
     public void testListObjects()
     {
-        printHeader("testListObjects");
-        System.out.println("current time is: " + new Date());
-        try
+        for(int j=0; j<nodeList.size(); j++)
         {
-            Date date1 = new Date(System.currentTimeMillis() - 1000000);
-            String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
-            AuthToken token = d1.login(principal, "kepler");
-            //AuthToken token = new AuthToken("public");
-            //create a document we know is in the system
-            String idString = prefix + ExampleUtilities.generateIdentifier();
-            Identifier guid = new Identifier();
-            guid.setValue(idString);
-            InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
-            SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
+            d1 = new D1Client(nodeList.get(j).getBaseURL());
             
-            Identifier rGuid = d1.create(token, guid, objectStream, sysmeta);
-            
-            assertEquals(guid.getValue(), rGuid.getValue());
-            
-            //make the inserted documents public
-            d1.setAccess(token, rGuid, "public", "read", "allow", "allowFirst");
+            printHeader("testListObjects - node " + nodeList.get(j).getBaseURL());
+            System.out.println("current time is: " + new Date());
+            try
+            {
+                Date date1 = new Date(System.currentTimeMillis() - 1000000);
+                String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
+                AuthToken token = d1.login(principal, "kepler");
+                //AuthToken token = new AuthToken("public");
+                //create a document we know is in the system
+                String idString = prefix + ExampleUtilities.generateIdentifier();
+                Identifier guid = new Identifier();
+                guid.setValue(idString);
+                InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
+                SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
 
-            //get the objectList and make sure our created doc is in it
-            ObjectList ol = d1.listObjects(token, null, null, null, false, 0, 1000);
-            boolean isThere = false;
-            assertTrue(ol.sizeObjectInfoList() > 0);
-            //System.out.println("ol size: " + ol.sizeObjectInfoList());
-            //System.out.println("guid: " + guid.getValue());
-            for(int i=0; i<ol.sizeObjectInfoList(); i++)
-            {
-                ObjectInfo oi = ol.getObjectInfo(i);
-                //System.out.println("oiid: " + oi.getIdentifier().getValue());
-                if(oi.getIdentifier().getValue().trim().equals(guid.getValue().trim()))
-                {
-                    isThere = true;
-                    //System.out.println("oi.checksum: " + oi.getChecksum().getValue() + 
-                    //        "   sm.checksum: " + sysmeta.getChecksum().getValue());
-                    break;
-                }
-            }
+                Identifier rGuid = d1.create(token, guid, objectStream, sysmeta);
 
-            assertTrue(isThere);
-            
-            idString = prefix + ExampleUtilities.generateIdentifier();
-            guid = new Identifier();
-            guid.setValue(idString);
-            objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
-            sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
-            
-            rGuid = d1.create(token, guid, objectStream, sysmeta);
-            System.out.println("inserted doc with id " + rGuid.getValue());
-            
-            assertEquals(guid.getValue(), rGuid.getValue());
-            
-            //make the inserted documents public
-            d1.setAccess(token, rGuid, "public", "read", "allow", "allowFirst");
-            
-            Date date2 = new Date(System.currentTimeMillis() + 1000000);
-            
-            ObjectList ol2 = d1.listObjects(token, date1, date2, null, false, 0, 1000);
-            //assertTrue(ol2.sizeObjectInfoList() == 1);
-            boolean isthere = false;
-            for(int i=0; i<ol2.sizeObjectInfoList(); i++)
-            {
-                ObjectInfo oi = ol2.getObjectInfo(i);
-                if(oi.getIdentifier().getValue().equals(rGuid.getValue()))
+                assertEquals(guid.getValue(), rGuid.getValue());
+
+                //make the inserted documents public
+                d1.setAccess(token, rGuid, "public", "read", "allow", "allowFirst");
+
+                //get the objectList and make sure our created doc is in it
+                ObjectList ol = d1.listObjects(token, null, null, null, false, 0, 1000);
+                boolean isThere = false;
+                assertTrue(ol.sizeObjectInfoList() > 0);
+                //System.out.println("ol size: " + ol.sizeObjectInfoList());
+                //System.out.println("guid: " + guid.getValue());
+                for(int i=0; i<ol.sizeObjectInfoList(); i++)
                 {
-                    isthere = true;
-                    break;
+                    ObjectInfo oi = ol.getObjectInfo(i);
+                    //System.out.println("oiid: " + oi.getIdentifier().getValue());
+                    if(oi.getIdentifier().getValue().trim().equals(guid.getValue().trim()))
+                    {
+                        isThere = true;
+                        //System.out.println("oi.checksum: " + oi.getChecksum().getValue() + 
+                        //        "   sm.checksum: " + sysmeta.getChecksum().getValue());
+                        break;
+                    }
                 }
-            }
-            System.out.println("isthere: " + isthere);
-            assertTrue(isthere);
-            
-            //test with a public token.  should get the same result since both docs are public
-            token = new AuthToken("public");
-            ol2 = d1.listObjects(token, null, null, null, false, 0, 1000);
-            isthere = false;
-            for(int i=0; i<ol2.sizeObjectInfoList(); i++)
-            {
-                ObjectInfo oi = ol2.getObjectInfo(i);
-                if(oi.getIdentifier().getValue().equals(rGuid.getValue()))
+
+                assertTrue(isThere);
+
+                idString = prefix + ExampleUtilities.generateIdentifier();
+                guid = new Identifier();
+                guid.setValue(idString);
+                objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
+                sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
+
+                rGuid = d1.create(token, guid, objectStream, sysmeta);
+                System.out.println("inserted doc with id " + rGuid.getValue());
+
+                assertEquals(guid.getValue(), rGuid.getValue());
+
+                //make the inserted documents public
+                d1.setAccess(token, rGuid, "public", "read", "allow", "allowFirst");
+
+                Date date2 = new Date(System.currentTimeMillis() + 1000000);
+
+                ObjectList ol2 = d1.listObjects(token, date1, date2, null, false, 0, 1000);
+                //assertTrue(ol2.sizeObjectInfoList() == 1);
+                boolean isthere = false;
+                for(int i=0; i<ol2.sizeObjectInfoList(); i++)
                 {
-                    isthere = true;
-                    break;
+                    ObjectInfo oi = ol2.getObjectInfo(i);
+                    if(oi.getIdentifier().getValue().equals(rGuid.getValue()))
+                    {
+                        isthere = true;
+                        break;
+                    }
                 }
+                System.out.println("isthere: " + isthere);
+                assertTrue(isthere);
+
+                //test with a public token.  should get the same result since both docs are public
+                token = new AuthToken("public");
+                ol2 = d1.listObjects(token, null, null, null, false, 0, 1000);
+                isthere = false;
+                for(int i=0; i<ol2.sizeObjectInfoList(); i++)
+                {
+                    ObjectInfo oi = ol2.getObjectInfo(i);
+                    if(oi.getIdentifier().getValue().equals(rGuid.getValue()))
+                    {
+                        isthere = true;
+                        break;
+                    }
+                }
+                System.out.println("isthere: " + isthere);
+                assertTrue(isthere);
             }
-            System.out.println("isthere: " + isthere);
-            assertTrue(isthere);
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-            fail("Could not list objects: " + e.getMessage());
+            catch(Exception e)
+            {
+                e.printStackTrace();
+                fail("Could not list objects: " + e.getMessage());
+            }
         }
     }
 
@@ -244,29 +282,34 @@ public class D1ClientTest  {
     @Test
     public void testGetSystemMetadata()
     {
-        printHeader("testGetSystemMetadata");
-        try
+        for(int i=0; i<nodeList.size(); i++)
         {
-            //create a document
-            String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
-            AuthToken token = d1.login(principal, "kepler");
-            String idString = prefix + ExampleUtilities.generateIdentifier();
-            Identifier guid = new Identifier();
-            guid.setValue(idString);
-            InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
-            SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
-            Identifier rGuid = d1.create(token, guid, objectStream, sysmeta);
-            assertEquals(guid.getValue(), rGuid.getValue());
-            //System.out.println("create success, id returned is " + rGuid.getValue());
+            d1 = new D1Client(nodeList.get(i).getBaseURL());
+            
+            printHeader("testGetSystemMetadata - node " + nodeList.get(i).getBaseURL());
+            try
+            {
+                //create a document
+                String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
+                AuthToken token = d1.login(principal, "kepler");
+                String idString = prefix + ExampleUtilities.generateIdentifier();
+                Identifier guid = new Identifier();
+                guid.setValue(idString);
+                InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
+                SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
+                Identifier rGuid = d1.create(token, guid, objectStream, sysmeta);
+                assertEquals(guid.getValue(), rGuid.getValue());
+                //System.out.println("create success, id returned is " + rGuid.getValue());
 
-            //get the system metadata
-            SystemMetadata sm = d1.getSystemMetadata(token, rGuid);
-            assertTrue(guid.getValue().equals(sm.getIdentifier().getValue()));
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-            fail("Error in getSystemMetadata: " + e.getMessage());
+                //get the system metadata
+                SystemMetadata sm = d1.getSystemMetadata(token, rGuid);
+                assertTrue(guid.getValue().equals(sm.getIdentifier().getValue()));
+            }
+            catch(Exception e)
+            {
+                e.printStackTrace();
+                fail("Error in getSystemMetadata: " + e.getMessage());
+            }
         }
     }
 
@@ -276,51 +319,55 @@ public class D1ClientTest  {
     @Test
     public void testUpdate()
     {
-        printHeader("testUpdate");
-        try 
+        for(int i=0; i<nodeList.size(); i++)
         {
-            //create a document
-            String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
-            AuthToken token = d1.login(principal, "kepler");
-            String idString = prefix + ExampleUtilities.generateIdentifier();
-            Identifier guid = new Identifier();
-            guid.setValue(idString);
-            InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
-            SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
-            Identifier rGuid = d1.create(token, guid, objectStream, sysmeta);
-            assertEquals(guid.getValue(), rGuid.getValue());
-            //System.out.println("create success, id returned is " + rGuid.getValue());
+            d1 = new D1Client(nodeList.get(i).getBaseURL());
+            
+            printHeader("testUpdate - node " + nodeList.get(i).getBaseURL());
+            try 
+            {
+                //create a document
+                String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
+                AuthToken token = d1.login(principal, "kepler");
+                String idString = prefix + ExampleUtilities.generateIdentifier();
+                Identifier guid = new Identifier();
+                guid.setValue(idString);
+                InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
+                SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
+                Identifier rGuid = d1.create(token, guid, objectStream, sysmeta);
+                assertEquals(guid.getValue(), rGuid.getValue());
+                //System.out.println("create success, id returned is " + rGuid.getValue());
 
-            //get the document
-            InputStream data = d1.get(token, rGuid);
-            assertNotNull(data);
-            String str = IOUtils.toString(data);
-            assertTrue(str.indexOf("x,y,z\n1,2,3") != -1);
-            data.close();
+                //get the document
+                InputStream data = d1.get(token, rGuid);
+                assertNotNull(data);
+                String str = IOUtils.toString(data);
+                assertTrue(str.indexOf("x,y,z\n1,2,3") != -1);
+                data.close();
 
-            //alter the document
-            Identifier newguid = new Identifier();
-            newguid.setValue(prefix + ExampleUtilities.generateIdentifier());
-            str = str.replaceAll("x", "a");
-            objectStream = IOUtils.toInputStream(str);
-            SystemMetadata updatedSysmeta = generateSystemMetadata(newguid, ObjectFormat.TEXT_CSV);
+                //alter the document
+                Identifier newguid = new Identifier();
+                newguid.setValue(prefix + ExampleUtilities.generateIdentifier());
+                str = str.replaceAll("x", "a");
+                objectStream = IOUtils.toInputStream(str);
+                SystemMetadata updatedSysmeta = generateSystemMetadata(newguid, ObjectFormat.TEXT_CSV);
 
-            //update the document
-            Identifier nGuid = d1.update(token, newguid, objectStream, rGuid, updatedSysmeta);
-            //System.out.println("updated success, id returned is " + nGuid.getValue());
+                //update the document
+                Identifier nGuid = d1.update(token, newguid, objectStream, rGuid, updatedSysmeta);
+                //System.out.println("updated success, id returned is " + nGuid.getValue());
 
-            //perform tests
-            data = d1.get(token, nGuid);
-            assertNotNull(data);
-            str = IOUtils.toString(data);
-            assertTrue(str.indexOf("a,y,z\n1,2,3") != -1);
-            data.close();
-
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-            fail("Error in testUpdate: " + e.getMessage());
+                //perform tests
+                data = d1.get(token, nGuid);
+                assertNotNull(data);
+                str = IOUtils.toString(data);
+                assertTrue(str.indexOf("a,y,z\n1,2,3") != -1);
+                data.close();
+            }
+            catch(Exception e)
+            {
+                e.printStackTrace();
+                fail("Error in testUpdate: " + e.getMessage());
+            }
         }
     }
 
@@ -330,64 +377,69 @@ public class D1ClientTest  {
      */
     @Test
     public void testCreateData() {
-        printHeader("testCreateData");
-        try
+        for(int i=0; i<nodeList.size(); i++)
         {
-            assertTrue(1==1);
-            String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
-            AuthToken token = d1.login(principal, "kepler");
-            String idString = prefix + ExampleUtilities.generateIdentifier();
-            Identifier guid = new Identifier();
-            guid.setValue(idString);
-            InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
-            SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
-            Identifier rGuid = null;
+            d1 = new D1Client(nodeList.get(i).getBaseURL());
 
-            try {
-                rGuid = d1.create(token, guid, objectStream, sysmeta);
-                assertEquals(guid.getValue(), rGuid.getValue());
-            } catch (InvalidToken e) {
-                fail(e.getMessage());
-            } catch (ServiceFailure e) {
-                e.printStackTrace();
-                fail(e.getMessage());
-            } catch (NotAuthorized e) {
-                fail(e.getMessage());
-            } catch (IdentifierNotUnique e) {
-                fail(e.getMessage());
-            } catch (UnsupportedType e) {
-                fail(e.getMessage());
-            } catch (InsufficientResources e) {
-                fail(e.getMessage());
-            } catch (InvalidSystemMetadata e) {
-                fail(e.getMessage());
-            } catch (NotImplemented e) {
-                fail(e.getMessage());
-            }
+            printHeader("testCreateData - node " + nodeList.get(i).getBaseURL());
+            try
+            {
+                assertTrue(1==1);
+                String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
+                AuthToken token = d1.login(principal, "kepler");
+                String idString = prefix + ExampleUtilities.generateIdentifier();
+                Identifier guid = new Identifier();
+                guid.setValue(idString);
+                InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
+                SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
+                Identifier rGuid = null;
 
-            try {
-                InputStream data = d1.get(token, rGuid);
-                assertNotNull(data);
-                String str = IOUtils.toString(data);
-                assertTrue(str.indexOf("x,y,z\n1,2,3") != -1);
-                data.close();
-            } catch (InvalidToken e) {
-                fail(e.getDescription());
-            } catch (ServiceFailure e) {
-                fail(e.getDescription());
-            } catch (NotAuthorized e) {
-                fail(e.getDescription());
-            } catch (NotFound e) {
-                fail(e.getDescription());
-            } catch (NotImplemented e) {
-                fail(e.getDescription());
-            } catch (IOException e) {
-                fail("get() test failed while closing data stream. " + e.getMessage());
+                try {
+                    rGuid = d1.create(token, guid, objectStream, sysmeta);
+                    assertEquals(guid.getValue(), rGuid.getValue());
+                } catch (InvalidToken e) {
+                    fail(e.getMessage());
+                } catch (ServiceFailure e) {
+                    e.printStackTrace();
+                    fail(e.getMessage());
+                } catch (NotAuthorized e) {
+                    fail(e.getMessage());
+                } catch (IdentifierNotUnique e) {
+                    fail(e.getMessage());
+                } catch (UnsupportedType e) {
+                    fail(e.getMessage());
+                } catch (InsufficientResources e) {
+                    fail(e.getMessage());
+                } catch (InvalidSystemMetadata e) {
+                    fail(e.getMessage());
+                } catch (NotImplemented e) {
+                    fail(e.getMessage());
+                }
+
+                try {
+                    InputStream data = d1.get(token, rGuid);
+                    assertNotNull(data);
+                    String str = IOUtils.toString(data);
+                    assertTrue(str.indexOf("x,y,z\n1,2,3") != -1);
+                    data.close();
+                } catch (InvalidToken e) {
+                    fail(e.getDescription());
+                } catch (ServiceFailure e) {
+                    fail(e.getDescription());
+                } catch (NotAuthorized e) {
+                    fail(e.getDescription());
+                } catch (NotFound e) {
+                    fail(e.getDescription());
+                } catch (NotImplemented e) {
+                    fail(e.getDescription());
+                } catch (IOException e) {
+                    fail("get() test failed while closing data stream. " + e.getMessage());
+                }
             }
-        }
-        catch(Exception e)
-        {
-            fail("unexpected exception: " + e.getMessage());
+            catch(Exception e)
+            {
+                fail("unexpected exception: " + e.getMessage());
+            }
         }
     }
     /**
@@ -396,8 +448,12 @@ public class D1ClientTest  {
      */
     @Test
     public void testFailedCreateData() {
-        printHeader("testFailedCreateData");
-        /*try 
+        for(int i=0; i<nodeList.size(); i++)
+        {
+            d1 = new D1Client(nodeList.get(i).getBaseURL());
+            
+            printHeader("testFailedCreateData - node " + nodeList.get(i).getBaseURL());
+            /*try 
         {
             System.out.println();
             assertTrue(1==1);
@@ -410,11 +466,11 @@ public class D1ClientTest  {
             Identifier guid = sysmeta.getIdentifier();
             System.out.println("inserting with guid " + guid.getValue());
             Identifier rGuid = new Identifier();
-        
+
             //insert
             rGuid = d1.create(token, guid, objectStream, sysmeta);
             assertEquals(guid.getValue(), rGuid.getValue());
-            
+
             //get
             InputStream data = d1.get(token, rGuid);
             assertNotNull(data);
@@ -428,34 +484,35 @@ public class D1ClientTest  {
             e.printStackTrace();
             fail("Error inserting: " + e.getMessage());
         }*/
-        try
-        {
-            assertTrue(1==1);
-            String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
-            AuthToken token = d1.login(principal, "kepler");
-            String idString = prefix + ExampleUtilities.generateIdentifier();
-            Identifier guid = new Identifier();
-            guid.setValue(idString + ".1.5.2");
-            System.out.println("guid is " + guid.getValue());
-            //InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
-            InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/BAYXXX_015ADCP015R00_20051215.50.9.xml");
-            SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
-            Identifier rGuid = null;
+            try
+            {
+                assertTrue(1==1);
+                String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
+                AuthToken token = d1.login(principal, "kepler");
+                String idString = prefix + ExampleUtilities.generateIdentifier();
+                Identifier guid = new Identifier();
+                guid.setValue(idString + ".1.5.2");
+                System.out.println("guid is " + guid.getValue());
+                //InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
+                InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/BAYXXX_015ADCP015R00_20051215.50.9.xml");
+                SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
+                Identifier rGuid = null;
 
-            //insert
-            rGuid = d1.create(token, guid, objectStream, sysmeta);
-            assertEquals(guid.getValue(), rGuid.getValue());
-            
-            //get
-            InputStream data = d1.get(token, rGuid);
-            assertNotNull(data);
-            String str = IOUtils.toString(data);
-            assertTrue(str.indexOf("BAYXXX_015ADCP015R00_20051215.50.9") != -1);
-            data.close();
-        }
-        catch(Exception e)
-        {
-            fail("unexpected exception: " + e.getMessage());
+                //insert
+                rGuid = d1.create(token, guid, objectStream, sysmeta);
+                assertEquals(guid.getValue(), rGuid.getValue());
+
+                //get
+                InputStream data = d1.get(token, rGuid);
+                assertNotNull(data);
+                String str = IOUtils.toString(data);
+                assertTrue(str.indexOf("BAYXXX_015ADCP015R00_20051215.50.9") != -1);
+                data.close();
+            }
+            catch(Exception e)
+            {
+                fail("unexpected exception: " + e.getMessage());
+            }
         }
     }
     
@@ -465,46 +522,51 @@ public class D1ClientTest  {
     @Test
     public void testGet() 
     {
-        printHeader("testGet");
-        try
+        for(int i=0; i<nodeList.size(); i++)
         {
-            //create a document
-            String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
-            AuthToken token = d1.login(principal, "kepler");
-            String idString = prefix + ExampleUtilities.generateIdentifier();
-            Identifier guid = new Identifier();
-            guid.setValue(idString);
-            //InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-luq.76.2.xml");
-            InputStream objectStream = IOUtils.toInputStream("<?xml version=\"1.0\"?><test></test>");
-            SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.EML_2_1_0);
-            Identifier rGuid = null;
-            rGuid = d1.create(token, guid, objectStream, sysmeta);
-            assertEquals(guid.getValue(), rGuid.getValue());
+            d1 = new D1Client(nodeList.get(i).getBaseURL());
             
-            //try to get it as public.  this should fail
-            AuthToken publicToken = new AuthToken("public");
-            //this test is commented out because of this issue:
-            //https://trac.dataone.org/ticket/706
-            /*try
+            printHeader("testGet - node " + nodeList.get(i).getBaseURL());
+            try
+            {
+                //create a document
+                String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
+                AuthToken token = d1.login(principal, "kepler");
+                String idString = prefix + ExampleUtilities.generateIdentifier();
+                Identifier guid = new Identifier();
+                guid.setValue(idString);
+                //InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-luq.76.2.xml");
+                InputStream objectStream = IOUtils.toInputStream("<?xml version=\"1.0\"?><test></test>");
+                SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.EML_2_1_0);
+                Identifier rGuid = null;
+                rGuid = d1.create(token, guid, objectStream, sysmeta);
+                assertEquals(guid.getValue(), rGuid.getValue());
+
+                //try to get it as public.  this should fail
+                AuthToken publicToken = new AuthToken("public");
+                //this test is commented out because of this issue:
+                //https://trac.dataone.org/ticket/706
+                /*try
             {
                 InputStream data = d1.get(publicToken, rGuid);
                 System.out.println("data: " + IOUtils.toString(data));
                 fail("Should have thrown an exception.  Public can't get this doc yet.");
-                
+
             }
             catch(Exception e)
             {
-                
+
             }*/
-            
-            //change the perms, then try to get it again
-            d1.setAccess(token, rGuid, "public", "read", "allow", "allowFirst");
-            InputStream data = d1.get(publicToken, rGuid);
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-            fail("Unexpected error in testGet: " + e.getMessage());
+
+                //change the perms, then try to get it again
+                d1.setAccess(token, rGuid, "public", "read", "allow", "allowFirst");
+                InputStream data = d1.get(publicToken, rGuid);
+            }
+            catch(Exception e)
+            {
+                e.printStackTrace();
+                fail("Unexpected error in testGet: " + e.getMessage());
+            }
         }
     }
     
@@ -513,49 +575,113 @@ public class D1ClientTest  {
      * is used to verify the inserted metadata
      */
     @Test
-    public void testCreateScienceMetadata() {
-
-        try
+    public void testCreateScienceMetadata() 
+    {
+        for(int i=0; i<nodeList.size(); i++)
         {
-            printHeader("testCreateScienceMetadata");
-            assertTrue(1==1);
-            String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
-            AuthToken token = d1.login(principal, "kepler");
-            String idString = prefix + ExampleUtilities.generateIdentifier();
-            Identifier guid = new Identifier();
-            guid.setValue(idString);
-            InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-luq.76.2.xml");
-            SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.EML_2_1_0);
-            Identifier rGuid = null;
+            d1 = new D1Client(nodeList.get(i).getBaseURL());
+            
+            try
+            {
+                printHeader("testCreateScienceMetadata - node " + nodeList.get(i).getBaseURL());
+                assertTrue(1==1);
+                String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
+                AuthToken token = d1.login(principal, "kepler");
+                String idString = prefix + ExampleUtilities.generateIdentifier();
+                Identifier guid = new Identifier();
+                guid.setValue(idString);
+                InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-luq.76.2.xml");
+                SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.EML_2_1_0);
+                Identifier rGuid = null;
 
-            try {
-                rGuid = d1.create(token, guid, objectStream, sysmeta);
-                assertEquals(guid.getValue(), rGuid.getValue());
-            } catch (InvalidToken e) {
-                fail(e.getMessage());
-            } catch (ServiceFailure e) {
-                fail(e.getMessage());
-            } catch (NotAuthorized e) {
-                fail(e.getMessage());
-            } catch (IdentifierNotUnique e) {
-                fail(e.getMessage());
-            } catch (UnsupportedType e) {
-                fail(e.getMessage());
-            } catch (InsufficientResources e) {
-                fail(e.getMessage());
-            } catch (InvalidSystemMetadata e) {
-                fail(e.getMessage());
-            } catch (NotImplemented e) {
-                fail(e.getMessage());
+                try {
+                    rGuid = d1.create(token, guid, objectStream, sysmeta);
+                    assertEquals(guid.getValue(), rGuid.getValue());
+                } catch (InvalidToken e) {
+                    fail(e.getMessage());
+                } catch (ServiceFailure e) {
+                    fail(e.getMessage());
+                } catch (NotAuthorized e) {
+                    fail(e.getMessage());
+                } catch (IdentifierNotUnique e) {
+                    fail(e.getMessage());
+                } catch (UnsupportedType e) {
+                    fail(e.getMessage());
+                } catch (InsufficientResources e) {
+                    fail(e.getMessage());
+                } catch (InvalidSystemMetadata e) {
+                    fail(e.getMessage());
+                } catch (NotImplemented e) {
+                    fail(e.getMessage());
+                }
+
+
+                try {
+                    InputStream data = d1.get(token, rGuid);
+                    assertNotNull(data);
+                    String str = IOUtils.toString(data);
+                    assertTrue(str.indexOf("<shortName>LUQMetadata76</shortName>") != -1);
+                    data.close();
+                } catch (InvalidToken e) {
+                    fail(e.getDescription());
+                } catch (ServiceFailure e) {
+                    fail(e.getDescription());
+                } catch (NotAuthorized e) {
+                    fail(e.getDescription());
+                } catch (NotFound e) {
+                    fail(e.getDescription());
+                } catch (NotImplemented e) {
+                    fail(e.getDescription());
+                } catch (IOException e) {
+                    fail("get() test failed while closing data stream. " + e.getMessage());
+                }
             }
+            catch(Exception e)
+            {
+                fail("Unexpected exception: " + e.getMessage());
+            }
+        }
+    }
+    
+    @Test
+    public void testDelete() 
+    {
+        for(int i=0; i<nodeList.size(); i++)
+        {
+            d1 = new D1Client(nodeList.get(i).getBaseURL());
+            
+            printHeader("testDelete - node " + nodeList.get(i).getBaseURL());
+            assertTrue(1==1);
+        }
+    }
+    
+    @Test
+    public void testDescribe() 
+    {
+        for(int i=0; i<nodeList.size(); i++)
+        {
+            d1 = new D1Client(nodeList.get(i).getBaseURL());
+            
+            printHeader("testDescribe - node " + nodeList.get(i).getBaseURL());
+            assertTrue(1==1);
+        }
+    }
 
-
+    @Test
+    public void testGetNotFound() 
+    {
+        for(int i=0; i<nodeList.size(); i++)
+        {
+            d1 = new D1Client(nodeList.get(i).getBaseURL());
+            
             try {
-                InputStream data = d1.get(token, rGuid);
-                assertNotNull(data);
-                String str = IOUtils.toString(data);
-                assertTrue(str.indexOf("<shortName>LUQMetadata76</shortName>") != -1);
-                data.close();
+                printHeader("testGetNotFound - node " + nodeList.get(i).getBaseURL());
+                String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
+                AuthToken token = d1.login(principal, "kepler");
+                Identifier guid = new Identifier();
+                guid.setValue(bogusId);
+                InputStream data = d1.get(token, guid);
+                fail("NotFound exception should have been thrown for non-existent ID.");
             } catch (InvalidToken e) {
                 fail(e.getDescription());
             } catch (ServiceFailure e) {
@@ -563,68 +689,30 @@ public class D1ClientTest  {
             } catch (NotAuthorized e) {
                 fail(e.getDescription());
             } catch (NotFound e) {
-                fail(e.getDescription());
+                String error = e.serialize(BaseException.FMT_XML);
+                System.out.println(error);
+                assertTrue(error.indexOf("<error") != -1);
             } catch (NotImplemented e) {
                 fail(e.getDescription());
-            } catch (IOException e) {
-                fail("get() test failed while closing data stream. " + e.getMessage());
             }
         }
-        catch(Exception e)
-        {
-            fail("Unexpected exception: " + e.getMessage());
-        }
     }
     
     @Test
-    public void testDelete() {
-        printHeader("testDelete");
+    public void testGetChecksumAuthTokenIdentifierType() 
+    {
         assertTrue(1==1);
     }
     
     @Test
-    public void testDescribe() {
-        printHeader("testDescribe");
-        assertTrue(1==1);
-    }
-
-    @Test
-    public void testGetNotFound() {
-        try {
-            printHeader("testGetNotFound");
-            String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
-            AuthToken token = d1.login(principal, "kepler");
-            Identifier guid = new Identifier();
-            guid.setValue(bogusId);
-            InputStream data = d1.get(token, guid);
-            fail("NotFound exception should have been thrown for non-existent ID.");
-        } catch (InvalidToken e) {
-            fail(e.getDescription());
-        } catch (ServiceFailure e) {
-            fail(e.getDescription());
-        } catch (NotAuthorized e) {
-            fail(e.getDescription());
-        } catch (NotFound e) {
-            String error = e.serialize(BaseException.FMT_XML);
-            System.out.println(error);
-            assertTrue(error.indexOf("<error") != -1);
-        } catch (NotImplemented e) {
-            fail(e.getDescription());
-        }
-    }
-    
-    @Test
-    public void testGetChecksumAuthTokenIdentifierType() {
-        assertTrue(1==1);
-    }
-    
-    @Test
-    public void testGetChecksumAuthTokenIdentifierTypeString() {
+    public void testGetChecksumAuthTokenIdentifierTypeString() 
+    {
         assertTrue(1==1);
     }
 
     /** Generate a SystemMetadata object with bogus data. */
-    private static SystemMetadata generateSystemMetadata(Identifier guid, ObjectFormat objectFormat) {
+    private static SystemMetadata generateSystemMetadata(Identifier guid, ObjectFormat objectFormat) 
+    {
         SystemMetadata sysmeta = new SystemMetadata();
         sysmeta.setIdentifier(guid);
         sysmeta.setObjectFormat(objectFormat);
@@ -668,7 +756,7 @@ public class D1ClientTest  {
      * @param metadataResourcePath
      * @return
      */
-    public SystemMetadata getSystemMetadata(String metadataResourcePath)  {
+    private SystemMetadata getSystemMetadata(String metadataResourcePath)  {
         printHeader("testGetSystemMetadata");
         SystemMetadata  systemMetadata = null;
         InputStream inputStream = null;
@@ -694,5 +782,10 @@ public class D1ClientTest  {
             }
         }
         return systemMetadata;
+    }
+    
+    private void printHeader(String methodName)
+    {
+        System.out.println("\n***************** running test for " + methodName + " *****************");
     }
 }
