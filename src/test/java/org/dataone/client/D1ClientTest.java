@@ -159,7 +159,7 @@ public class D1ClientTest  {
                    LogEntry le = log.getLogEntry(i);
                    //System.out.println("le: " + le.getIdentifier().getValue());
                    //System.out.println("rGuid: " + rGuid.getValue());
-                   if(le.getIdentifier().getValue().equals(rGuid.getValue()))
+                   if(le.getIdentifier().getValue().trim().equals(rGuid.getValue().trim()))
                    {
                        isfound = true;
                        System.out.println("log record found");
@@ -255,7 +255,7 @@ public class D1ClientTest  {
                 for(int i=0; i<ol2.sizeObjectInfoList(); i++)
                 {
                     ObjectInfo oi = ol2.getObjectInfo(i);
-                    if(oi.getIdentifier().getValue().equals(rGuid.getValue()))
+                    if(oi.getIdentifier().getValue().trim().equals(rGuid.getValue().trim()))
                     {
                         isthere = true;
                         break;
@@ -271,7 +271,7 @@ public class D1ClientTest  {
                 for(int i=0; i<ol2.sizeObjectInfoList(); i++)
                 {
                     ObjectInfo oi = ol2.getObjectInfo(i);
-                    if(oi.getIdentifier().getValue().equals(rGuid.getValue()))
+                    if(oi.getIdentifier().getValue().trim().equals(rGuid.getValue().trim()))
                     {
                         isthere = true;
                         break;
