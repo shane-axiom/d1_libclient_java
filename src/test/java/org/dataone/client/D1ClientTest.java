@@ -22,9 +22,12 @@ import java.io.*;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.concurrent.Callable;
 
 import org.junit.*;
+import org.junit.rules.*;
 import static org.junit.Assert.*;
+import static  org.hamcrest.CoreMatchers.is;
 
 import org.apache.commons.io.IOUtils;
 import org.dataone.service.exceptions.BaseException;
@@ -68,6 +71,12 @@ public class D1ClientTest  {
     private D1Client d1 = null;
     private List<Node> nodeList = null;
     private boolean useNodeList = true;
+    private static String currentUrl;
+    
+    private static String watchedLog;
+    
+    @Rule 
+    public ErrorCollector errorCollector = new ErrorCollector();
 
     @Before
     public void setUp() throws Exception 
@@ -106,7 +115,7 @@ public class D1ClientTest  {
             System.out.println(i + ": " + nodeList.get(i).getBaseURL());
         }*/
     }
-    
+
     /**
      * test the getLogRecords call
      */
@@ -115,7 +124,8 @@ public class D1ClientTest  {
     {
        for(int j=0; j<nodeList.size(); j++)
        {
-           d1 = new D1Client(nodeList.get(j).getBaseURL());
+           currentUrl = nodeList.get(j).getBaseURL();
+           d1 = new D1Client(currentUrl);
            
            printHeader("testGetLogRecords - node " + nodeList.get(j).getBaseURL());
            System.out.println("current time is: " + new Date());
@@ -135,8 +145,8 @@ public class D1ClientTest  {
                InputStream data = d1.get(token, rGuid);
                String str = IOUtils.toString(data);
                //System.out.println("str: " + str);
-               assertTrue(str.indexOf("x,y,z") != -1);
-               assertEquals(guid.getValue(), rGuid.getValue());
+               checkTrue(str.indexOf("x,y,z") != -1);
+               checkEquals(guid.getValue(), rGuid.getValue());
 
                //get the logs for the last minute
                Date end = new Date(System.currentTimeMillis() + 500000);
@@ -157,13 +167,13 @@ public class D1ClientTest  {
                    }
                }
                System.out.println("isfound: " + isfound);
-               assertTrue(isfound);
+               checkTrue(isfound);
 
            } 
            catch(Exception e)
            {
                e.printStackTrace();
-               fail("testGetLogRecords threw an unexpected exception: " + e.getMessage());
+               errorCollector.addError(new Throwable(createAssertMessage() + " threw an unexpected exception: " + e.getMessage()));
            }
        }
     }
@@ -176,7 +186,8 @@ public class D1ClientTest  {
     {
         for(int j=0; j<nodeList.size(); j++)
         {
-            d1 = new D1Client(nodeList.get(j).getBaseURL());
+            currentUrl = nodeList.get(j).getBaseURL();
+            d1 = new D1Client(currentUrl);
             
             printHeader("testListObjects - node " + nodeList.get(j).getBaseURL());
             System.out.println("current time is: " + new Date());
@@ -194,16 +205,18 @@ public class D1ClientTest  {
                 SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
 
                 Identifier rGuid = d1.create(token, guid, objectStream, sysmeta);
-
-                assertEquals(guid.getValue(), rGuid.getValue());
-
+                
+                checkEquals(rGuid.getValue(), guid.getValue());
+                
                 //make the inserted documents public
                 d1.setAccess(token, rGuid, "public", "read", "allow", "allowFirst");
 
                 //get the objectList and make sure our created doc is in it
                 ObjectList ol = d1.listObjects(token, null, null, null, false, 0, 1000);
                 boolean isThere = false;
-                assertTrue(ol.sizeObjectInfoList() > 0);
+                
+                checkTrue(ol.sizeObjectInfoList() > 0);
+                
                 //System.out.println("ol size: " + ol.sizeObjectInfoList());
                 //System.out.println("guid: " + guid.getValue());
                 for(int i=0; i<ol.sizeObjectInfoList(); i++)
@@ -219,8 +232,8 @@ public class D1ClientTest  {
                     }
                 }
 
-                assertTrue(isThere);
-
+                checkTrue(isThere);
+                
                 idString = prefix + ExampleUtilities.generateIdentifier();
                 guid = new Identifier();
                 guid.setValue(idString);
@@ -230,15 +243,14 @@ public class D1ClientTest  {
                 rGuid = d1.create(token, guid, objectStream, sysmeta);
                 System.out.println("inserted doc with id " + rGuid.getValue());
 
-                assertEquals(guid.getValue(), rGuid.getValue());
-
+                checkEquals(guid.getValue(), rGuid.getValue());
+                
                 //make the inserted documents public
                 d1.setAccess(token, rGuid, "public", "read", "allow", "allowFirst");
 
                 Date date2 = new Date(System.currentTimeMillis() + 1000000);
 
                 ObjectList ol2 = d1.listObjects(token, date1, date2, null, false, 0, 1000);
-                //assertTrue(ol2.sizeObjectInfoList() == 1);
                 boolean isthere = false;
                 for(int i=0; i<ol2.sizeObjectInfoList(); i++)
                 {
@@ -250,8 +262,8 @@ public class D1ClientTest  {
                     }
                 }
                 System.out.println("isthere: " + isthere);
-                assertTrue(isthere);
-
+                checkTrue(isthere);
+                
                 //test with a public token.  should get the same result since both docs are public
                 token = new AuthToken("public");
                 ol2 = d1.listObjects(token, null, null, null, false, 0, 1000);
@@ -266,12 +278,12 @@ public class D1ClientTest  {
                     }
                 }
                 System.out.println("isthere: " + isthere);
-                assertTrue(isthere);
+                checkTrue(isthere);
             }
             catch(Exception e)
             {
                 e.printStackTrace();
-                fail("Could not list objects: " + e.getMessage());
+                errorCollector.addError(new Throwable(createAssertMessage() + " could not list object: " + e.getMessage()));
             }
         }
     }
@@ -284,7 +296,8 @@ public class D1ClientTest  {
     {
         for(int i=0; i<nodeList.size(); i++)
         {
-            d1 = new D1Client(nodeList.get(i).getBaseURL());
+            currentUrl = nodeList.get(i).getBaseURL();
+            d1 = new D1Client(currentUrl);
             
             printHeader("testGetSystemMetadata - node " + nodeList.get(i).getBaseURL());
             try
@@ -298,17 +311,17 @@ public class D1ClientTest  {
                 InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
                 SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
                 Identifier rGuid = d1.create(token, guid, objectStream, sysmeta);
-                assertEquals(guid.getValue(), rGuid.getValue());
+                checkEquals(guid.getValue(), rGuid.getValue());
                 //System.out.println("create success, id returned is " + rGuid.getValue());
 
                 //get the system metadata
                 SystemMetadata sm = d1.getSystemMetadata(token, rGuid);
-                assertTrue(guid.getValue().equals(sm.getIdentifier().getValue()));
+                checkTrue(guid.getValue().equals(sm.getIdentifier().getValue()));
             }
             catch(Exception e)
             {
                 e.printStackTrace();
-                fail("Error in getSystemMetadata: " + e.getMessage());
+                errorCollector.addError(new Throwable(createAssertMessage() + " error in getSystemMetadata: " + e.getMessage()));
             }
         }
     }
@@ -321,7 +334,8 @@ public class D1ClientTest  {
     {
         for(int i=0; i<nodeList.size(); i++)
         {
-            d1 = new D1Client(nodeList.get(i).getBaseURL());
+            currentUrl = nodeList.get(i).getBaseURL();
+            d1 = new D1Client(currentUrl);
             
             printHeader("testUpdate - node " + nodeList.get(i).getBaseURL());
             try 
@@ -335,14 +349,14 @@ public class D1ClientTest  {
                 InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
                 SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
                 Identifier rGuid = d1.create(token, guid, objectStream, sysmeta);
-                assertEquals(guid.getValue(), rGuid.getValue());
+                checkEquals(guid.getValue(), rGuid.getValue());
                 //System.out.println("create success, id returned is " + rGuid.getValue());
 
                 //get the document
                 InputStream data = d1.get(token, rGuid);
-                assertNotNull(data);
+                checkTrue(null != data);
                 String str = IOUtils.toString(data);
-                assertTrue(str.indexOf("x,y,z\n1,2,3") != -1);
+                checkTrue(str.indexOf("x,y,z\n1,2,3") != -1);
                 data.close();
 
                 //alter the document
@@ -358,15 +372,15 @@ public class D1ClientTest  {
 
                 //perform tests
                 data = d1.get(token, nGuid);
-                assertNotNull(data);
+                checkTrue(null != data);
                 str = IOUtils.toString(data);
-                assertTrue(str.indexOf("a,y,z\n1,2,3") != -1);
+                checkTrue(str.indexOf("a,y,z\n1,2,3") != -1);
                 data.close();
             }
             catch(Exception e)
             {
                 e.printStackTrace();
-                fail("Error in testUpdate: " + e.getMessage());
+                errorCollector.addError(new Throwable(createAssertMessage() + " error in testUpdate: " + e.getMessage()));
             }
         }
     }
@@ -379,12 +393,13 @@ public class D1ClientTest  {
     public void testCreateData() {
         for(int i=0; i<nodeList.size(); i++)
         {
-            d1 = new D1Client(nodeList.get(i).getBaseURL());
+            currentUrl = nodeList.get(i).getBaseURL();
+            d1 = new D1Client(currentUrl);
 
             printHeader("testCreateData - node " + nodeList.get(i).getBaseURL());
             try
             {
-                assertTrue(1==1);
+                checkTrue(1==1);
                 String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
                 AuthToken token = d1.login(principal, "kepler");
                 String idString = prefix + ExampleUtilities.generateIdentifier();
@@ -396,49 +411,24 @@ public class D1ClientTest  {
 
                 try {
                     rGuid = d1.create(token, guid, objectStream, sysmeta);
-                    assertEquals(guid.getValue(), rGuid.getValue());
-                } catch (InvalidToken e) {
-                    fail(e.getMessage());
-                } catch (ServiceFailure e) {
-                    e.printStackTrace();
-                    fail(e.getMessage());
-                } catch (NotAuthorized e) {
-                    fail(e.getMessage());
-                } catch (IdentifierNotUnique e) {
-                    fail(e.getMessage());
-                } catch (UnsupportedType e) {
-                    fail(e.getMessage());
-                } catch (InsufficientResources e) {
-                    fail(e.getMessage());
-                } catch (InvalidSystemMetadata e) {
-                    fail(e.getMessage());
-                } catch (NotImplemented e) {
-                    fail(e.getMessage());
+                    checkEquals(guid.getValue(), rGuid.getValue());
+                } catch (Exception e) {
+                    errorCollector.addError(new Throwable(createAssertMessage() + " error in testCreateData: " + e.getMessage()));
                 }
 
                 try {
                     InputStream data = d1.get(token, rGuid);
-                    assertNotNull(data);
+                    checkTrue(null != data);
                     String str = IOUtils.toString(data);
-                    assertTrue(str.indexOf("x,y,z\n1,2,3") != -1);
+                    checkTrue(str.indexOf("x,y,z\n1,2,3") != -1);
                     data.close();
-                } catch (InvalidToken e) {
-                    fail(e.getDescription());
-                } catch (ServiceFailure e) {
-                    fail(e.getDescription());
-                } catch (NotAuthorized e) {
-                    fail(e.getDescription());
-                } catch (NotFound e) {
-                    fail(e.getDescription());
-                } catch (NotImplemented e) {
-                    fail(e.getDescription());
-                } catch (IOException e) {
-                    fail("get() test failed while closing data stream. " + e.getMessage());
-                }
+                } catch (Exception e) {
+                    errorCollector.addError(new Throwable(createAssertMessage() + " error in testCreateData: " + e.getMessage()));
+                } 
             }
             catch(Exception e)
             {
-                fail("unexpected exception: " + e.getMessage());
+                errorCollector.addError(new Throwable(createAssertMessage() + " unexpected error in testCreateData: " + e.getMessage()));
             }
         }
     }
@@ -450,7 +440,8 @@ public class D1ClientTest  {
     public void testFailedCreateData() {
         for(int i=0; i<nodeList.size(); i++)
         {
-            d1 = new D1Client(nodeList.get(i).getBaseURL());
+            currentUrl = nodeList.get(i).getBaseURL();
+            d1 = new D1Client(currentUrl);
             
             printHeader("testFailedCreateData - node " + nodeList.get(i).getBaseURL());
             /*try 
@@ -486,7 +477,7 @@ public class D1ClientTest  {
         }*/
             try
             {
-                assertTrue(1==1);
+                checkTrue(1==1);
                 String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
                 AuthToken token = d1.login(principal, "kepler");
                 String idString = prefix + ExampleUtilities.generateIdentifier();
@@ -500,18 +491,18 @@ public class D1ClientTest  {
 
                 //insert
                 rGuid = d1.create(token, guid, objectStream, sysmeta);
-                assertEquals(guid.getValue(), rGuid.getValue());
+                checkEquals(guid.getValue(), rGuid.getValue());
 
                 //get
                 InputStream data = d1.get(token, rGuid);
-                assertNotNull(data);
+                checkTrue(null != data);
                 String str = IOUtils.toString(data);
-                assertTrue(str.indexOf("BAYXXX_015ADCP015R00_20051215.50.9") != -1);
+                checkTrue(str.indexOf("BAYXXX_015ADCP015R00_20051215.50.9") != -1);
                 data.close();
             }
             catch(Exception e)
             {
-                fail("unexpected exception: " + e.getMessage());
+                errorCollector.addError(new Throwable(createAssertMessage() + " error in testFailedCreateData: " + e.getMessage()));
             }
         }
     }
@@ -524,7 +515,8 @@ public class D1ClientTest  {
     {
         for(int i=0; i<nodeList.size(); i++)
         {
-            d1 = new D1Client(nodeList.get(i).getBaseURL());
+            currentUrl = nodeList.get(i).getBaseURL();
+            d1 = new D1Client(currentUrl);
             
             printHeader("testGet - node " + nodeList.get(i).getBaseURL());
             try
@@ -535,12 +527,12 @@ public class D1ClientTest  {
                 String idString = prefix + ExampleUtilities.generateIdentifier();
                 Identifier guid = new Identifier();
                 guid.setValue(idString);
-                //InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-luq.76.2.xml");
-                InputStream objectStream = IOUtils.toInputStream("<?xml version=\"1.0\"?><test></test>");
+                InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-luq.76.2.xml");
+                //InputStream objectStream = IOUtils.toInputStream("<?xml version=\"1.0\"?><test></test>");
                 SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.EML_2_1_0);
                 Identifier rGuid = null;
                 rGuid = d1.create(token, guid, objectStream, sysmeta);
-                assertEquals(guid.getValue(), rGuid.getValue());
+                checkEquals(guid.getValue(), rGuid.getValue());
 
                 //try to get it as public.  this should fail
                 AuthToken publicToken = new AuthToken("public");
@@ -565,7 +557,7 @@ public class D1ClientTest  {
             catch(Exception e)
             {
                 e.printStackTrace();
-                fail("Unexpected error in testGet: " + e.getMessage());
+                errorCollector.addError(new Throwable(createAssertMessage() + " error in testGet: " + e.getMessage()));
             }
         }
     }
@@ -579,12 +571,13 @@ public class D1ClientTest  {
     {
         for(int i=0; i<nodeList.size(); i++)
         {
-            d1 = new D1Client(nodeList.get(i).getBaseURL());
+            currentUrl = nodeList.get(i).getBaseURL();
+            d1 = new D1Client(currentUrl);
             
             try
             {
                 printHeader("testCreateScienceMetadata - node " + nodeList.get(i).getBaseURL());
-                assertTrue(1==1);
+                checkTrue(1==1);
                 String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
                 AuthToken token = d1.login(principal, "kepler");
                 String idString = prefix + ExampleUtilities.generateIdentifier();
@@ -596,49 +589,25 @@ public class D1ClientTest  {
 
                 try {
                     rGuid = d1.create(token, guid, objectStream, sysmeta);
-                    assertEquals(guid.getValue(), rGuid.getValue());
-                } catch (InvalidToken e) {
-                    fail(e.getMessage());
-                } catch (ServiceFailure e) {
-                    fail(e.getMessage());
-                } catch (NotAuthorized e) {
-                    fail(e.getMessage());
-                } catch (IdentifierNotUnique e) {
-                    fail(e.getMessage());
-                } catch (UnsupportedType e) {
-                    fail(e.getMessage());
-                } catch (InsufficientResources e) {
-                    fail(e.getMessage());
-                } catch (InvalidSystemMetadata e) {
-                    fail(e.getMessage());
-                } catch (NotImplemented e) {
-                    fail(e.getMessage());
+                    checkEquals(guid.getValue(), rGuid.getValue());
+                } catch (Exception e) {
+                    errorCollector.addError(new Throwable(createAssertMessage() + " error in testCreateScienceMetadata: " + e.getMessage()));
                 }
 
 
                 try {
                     InputStream data = d1.get(token, rGuid);
-                    assertNotNull(data);
+                    checkTrue(null != data);
                     String str = IOUtils.toString(data);
-                    assertTrue(str.indexOf("<shortName>LUQMetadata76</shortName>") != -1);
+                    checkTrue(str.indexOf("<shortName>LUQMetadata76</shortName>") != -1);
                     data.close();
-                } catch (InvalidToken e) {
-                    fail(e.getDescription());
-                } catch (ServiceFailure e) {
-                    fail(e.getDescription());
-                } catch (NotAuthorized e) {
-                    fail(e.getDescription());
-                } catch (NotFound e) {
-                    fail(e.getDescription());
-                } catch (NotImplemented e) {
-                    fail(e.getDescription());
-                } catch (IOException e) {
-                    fail("get() test failed while closing data stream. " + e.getMessage());
-                }
+                } catch (Exception e) {
+                    errorCollector.addError(new Throwable(createAssertMessage() + " error in testCreateScienceMetadata: " + e.getMessage()));
+                } 
             }
             catch(Exception e)
             {
-                fail("Unexpected exception: " + e.getMessage());
+                errorCollector.addError(new Throwable(createAssertMessage() + " unexpected error in testCreateScienceMetadata: " + e.getMessage()));
             }
         }
     }
@@ -648,10 +617,11 @@ public class D1ClientTest  {
     {
         for(int i=0; i<nodeList.size(); i++)
         {
-            d1 = new D1Client(nodeList.get(i).getBaseURL());
+            currentUrl = nodeList.get(i).getBaseURL();
+            d1 = new D1Client(currentUrl);
             
             printHeader("testDelete - node " + nodeList.get(i).getBaseURL());
-            assertTrue(1==1);
+            checkTrue(1==1);
         }
     }
     
@@ -660,10 +630,11 @@ public class D1ClientTest  {
     {
         for(int i=0; i<nodeList.size(); i++)
         {
-            d1 = new D1Client(nodeList.get(i).getBaseURL());
+            currentUrl = nodeList.get(i).getBaseURL();
+            d1 = new D1Client(currentUrl);
             
             printHeader("testDescribe - node " + nodeList.get(i).getBaseURL());
-            assertTrue(1==1);
+            checkTrue(1==1);
         }
     }
 
@@ -672,7 +643,8 @@ public class D1ClientTest  {
     {
         for(int i=0; i<nodeList.size(); i++)
         {
-            d1 = new D1Client(nodeList.get(i).getBaseURL());
+            currentUrl = nodeList.get(i).getBaseURL();
+            d1 = new D1Client(currentUrl);
             
             try {
                 printHeader("testGetNotFound - node " + nodeList.get(i).getBaseURL());
@@ -681,19 +653,14 @@ public class D1ClientTest  {
                 Identifier guid = new Identifier();
                 guid.setValue(bogusId);
                 InputStream data = d1.get(token, guid);
-                fail("NotFound exception should have been thrown for non-existent ID.");
-            } catch (InvalidToken e) {
-                fail(e.getDescription());
-            } catch (ServiceFailure e) {
-                fail(e.getDescription());
-            } catch (NotAuthorized e) {
-                fail(e.getDescription());
-            } catch (NotFound e) {
+                errorCollector.addError(new Throwable(createAssertMessage() + " NotFound exception should have been thrown"));
+            }  catch (NotFound e) {
                 String error = e.serialize(BaseException.FMT_XML);
                 System.out.println(error);
-                assertTrue(error.indexOf("<error") != -1);
-            } catch (NotImplemented e) {
-                fail(e.getDescription());
+                checkTrue(error.indexOf("<error") != -1);
+            } catch (Exception e) {
+                errorCollector.addError(new Throwable(createAssertMessage() + " unexpected exception in testGetNotFound: " + 
+                        e.getMessage()));
             }
         }
     }
@@ -701,13 +668,18 @@ public class D1ClientTest  {
     @Test
     public void testGetChecksumAuthTokenIdentifierType() 
     {
-        assertTrue(1==1);
+        checkTrue(1==1);
     }
     
     @Test
     public void testGetChecksumAuthTokenIdentifierTypeString() 
     {
-        assertTrue(1==1);
+        checkTrue(1==1);
+    }
+    
+    private static String createAssertMessage()
+    {
+        return "test failed at url " + currentUrl;
     }
 
     /** Generate a SystemMetadata object with bogus data. */
@@ -787,5 +759,30 @@ public class D1ClientTest  {
     private void printHeader(String methodName)
     {
         System.out.println("\n***************** running test for " + methodName + " *****************");
+    }
+    
+    private void checkEquals(final String s1, final String s2)
+    {
+        errorCollector.checkSucceeds(new Callable<Object>() 
+        {
+            public Object call() throws Exception 
+            {
+                assertThat("assertion failed for host " + currentUrl, s1, is(s2));
+                //assertThat("assertion failed for host " + currentUrl, s1, is(s2 + "x"));
+                return null;
+            }
+        });
+    }
+    
+    private void checkTrue(final boolean b)
+    {
+        errorCollector.checkSucceeds(new Callable<Object>() 
+        {
+            public Object call() throws Exception 
+            {
+                assertThat("assertion failed for host " + currentUrl, true, is(b));
+                return null;
+            }
+        });
     }
 }
