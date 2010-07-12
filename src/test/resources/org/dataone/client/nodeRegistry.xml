@@ -39,7 +39,7 @@
     </node>
     
     <!-- localhost MN -->
-    <node type="member" synchronize="true" replicate="true">
+    <!--<node type="member" synchronize="true" replicate="true">
         <identifier>3</identifier>
         <name>knb-mn</name>
         <baseURL>http://localhost:8080/knb/</baseURL>  
@@ -53,7 +53,7 @@
             <lastHarvested>2010-06-07T23:55:10Z</lastHarvested>
             <lastCompleteHarvest>2010-06-07T23:55:10Z</lastCompleteHarvest>
         </synchronization>
-    </node>
+    </node>-->
     
     <!-- DAC MN -->
     <!--<node type="member" synchronize="true" replicate="true">
