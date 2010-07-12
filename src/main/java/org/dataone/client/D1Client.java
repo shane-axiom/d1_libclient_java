@@ -164,7 +164,7 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
      * @throws ServiceFailure
      */
     public AuthToken login(String username, String password)
-      throws ServiceFailure
+      throws ServiceFailure, NotImplemented
     {
         String postData = "username=" + username + "&password=" + password;
         String params = "qformat=xml&op=login";

@@ -19,11 +19,11 @@
             <lastHarvested>2010-06-07T23:55:10Z</lastHarvested>
             <lastCompleteHarvest>2010-06-07T23:55:10Z</lastCompleteHarvest>
         </synchronization>
-    </node>
+    </node> 
     
     <!-- KNB MN -->
     <node type="member" synchronize="true" replicate="true">
-        <identifier>1</identifier>
+        <identifier>2</identifier>
         <name>knb-mn</name>
         <baseURL>http://knb-mn.ecoinformatics.org/knb/</baseURL>  
         <services>
@@ -38,8 +38,26 @@
         </synchronization>
     </node>
     
+    <!-- localhost MN -->
+    <node type="member" synchronize="true" replicate="true">
+        <identifier>3</identifier>
+        <name>knb-mn</name>
+        <baseURL>http://localhost:8080/knb/</baseURL>  
+        <services>
+            <service api="mn_crud" method="get" rest="object/${GUID}" available="true"    datechecked="2010-06-07T23:55:10Z" />
+            <service api="mn_crud" method="getSystemMetadata" rest="meta/${GUID}" available="true"     datechecked="2010-06-07T23:55:10Z" />
+            <service api="mn_replicate" method="listObjects" rest="object" available="true"    datechecked="2010-06-07T23:55:10Z" />
+        </services>
+        <synchronization>
+            <schedule sec="00" min="00" hour="12" mday="*"  mon="*" wday="*" year="*" />
+            <lastHarvested>2010-06-07T23:55:10Z</lastHarvested>
+            <lastCompleteHarvest>2010-06-07T23:55:10Z</lastCompleteHarvest>
+        </synchronization>
+    </node>
+    
+    <!-- DAC MN -->
     <!--<node type="member" synchronize="true" replicate="true">
-        <identifier>1</identifier>
+        <identifier>4</identifier>
         <name>knb-mn</name>
         <baseURL>http://129.24.0.11/mn/</baseURL>  
         <services>
@@ -52,6 +70,5 @@
             <lastHarvested>2010-06-07T23:55:10Z</lastHarvested>
             <lastCompleteHarvest>2010-06-07T23:55:10Z</lastCompleteHarvest>
         </synchronization>
-    </node>-->
-    
+    </node> -->    
 </d1:nodeRegistry>

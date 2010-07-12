@@ -57,9 +57,9 @@ public class D1ClientTest  {
 
     // TODO: move these hardcoded properties out to a test configuration
     //protected static String contextUrl = "http://localhost:8080/knb/";
-    protected static String contextUrl = "http://knb-mn.ecoinformatics.org/knb/";
+    //protected static String contextUrl = "http://knb-mn.ecoinformatics.org/knb/";
     //protected static String contextUrl = "http://mn-rpw/mn/";
-    //protected static String contextUrl = "http://cn-dev.dataone.org/knb/";
+    protected static String contextUrl = "http://cn-dev.dataone.org/knb/";
 
     // TODO: use the create() and insert() methods to create predictable test data,
     // rather than hardcoding test assumptions here
@@ -72,6 +72,9 @@ public class D1ClientTest  {
     private List<Node> nodeList = null;
     private boolean useNodeList = true;
     private static String currentUrl;
+    //set this to false if you don't want to use the node list to get the urls for 
+    //the test.  
+    private static boolean useNodeList = false;
     
     private static String watchedLog;
     
@@ -101,7 +104,7 @@ public class D1ClientTest  {
             
         }
         
-        if(nodeList == null || nodeList.size() == 0)
+        if(nodeList == null || nodeList.size() == 0 || !useNodeList)
         {
             nodeList = new Vector<Node>();
             Node n = new Node();
