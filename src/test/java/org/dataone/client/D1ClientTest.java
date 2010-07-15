@@ -84,12 +84,12 @@ public class D1ClientTest  {
     public void setUp() throws Exception 
     {
         InputStream nodeRegStream = this.getClass().getResourceAsStream("/org/dataone/client/nodeRegistry.xml");
-        NodeRegistry nr = null;
+        NodeList nr = null;
         try 
         {
-            IBindingFactory bfact = BindingDirectory.getFactory(NodeRegistry.class);
+            IBindingFactory bfact = BindingDirectory.getFactory(NodeList.class);
             IUnmarshallingContext uctx = bfact.createUnmarshallingContext();
-            nr = (NodeRegistry) uctx.unmarshalDocument(nodeRegStream, null);
+            nr = (NodeList) uctx.unmarshalDocument(nodeRegStream, null);
         } 
         catch (JiBXException e) 
         {
