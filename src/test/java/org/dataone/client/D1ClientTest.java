@@ -131,7 +131,7 @@ public class D1ClientTest  {
     /**
      * test the getLogRecords call
      */
-    //@Test
+    @Test
     public void testGetLogRecords()
     {
        for(int j=0; j<nodeList.size(); j++)
@@ -193,7 +193,7 @@ public class D1ClientTest  {
     /**
      * list objects with specified params
      */
-    //@Test
+    @Test
     public void testListObjects()
     {
         for(int j=0; j<nodeList.size(); j++)
@@ -303,7 +303,7 @@ public class D1ClientTest  {
     /**
      * get a systemMetadata resource
      */
-    //@Test
+    @Test
     public void testGetSystemMetadata()
     {
         for(int i=0; i<nodeList.size(); i++)
@@ -341,7 +341,7 @@ public class D1ClientTest  {
     /**
      * test the update of a resource
      */
-    //@Test
+    @Test
     public void testUpdate()
     {
         for(int i=0; i<nodeList.size(); i++)
@@ -401,7 +401,7 @@ public class D1ClientTest  {
      * test creation of data.  this also tests get() since it
      * is used to verify the inserted metadata
      */
-    //@Test
+    @Test
     public void testCreateData() {
         for(int i=0; i<nodeList.size(); i++)
         {
@@ -448,7 +448,7 @@ public class D1ClientTest  {
      * test the error state where metacat fails if the id includes a .\d on
      * the end.
      */
-    //@Test
+    @Test
     public void testFailedCreateData() {
         for(int i=0; i<nodeList.size(); i++)
         {
@@ -578,7 +578,7 @@ public class D1ClientTest  {
      * test creation of science metadata.  this also tests get() since it
      * is used to verify the inserted metadata
      */
-    //@Test
+    @Test
     public void testCreateScienceMetadata() 
     {
         for(int i=0; i<nodeList.size(); i++)
@@ -624,7 +624,7 @@ public class D1ClientTest  {
         }
     }
     
-    //@Test
+    @Test
     public void testDelete() 
     {
         for(int i=0; i<nodeList.size(); i++)
@@ -637,7 +637,7 @@ public class D1ClientTest  {
         }
     }
     
-    //@Test
+    @Test
     public void testDescribe() 
     {
         for(int i=0; i<nodeList.size(); i++)
@@ -650,7 +650,7 @@ public class D1ClientTest  {
         }
     }
 
-    //@Test
+    @Test
     public void testGetNotFound() 
     {
         for(int i=0; i<nodeList.size(); i++)
@@ -677,13 +677,13 @@ public class D1ClientTest  {
         }
     }
     
-    //@Test
+    @Test
     public void testGetChecksumAuthTokenIdentifierType() 
     {
         checkTrue(1==1);
     }
     
-    //@Test
+    @Test
     public void testGetChecksumAuthTokenIdentifierTypeString() 
     {
         checkTrue(1==1);
