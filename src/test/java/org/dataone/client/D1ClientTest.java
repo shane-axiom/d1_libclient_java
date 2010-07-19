@@ -57,9 +57,9 @@ public class D1ClientTest  {
 
     // TODO: move these hardcoded properties out to a test configuration
     //protected static String contextUrl = "http://localhost:8080/knb/";
-    //protected static String contextUrl = "http://knb-mn.ecoinformatics.org/knb/";
+    protected static String contextUrl = "http://knb-mn.ecoinformatics.org/knb/";
     //protected static String contextUrl = "http://mn-rpw/mn/";
-    protected static String contextUrl = "http://cn-dev.dataone.org/knb/";
+    //protected static String contextUrl = "http://cn-dev.dataone.org/knb/";
 
     // TODO: use the create() and insert() methods to create predictable test data,
     // rather than hardcoding test assumptions here
@@ -85,7 +85,9 @@ public class D1ClientTest  {
     {
         InputStream nodeRegStream = this.getClass().getResourceAsStream("/org/dataone/client/nodeRegistry.xml");
         NodeList nr = null;
-        try 
+        
+        
+        /*try 
         {
             IBindingFactory bfact = BindingDirectory.getFactory(NodeList.class);
             IUnmarshallingContext uctx = bfact.createUnmarshallingContext();
@@ -101,7 +103,15 @@ public class D1ClientTest  {
         {
             nodeList = nr.getNodes();
             
-        }
+        }*/
+        
+        nodeList = new Vector<Node>();
+        Node n1 = new Node();
+        Node n2 = new Node();
+        n1.setBaseURL("http://knb-mn.ecoinformatics.org/knb/");
+        n2.setBaseURL("http://cn-dev.dataone.org/knb/");
+        nodeList.add(n1);
+        nodeList.add(n2);
         
         if(nodeList == null || nodeList.size() == 0 || !useNodeList)
         {
@@ -121,7 +131,7 @@ public class D1ClientTest  {
     /**
      * test the getLogRecords call
      */
-    @Test
+    //@Test
     public void testGetLogRecords()
     {
        for(int j=0; j<nodeList.size(); j++)
@@ -183,7 +193,7 @@ public class D1ClientTest  {
     /**
      * list objects with specified params
      */
-    @Test
+    //@Test
     public void testListObjects()
     {
         for(int j=0; j<nodeList.size(); j++)
@@ -293,7 +303,7 @@ public class D1ClientTest  {
     /**
      * get a systemMetadata resource
      */
-    @Test
+    //@Test
     public void testGetSystemMetadata()
     {
         for(int i=0; i<nodeList.size(); i++)
@@ -331,7 +341,7 @@ public class D1ClientTest  {
     /**
      * test the update of a resource
      */
-    @Test
+    //@Test
     public void testUpdate()
     {
         for(int i=0; i<nodeList.size(); i++)
@@ -391,7 +401,7 @@ public class D1ClientTest  {
      * test creation of data.  this also tests get() since it
      * is used to verify the inserted metadata
      */
-    @Test
+    //@Test
     public void testCreateData() {
         for(int i=0; i<nodeList.size(); i++)
         {
@@ -438,7 +448,7 @@ public class D1ClientTest  {
      * test the error state where metacat fails if the id includes a .\d on
      * the end.
      */
-    @Test
+    //@Test
     public void testFailedCreateData() {
         for(int i=0; i<nodeList.size(); i++)
         {
@@ -529,8 +539,8 @@ public class D1ClientTest  {
                 String idString = prefix + ExampleUtilities.generateIdentifier();
                 Identifier guid = new Identifier();
                 guid.setValue(idString);
-                InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-luq.76.2.xml");
-                //InputStream objectStream = IOUtils.toInputStream("<?xml version=\"1.0\"?><test></test>");
+                //InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-luq.76.2.xml");
+                InputStream objectStream = IOUtils.toInputStream("<?xml version=\"1.0\"?><test></test>");
                 SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.EML_2_1_0);
                 Identifier rGuid = null;
                 rGuid = d1.create(token, guid, objectStream, sysmeta);
@@ -568,7 +578,7 @@ public class D1ClientTest  {
      * test creation of science metadata.  this also tests get() since it
      * is used to verify the inserted metadata
      */
-    @Test
+    //@Test
     public void testCreateScienceMetadata() 
     {
         for(int i=0; i<nodeList.size(); i++)
@@ -614,7 +624,7 @@ public class D1ClientTest  {
         }
     }
     
-    @Test
+    //@Test
     public void testDelete() 
     {
         for(int i=0; i<nodeList.size(); i++)
@@ -627,7 +637,7 @@ public class D1ClientTest  {
         }
     }
     
-    @Test
+    //@Test
     public void testDescribe() 
     {
         for(int i=0; i<nodeList.size(); i++)
@@ -640,7 +650,7 @@ public class D1ClientTest  {
         }
     }
 
-    @Test
+    //@Test
     public void testGetNotFound() 
     {
         for(int i=0; i<nodeList.size(); i++)
@@ -667,13 +677,13 @@ public class D1ClientTest  {
         }
     }
     
-    @Test
+    //@Test
     public void testGetChecksumAuthTokenIdentifierType() 
     {
         checkTrue(1==1);
     }
     
-    @Test
+    //@Test
     public void testGetChecksumAuthTokenIdentifierTypeString() 
     {
         checkTrue(1==1);
