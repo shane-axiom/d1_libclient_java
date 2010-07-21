@@ -323,22 +323,27 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
         String s = dateFormat.format(d);
         return s;
     }
-    
+
     /**
-     * create a resource with the specified guid
+     * create both a system metadata resource and science metadata resource with the specified guid
      */
     public Identifier create(AuthToken token, Identifier guid,
             InputStream object, SystemMetadata sysmeta) throws InvalidToken,
             ServiceFailure, NotAuthorized, IdentifierNotUnique,
             UnsupportedType, InsufficientResources, InvalidSystemMetadata,
             NotImplemented {
-        
+
         String resource = RESOURCE_OBJECTS + "/" + guid.getValue();
         InputStream is = null;
-        
+        final MimeMultipart mmp;
+        if (object == null) {
+            mmp = createMimeMultipart(sysmeta);
+        } else {
         // Create a multipart message containing the data and sysmeta
-        final MimeMultipart mmp = createMimeMultipart(object, sysmeta);
-        final InputStreamFromOutputStream<String> multipartStream = 
+             mmp = createMimeMultipart(object, sysmeta);
+        }
+ 
+        final InputStreamFromOutputStream<String> multipartStream =
             new InputStreamFromOutputStream<String>() 
         {
             @Override
@@ -348,7 +353,7 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
                 return "Complete";
             }
         };
-        
+
         ResponseData rd = sendRequest(token, resource, POST, null, 
                 mmp.getContentType(), multipartStream);
         
@@ -663,14 +668,40 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
         }
         return params;
     }
-    
+
+    /**
+     * create a mime multipart message from sysmeta
+     */
+    private MimeMultipart createMimeMultipart(SystemMetadata sysmeta)
+      throws ServiceFailure, InvalidSystemMetadata
+    {
+        final MimeMultipart mmp = new MimeMultipart();
+        try {
+            ByteArrayInputStream sysmetaStream = serializeSystemMetadata(sysmeta);
+
+            MimeBodyPart sysmetaPart = new MimeBodyPart();
+            sysmetaPart.addHeaderLine("Content-Transfer-Encoding: base64");
+            sysmetaPart.setFileName("systemmetadata");
+            DataSource smDs = new InputStreamDataSource("systemmetadata", sysmetaStream);
+            DataHandler smDh = new DataHandler(smDs);
+            sysmetaPart.setDataHandler(smDh);
+
+            mmp.addBodyPart(sysmetaPart);
+            return mmp;
+        } catch (MessagingException e) {
+            throw new ServiceFailure("1190", "Failed constructing mime message on client create()...");
+        } catch (JiBXException e) {
+            e.printStackTrace(System.out);
+            throw new InvalidSystemMetadata("1180", "Failed to marshal SystemMetadata.");
+        }
+    }
     /**
      * create a mime multipart message from object and sysmeta
      */
     private MimeMultipart createMimeMultipart(InputStream object, SystemMetadata sysmeta)
       throws ServiceFailure, InvalidSystemMetadata
     {
-        final MimeMultipart mmp = new MimeMultipart();
+        MimeMultipart mmp = createMimeMultipart(sysmeta);
         try {
             MimeBodyPart objectPart = new MimeBodyPart();
             objectPart.addHeaderLine("Content-Transfer-Encoding: base64");
@@ -679,24 +710,11 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
             DataSource ds = new InputStreamDataSource("object", object);
             DataHandler dh = new DataHandler(ds);
             objectPart.setDataHandler(dh);
-            
-            ByteArrayInputStream sysmetaStream = serializeSystemMetadata(sysmeta);
-       
-            MimeBodyPart sysmetaPart = new MimeBodyPart();
-            sysmetaPart.addHeaderLine("Content-Transfer-Encoding: base64");
-            sysmetaPart.setFileName("systemmetadata");
-            DataSource smDs = new InputStreamDataSource("systemmetadata", sysmetaStream);
-            DataHandler smDh = new DataHandler(smDs);
-            sysmetaPart.setDataHandler(smDh);
-            
-            mmp.addBodyPart(sysmetaPart);
+
             mmp.addBodyPart(objectPart);
             return mmp;
         } catch (MessagingException e) {
             throw new ServiceFailure("1190", "Failed constructing mime message on client create()...");
-        } catch (JiBXException e) {
-            e.printStackTrace(System.out);
-            throw new InvalidSystemMetadata("1180", "Failed to marshal SystemMetadata.");
         }
     }
     
@@ -896,7 +914,7 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
         ByteArrayInputStream sysmetaStream = 
             new ByteArrayInputStream(sysmetaOut.toByteArray());
         return sysmetaStream;*/
-        
+
         ByteArrayOutputStream sysmetaOut = new ByteArrayOutputStream();
         serializeServiceType(SystemMetadata.class, sysmeta, sysmetaOut);
         ByteArrayInputStream sysmetaStream = 
