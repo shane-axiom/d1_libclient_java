@@ -1,9 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<d1:nodeRegistry xmlns:d1="http://dataone.org/service/types/NodeRegistry/0.1"
+<d1:nodeList xmlns:d1="http://dataone.org/service/types/NodeList/0.1"
  xmlns:common="http://dataone.org/service/types/common/0.1"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
- xsi:schemaLocation="http://dataone.org/service/types/NodeRegistry/0.1 https://repository.dataone.org/software/cicore/trunk/schemas/noderegistry.xsd">
-    
+ xsi:schemaLocation="http://dataone.org/service/types/NodeList/0.1 https://repository.dataone.org/software/cicore/trunk/schemas/nodelist.xsd">
+
+<!-- CN-RPW
+    <node type="member" synchronize="true" replicate="true">
+        <identifier>1</identifier>
+        <name>knb-mn</name>
+        <baseURL>http://cn-rpw/knb/</baseURL>
+        <services>
+            <service api="mn_crud" method="get" rest="object/${GUID}" available="true"    datechecked="2010-06-07T23:55:10Z" />
+            <service api="mn_crud" method="getSystemMetadata" rest="meta/${GUID}" available="true"     datechecked="2010-06-07T23:55:10Z" />
+            <service api="mn_replicate" method="listObjects" rest="object" available="true"    datechecked="2010-06-07T23:55:10Z" />
+        </services>
+        <synchronization>
+            <schedule sec="00" min="00" hour="12" mday="*"  mon="*" wday="*" year="*" />
+            <lastHarvested>2010-06-07T23:55:10Z</lastHarvested>
+            <lastCompleteHarvest>2010-06-07T23:55:10Z</lastCompleteHarvest>
+        </synchronization>
+    </node>
+-->
     <!-- CN-DEV -->
     <node type="member" synchronize="true" replicate="true">
         <identifier>1</identifier>
@@ -20,7 +37,7 @@
             <lastCompleteHarvest>2010-06-07T23:55:10Z</lastCompleteHarvest>
         </synchronization>
     </node> 
-    
+
     <!-- KNB MN -->
     <node type="member" synchronize="true" replicate="true">
         <identifier>2</identifier>
@@ -37,7 +54,7 @@
             <lastCompleteHarvest>2010-06-07T23:55:10Z</lastCompleteHarvest>
         </synchronization>
     </node>
-    
+
     <!-- localhost MN -->
     <!--<node type="member" synchronize="true" replicate="true">
         <identifier>3</identifier>
@@ -71,4 +88,4 @@
             <lastCompleteHarvest>2010-06-07T23:55:10Z</lastCompleteHarvest>
         </synchronization>
     </node> -->    
-</d1:nodeRegistry>
+</d1:nodeList>
