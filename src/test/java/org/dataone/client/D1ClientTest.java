@@ -108,7 +108,7 @@ public class D1ClientTest  {
         Node n3 = new Node();
         Node n4 = new Node();
         n1.setBaseURL("http://knb-mn.ecoinformatics.org/knb/");
-        n2.setBaseURL("http://cn-unm.dataone.org/knb/");
+        n2.setBaseURL("http://cn-unm-1.dataone.org/knb/");
         n3.setBaseURL("http://cn-ucsb-1.dataone.org/knb/");
         n4.setBaseURL("http://cn-orc-1.dataone.org/knb/");
         nodeList.add(n1);
