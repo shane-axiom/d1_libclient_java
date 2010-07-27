@@ -55,12 +55,13 @@ import org.jibx.runtime.JiBXException;
  */
 public class D1ClientTest  {
 
-    //protected static String contextUrl = "http://localhost:8080/knb/";
+    protected static String contextUrl = "http://localhost:8080/knb/";
     //protected static String contextUrl = "http://knb-mn.ecoinformatics.org/knb/";
     //protected static String contextUrl = "http://mn-rpw/mn/";
     //protected static String contextUrl = "http://cn-dev.dataone.org/knb/";
-    String contextUrl = "http://cn-ucsb-1.dataone.org/knb/";
-
+    //String contextUrl = "http://cn-ucsb-1.dataone.org/knb/";
+    //String contextUrl = "http://cn-unm-1.dataone.org/knb/";
+    
     private static final String prefix = "knb:testid:";
     private static final String bogusId = "foobarbaz214";
 
@@ -105,12 +106,15 @@ public class D1ClientTest  {
         Node n1 = new Node();
         Node n2 = new Node();
         Node n3 = new Node();
+        Node n4 = new Node();
         n1.setBaseURL("http://knb-mn.ecoinformatics.org/knb/");
-        n2.setBaseURL("http://cn-dev.dataone.org/knb/");
+        n2.setBaseURL("http://cn-unm.dataone.org/knb/");
         n3.setBaseURL("http://cn-ucsb-1.dataone.org/knb/");
+        n4.setBaseURL("http://cn-orc-1.dataone.org/knb/");
         nodeList.add(n1);
         nodeList.add(n2);
         nodeList.add(n3);
+        nodeList.add(n4);
         
         if(nodeList == null || nodeList.size() == 0 || !useNodeList)
         {
@@ -359,7 +363,9 @@ public class D1ClientTest  {
                 guid.setValue(idString);
                 InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
                 SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
+                System.out.println("d1 create");
                 Identifier rGuid = d1.create(token, guid, objectStream, sysmeta);
+                System.out.println("d1 created " + rGuid.getValue());
                 checkEquals(guid.getValue(), rGuid.getValue());
                 //System.out.println("create success, id returned is " + rGuid.getValue());
 
@@ -378,8 +384,9 @@ public class D1ClientTest  {
                 SystemMetadata updatedSysmeta = generateSystemMetadata(newguid, ObjectFormat.TEXT_CSV);
 
                 //update the document
+                System.out.println("d1 update newguid: "+ newguid.getValue() + " old guid: " + rGuid);
                 Identifier nGuid = d1.update(token, newguid, objectStream, rGuid, updatedSysmeta);
-                //System.out.println("updated success, id returned is " + nGuid.getValue());
+                System.out.println("d1 updated success, id returned is " + nGuid.getValue());
 
                 //perform tests
                 data = d1.get(token, nGuid);
