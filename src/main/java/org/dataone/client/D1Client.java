@@ -336,9 +336,12 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
         String resource = RESOURCE_OBJECTS + "/" + guid.getValue();
         InputStream is = null;
         final MimeMultipart mmp;
-        if (object == null) {
+        if (object == null) 
+        {
             mmp = createMimeMultipart(sysmeta);
-        } else {
+        } 
+        else 
+        {
         // Create a multipart message containing the data and sysmeta
              mmp = createMimeMultipart(object, sysmeta);
         }
@@ -687,6 +690,7 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
             sysmetaPart.setDataHandler(smDh);
 
             mmp.addBodyPart(sysmetaPart);
+            
             return mmp;
         } catch (MessagingException e) {
             throw new ServiceFailure("1190", "Failed constructing mime message on client create()...");

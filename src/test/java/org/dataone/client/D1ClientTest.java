@@ -55,10 +55,10 @@ import org.jibx.runtime.JiBXException;
  */
 public class D1ClientTest  {
 
-    protected static String contextUrl = "http://localhost:8080/knb/";
-    //protected static String contextUrl = "http://knb-mn.ecoinformatics.org/knb/";
-    //protected static String contextUrl = "http://mn-rpw/mn/";
-    //protected static String contextUrl = "http://cn-dev.dataone.org/knb/";
+    String contextUrl = "http://localhost:8080/knb/";
+    //String contextUrl = "http://knb-mn.ecoinformatics.org/knb/";
+    //String contextUrl = "http://mn-rpw/mn/";
+    //String contextUrl = "http://cn-dev.dataone.org/knb/";
     //String contextUrl = "http://cn-ucsb-1.dataone.org/knb/";
     //String contextUrl = "http://cn-unm-1.dataone.org/knb/";
     
@@ -130,11 +130,49 @@ public class D1ClientTest  {
             System.out.println(i + ": " + nodeList.get(i).getBaseURL());
         }*/
     }
+    
+    /**
+     * test the failed creation of a doc
+     */
+    @Test
+    public void testFailedCreate()
+    {
+        for(int i=0; i<nodeList.size(); i++)
+        {
+            currentUrl = nodeList.get(i).getBaseURL();
+            d1 = new D1Client(currentUrl);
+            
+            try
+            {
+                printHeader("testFailedCreate - node " + nodeList.get(i).getBaseURL());
+                checkTrue(1==1);
+                String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
+                AuthToken token = d1.login(principal, "kepler");
+                String idString = prefix + ExampleUtilities.generateIdentifier();
+                Identifier guid = new Identifier();
+                guid.setValue(idString);
+                InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-luq.76.2-broken.xml");
+                SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.EML_2_1_0);
+                Identifier rGuid = null;
+
+                try {
+                    rGuid = d1.create(token, guid, objectStream, sysmeta);
+                    errorCollector.addError(new Throwable(createAssertMessage() + 
+                            " Should have thrown exception since the xml file created was currupt"));
+                } catch (Exception e) {
+                }
+            }
+            catch(Exception e)
+            {
+                errorCollector.addError(new Throwable(createAssertMessage() + " unexpected error in testFailedCreate: " + e.getMessage()));
+            }
+        }
+    }
 
     /**
      * test the getLogRecords call
      */
-    @Test
+    //@Test
     public void testGetLogRecords()
     {
        for(int j=0; j<nodeList.size(); j++)
@@ -196,7 +234,7 @@ public class D1ClientTest  {
     /**
      * list objects with specified params
      */
-    @Test
+    //@Test
     public void testListObjects()
     {
         for(int j=0; j<nodeList.size(); j++)
@@ -306,7 +344,7 @@ public class D1ClientTest  {
     /**
      * get a systemMetadata resource
      */
-    @Test
+    //@Test
     public void testGetSystemMetadata()
     {
         for(int i=0; i<nodeList.size(); i++)
@@ -344,7 +382,7 @@ public class D1ClientTest  {
     /**
      * test the update of a resource
      */
-    @Test
+    //@Test
     public void testUpdate()
     {
         for(int i=0; i<nodeList.size(); i++)
@@ -407,7 +445,7 @@ public class D1ClientTest  {
      * test creation of data.  this also tests get() since it
      * is used to verify the inserted metadata
      */
-    @Test
+    //@Test
     public void testCreateData() {
         for(int i=0; i<nodeList.size(); i++)
         {
@@ -454,7 +492,7 @@ public class D1ClientTest  {
      * test the error state where metacat fails if the id includes a .\d on
      * the end.
      */
-    @Test
+    //@Test
     public void testFailedCreateData() {
         for(int i=0; i<nodeList.size(); i++)
         {
@@ -528,7 +566,7 @@ public class D1ClientTest  {
     /**
      * test various create and get scenarios with different access rules
      */
-    @Test
+    //@Test
     public void testGet() 
     {
         for(int i=0; i<nodeList.size(); i++)
@@ -557,16 +595,15 @@ public class D1ClientTest  {
                 //this test is commented out because of this issue:
                 //https://trac.dataone.org/ticket/706
                 /*try
-            {
-                InputStream data = d1.get(publicToken, rGuid);
-                System.out.println("data: " + IOUtils.toString(data));
-                fail("Should have thrown an exception.  Public can't get this doc yet.");
+                {
+                    InputStream data = d1.get(publicToken, rGuid);
+                    System.out.println("data: " + IOUtils.toString(data));
+                    fail("Should have thrown an exception.  Public can't get this doc yet.");
+                }
+                catch(Exception e)
+                {
 
-            }
-            catch(Exception e)
-            {
-
-            }*/
+                }*/
 
                 //change the perms, then try to get it again
                 d1.setAccess(token, rGuid, "public", "read", "allow", "allowFirst");
@@ -584,7 +621,7 @@ public class D1ClientTest  {
      * test creation of science metadata.  this also tests get() since it
      * is used to verify the inserted metadata
      */
-    @Test
+    //@Test
     public void testCreateScienceMetadata() 
     {
         for(int i=0; i<nodeList.size(); i++)
@@ -630,7 +667,7 @@ public class D1ClientTest  {
         }
     }
     
-    @Test
+    //@Test
     public void testDelete() 
     {
         for(int i=0; i<nodeList.size(); i++)
@@ -643,7 +680,7 @@ public class D1ClientTest  {
         }
     }
     
-    @Test
+    //@Test
     public void testDescribe() 
     {
         for(int i=0; i<nodeList.size(); i++)
@@ -656,7 +693,7 @@ public class D1ClientTest  {
         }
     }
 
-    @Test
+    //@Test
     public void testGetNotFound() 
     {
         for(int i=0; i<nodeList.size(); i++)
@@ -683,13 +720,13 @@ public class D1ClientTest  {
         }
     }
     
-    @Test
+    //@Test
     public void testGetChecksumAuthTokenIdentifierType() 
     {
         checkTrue(1==1);
     }
     
-    @Test
+    //@Test
     public void testGetChecksumAuthTokenIdentifierTypeString() 
     {
         checkTrue(1==1);
