@@ -335,30 +335,24 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
 
         String resource = RESOURCE_OBJECTS + "/" + guid.getValue();
         InputStream is = null;
-        final MimeMultipart mmp;
-        if (object == null) 
-        {
-            mmp = createMimeMultipart(sysmeta);
-        } 
-        else 
-        {
-        // Create a multipart message containing the data and sysmeta
-             mmp = createMimeMultipart(object, sysmeta);
-        }
+
+        final String mmp = createMimeMultipart(object, sysmeta);
  
         final InputStreamFromOutputStream<String> multipartStream =
             new InputStreamFromOutputStream<String>() 
         {
             @Override
             public String produce(final OutputStream dataSink) throws Exception {
-                mmp.writeTo(dataSink);
+                //mmp.writeTo(dataSink);
+                IOUtils.write(mmp.getBytes(), dataSink);
                 IOUtils.closeQuietly(dataSink);
                 return "Complete";
             }
         };
 
+        
         ResponseData rd = sendRequest(token, resource, POST, null, 
-                mmp.getContentType(), multipartStream);
+                "multipart/mixed", multipartStream);
         
         // Handle any errors that were generated
         int code = rd.getCode();
@@ -420,14 +414,15 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
         InputStream is = null;
         
         // Create a multipart message containing the data and sysmeta
-        final MimeMultipart mmp = createMimeMultipart(object, sysmeta);
+        final String mmp = createMimeMultipart(object, sysmeta);
         
         // write the mmp to an InputStream and pass it to SendRequest in last param
         final InputStreamFromOutputStream<String> multipartStream = 
             new InputStreamFromOutputStream<String>() {
             @Override
             public String produce(final OutputStream dataSink) throws Exception {
-                mmp.writeTo(dataSink);
+                //mmp.writeTo(dataSink);
+                IOUtils.write(mmp.getBytes(), dataSink);
                 IOUtils.closeQuietly(dataSink);
                 return "Completed";
             }
@@ -435,7 +430,7 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
         
         String urlParams = "obsoletedGuid=" + obsoletedGuid.getValue();
         ResponseData rd = sendRequest(token, resource, PUT, urlParams, 
-                mmp.getContentType(), multipartStream);
+                "multipart/mixed", multipartStream);
         
         // Handle any errors that were generated
         int code = rd.getCode();
@@ -671,55 +666,57 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
         }
         return params;
     }
-
-    /**
-     * create a mime multipart message from sysmeta
-     */
-    private MimeMultipart createMimeMultipart(SystemMetadata sysmeta)
-      throws ServiceFailure, InvalidSystemMetadata
-    {
-        final MimeMultipart mmp = new MimeMultipart();
-        try {
-            ByteArrayInputStream sysmetaStream = serializeSystemMetadata(sysmeta);
-
-            MimeBodyPart sysmetaPart = new MimeBodyPart();
-            sysmetaPart.addHeaderLine("Content-Transfer-Encoding: base64");
-            sysmetaPart.setFileName("systemmetadata");
-            DataSource smDs = new InputStreamDataSource("systemmetadata", sysmetaStream);
-            DataHandler smDh = new DataHandler(smDs);
-            sysmetaPart.setDataHandler(smDh);
-
-            mmp.addBodyPart(sysmetaPart);
-            
-            return mmp;
-        } catch (MessagingException e) {
-            throw new ServiceFailure("1190", "Failed constructing mime message on client create()...");
-        } catch (JiBXException e) {
-            e.printStackTrace(System.out);
-            throw new InvalidSystemMetadata("1180", "Failed to marshal SystemMetadata.");
-        }
-    }
+    
     /**
      * create a mime multipart message from object and sysmeta
      */
-    private MimeMultipart createMimeMultipart(InputStream object, SystemMetadata sysmeta)
+    private String createMimeMultipart(InputStream object, SystemMetadata sysmeta)
       throws ServiceFailure, InvalidSystemMetadata
     {
-        MimeMultipart mmp = createMimeMultipart(sysmeta);
-        try {
-            MimeBodyPart objectPart = new MimeBodyPart();
-            objectPart.addHeaderLine("Content-Transfer-Encoding: base64");
-            objectPart.setFileName("object");
-            
-            DataSource ds = new InputStreamDataSource("object", object);
-            DataHandler dh = new DataHandler(ds);
-            objectPart.setDataHandler(dh);
-
-            mmp.addBodyPart(objectPart);
-            return mmp;
-        } catch (MessagingException e) {
-            throw new ServiceFailure("1190", "Failed constructing mime message on client create()...");
+        if(sysmeta == null)
+        {
+            throw new InvalidSystemMetadata("1000", "System metadata was null.  Can't create multipart form.");
         }
+        
+        String sysmetaString = null;
+        try
+        {
+            ByteArrayInputStream sysmetaStream = serializeSystemMetadata(sysmeta);
+            sysmetaString = IOUtils.toString(sysmetaStream);
+        }
+        catch(Exception e)
+        {
+            throw new ServiceFailure("1000", "Could not serialize the system metadata: " + e.getMessage());
+        }
+        
+        Date d = new Date();
+        String boundary = d.getTime() + "";
+        
+        String mime = "MIME-Version:1.0\n";
+        mime += "Content-type:multipart/mixed; boundary=\"" + boundary + "\"\n";
+        boundary = "--" + boundary + "\n";
+        mime += boundary;
+        mime += "Content-Disposition: attachment; filename=systemmetadata\n\n";
+        mime += sysmetaString;
+        mime += "\n";
+        
+        if(object != null)
+        {
+            mime += boundary;
+            mime += "Content-Disposition: attachment; filename=object\n\n";
+            try
+            {
+              mime += IOUtils.toString(object);
+            }
+            catch(IOException ioe)
+            {
+                throw new ServiceFailure("1000", "Error serializing object to multipart form: " + ioe.getMessage());
+            }
+            mime += "\n";
+        }
+        
+        mime += boundary;
+        return mime;
     }
     
     private String streamToString(InputStream is)
