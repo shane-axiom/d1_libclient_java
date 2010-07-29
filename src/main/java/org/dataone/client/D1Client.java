@@ -240,7 +240,7 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
             ServiceFailure, InvalidToken
     {
         InputStream is = null;
-        String resource = RESOURCE_OBJECTS + "/";
+        String resource = RESOURCE_OBJECTS;
         String params = "";
         
         if(startTime != null)
