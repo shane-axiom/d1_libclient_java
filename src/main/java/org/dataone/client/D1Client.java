@@ -715,7 +715,7 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
             mime += "\n";
         }
         
-        mime += boundary;
+        mime += boundary + "--";
         return mime;
     }
     
