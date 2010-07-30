@@ -70,7 +70,7 @@ public class D1ClientTest  {
     private static String currentUrl;
     //set this to false if you don't want to use the node list to get the urls for 
     //the test.  
-    private static boolean useNodeList = true;
+    private static boolean useNodeList = false;
     
     private static String watchedLog;
     
@@ -191,14 +191,14 @@ public class D1ClientTest  {
                String idString = prefix + ExampleUtilities.generateIdentifier();
                Identifier guid = new Identifier();
                guid.setValue(idString);
-               InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
+               InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-cdr.329066.1.data");
                SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
 
                Identifier rGuid = d1.create(token, guid, objectStream, sysmeta);
                InputStream data = d1.get(token, rGuid);
                String str = IOUtils.toString(data);
                //System.out.println("str: " + str);
-               checkTrue(str.indexOf("x,y,z") != -1);
+               checkTrue(str.indexOf("61 66 104 2 103 900817 \"Planted\" 15.0  3.3") != -1);
                checkEquals(guid.getValue(), rGuid.getValue());
 
                //get the logs for the last minute
@@ -254,7 +254,8 @@ public class D1ClientTest  {
                 String idString = prefix + ExampleUtilities.generateIdentifier();
                 Identifier guid = new Identifier();
                 guid.setValue(idString);
-                InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
+                
+                InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-cdr.329066.1.data");
                 SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
 
                 Identifier rGuid = d1.create(token, guid, objectStream, sysmeta);
@@ -290,7 +291,7 @@ public class D1ClientTest  {
                 idString = prefix + ExampleUtilities.generateIdentifier();
                 guid = new Identifier();
                 guid.setValue(idString);
-                objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
+                objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-cdr.329066.1.data");
                 sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
 
                 rGuid = d1.create(token, guid, objectStream, sysmeta);
@@ -361,7 +362,7 @@ public class D1ClientTest  {
                 String idString = prefix + ExampleUtilities.generateIdentifier();
                 Identifier guid = new Identifier();
                 guid.setValue(idString);
-                InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
+                InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-cdr.329066.1.data");
                 SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
                 Identifier rGuid = d1.create(token, guid, objectStream, sysmeta);
                 checkEquals(guid.getValue(), rGuid.getValue());
@@ -399,7 +400,7 @@ public class D1ClientTest  {
                 String idString = prefix + ExampleUtilities.generateIdentifier();
                 Identifier guid = new Identifier();
                 guid.setValue(idString);
-                InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
+                InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-cdr.329066.1.data");
                 SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
                 System.out.println("d1 create");
                 Identifier rGuid = d1.create(token, guid, objectStream, sysmeta);
@@ -411,13 +412,13 @@ public class D1ClientTest  {
                 InputStream data = d1.get(token, rGuid);
                 checkTrue(null != data);
                 String str = IOUtils.toString(data);
-                checkTrue(str.indexOf("x,y,z\n1,2,3") != -1);
+                checkTrue(str.indexOf("61 66 104 2 103 900817 \"Planted\" 15.0  3.3") != -1);
                 data.close();
 
                 //alter the document
                 Identifier newguid = new Identifier();
                 newguid.setValue(prefix + ExampleUtilities.generateIdentifier());
-                str = str.replaceAll("x", "a");
+                str = str.replaceAll("61", "0");
                 objectStream = IOUtils.toInputStream(str);
                 SystemMetadata updatedSysmeta = generateSystemMetadata(newguid, ObjectFormat.TEXT_CSV);
 
@@ -430,7 +431,7 @@ public class D1ClientTest  {
                 data = d1.get(token, nGuid);
                 checkTrue(null != data);
                 str = IOUtils.toString(data);
-                checkTrue(str.indexOf("a,y,z\n1,2,3") != -1);
+                checkTrue(str.indexOf("0 66 104 2 103 900817 \"Planted\" 15.0  3.3") != -1);
                 data.close();
             }
             catch(Exception e)
@@ -461,7 +462,7 @@ public class D1ClientTest  {
                 String idString = prefix + ExampleUtilities.generateIdentifier();
                 Identifier guid = new Identifier();
                 guid.setValue(idString);
-                InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
+                InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-cdr.329066.1.data");
                 SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
                 Identifier rGuid = null;
 
@@ -476,7 +477,7 @@ public class D1ClientTest  {
                     InputStream data = d1.get(token, rGuid);
                     checkTrue(null != data);
                     String str = IOUtils.toString(data);
-                    checkTrue(str.indexOf("x,y,z\n1,2,3") != -1);
+                    checkTrue(str.indexOf("61 66 104 2 103 900817 \"Planted\" 15.0  3.3") != -1);
                     data.close();
                 } catch (Exception e) {
                     errorCollector.addError(new Throwable(createAssertMessage() + " error in testCreateData: " + e.getMessage()));
@@ -583,8 +584,8 @@ public class D1ClientTest  {
                 String idString = prefix + ExampleUtilities.generateIdentifier();
                 Identifier guid = new Identifier();
                 guid.setValue(idString);
-                //InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-luq.76.2.xml");
-                InputStream objectStream = IOUtils.toInputStream("<?xml version=\"1.0\"?><test></test>");
+                InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-luq.76.2.xml");
+                //InputStream objectStream = IOUtils.toInputStream("<?xml version=\"1.0\"?><test></test>");
                 SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.EML_2_1_0);
                 Identifier rGuid = null;
                 rGuid = d1.create(token, guid, objectStream, sysmeta);
