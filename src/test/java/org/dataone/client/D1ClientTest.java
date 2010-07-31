@@ -18,34 +18,43 @@
 
 package org.dataone.client;
 
-import java.io.*;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.concurrent.Callable;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
-import org.junit.*;
-import org.junit.rules.*;
-import static org.junit.Assert.*;
-import static  org.hamcrest.CoreMatchers.is;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Date;
+import java.util.List;
+import java.util.Vector;
+import java.util.concurrent.Callable;
 
 import org.apache.commons.io.IOUtils;
 import org.dataone.service.exceptions.BaseException;
-import org.dataone.service.exceptions.IdentifierNotUnique;
-import org.dataone.service.exceptions.InsufficientResources;
-import org.dataone.service.exceptions.InvalidSystemMetadata;
-import org.dataone.service.exceptions.InvalidToken;
-import org.dataone.service.exceptions.NotAuthorized;
 import org.dataone.service.exceptions.NotFound;
-import org.dataone.service.exceptions.NotImplemented;
-import org.dataone.service.exceptions.ServiceFailure;
-import org.dataone.service.exceptions.UnsupportedType;
-import org.dataone.service.types.*;
+import org.dataone.service.types.AuthToken;
+import org.dataone.service.types.Checksum;
+import org.dataone.service.types.ChecksumAlgorithm;
+import org.dataone.service.types.Event;
+import org.dataone.service.types.Identifier;
+import org.dataone.service.types.Log;
+import org.dataone.service.types.LogEntry;
+import org.dataone.service.types.Node;
+import org.dataone.service.types.NodeList;
+import org.dataone.service.types.NodeReference;
+import org.dataone.service.types.ObjectFormat;
+import org.dataone.service.types.ObjectInfo;
+import org.dataone.service.types.ObjectList;
+import org.dataone.service.types.Principal;
+import org.dataone.service.types.SystemMetadata;
 import org.jibx.runtime.BindingDirectory;
 import org.jibx.runtime.IBindingFactory;
 import org.jibx.runtime.IMarshallingContext;
 import org.jibx.runtime.IUnmarshallingContext;
 import org.jibx.runtime.JiBXException;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ErrorCollector;
 
 
 
