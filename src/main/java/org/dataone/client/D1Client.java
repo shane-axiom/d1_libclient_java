@@ -29,20 +29,10 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.CountDownLatch;
 
-import javax.activation.DataHandler;
-import javax.activation.DataSource;
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMultipart;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -61,7 +51,16 @@ import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.exceptions.UnsupportedType;
 import org.dataone.service.mn.MemberNodeCrud;
-import org.dataone.service.types.*;
+import org.dataone.service.mn.MemberNodeReplication;
+import org.dataone.service.types.AuthToken;
+import org.dataone.service.types.Checksum;
+import org.dataone.service.types.DescribeResponse;
+import org.dataone.service.types.Event;
+import org.dataone.service.types.Identifier;
+import org.dataone.service.types.Log;
+import org.dataone.service.types.ObjectFormat;
+import org.dataone.service.types.ObjectList;
+import org.dataone.service.types.SystemMetadata;
 import org.jibx.runtime.BindingDirectory;
 import org.jibx.runtime.IBindingFactory;
 import org.jibx.runtime.IMarshallingContext;
@@ -73,7 +72,6 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import com.gc.iotools.stream.is.InputStreamFromOutputStream;
-import org.dataone.service.mn.MemberNodeReplication;
 
 /**
  * The D1Client class represents a client-side implementation of the DataONE
