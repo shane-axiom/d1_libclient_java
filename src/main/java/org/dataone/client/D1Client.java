@@ -83,6 +83,8 @@ import com.gc.iotools.stream.is.InputStreamFromOutputStream;
  */
 public class D1Client implements MemberNodeCrud, MemberNodeReplication {
     
+    // TODO: Need Javadocs throughout
+    
     /** HTTP Verb GET*/
     public static final String GET = "GET";
     /** HTTP Verb POST*/    
@@ -150,7 +152,7 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
             throw new ServiceFailure("1000", "Error setting acces on document");
         }
         
-        //also set the system metadata to the same perms
+        // TODO: also set the system metadata to the same perms
         
     }
     
@@ -175,12 +177,14 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
         int code = rd.getCode();
         if(code != HttpURLConnection.HTTP_OK)
         { //deal with the error
+        	// TODO: detail codes are wrong
             throw new ServiceFailure("1000", "Error logging in.");
         }
         else
         {
             try
             {
+            	// TODO: use IOUtils to get the string
                 InputStream is = rd.getContentStream();
                 byte[] b = new byte[1024];
                 int numread = is.read(b, 0, 1024);
