@@ -16,6 +16,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ * 
+ * $Id$
  */
 
 package org.dataone.client;
@@ -80,8 +82,6 @@ import com.gc.iotools.stream.is.InputStreamFromOutputStream;
  * Service API.  The class exposes the DataONE APIs as client  methods,
  * dispatches the calls to the correct DataONE node, and then returns the
  * results or throws the appropriate exceptions.
- * 
- * @author Matthew Jones
  */
 public class D1Client implements MemberNodeCrud, MemberNodeReplication {
     
@@ -110,9 +110,7 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
     public static final String RESOURCE_IDENTIFIER = "identifier";
     /** API LOG  controls logging events*/
     public static final String RESOURCE_LOG = "log";
-    
-    private static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-    
+        
     /** The session identifier for the session */
     //private String sessionId;
     
@@ -338,6 +336,8 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
             NotImplemented {
 
         String resource = RESOURCE_OBJECTS + "/" + guid.getValue();
+        // TODO: This input stream is assigned below but not used.  
+        // TODO: Unclear why the conditional below exists; need to refactor
         InputStream is = null;
 
         final String mmp = createMimeMultipart(object, sysmeta);
@@ -415,7 +415,11 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
             NotImplemented {
         
         String resource = RESOURCE_OBJECTS + "/" + guid.getValue();
+        // TODO: This input stream is assigned below but not used.  
+        // TODO: Unclear why the conditional below exists; need to refactor
         InputStream is = null;
+        
+        // TODO: Much of the code in this method is a direct copy of the code in insert() above -- factor out duplication
         
         // Create a multipart message containing the data and sysmeta
         final String mmp = createMimeMultipart(object, sysmeta);
@@ -595,19 +599,16 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
         String params = null;
         if(fromDate != null)
         {
-            //params = "fromDate=" + dateFormat.format(fromDate);
             params = "fromDate=" + convertDateToGMT(fromDate);
         }
         if(toDate != null)
         {
             if(params != null)
             {
-                //params += "&toDate=" + dateFormat.format(toDate);
                 params += "&toDate=" + convertDateToGMT(toDate);
             }
             else
             {
-                //params = "toDate=" + dateFormat.format(toDate);
                 params += "toDate=" + convertDateToGMT(toDate);
             }
         }
@@ -657,19 +658,27 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
         
     }
     
+    public String getContextRootUrl() {
+        return contextRootUrl;
+    }
+
+    public void setContextRootUrl(String contextRootUrl) {
+        this.contextRootUrl = contextRootUrl;
+    }
+    
     /**
      * add ampersand to a param list if needed
      * @param params
      * @return
      */
-    private String addAmp(String params)
-    {
-        if(params != null && !params.trim().equals(""))
-        {
-            params += "&";
-        }
-        return params;
-    }
+//    private String addAmp(String params)
+//    {
+//        if(params != null && !params.trim().equals(""))
+//        {
+//            params += "&";
+//        }
+//        return params;
+//    }
     
     /**
      * create a mime multipart message from object and sysmeta
@@ -723,26 +732,28 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
         return mime;
     }
     
-    private String streamToString(InputStream is)
-    throws Exception
-    {
-        byte b[] = new byte[1024];
-        int numread = is.read(b, 0, 1024);
-        String response = new String();
-        while(numread != -1)
-        {
-            response += new String(b, 0, numread);
-            numread = is.read(b, 0, 1024);
-        }
-        return response;
-    }
+    // TODO: remove dead code that is now just cruft
+//    private String streamToString(InputStream is)
+//    throws Exception
+//    {
+//        byte b[] = new byte[1024];
+//        int numread = is.read(b, 0, 1024);
+//        String response = new String();
+//        while(numread != -1)
+//        {
+//            response += new String(b, 0, numread);
+//            numread = is.read(b, 0, 1024);
+//        }
+//        return response;
+//    }
 
-    private InputStream stringToStream(String s)
-    throws Exception
-    {
-        ByteArrayInputStream bais = new ByteArrayInputStream(s.getBytes());
-        return bais;
-    }
+    // TODO: remove dead code that is now just cruft
+//    private InputStream stringToStream(String s)
+//    throws Exception
+//    {
+//        ByteArrayInputStream bais = new ByteArrayInputStream(s.getBytes());
+//        return bais;
+//    }
     
     /**
      * send a request to the resource
@@ -844,7 +855,8 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
         throws NotFound, InvalidToken, ServiceFailure, NotAuthorized, 
         NotFound, IdentifierNotUnique, UnsupportedType, InsufficientResources, 
         InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest {
-        BaseException b = null;
+        // TODO: remove dead code that is now just cruft
+    	//        BaseException b = null;
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         Document doc;
         boolean parseFailed = false;
@@ -946,6 +958,7 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
      * @param out the stream to serialize it to
      * @throws JiBXException
      */
+    @SuppressWarnings("rawtypes")
     private void serializeServiceType(Class type, Object object, OutputStream out)
       throws JiBXException
     {
@@ -960,6 +973,7 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
      * @param is the stream to deserialize from
      * @throws JiBXException
      */
+    @SuppressWarnings("rawtypes")
     private Object deserializeServiceType(Class type, InputStream is)
       throws JiBXException
     {
@@ -968,7 +982,8 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
         Object o = (Object) uctx.unmarshalDocument(is, null);
         return o;
     }
-
+    
+    // TODO: Document class and methods
     protected class ResponseData {
         private int code;
         private InputStream contentStream;
@@ -1020,14 +1035,6 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
             this.errorStream = errorStream;
         }
         
-    }
-
-    public String getContextRootUrl() {
-        return contextRootUrl;
-    }
-
-    public void setContextRootUrl(String contextRootUrl) {
-        this.contextRootUrl = contextRootUrl;
     }
     
 }
