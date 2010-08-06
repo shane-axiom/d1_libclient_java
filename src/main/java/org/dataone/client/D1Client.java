@@ -85,6 +85,8 @@ import com.gc.iotools.stream.is.InputStreamFromOutputStream;
  */
 public class D1Client implements MemberNodeCrud, MemberNodeReplication {
 
+	// TODO: This class should implement the MemberNodeAuthorization interface as well
+	
 	// TODO: Need Javadocs throughout
 
 	/** HTTP Verb GET */
@@ -99,7 +101,8 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
 	/*
 	 * API Resources
 	 */
-
+	
+	// TODO: Move these constants into service-api-java so they can be shared across clients
 	/** API OBJECTS Resource which handles with document operations */
 	public static final String RESOURCE_OBJECTS = "object";
 	/** API META Resource which handles SystemMetadata operations */
@@ -114,7 +117,7 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
 	/** API LOG controls logging events */
 	public static final String RESOURCE_LOG = "log";
 
-	/** The URL string for the metacat REST API */
+	/** The URL string for the node REST API */
 	private String contextRootUrl;
 
 	/**
@@ -124,6 +127,9 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
 		this.contextRootUrl = contextRootUrl;
 	}
 
+	// TODO: this constructor should not exist
+	// lest we end up with a client that is not attached to a particular node; 
+	// No code calls it in Java, but it is called by the R client; evaluate if this can change
 	public D1Client() {
 	}
 
@@ -140,6 +146,7 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
 	public void setAccess(AuthToken token, Identifier id, String principal,
 			String permission, String permissionType, String permissionOrder)
 			throws ServiceFailure {
+		// TODO: this method assumes an access control model that is not finalized, refactor when it is
 		String params = "guid=" + id.getValue() + "&principal=" + principal
 				+ "&permission=" + permission + "&permissionType="
 				+ permissionType + "&permissionOrder=" + permissionOrder
@@ -165,6 +172,7 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
 	 */
 	public AuthToken login(String username, String password)
 			throws ServiceFailure, NotImplemented {
+		// TODO: this method assumes an access control model that is not finalized, refactor when it is
 		String postData = "username=" + username + "&password=" + password;
 		String params = "qformat=xml&op=login";
 		String resource = RESOURCE_SESSION + "/";
@@ -175,12 +183,11 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
 
 		int code = rd.getCode();
 		if (code != HttpURLConnection.HTTP_OK) { // deal with the error
-													// TODO: detail codes are
-													// wrong
+			// TODO: detail codes are wrong, and exception is the wrong one too I think
 			throw new ServiceFailure("1000", "Error logging in.");
 		} else {
 			try {
-				// TODO: use IOUtils to get the string
+				// TODO: use IOUtils to get the string, as this code is error prone
 				InputStream is = rd.getContentStream();
 				byte[] b = new byte[1024];
 				int numread = is.read(b, 0, 1024);
@@ -189,8 +196,10 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
 					sb.append(new String(b, 0, numread));
 					numread = is.read(b, 0, 1024);
 				}
-
 				String response = sb.toString();
+				//String response = IOUtils.toString(is);
+
+				
 				int successIndex = response.indexOf("<sessionId>");
 				if (successIndex != -1) {
 					sessionid = response.substring(
@@ -198,6 +207,7 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
 									+ "<sessionId>".length(),
 							response.indexOf("</sessionId>"));
 				} else {
+					// TODO: wrong exception thrown, wrong detail code?
 					throw new ServiceFailure("1000", "Error authenticating: "
 							+ response.substring(response.indexOf("<error>")
 									+ "<error>".length(),
@@ -242,7 +252,8 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
 		if (startTime != null) {
 			params += "startTime=" + convertDateToGMT(startTime);
 		}
-
+		
+		// TODO: should check that endTime >= startTime, throw InvalidRequest if not
 		if (endTime != null) {
 			if (!params.equals("")) {
 				params += "&";
@@ -251,6 +262,7 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
 			params += "endTime=" + convertDateToGMT(endTime);
 		}
 
+		// TODO: Check that the format is vaid, throw InvalidRequest if not
 		if (objectFormat != null) {
 			if (!params.equals("")) {
 				params += "&";
@@ -261,6 +273,8 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
 		if (!params.equals("")) {
 			params += "&";
 		}
+		
+		// TODO: what if these are null?  Safely ignored?
 		params += "replicaStatus=" + replicaStatus;
 		params += "&";
 		params += "start=" + start;
@@ -289,26 +303,16 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
 		} else {
 			is = rd.getContentStream();
 		}
-
+		
+		// TODO: this block should be inside the preceding conditional I think
 		try {
 			return deserializeObjectList(is);
+			
+		// TODO: never catch an Exception per se -- it masks bad behavior
 		} catch (Exception e) {
 			throw new ServiceFailure("500",
 					"Could not deserialize the ObjectList: " + e.getMessage());
 		}
-	}
-
-	/**
-	 * convert a date to GMT
-	 * 
-	 * @param d
-	 * @return
-	 */
-	private String convertDateToGMT(Date d) {
-		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
-		dateFormat.setTimeZone(TimeZone.getTimeZone("GMT-0"));
-		String s = dateFormat.format(d);
-		return s;
 	}
 
 	/**
@@ -323,7 +327,6 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
 
 		String resource = RESOURCE_OBJECTS + "/" + guid.getValue();
 		// TODO: This input stream is assigned below but not used.
-		// TODO: Unclear why the conditional below exists; need to refactor
 		InputStream is = null;
 
 		final String mmp = createMimeMultipart(object, sysmeta);
@@ -332,6 +335,7 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
 			@Override
 			public String produce(final OutputStream dataSink) throws Exception {
 				// mmp.writeTo(dataSink);
+				// TODO: this appears memory bound and therefore not scalable; avoid getBytes()
 				IOUtils.write(mmp.getBytes(), dataSink);
 				IOUtils.closeQuietly(dataSink);
 				return "Complete";
@@ -376,7 +380,9 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
 			} catch (IOException e) {
 				System.out.println("io exception: " + e.getMessage());
 			}
-
+			
+		// TODO: Unclear why the conditional below exists; need to refactor;
+		// probably is meant to check the return value to make sure the guid matches
 		} else {
 			is = rd.getContentStream();
 		}
@@ -395,7 +401,6 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
 
 		String resource = RESOURCE_OBJECTS + "/" + guid.getValue();
 		// TODO: This input stream is assigned below but not used.
-		// TODO: Unclear why the conditional below exists; need to refactor
 		InputStream is = null;
 
 		// TODO: Much of the code in this method is a direct copy of the code in
@@ -404,18 +409,19 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
 		// Create a multipart message containing the data and sysmeta
 		final String mmp = createMimeMultipart(object, sysmeta);
 
-		// write the mmp to an InputStream and pass it to SendRequest in last
-		// param
+		// write the mmp to an InputStream and pass it to SendRequest in last param
 		final InputStreamFromOutputStream<String> multipartStream = new InputStreamFromOutputStream<String>() {
 			@Override
 			public String produce(final OutputStream dataSink) throws Exception {
 				// mmp.writeTo(dataSink);
+				// TODO: this appears memory bound and therefore not scalable; avoid getBytes()
 				IOUtils.write(mmp.getBytes(), dataSink);
 				IOUtils.closeQuietly(dataSink);
 				return "Completed";
 			}
 		};
 
+		// TODO: what if obsoletedGuid is null? Safe?
 		String urlParams = "obsoletedGuid=" + obsoletedGuid.getValue();
 		ResponseData rd = sendRequest(token, resource, PUT, urlParams,
 				"multipart/mixed", multipartStream);
@@ -446,7 +452,9 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
 				throw new ServiceFailure("1000",
 						"Method threw improper exception: " + e.getMessage());
 			}
-
+			
+		// TODO: Unclear why the conditional below exists; need to refactor;
+		// probably is meant to check the return value to make sure the guid matches
 		} else {
 			is = rd.getContentStream();
 		}
@@ -455,8 +463,7 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
 	}
 
 	/**
-	 * get the system metadata from a resource with the specified guid. NOT
-	 * IMPLEMENTED.
+	 * get the system metadata from a resource with the specified guid.
 	 */
 	public SystemMetadata getSystemMetadata(AuthToken token, Identifier guid)
 			throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
@@ -488,6 +495,7 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
 			is = rd.getContentStream();
 		}
 
+		// TODO: this block should be inside the above else conditional, right?
 		try {
 			return deserializeSystemMetadata(is);
 		} catch (Exception e) {
@@ -636,6 +644,19 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
 		this.contextRootUrl = contextRootUrl;
 	}
 
+	/**
+	 * convert a date to GMT
+	 * 
+	 * @param d
+	 * @return
+	 */
+	private String convertDateToGMT(Date d) {
+		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+		dateFormat.setTimeZone(TimeZone.getTimeZone("GMT-0"));
+		String s = dateFormat.format(d);
+		return s;
+	}
+	
 	/**
 	 * create a mime multipart message from object and sysmeta
 	 */
