@@ -172,6 +172,7 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
 	 */
 	public AuthToken login(String username, String password)
 			throws ServiceFailure, NotImplemented {
+	    // TODO: reassess the exceptions thrown here.  Look at the Authentication interface.
 		// TODO: this method assumes an access control model that is not finalized, refactor when it is
 		String postData = "username=" + username + "&password=" + password;
 		String params = "qformat=xml&op=login";
@@ -262,7 +263,7 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
 			params += "endTime=" + convertDateToGMT(endTime);
 		}
 
-		// TODO: Check that the format is vaid, throw InvalidRequest if not
+		// TODO: Check that the format is valid, throw InvalidRequest if not
 		if (objectFormat != null) {
 			if (!params.equals("")) {
 				params += "&";
@@ -546,6 +547,7 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
 	public Identifier delete(AuthToken token, Identifier guid)
 			throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
 			NotImplemented {
+		// TODO: Implement client delete method
 		throw new NotImplemented("1000", "Method not yet implemented.");
 	}
 
@@ -555,6 +557,7 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
 	public DescribeResponse describe(AuthToken token, Identifier guid)
 			throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
 			NotImplemented {
+		// TODO: Implement client describe method
 		throw new NotImplemented("1000", "Method not yet implemented.");
 	}
 
@@ -565,6 +568,7 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
 	public Checksum getChecksum(AuthToken token, Identifier guid)
 			throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
 			InvalidRequest, NotImplemented {
+		// TODO: Implement client getChecksum method
 		throw new NotImplemented("1000", "Method not yet implemented.");
 	}
 
@@ -575,6 +579,7 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
 	public Checksum getChecksum(AuthToken token, Identifier guid,
 			String checksumAlgorithm) throws InvalidToken, ServiceFailure,
 			NotAuthorized, NotFound, InvalidRequest, NotImplemented {
+		// TODO: Implement client getChecksum method
 		throw new NotImplemented("1000", "Method not yet implemented.");
 	}
 
@@ -814,6 +819,7 @@ public class D1Client implements MemberNodeCrud, MemberNodeReplication {
 			String description = getTextValue(root, "description");
 			switch (code) {
 			case 400:
+			    // TODO: change this to a startsWith since error codes can have text after the number.
 				if (detailCode.equals("1180")) {
 					throw new InvalidSystemMetadata("1180", description);
 				} else {
