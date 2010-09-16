@@ -26,6 +26,7 @@ import static org.junit.Assert.assertThat;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.Callable;
@@ -77,11 +78,11 @@ import org.xml.sax.SAXException;
  */
 public class D1ClientTest  {
 
-    String contextUrl = "http://localhost:8080/knb/";
+    //String contextUrl = "http://localhost:8080/knb/";
     //String contextUrl = "http://knb-mn.ecoinformatics.org/knb/";
     //String contextUrl = "http://mn-rpw/mn/";
     //String contextUrl = "http://cn-dev.dataone.org/knb/";
-    //String contextUrl = "http://cn-ucsb-1.dataone.org/knb/";
+    String contextUrl = "http://cn-ucsb-1.dataone.org/knb/";
     //String contextUrl = "http://cn-unm-1.dataone.org/knb/";
     
     private static final String prefix = "knb:testid:";
@@ -640,17 +641,68 @@ public class D1ClientTest  {
     {
         try
         {
-            //create an EML document with a distribution element
-            InputStream is = this.getClass().getResourceAsStream("/org/dataone/client/tests/dpennington.195.2.xml");
-            //parse that document for distribution info
-            Vector<String> distroUrls = getDistributionInfo(is);
-            //get the document(s) listed in the EML distribution elements
-            
-            //create Identifiers for each document
-            //create system metadata for the dist documents with a describedBy tag
-            //create system metadata for the metadata doc with a describes tag
-            //create the dist doc(s)
-            //create the metadata doc
+            for(int j=0; j<nodeList.size(); j++)
+            {
+                currentUrl = nodeList.get(j).getBaseURL();
+                d1 = new D1Client(currentUrl);
+                String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
+                AuthToken token = d1.login(principal, "kepler");
+
+                //create an EML document with a distribution element
+                InputStream is = this.getClass().getResourceAsStream("/org/dataone/client/tests/dpennington.195.2.xml");
+
+                //parse that document for distribution info
+                Vector<String> distroUrls = getDistributionInfo(is);
+
+                //create an ID for the metadata doc
+                String idString = ExampleUtilities.generateIdentifier();
+                Identifier mdId = new Identifier();
+                mdId.setValue(idString);
+                //create system metadata for the metadata doc
+                //TODO: the object format should be set from the eml doc itself
+                SystemMetadata mdSm = generateSystemMetadata(mdId, ObjectFormat.EML_2_0_0);
+
+                //send the EML doc to create
+                is = this.getClass().getResourceAsStream("/org/dataone/client/tests/dpennington.195.2.xml");
+                Identifier createdMdId = d1.create(token, mdId, is, mdSm);
+                checkEquals(createdMdId.getValue(), mdId.getValue());
+                System.out.println("Metadata ID: " + createdMdId.getValue());
+
+                //get the document(s) listed in the EML distribution elements
+                //for the sake of this method, we're just going to get them from the resources directory
+                //in an actual implementation, this would get the doc from the server
+                for(int i=0; i<distroUrls.size(); i++)
+                { 
+                    String name = distroUrls.elementAt(i);
+                    if(name.startsWith("ecogrid://knb"))
+                    { //just handle ecogrid uris right now
+                        name = name.substring(name.indexOf("ecogrid://knb/") + "ecogrid://knb/".length(), name.length());
+                    }
+                    else
+                    {
+                        continue;
+                    }
+
+                    //create Identifiers for each document
+                    idString = ExampleUtilities.generateIdentifier();
+                    Identifier id = new Identifier();
+                    id.setValue(idString);
+                    //create system metadata for the dist documents with a describedBy tag
+                    //TODO: assume this is plain text, but really i should parse the EML 
+                    //above to determine the mime type.
+                    SystemMetadata sm = generateSystemMetadata(id, ObjectFormat.TEXT_PLAIN);
+                    //add desrviedBy
+                    sm.addDescribedBy(mdId);
+                    //add describes to the metadata doc's sm
+                    mdSm.addDescribe(id);
+                    //TODO: replace this with a call to the server eventually
+                    InputStream instream = this.getClass().getResourceAsStream("/org/dataone/client/tests/" + name);
+
+                    Identifier createdDataId = d1.create(token, id, instream, sm);
+                    checkEquals(createdDataId.getValue(), id.getValue());
+                    System.out.println("Data ID: " + createdMdId.getValue());
+                }
+            }
         }
         catch(Exception e)
         {
