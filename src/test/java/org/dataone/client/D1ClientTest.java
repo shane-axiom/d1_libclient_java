@@ -40,6 +40,7 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.io.IOUtils;
+import org.dataone.eml.DataoneEMLParser;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.types.AuthToken;
@@ -595,45 +596,6 @@ public class D1ClientTest  {
     }
     
     /**
-     * parse an eml document and return any distribution urls
-     * @param is
-     * @throws XPathExpressionException 
-     */
-    private Vector<String> getDistributionInfo(InputStream is)
-        throws ParserConfigurationException, IOException, SAXException, XPathExpressionException
-    {
-        /*//look for this
-        <distribution>
-            <online>
-                <url>xxx</url>
-            </online>
-        </distribution>
-         */
-        System.out.println("parsing EML document for any distribution urls");
-        Vector<String> urls = new Vector<String>();
-        Document d = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(is);
-        org.w3c.dom.NodeList nl = d.getChildNodes();
-        XPathFactory factory = XPathFactory.newInstance();
-        XPath xpath = factory.newXPath();
-        XPathExpression expr = xpath.compile("//distribution/online/url");
-        org.w3c.dom.NodeList result = (org.w3c.dom.NodeList)expr.evaluate(d, XPathConstants.NODESET);
-        System.out.println("result nodelist contains " + result.getLength() + " nodes");
-        for (int i = 0; i < result.getLength(); i++) 
-        {
-            //System.out.println("result node name: " + result.item(i).getNodeName());
-            System.out.println("found url: " + result.item(i).getFirstChild().getNodeValue()); 
-            String nodeName = result.item(i).getNodeName();
-            String nodeVal = result.item(i).getFirstChild().getNodeValue();
-            if(nodeName.equals("url"))
-            {
-                urls.add(nodeVal);
-            }
-        }
-        System.out.println("done parsing EML document");
-        return urls;
-    }
-    
-    /**
      * test the creation of the desribes and describedBy sysmeta elements
      */
     @Test
@@ -646,16 +608,18 @@ public class D1ClientTest  {
                 currentUrl = nodeList.get(j).getBaseURL();
                 d1 = new D1Client(currentUrl);
                 String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
-                AuthToken token = d1.login(principal, "kepler");
+                //AuthToken token = d1.login(principal, "kepler");
 
                 //create an EML document with a distribution element
-                InputStream is = this.getClass().getResourceAsStream("/org/dataone/client/tests/dpennington.195.2.xml");
+                InputStream is = this.getClass().getResourceAsStream("/org/dataone/client/tests/eml200/dpennington.195.2");
 
                 //parse that document for distribution info
-                Vector<String> distroUrls = getDistributionInfo(is);
+                //Vector<String> distroUrls = getDistributionInfo(is);
+                DataoneEMLParser parser = DataoneEMLParser.getInstance();
+                parser.parseDocument(is);
 
                 //create an ID for the metadata doc
-                String idString = ExampleUtilities.generateIdentifier();
+                /*String idString = ExampleUtilities.generateIdentifier();
                 Identifier mdId = new Identifier();
                 mdId.setValue(idString);
                 //create system metadata for the metadata doc
@@ -674,6 +638,8 @@ public class D1ClientTest  {
                     }
                     else
                     {
+                        System.out.println("Attempting to describe " + name + ", however ");
+                        System.out.println("Describes/DescribesBy can only handle ecogrid:// urls at this time.");
                         continue;
                     }
 
@@ -690,7 +656,7 @@ public class D1ClientTest  {
                     //add describes to the metadata doc's sm
                     mdSm.addDescribe(id);
                     //TODO: replace this with a call to the server eventually
-                    InputStream instream = this.getClass().getResourceAsStream("/org/dataone/client/tests/" + name);
+                    InputStream instream = this.getClass().getResourceAsStream("/org/dataone/client/tests/eml200/" + name);
 
                     Identifier createdDataId = d1.create(token, id, instream, sm);
                     d1.setAccess(token, createdDataId, "public", "read", "allow", "allowFirst");
@@ -703,7 +669,7 @@ public class D1ClientTest  {
                 Identifier createdMdId = d1.create(token, mdId, is, mdSm);
                 d1.setAccess(token, createdMdId, "public", "read", "allow", "allowFirst");
                 checkEquals(createdMdId.getValue(), mdId.getValue());
-                System.out.println("Metadata ID: " + createdMdId.getValue());
+                System.out.println("Metadata ID: " + createdMdId.getValue());*/
             }
         }
         catch(Exception e)
