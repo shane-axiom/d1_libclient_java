@@ -78,11 +78,11 @@ import org.xml.sax.SAXException;
  */
 public class D1ClientTest  {
 
-    //String contextUrl = "http://localhost:8080/knb/";
+    String contextUrl = "http://localhost:8080/knb/";
     //String contextUrl = "http://knb-mn.ecoinformatics.org/knb/";
     //String contextUrl = "http://mn-rpw/mn/";
     //String contextUrl = "http://cn-dev.dataone.org/knb/";
-    String contextUrl = "http://cn-ucsb-1.dataone.org/knb/";
+    //String contextUrl = "http://cn-ucsb-1.dataone.org/knb/";
     //String contextUrl = "http://cn-unm-1.dataone.org/knb/";
     
     private static final String prefix = "knb:testid:";
@@ -662,12 +662,6 @@ public class D1ClientTest  {
                 //TODO: the object format should be set from the eml doc itself
                 SystemMetadata mdSm = generateSystemMetadata(mdId, ObjectFormat.EML_2_0_0);
 
-                //send the EML doc to create
-                is = this.getClass().getResourceAsStream("/org/dataone/client/tests/dpennington.195.2.xml");
-                Identifier createdMdId = d1.create(token, mdId, is, mdSm);
-                checkEquals(createdMdId.getValue(), mdId.getValue());
-                System.out.println("Metadata ID: " + createdMdId.getValue());
-
                 //get the document(s) listed in the EML distribution elements
                 //for the sake of this method, we're just going to get them from the resources directory
                 //in an actual implementation, this would get the doc from the server
@@ -699,9 +693,17 @@ public class D1ClientTest  {
                     InputStream instream = this.getClass().getResourceAsStream("/org/dataone/client/tests/" + name);
 
                     Identifier createdDataId = d1.create(token, id, instream, sm);
+                    d1.setAccess(token, createdDataId, "public", "read", "allow", "allowFirst");
                     checkEquals(createdDataId.getValue(), id.getValue());
-                    System.out.println("Data ID: " + createdMdId.getValue());
+                    System.out.println("Data ID: " + id.getValue());
                 }
+                
+                //send the EML doc to create
+                is = this.getClass().getResourceAsStream("/org/dataone/client/tests/dpennington.195.2.xml");
+                Identifier createdMdId = d1.create(token, mdId, is, mdSm);
+                d1.setAccess(token, createdMdId, "public", "read", "allow", "allowFirst");
+                checkEquals(createdMdId.getValue(), mdId.getValue());
+                System.out.println("Metadata ID: " + createdMdId.getValue());
             }
         }
         catch(Exception e)
