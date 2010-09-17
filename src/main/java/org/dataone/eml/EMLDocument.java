@@ -40,8 +40,30 @@ public class EMLDocument
         distributionMetadata = new Vector<DistributionMetadata>();
     }
     
+    public void addDistributionMetadata(String url, String mimeType)
+    {
+        distributionMetadata.add(new DistributionMetadata(url, mimeType));
+    }
+    
+    public void setObjectFormat(ObjectFormat format)
+    {
+        this.format = format;
+    }
+    
     public class DistributionMetadata
     {
+        public DistributionMetadata(String url, String mimeType)
+        {
+            this.url = url;
+            this.mimeType = mimeType;
+        }
+        
+        public DistributionMetadata()
+        {
+            this.url = null;
+            this.mimeType = null;
+        }
+        
         public String url;
         public String mimeType;
     }

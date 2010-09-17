@@ -33,8 +33,11 @@ import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
+import org.dataone.eml.EMLDocument.DistributionMetadata;
 import org.dataone.service.types.ObjectFormat;
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 /**
@@ -89,48 +92,102 @@ public class DataoneEMLParser
         String namespace = d.getFirstChild().getNamespaceURI();
         System.out.println("namespace: " + namespace);
         
+        //switch on the namespace
         if(namespace.equals(ObjectFormat.EML_2_0_0.toString()))
         {
             return parseEML200Document(d);
         }
-        
+        else if(namespace.equals(ObjectFormat.EML_2_0_1.toString()))
+        {
+            return parseEML201Document(d);
+        }
+        else if(namespace.equals(ObjectFormat.EML_2_1_0.toString()))
+        {
+            return parseEML210Document(d);
+        }
+        else
+        {
+            throw new ParserConfigurationException(
+                    "This parser only parses EML 2.0.0, 2.0.1 and 2.1.0.  Namespace " + 
+                    namespace + " is not supported.");
+        }
+    }
+    
+    private NodeList runXPath(String expression, Node n)
+      throws XPathExpressionException
+    {
         XPathFactory factory = XPathFactory.newInstance();
         XPath xpath = factory.newXPath();
-        /*XPathExpression expr = xpath.compile("//distribution/online/url");
-        org.w3c.dom.NodeList result = (org.w3c.dom.NodeList)expr.evaluate(d, XPathConstants.NODESET);
-        
-        System.out.println("result nodelist contains " + result.getLength() + " nodes");
+        XPathExpression expr = xpath.compile(expression);
+        NodeList result = (org.w3c.dom.NodeList)expr.evaluate(n, XPathConstants.NODESET);
+        return result;
+    }
+    
+    /**
+     * parse an EML 2.0.0 document
+     * @param d
+     * @return
+     * @throws XPathExpressionException 
+     */
+    private EMLDocument parseEML200Document(Document d) throws XPathExpressionException
+    {
+        System.out.println("Parsing an EML 2.0.0 document.");
+        EMLDocument emld = new EMLDocument();
+        NodeList result = runXPath("//distribution", d);        
         
         for (int i = 0; i < result.getLength(); i++) 
         {
-            //System.out.println("result node name: " + result.item(i).getNodeName());
-            System.out.println("found url: " + result.item(i).getFirstChild().getNodeValue()); 
-            String nodeName = result.item(i).getNodeName();
-            String nodeVal = result.item(i).getFirstChild().getNodeValue();
-            if(nodeName.equals("url"))
-            {
-                urls.add(nodeVal);
+            String url = runXPath("online/url", result.item(i)).item(0).getFirstChild().getNodeValue();
+            String mimeType = "";
+            System.out.println("url: " + url);
+            Node physicalNode = result.item(i).getParentNode();
+            NodeList nl1 = runXPath("dataFormat/textFormat", physicalNode);
+            NodeList nl2 = runXPath("dataFormat/binaryRasterFormat", physicalNode);
+            NodeList nl3 = runXPath("dataFormat/externallyDefinedFormat", physicalNode);
+            //TODO: this isn't entirely right, but it's a good start.  Need to 
+            //figure out how to property parse the EML to get a better idea
+            //of what the mime type is
+            if(nl1.getLength() > 0)
+            { //found a text format
+                mimeType = ObjectFormat.TEXT_PLAIN.toString();
             }
-        }*/
-        System.out.println("done parsing EML document");
-        return doc;
-    }
-    
-    private EMLDocument parseEML200Document(Document d)
-    {
-        EMLDocument emld = new EMLDocument();
-        System.out.println("Parsing an EML 2.0.0 document.");
+            else if(nl2.getLength() > 0)
+            {
+                mimeType = "application/octet-stream";
+            }
+            else if(nl3.getLength() > 0)
+            {
+                mimeType = "application/octet-stream";
+            }
+            
+            emld.addDistributionMetadata(url, mimeType);
+        }
+        
+        emld.setObjectFormat(ObjectFormat.EML_2_0_0);
+        
         return emld;
     }
     
+    /**
+     * parse an EML 2.0.1 document
+     * @param d
+     * @return
+     */
     private EMLDocument parseEML201Document(Document d)
     {
+        System.out.println("Parsing an EML 2.0.1 document.");
         EMLDocument emld = new EMLDocument();
         return emld;
     }
     
+    /**
+     * parse and EML 2.1.0 document
+     * @param d
+     * @return
+     */
     private EMLDocument parseEML210Document(Document d)
     {
+        System.out.println("Parsing an EML 2.1.0 document.");
         EMLDocument emld = new EMLDocument();
         return emld;
     }

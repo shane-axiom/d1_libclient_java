@@ -41,6 +41,8 @@ import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.io.IOUtils;
 import org.dataone.eml.DataoneEMLParser;
+import org.dataone.eml.EMLDocument;
+import org.dataone.eml.EMLDocument.DistributionMetadata;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.types.AuthToken;
@@ -616,8 +618,12 @@ public class D1ClientTest  {
                 //parse that document for distribution info
                 //Vector<String> distroUrls = getDistributionInfo(is);
                 DataoneEMLParser parser = DataoneEMLParser.getInstance();
-                parser.parseDocument(is);
-
+                EMLDocument emld = parser.parseDocument(is);
+                checkEquals(ObjectFormat.EML_2_0_0.toString(), emld.format.toString());
+                DistributionMetadata dm = emld.distributionMetadata.elementAt(0);
+                checkEquals(ObjectFormat.TEXT_PLAIN.toString(), dm.mimeType);
+                checkEquals(dm.url, "ecogrid://knb/IPCC.200802107062739.1");
+                
                 //create an ID for the metadata doc
                 /*String idString = ExampleUtilities.generateIdentifier();
                 Identifier mdId = new Identifier();
