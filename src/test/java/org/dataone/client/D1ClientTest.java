@@ -612,17 +612,40 @@ public class D1ClientTest  {
                 String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
                 //AuthToken token = d1.login(principal, "kepler");
 
-                //create an EML document with a distribution element
-                InputStream is = this.getClass().getResourceAsStream("/org/dataone/client/tests/eml200/dpennington.195.2");
 
                 //parse that document for distribution info
-                //Vector<String> distroUrls = getDistributionInfo(is);
+                //Test EML 2.0.0
+                InputStream is = this.getClass().getResourceAsStream("/org/dataone/client/tests/eml200/dpennington.195.2");
                 DataoneEMLParser parser = DataoneEMLParser.getInstance();
                 EMLDocument emld = parser.parseDocument(is);
                 checkEquals(ObjectFormat.EML_2_0_0.toString(), emld.format.toString());
                 DistributionMetadata dm = emld.distributionMetadata.elementAt(0);
                 checkEquals(ObjectFormat.TEXT_PLAIN.toString(), dm.mimeType);
                 checkEquals(dm.url, "ecogrid://knb/IPCC.200802107062739.1");
+                
+                //Test EML 2.0.1
+                is = this.getClass().getResourceAsStream("/org/dataone/client/tests/eml201/msucci.23.3");
+                parser = DataoneEMLParser.getInstance();
+                emld = parser.parseDocument(is);
+                checkEquals(ObjectFormat.EML_2_0_1.toString(), emld.format.toString());
+                dm = emld.distributionMetadata.elementAt(0);
+                checkEquals(ObjectFormat.TEXT_PLAIN.toString(), dm.mimeType);
+                checkEquals(dm.url, "ecogrid://knb/msucci.24.1");
+                
+                //Test EML 2.1.0
+                is = this.getClass().getResourceAsStream("/org/dataone/client/tests/eml210/peggym.130.4");
+                parser = DataoneEMLParser.getInstance();
+                emld = parser.parseDocument(is);
+                checkEquals(ObjectFormat.EML_2_1_0.toString(), emld.format.toString());
+                dm = emld.distributionMetadata.elementAt(0);
+                checkEquals(ObjectFormat.TEXT_PLAIN.toString(), dm.mimeType);
+                checkEquals(dm.url, "ecogrid://knb/peggym.127.1");
+                dm = emld.distributionMetadata.elementAt(1);
+                checkEquals(ObjectFormat.TEXT_PLAIN.toString(), dm.mimeType);
+                checkEquals(dm.url, "ecogrid://knb/peggym.128.1");
+                dm = emld.distributionMetadata.elementAt(2);
+                checkEquals(ObjectFormat.TEXT_PLAIN.toString(), dm.mimeType);
+                checkEquals(dm.url, "ecogrid://knb/peggym.129.1");
                 
                 //create an ID for the metadata doc
                 /*String idString = ExampleUtilities.generateIdentifier();

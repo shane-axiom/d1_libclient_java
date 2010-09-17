@@ -132,6 +132,33 @@ public class DataoneEMLParser
     private EMLDocument parseEML200Document(Document d) throws XPathExpressionException
     {
         System.out.println("Parsing an EML 2.0.0 document.");
+        return parseEMLDocument(d, ObjectFormat.EML_2_0_0);
+    }
+    
+    /**
+     * parse an EML 2.0.1 document
+     * @param d
+     * @return
+     */
+    private EMLDocument parseEML201Document(Document d) throws XPathExpressionException
+    {
+        System.out.println("Parsing an EML 2.0.1 document.");
+        return parseEMLDocument(d, ObjectFormat.EML_2_0_1);
+    }
+    
+    /**
+     * parse and EML 2.1.0 document
+     * @param d
+     * @return
+     */
+    private EMLDocument parseEML210Document(Document d) throws XPathExpressionException
+    {
+        System.out.println("Parsing an EML 2.1.0 document.");
+        return parseEMLDocument(d, ObjectFormat.EML_2_1_0);
+    }
+    
+    private EMLDocument parseEMLDocument(Document d, ObjectFormat docType) throws XPathExpressionException
+    {
         EMLDocument emld = new EMLDocument();
         NodeList result = runXPath("//distribution", d);        
         
@@ -139,7 +166,6 @@ public class DataoneEMLParser
         {
             String url = runXPath("online/url", result.item(i)).item(0).getFirstChild().getNodeValue();
             String mimeType = "";
-            System.out.println("url: " + url);
             Node physicalNode = result.item(i).getParentNode();
             NodeList nl1 = runXPath("dataFormat/textFormat", physicalNode);
             NodeList nl2 = runXPath("dataFormat/binaryRasterFormat", physicalNode);
@@ -160,35 +186,14 @@ public class DataoneEMLParser
                 mimeType = "application/octet-stream";
             }
             
+            System.out.println("mime type: " + mimeType); 
+            System.out.println("url: " + url);
             emld.addDistributionMetadata(url, mimeType);
         }
         
-        emld.setObjectFormat(ObjectFormat.EML_2_0_0);
+        emld.setObjectFormat(docType);
+        System.out.println("document type: " + emld.format.toString());
         
-        return emld;
-    }
-    
-    /**
-     * parse an EML 2.0.1 document
-     * @param d
-     * @return
-     */
-    private EMLDocument parseEML201Document(Document d)
-    {
-        System.out.println("Parsing an EML 2.0.1 document.");
-        EMLDocument emld = new EMLDocument();
-        return emld;
-    }
-    
-    /**
-     * parse and EML 2.1.0 document
-     * @param d
-     * @return
-     */
-    private EMLDocument parseEML210Document(Document d)
-    {
-        System.out.println("Parsing an EML 2.1.0 document.");
-        EMLDocument emld = new EMLDocument();
         return emld;
     }
 }
