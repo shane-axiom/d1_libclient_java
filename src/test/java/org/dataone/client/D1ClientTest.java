@@ -104,7 +104,7 @@ public class D1ClientTest  {
     private static String currentUrl;
     //set this to false if you don't want to use the node list to get the urls for 
     //the test.  
-    private static boolean useNodeList = false;
+    private static boolean useNodeList = true;
     
     private static String watchedLog;
     
@@ -137,15 +137,15 @@ public class D1ClientTest  {
         }*/
         
         nodeList = new Vector<Node>();
-        Node n1 = new Node();
+//        Node n1 = new Node();
         Node n2 = new Node();
         Node n3 = new Node();
         Node n4 = new Node();
-        n1.setBaseURL("http://knb-mn.ecoinformatics.org/knb/");
+//        n1.setBaseURL("http://knb-mn.ecoinformatics.org/knb/");
         n2.setBaseURL("http://cn-unm-1.dataone.org/knb/");
         n3.setBaseURL("http://cn-ucsb-1.dataone.org/knb/");
         n4.setBaseURL("http://cn-orc-1.dataone.org/knb/");
-        nodeList.add(n1);
+//        nodeList.add(n1);
         nodeList.add(n2);
         nodeList.add(n3);
         nodeList.add(n4);
@@ -175,13 +175,14 @@ public class D1ClientTest  {
         {
             currentUrl = nodeList.get(i).getBaseURL();
             d1 = new D1Client(currentUrl);
+            MNode mn = d1.getMN(currentUrl);
             
             try
             {
                 printHeader("testFailedCreate - node " + nodeList.get(i).getBaseURL());
                 checkTrue(1==1);
                 String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
-                AuthToken token = d1.login(principal, "kepler");
+                AuthToken token = mn.login(principal, "kepler");
                 String idString = prefix + ExampleUtilities.generateIdentifier();
                 Identifier guid = new Identifier();
                 guid.setValue(idString);
@@ -190,7 +191,7 @@ public class D1ClientTest  {
                 Identifier rGuid = null;
 
                 try {
-                    rGuid = d1.create(token, guid, objectStream, sysmeta);
+                    rGuid = mn.create(token, guid, objectStream, sysmeta);
                     errorCollector.addError(new Throwable(createAssertMessage() + 
                             " Should have thrown exception since the xml file created was currupt"));
                 } catch (Exception e) {
@@ -213,6 +214,7 @@ public class D1ClientTest  {
        {
            currentUrl = nodeList.get(j).getBaseURL();
            d1 = new D1Client(currentUrl);
+           MNode mn = d1.getMN(currentUrl);
            
            printHeader("testGetLogRecords - node " + nodeList.get(j).getBaseURL());
            System.out.println("current time is: " + new Date());
@@ -220,7 +222,7 @@ public class D1ClientTest  {
            {
                Date start = new Date(System.currentTimeMillis() - 500000);
                String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
-               AuthToken token = d1.login(principal, "kepler");
+               AuthToken token = mn.login(principal, "kepler");
 
                String idString = prefix + ExampleUtilities.generateIdentifier();
                Identifier guid = new Identifier();
@@ -228,8 +230,8 @@ public class D1ClientTest  {
                InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-cdr.329066.1.data");
                SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
 
-               Identifier rGuid = d1.create(token, guid, objectStream, sysmeta);
-               InputStream data = d1.get(token, rGuid);
+               Identifier rGuid = mn.create(token, guid, objectStream, sysmeta);
+               InputStream data = mn.get(token, rGuid);
                String str = IOUtils.toString(data);
                //System.out.println("str: " + str);
                checkTrue(str.indexOf("61 66 104 2 103 900817 \"Planted\" 15.0  3.3") != -1);
@@ -238,7 +240,7 @@ public class D1ClientTest  {
                //get the logs for the last minute
                Date end = new Date(System.currentTimeMillis() + 500000);
                System.out.println("start: " + start + " end: " + end);
-               Log log = d1.getLogRecords(token, start, end, Event.CREATE);
+               Log log = mn.getLogRecords(token, start, end, Event.CREATE);
                System.out.println("log size: " + log.sizeLogEntryList());
                boolean isfound = false;
                for(int i=0; i<log.sizeLogEntryList(); i++)
@@ -275,6 +277,7 @@ public class D1ClientTest  {
         {
             currentUrl = nodeList.get(j).getBaseURL();
             d1 = new D1Client(currentUrl);
+            MNode mn = d1.getMN(currentUrl);
             
             printHeader("testListObjects - node " + nodeList.get(j).getBaseURL());
             System.out.println("current time is: " + new Date());
@@ -282,7 +285,7 @@ public class D1ClientTest  {
             {
                 Date date1 = new Date(System.currentTimeMillis() - 1000000);
                 String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
-                AuthToken token = d1.login(principal, "kepler");
+                AuthToken token = mn.login(principal, "kepler");
                 //AuthToken token = new AuthToken("public");
                 //create a document we know is in the system
                 String idString = prefix + ExampleUtilities.generateIdentifier();
@@ -292,15 +295,15 @@ public class D1ClientTest  {
                 InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-cdr.329066.1.data");
                 SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
 
-                Identifier rGuid = d1.create(token, guid, objectStream, sysmeta);
+                Identifier rGuid = mn.create(token, guid, objectStream, sysmeta);
                 
                 checkEquals(rGuid.getValue(), guid.getValue());
                 
                 //make the inserted documents public
-                d1.setAccess(token, rGuid, "public", "read", "allow", "allowFirst");
+                mn.setAccess(token, rGuid, "public", "read", "allow", "allowFirst");
 
                 //get the objectList and make sure our created doc is in it
-                ObjectList ol = d1.listObjects(token, null, null, null, false, 0, 1000);
+                ObjectList ol = mn.listObjects(token, null, null, null, false, 0, 1000);
                 boolean isThere = false;
                 
                 checkTrue(ol.sizeObjectInfoList() > 0);
@@ -328,17 +331,17 @@ public class D1ClientTest  {
                 objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-cdr.329066.1.data");
                 sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
 
-                rGuid = d1.create(token, guid, objectStream, sysmeta);
+                rGuid = mn.create(token, guid, objectStream, sysmeta);
                 System.out.println("inserted doc with id " + rGuid.getValue());
 
                 checkEquals(guid.getValue(), rGuid.getValue());
                 
                 //make the inserted documents public
-                d1.setAccess(token, rGuid, "public", "read", "allow", "allowFirst");
+                mn.setAccess(token, rGuid, "public", "read", "allow", "allowFirst");
 
                 Date date2 = new Date(System.currentTimeMillis() + 1000000);
 
-                ObjectList ol2 = d1.listObjects(token, date1, date2, null, false, 0, 1000);
+                ObjectList ol2 = mn.listObjects(token, date1, date2, null, false, 0, 1000);
                 boolean isthere = false;
                 for(int i=0; i<ol2.sizeObjectInfoList(); i++)
                 {
@@ -354,7 +357,7 @@ public class D1ClientTest  {
                 
                 //test with a public token.  should get the same result since both docs are public
                 token = new AuthToken("public");
-                ol2 = d1.listObjects(token, null, null, null, false, 0, 1000);
+                ol2 = mn.listObjects(token, null, null, null, false, 0, 1000);
                 isthere = false;
                 for(int i=0; i<ol2.sizeObjectInfoList(); i++)
                 {
@@ -386,24 +389,25 @@ public class D1ClientTest  {
         {
             currentUrl = nodeList.get(i).getBaseURL();
             d1 = new D1Client(currentUrl);
-            
+            MNode mn = d1.getMN(currentUrl);
+
             printHeader("testGetSystemMetadata - node " + nodeList.get(i).getBaseURL());
             try
             {
                 //create a document
                 String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
-                AuthToken token = d1.login(principal, "kepler");
+                AuthToken token = mn.login(principal, "kepler");
                 String idString = prefix + ExampleUtilities.generateIdentifier();
                 Identifier guid = new Identifier();
                 guid.setValue(idString);
                 InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-cdr.329066.1.data");
                 SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
-                Identifier rGuid = d1.create(token, guid, objectStream, sysmeta);
+                Identifier rGuid = mn.create(token, guid, objectStream, sysmeta);
                 checkEquals(guid.getValue(), rGuid.getValue());
                 //System.out.println("create success, id returned is " + rGuid.getValue());
 
                 //get the system metadata
-                SystemMetadata sm = d1.getSystemMetadata(token, rGuid);
+                SystemMetadata sm = mn.getSystemMetadata(token, rGuid);
                 checkTrue(guid.getValue().equals(sm.getIdentifier().getValue()));
             }
             catch(Exception e)
@@ -424,26 +428,27 @@ public class D1ClientTest  {
         {
             currentUrl = nodeList.get(i).getBaseURL();
             d1 = new D1Client(currentUrl);
-            
+            MNode mn = d1.getMN(currentUrl);
+
             printHeader("testUpdate - node " + nodeList.get(i).getBaseURL());
             try 
             {
                 //create a document
                 String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
-                AuthToken token = d1.login(principal, "kepler");
+                AuthToken token = mn.login(principal, "kepler");
                 String idString = prefix + ExampleUtilities.generateIdentifier();
                 Identifier guid = new Identifier();
                 guid.setValue(idString);
                 InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-cdr.329066.1.data");
                 SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
                 System.out.println("d1 create");
-                Identifier rGuid = d1.create(token, guid, objectStream, sysmeta);
+                Identifier rGuid = mn.create(token, guid, objectStream, sysmeta);
                 System.out.println("d1 created " + rGuid.getValue());
                 checkEquals(guid.getValue(), rGuid.getValue());
                 //System.out.println("create success, id returned is " + rGuid.getValue());
 
                 //get the document
-                InputStream data = d1.get(token, rGuid);
+                InputStream data = mn.get(token, rGuid);
                 checkTrue(null != data);
                 String str = IOUtils.toString(data);
                 checkTrue(str.indexOf("61 66 104 2 103 900817 \"Planted\" 15.0  3.3") != -1);
@@ -458,11 +463,11 @@ public class D1ClientTest  {
 
                 //update the document
                 System.out.println("d1 update newguid: "+ newguid.getValue() + " old guid: " + rGuid);
-                Identifier nGuid = d1.update(token, newguid, objectStream, rGuid, updatedSysmeta);
+                Identifier nGuid = mn.update(token, newguid, objectStream, rGuid, updatedSysmeta);
                 System.out.println("d1 updated success, id returned is " + nGuid.getValue());
 
                 //perform tests
-                data = d1.get(token, nGuid);
+                data = mn.get(token, nGuid);
                 checkTrue(null != data);
                 str = IOUtils.toString(data);
                 checkTrue(str.indexOf("0 66 104 2 103 900817 \"Planted\" 15.0  3.3") != -1);
@@ -486,7 +491,8 @@ public class D1ClientTest  {
         {
             currentUrl = nodeList.get(i).getBaseURL();
             d1 = new D1Client(currentUrl);
-            
+            MNode mn = d1.getMN(currentUrl);
+
             printHeader("testFailedCreateData - node " + nodeList.get(i).getBaseURL());
             /*try 
         {
@@ -523,7 +529,7 @@ public class D1ClientTest  {
             {
                 checkTrue(1==1);
                 String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
-                AuthToken token = d1.login(principal, "kepler");
+                AuthToken token = mn.login(principal, "kepler");
                 String idString = prefix + ExampleUtilities.generateIdentifier();
                 Identifier guid = new Identifier();
                 guid.setValue(idString + ".1.5.2");
@@ -534,11 +540,11 @@ public class D1ClientTest  {
                 Identifier rGuid = null;
 
                 //insert
-                rGuid = d1.create(token, guid, objectStream, sysmeta);
+                rGuid = mn.create(token, guid, objectStream, sysmeta);
                 checkEquals(guid.getValue(), rGuid.getValue());
 
                 //get
-                InputStream data = d1.get(token, rGuid);
+                InputStream data = mn.get(token, rGuid);
                 checkTrue(null != data);
                 String str = IOUtils.toString(data);
                 checkTrue(str.indexOf("BAYXXX_015ADCP015R00_20051215.50.9") != -1);
@@ -561,13 +567,14 @@ public class D1ClientTest  {
         {
             currentUrl = nodeList.get(i).getBaseURL();
             d1 = new D1Client(currentUrl);
-            
+            MNode mn = d1.getMN(currentUrl);
+
             printHeader("testGet - node " + nodeList.get(i).getBaseURL());
             try
             {
                 //create a document
                 String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
-                AuthToken token = d1.login(principal, "kepler");
+                AuthToken token = mn.login(principal, "kepler");
                 String idString = prefix + ExampleUtilities.generateIdentifier();
                 Identifier guid = new Identifier();
                 guid.setValue(idString);
@@ -575,7 +582,7 @@ public class D1ClientTest  {
                 //InputStream objectStream = IOUtils.toInputStream("<?xml version=\"1.0\"?><test></test>");
                 SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.EML_2_1_0);
                 Identifier rGuid = null;
-                rGuid = d1.create(token, guid, objectStream, sysmeta);
+                rGuid = mn.create(token, guid, objectStream, sysmeta);
                 checkEquals(guid.getValue(), rGuid.getValue());
 
                 //try to get it as public.  this should fail
@@ -594,8 +601,8 @@ public class D1ClientTest  {
                 }*/
 
                 //change the perms, then try to get it again
-                d1.setAccess(token, rGuid, "public", "read", "allow", "allowFirst");
-                InputStream data = d1.get(publicToken, rGuid);
+                mn.setAccess(token, rGuid, "public", "read", "allow", "allowFirst");
+                InputStream data = mn.get(publicToken, rGuid);
             }
             catch(Exception e)
             {
@@ -605,7 +612,7 @@ public class D1ClientTest  {
         }
     }
     
-    private void insertEMLDocsWithEMLParserOutput(EMLDocument emld, String file, AuthToken token) 
+    private void insertEMLDocsWithEMLParserOutput(MNode mn, EMLDocument emld, String file, AuthToken token) 
         throws InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, 
         UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented
     {
@@ -658,16 +665,16 @@ public class D1ClientTest  {
             
             InputStream instream = this.getClass().getResourceAsStream("/org/dataone/client/tests/" + dirname + "/" + url);
 
-            Identifier createdDataId = d1.create(token, id, instream, sm);
-            d1.setAccess(token, createdDataId, "public", "read", "allow", "allowFirst");
+            Identifier createdDataId = mn.create(token, id, instream, sm);
+            mn.setAccess(token, createdDataId, "public", "read", "allow", "allowFirst");
             checkEquals(createdDataId.getValue(), id.getValue());
             System.out.println("Data ID: " + id.getValue());
         }
         
         //send the EML doc to create
         InputStream is = this.getClass().getResourceAsStream("/org/dataone/client/tests/" + dirname + "/" + file);
-        Identifier createdMdId = d1.create(token, mdId, is, mdSm);
-        d1.setAccess(token, createdMdId, "public", "read", "allow", "allowFirst");
+        Identifier createdMdId = mn.create(token, mdId, is, mdSm);
+        mn.setAccess(token, createdMdId, "public", "read", "allow", "allowFirst");
         checkEquals(createdMdId.getValue(), mdId.getValue());
         System.out.println("Metadata ID: " + createdMdId.getValue());
     }
@@ -684,8 +691,10 @@ public class D1ClientTest  {
             {
                 currentUrl = nodeList.get(j).getBaseURL();
                 d1 = new D1Client(currentUrl);
+                MNode mn = d1.getMN(currentUrl);
+
                 String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
-                AuthToken token = d1.login(principal, "kepler");
+                AuthToken token = mn.login(principal, "kepler");
 
 
                 //parse that document for distribution info
@@ -697,7 +706,7 @@ public class D1ClientTest  {
                 DistributionMetadata dm = emld.distributionMetadata.elementAt(0);
                 checkEquals(ObjectFormat.TEXT_PLAIN.toString(), dm.mimeType);
                 checkEquals(dm.url, "ecogrid://knb/IPCC.200802107062739.1");
-                insertEMLDocsWithEMLParserOutput(emld, "dpennington.195.2", token);
+                insertEMLDocsWithEMLParserOutput(mn, emld, "dpennington.195.2", token);
                 
                 //Test EML 2.0.1
                 is = this.getClass().getResourceAsStream("/org/dataone/client/tests/eml201/msucci.23.3");
@@ -707,7 +716,7 @@ public class D1ClientTest  {
                 dm = emld.distributionMetadata.elementAt(0);
                 checkEquals(ObjectFormat.TEXT_PLAIN.toString(), dm.mimeType);
                 checkEquals(dm.url, "ecogrid://knb/msucci.24.1");
-                insertEMLDocsWithEMLParserOutput(emld, "msucci.23.3", token);
+                insertEMLDocsWithEMLParserOutput(mn, emld, "msucci.23.3", token);
                 
                 //Test EML 2.1.0
                 is = this.getClass().getResourceAsStream("/org/dataone/client/tests/eml210/peggym.130.4");
@@ -723,7 +732,7 @@ public class D1ClientTest  {
                 dm = emld.distributionMetadata.elementAt(2);
                 checkEquals(ObjectFormat.TEXT_PLAIN.toString(), dm.mimeType);
                 checkEquals(dm.url, "ecogrid://knb/peggym.129.1");
-                insertEMLDocsWithEMLParserOutput(emld, "peggym.130.4", token);
+                insertEMLDocsWithEMLParserOutput(mn, emld, "peggym.130.4", token);
             }
         }
         catch(Exception e)
@@ -745,13 +754,14 @@ public class D1ClientTest  {
         {
             currentUrl = nodeList.get(i).getBaseURL();
             d1 = new D1Client(currentUrl);
+            MNode mn = d1.getMN(currentUrl);
 
             printHeader("testCreateData - node " + nodeList.get(i).getBaseURL());
             try
             {
                 checkTrue(1==1);
                 String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
-                AuthToken token = d1.login(principal, "kepler");
+                AuthToken token = mn.login(principal, "kepler");
                 String idString = prefix + ExampleUtilities.generateIdentifier();
                 Identifier guid = new Identifier();
                 guid.setValue(idString);
@@ -760,14 +770,14 @@ public class D1ClientTest  {
                 Identifier rGuid = null;
 
                 try {
-                    rGuid = d1.create(token, guid, objectStream, sysmeta);
+                    rGuid = mn.create(token, guid, objectStream, sysmeta);
                     checkEquals(guid.getValue(), rGuid.getValue());
                 } catch (Exception e) {
                     errorCollector.addError(new Throwable(createAssertMessage() + " error in testCreateData: " + e.getMessage()));
                 }
 
                 try {
-                    InputStream data = d1.get(token, rGuid);
+                    InputStream data = mn.get(token, rGuid);
                     checkTrue(null != data);
                     String str = IOUtils.toString(data);
                     checkTrue(str.indexOf("61 66 104 2 103 900817 \"Planted\" 15.0  3.3") != -1);
@@ -794,13 +804,14 @@ public class D1ClientTest  {
         {
             currentUrl = nodeList.get(i).getBaseURL();
             d1 = new D1Client(currentUrl);
-            
+            MNode mn = d1.getMN(currentUrl);
+
             try
             {
                 printHeader("testCreateScienceMetadata - node " + nodeList.get(i).getBaseURL());
                 checkTrue(1==1);
                 String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
-                AuthToken token = d1.login(principal, "kepler");
+                AuthToken token = mn.login(principal, "kepler");
                 String idString = prefix + ExampleUtilities.generateIdentifier();
                 Identifier guid = new Identifier();
                 guid.setValue(idString);
@@ -809,7 +820,7 @@ public class D1ClientTest  {
                 Identifier rGuid = null;
 
                 try {
-                    rGuid = d1.create(token, guid, objectStream, sysmeta);
+                    rGuid = mn.create(token, guid, objectStream, sysmeta);
                     checkEquals(guid.getValue(), rGuid.getValue());
                 } catch (Exception e) {
                     errorCollector.addError(new Throwable(createAssertMessage() + " error in testCreateScienceMetadata: " + e.getMessage()));
@@ -817,7 +828,7 @@ public class D1ClientTest  {
 
 
                 try {
-                    InputStream data = d1.get(token, rGuid);
+                    InputStream data = mn.get(token, rGuid);
                     checkTrue(null != data);
                     String str = IOUtils.toString(data);
                     checkTrue(str.indexOf("<shortName>LUQMetadata76</shortName>") != -1);
@@ -866,14 +877,15 @@ public class D1ClientTest  {
         {
             currentUrl = nodeList.get(i).getBaseURL();
             d1 = new D1Client(currentUrl);
-            
+            MNode mn = d1.getMN(currentUrl);
+
             try {
                 printHeader("testGetNotFound - node " + nodeList.get(i).getBaseURL());
                 String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
-                AuthToken token = d1.login(principal, "kepler");
+                AuthToken token = mn.login(principal, "kepler");
                 Identifier guid = new Identifier();
                 guid.setValue(bogusId);
-                InputStream data = d1.get(token, guid);
+                InputStream data = mn.get(token, guid);
                 errorCollector.addError(new Throwable(createAssertMessage() + " NotFound exception should have been thrown"));
             }  catch (NotFound e) {
                 String error = e.serialize(BaseException.FMT_XML);
