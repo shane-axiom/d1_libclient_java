@@ -612,73 +612,6 @@ public class D1ClientTest  {
         }
     }
     
-    private void insertEMLDocsWithEMLParserOutput(MNode mn, EMLDocument emld, String file, AuthToken token) 
-        throws InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, 
-        UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented
-    {
-        String dirname;
-        if(emld.format == ObjectFormat.EML_2_0_0)
-            dirname = "eml200";
-        else if(emld.format == ObjectFormat.EML_2_0_1)
-            dirname = "eml201";
-        else if(emld.format == ObjectFormat.EML_2_1_0)
-            dirname = "eml210";
-        else
-            dirname = "";
-        
-        //create an ID for the metadata doc
-        String idString = ExampleUtilities.generateIdentifier();
-        Identifier mdId = new Identifier();
-        mdId.setValue(idString);
-        
-        SystemMetadata mdSm = generateSystemMetadata(mdId, emld.format);
-
-        //get the document(s) listed in the EML distribution elements
-        //for the sake of this method, we're just going to get them from the resources directory
-        //in an actual implementation, this would get the doc from the server
-        for(int i=0; i<emld.distributionMetadata.size(); i++)
-        { 
-            String url = emld.distributionMetadata.elementAt(i).url;
-            if(url.startsWith("ecogrid://knb"))
-            { //just handle ecogrid uris right now
-                url = url.substring(url.indexOf("ecogrid://knb/") + "ecogrid://knb/".length(), url.length());
-            }
-            else
-            {
-                System.out.println("Attempting to describe " + url + ", however ");
-                System.out.println("Describes/DescribesBy can only handle ecogrid:// urls at this time.");
-                continue;
-            }
-
-            //create Identifiers for each document
-            idString = ExampleUtilities.generateIdentifier();
-            idString += i;
-            Identifier id = new Identifier();
-            id.setValue(idString);
-            //create system metadata for the dist documents with a describedBy tag
-            SystemMetadata sm = generateSystemMetadata(id, ObjectFormat.convert(emld.distributionMetadata.elementAt(i).mimeType));
-            //add desrviedBy
-            sm.addDescribedBy(mdId);
-            //add describes to the metadata doc's sm
-            mdSm.addDescribe(id);
-            //TODO: replace this with a call to the server eventually
-            
-            InputStream instream = this.getClass().getResourceAsStream("/org/dataone/client/tests/" + dirname + "/" + url);
-
-            Identifier createdDataId = mn.create(token, id, instream, sm);
-            mn.setAccess(token, createdDataId, "public", "read", "allow", "allowFirst");
-            checkEquals(createdDataId.getValue(), id.getValue());
-            System.out.println("Data ID: " + id.getValue());
-        }
-        
-        //send the EML doc to create
-        InputStream is = this.getClass().getResourceAsStream("/org/dataone/client/tests/" + dirname + "/" + file);
-        Identifier createdMdId = mn.create(token, mdId, is, mdSm);
-        mn.setAccess(token, createdMdId, "public", "read", "allow", "allowFirst");
-        checkEquals(createdMdId.getValue(), mdId.getValue());
-        System.out.println("Metadata ID: " + createdMdId.getValue());
-    }
-    
     /**
      * test the creation of the desribes and describedBy sysmeta elements
      */
@@ -908,6 +841,89 @@ public class D1ClientTest  {
     public void testGetChecksumAuthTokenIdentifierTypeString() 
     {
         checkTrue(1==1);
+    }
+    
+    /**
+     * this method is an example of how to use the EMLParser output to
+     * create system metadata for eml files.
+     * 
+     * @param emld
+     * @param file
+     * @param token
+     * @throws InvalidToken
+     * @throws ServiceFailure
+     * @throws NotAuthorized
+     * @throws IdentifierNotUnique
+     * @throws UnsupportedType
+     * @throws InsufficientResources
+     * @throws InvalidSystemMetadata
+     * @throws NotImplemented
+     */
+    private void insertEMLDocsWithEMLParserOutput(EMLDocument emld, String file, AuthToken token) 
+        throws InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, 
+        UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented
+    {
+        String dirname;
+        if(emld.format == ObjectFormat.EML_2_0_0)
+            dirname = "eml200";
+        else if(emld.format == ObjectFormat.EML_2_0_1)
+            dirname = "eml201";
+        else if(emld.format == ObjectFormat.EML_2_1_0)
+            dirname = "eml210";
+        else
+            dirname = "";
+        
+        //create an ID for the metadata doc
+        String idString = ExampleUtilities.generateIdentifier();
+        Identifier mdId = new Identifier();
+        mdId.setValue(idString);
+        
+        SystemMetadata mdSm = generateSystemMetadata(mdId, emld.format);
+
+        //get the document(s) listed in the EML distribution elements
+        //for the sake of this method, we're just going to get them from the resources directory
+        //in an actual implementation, this would get the doc from the server
+        for(int i=0; i<emld.distributionMetadata.size(); i++)
+        { 
+            String url = emld.distributionMetadata.elementAt(i).url;
+            if(url.startsWith("ecogrid://knb"))
+            { //just handle ecogrid uris right now
+                url = url.substring(url.indexOf("ecogrid://knb/") + "ecogrid://knb/".length(), url.length());
+            }
+            else
+            {
+                System.out.println("Attempting to describe " + url + ", however ");
+                System.out.println("Describes/DescribesBy can only handle ecogrid:// urls at this time.");
+                continue;
+            }
+
+            //create Identifiers for each document
+            idString = ExampleUtilities.generateIdentifier();
+            idString += i;
+            Identifier id = new Identifier();
+            id.setValue(idString);
+            //create system metadata for the dist documents with a describedBy tag
+            SystemMetadata sm = generateSystemMetadata(id, ObjectFormat.convert(emld.distributionMetadata.elementAt(i).mimeType));
+            //add desrviedBy
+            sm.addDescribedBy(mdId);
+            //add describes to the metadata doc's sm
+            mdSm.addDescribe(id);
+            //TODO: replace this with a call to the server eventually
+            
+            InputStream instream = this.getClass().getResourceAsStream("/org/dataone/client/tests/" + dirname + "/" + url);
+
+            Identifier createdDataId = d1.create(token, id, instream, sm);
+            d1.setAccess(token, createdDataId, "public", "read", "allow", "allowFirst");
+            checkEquals(createdDataId.getValue(), id.getValue());
+            System.out.println("Data ID: " + id.getValue());
+        }
+        
+        //send the EML doc to create
+        InputStream is = this.getClass().getResourceAsStream("/org/dataone/client/tests/" + dirname + "/" + file);
+        Identifier createdMdId = d1.create(token, mdId, is, mdSm);
+        d1.setAccess(token, createdMdId, "public", "read", "allow", "allowFirst");
+        checkEquals(createdMdId.getValue(), mdId.getValue());
+        System.out.println("Metadata ID: " + createdMdId.getValue());
     }
     
     private static String createAssertMessage()

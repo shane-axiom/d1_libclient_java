@@ -175,15 +175,19 @@ public class DataoneEMLParser
             //of what the mime type is
             if(nl1.getLength() > 0)
             { //found a text format
+                //TODO: it's possible here to do a bit more parsing to determine if this
+                //is text/plain or text/csv
                 mimeType = ObjectFormat.TEXT_PLAIN.toString();
             }
             else if(nl2.getLength() > 0)
             {
-                mimeType = "application/octet-stream";
+                //TODO: could do a bit more parsing and refine this type more
+                mimeType = ObjectFormat.OCTET_STREAM.toString();
             }
             else if(nl3.getLength() > 0)
             {
-                mimeType = "application/octet-stream";
+                //TODO: could do a bit more parsing and refine this type more
+                mimeType = ObjectFormat.OCTET_STREAM.toString();
             }
             
             System.out.println("mime type: " + mimeType); 

@@ -35,21 +35,38 @@ public class EMLDocument
     public ObjectFormat format = null;
     public Vector<DistributionMetadata> distributionMetadata = null;
     
+    /**
+     * constructor
+     */
     public EMLDocument()
     {
         distributionMetadata = new Vector<DistributionMetadata>();
     }
     
+    /**
+     * add a url and mime type to the document reference
+     * @param url
+     * @param mimeType
+     */
     public void addDistributionMetadata(String url, String mimeType)
     {
         distributionMetadata.add(new DistributionMetadata(url, mimeType));
     }
     
+    /**
+     * set the format of the document
+     * @param format
+     */
     public void setObjectFormat(ObjectFormat format)
     {
         this.format = format;
     }
     
+    /**
+     * sub class to contain the distribution metadata
+     * @author berkley
+     *
+     */
     public class DistributionMetadata
     {
         public DistributionMetadata(String url, String mimeType)
