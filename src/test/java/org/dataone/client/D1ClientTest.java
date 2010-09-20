@@ -859,7 +859,7 @@ public class D1ClientTest  {
      * @throws InvalidSystemMetadata
      * @throws NotImplemented
      */
-    private void insertEMLDocsWithEMLParserOutput(EMLDocument emld, String file, AuthToken token) 
+    private void insertEMLDocsWithEMLParserOutput(MNode mn, EMLDocument emld, String file, AuthToken token) 
         throws InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, 
         UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented
     {
@@ -912,16 +912,16 @@ public class D1ClientTest  {
             
             InputStream instream = this.getClass().getResourceAsStream("/org/dataone/client/tests/" + dirname + "/" + url);
 
-            Identifier createdDataId = d1.create(token, id, instream, sm);
-            d1.setAccess(token, createdDataId, "public", "read", "allow", "allowFirst");
+            Identifier createdDataId = mn.create(token, id, instream, sm);
+            mn.setAccess(token, createdDataId, "public", "read", "allow", "allowFirst");
             checkEquals(createdDataId.getValue(), id.getValue());
             System.out.println("Data ID: " + id.getValue());
         }
         
         //send the EML doc to create
         InputStream is = this.getClass().getResourceAsStream("/org/dataone/client/tests/" + dirname + "/" + file);
-        Identifier createdMdId = d1.create(token, mdId, is, mdSm);
-        d1.setAccess(token, createdMdId, "public", "read", "allow", "allowFirst");
+        Identifier createdMdId = mn.create(token, mdId, is, mdSm);
+        mn.setAccess(token, createdMdId, "public", "read", "allow", "allowFirst");
         checkEquals(createdMdId.getValue(), mdId.getValue());
         System.out.println("Metadata ID: " + createdMdId.getValue());
     }
