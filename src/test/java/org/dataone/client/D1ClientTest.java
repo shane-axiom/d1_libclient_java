@@ -26,18 +26,9 @@ import static org.junit.Assert.assertThat;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.Callable;
-
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.io.IOUtils;
 import org.dataone.eml.DataoneEMLParser;
@@ -66,6 +57,8 @@ import org.dataone.service.types.NodeReference;
 import org.dataone.service.types.ObjectFormat;
 import org.dataone.service.types.ObjectInfo;
 import org.dataone.service.types.ObjectList;
+import org.dataone.service.types.ObjectLocation;
+import org.dataone.service.types.ObjectLocationList;
 import org.dataone.service.types.Principal;
 import org.dataone.service.types.SystemMetadata;
 import org.jibx.runtime.BindingDirectory;
@@ -77,9 +70,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ErrorCollector;
-import org.w3c.dom.Document;
-import org.w3c.dom.DocumentType;
-import org.xml.sax.SAXException;
 
 /**
  * Test the DataONE Java client methods.
@@ -104,9 +94,7 @@ public class D1ClientTest  {
     //set this to false if you don't want to use the node list to get the urls for 
     //the test.  
     private static boolean useNodeList = true;
-    
-    private static String watchedLog;
-    
+        
     @Rule 
     public ErrorCollector errorCollector = new ErrorCollector();
 
@@ -179,7 +167,7 @@ public class D1ClientTest  {
             try
             {
                 printHeader("testFailedCreate - node " + nodeList.get(i).getBaseURL());
-                checkTrue(1==1);
+                checkTrue(true);
                 String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
                 AuthToken token = mn.login(principal, "kepler");
                 String idString = prefix + ExampleUtilities.generateIdentifier();
@@ -526,7 +514,7 @@ public class D1ClientTest  {
         }*/
             try
             {
-                checkTrue(1==1);
+                checkTrue(true);
                 String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
                 AuthToken token = mn.login(principal, "kepler");
                 String idString = prefix + ExampleUtilities.generateIdentifier();
@@ -691,7 +679,7 @@ public class D1ClientTest  {
             printHeader("testCreateData - node " + nodeList.get(i).getBaseURL());
             try
             {
-                checkTrue(1==1);
+                checkTrue(true);
                 String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
                 AuthToken token = mn.login(principal, "kepler");
                 String idString = prefix + ExampleUtilities.generateIdentifier();
@@ -741,7 +729,7 @@ public class D1ClientTest  {
             try
             {
                 printHeader("testCreateScienceMetadata - node " + nodeList.get(i).getBaseURL());
-                checkTrue(1==1);
+                checkTrue(true);
                 String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
                 AuthToken token = mn.login(principal, "kepler");
                 String idString = prefix + ExampleUtilities.generateIdentifier();
@@ -785,7 +773,7 @@ public class D1ClientTest  {
             d1 = new D1Client(currentUrl);
             
             printHeader("testDelete - node " + nodeList.get(i).getBaseURL());
-            checkTrue(1==1);
+            checkTrue(true);
         }
     }
     
@@ -798,7 +786,7 @@ public class D1ClientTest  {
             d1 = new D1Client(currentUrl);
             
             printHeader("testDescribe - node " + nodeList.get(i).getBaseURL());
-            checkTrue(1==1);
+            checkTrue(true);
         }
     }
 
@@ -833,13 +821,13 @@ public class D1ClientTest  {
     @Test
     public void testGetChecksumAuthTokenIdentifierType() 
     {
-        checkTrue(1==1);
+        checkTrue(true);
     }
     
     @Test
     public void testGetChecksumAuthTokenIdentifierTypeString() 
     {
-        checkTrue(1==1);
+        checkTrue(true);
     }
     
     /**
