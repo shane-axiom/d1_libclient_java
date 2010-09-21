@@ -81,20 +81,19 @@ import org.w3c.dom.Document;
 import org.w3c.dom.DocumentType;
 import org.xml.sax.SAXException;
 
-
-
 /**
  * Test the DataONE Java client methods.
  * @author Matthew Jones
  */
 public class D1ClientTest  {
 
-    String contextUrl = "http://localhost:8080/knb/";
+    //String contextUrl = "http://localhost:8080/knb/";
     //String contextUrl = "http://knb-mn.ecoinformatics.org/knb/";
     //String contextUrl = "http://mn-rpw/mn/";
     //String contextUrl = "http://cn-dev.dataone.org/knb/";
     //String contextUrl = "http://cn-ucsb-1.dataone.org/knb/";
     //String contextUrl = "http://cn-unm-1.dataone.org/knb/";
+    String contextUrl = "http://cn-orc-1.dataone.org/knb/";
     
     private static final String prefix = "knb:testid:";
     private static final String bogusId = "foobarbaz214";
@@ -303,7 +302,7 @@ public class D1ClientTest  {
                 mn.setAccess(token, rGuid, "public", "read", "allow", "allowFirst");
 
                 //get the objectList and make sure our created doc is in it
-                ObjectList ol = mn.listObjects(token, null, null, null, false, 0, 1000);
+                ObjectList ol = mn.listObjects(token, null, null, null, false, 0, 100000);
                 boolean isThere = false;
                 
                 checkTrue(ol.sizeObjectInfoList() > 0);
@@ -357,7 +356,7 @@ public class D1ClientTest  {
                 
                 //test with a public token.  should get the same result since both docs are public
                 token = new AuthToken("public");
-                ol2 = mn.listObjects(token, null, null, null, false, 0, 1000);
+                ol2 = mn.listObjects(token, null, null, null, false, 0, 100000);
                 isthere = false;
                 for(int i=0; i<ol2.sizeObjectInfoList(); i++)
                 {

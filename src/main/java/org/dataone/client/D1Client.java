@@ -22,7 +22,6 @@
 
 package org.dataone.client;
 
-
 /**
  * The D1Client class represents a client-side implementation of the DataONE
  * Service API. The class exposes the DataONE APIs as client methods, dispatches

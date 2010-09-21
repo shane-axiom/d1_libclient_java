@@ -35,6 +35,7 @@ import javax.xml.xpath.XPathFactory;
 
 import org.dataone.eml.EMLDocument.DistributionMetadata;
 import org.dataone.service.types.ObjectFormat;
+import org.dataone.service.types.SystemMetadata;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
