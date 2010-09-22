@@ -54,15 +54,8 @@ import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.exceptions.UnsupportedType;
-import org.dataone.service.mn.MemberNodeCrud;
-import org.dataone.service.mn.MemberNodeReplication;
 import org.dataone.service.types.AuthToken;
-import org.dataone.service.types.Checksum;
-import org.dataone.service.types.DescribeResponse;
-import org.dataone.service.types.Event;
 import org.dataone.service.types.Identifier;
-import org.dataone.service.types.Log;
-import org.dataone.service.types.ObjectFormat;
 import org.dataone.service.types.ObjectList;
 import org.dataone.service.types.SystemMetadata;
 import org.jibx.runtime.BindingDirectory;
@@ -75,15 +68,11 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import com.gc.iotools.stream.is.InputStreamFromOutputStream;
-
 /**
- * The D1Client class represents a client-side implementation of the DataONE
- * Service API. The class exposes the DataONE APIs as client methods, dispatches
- * the calls to the correct DataONE node, and then returns the results or throws
- * the appropriate exceptions.
+ * An abstract node class that contains base functionality shared between 
+ * Coordinating Node and Member Node implementations. 
  */
-public class D1Node {
+public abstract class D1Node {
 
 	// TODO: This class should implement the MemberNodeAuthorization interface as well
 	
@@ -109,10 +98,9 @@ public class D1Node {
 	public static final String RESOURCE_META = "meta";
 	/** API SESSION Resource which handles with user session operations */
 	public static final String RESOURCE_SESSION = "session";
-	/**
-	 * API IDENTIFIER Resource which controls object unique identifier
-	 * operations
-	 */
+	/** API RESOLVE Resource which handles resolve operations */
+    public static final String RESOURCE_RESOLVE = "resolve";
+	/** API IDENTIFIER Resource which controls object identifier operations */
 	public static final String RESOURCE_IDENTIFIER = "identifier";
 	/** API LOG controls logging events */
 	public static final String RESOURCE_LOG = "log";
@@ -154,6 +142,85 @@ public class D1Node {
         this.nodeBaseServiceUrl = nodeBaseServiceUrl;
     }
     
+    /**
+     * Get the resource with the specified guid.  Used by both the CNode and 
+     * MNode implementations.
+     */
+    public InputStream get(AuthToken token, Identifier guid)
+            throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
+            NotImplemented {
+        String resource = RESOURCE_OBJECTS + "/" + guid.getValue();
+        InputStream is = null;
+        ResponseData rd = sendRequest(token, resource, GET, null, null, null, null);
+        int code = rd.getCode();
+        if (code != HttpURLConnection.HTTP_OK) {
+            InputStream errorStream = rd.getErrorStream();
+            try {
+                deserializeAndThrowException(errorStream);
+            } catch (InvalidToken e) {
+                throw e;
+            } catch (ServiceFailure e) {
+                throw e;
+            } catch (NotAuthorized e) {
+                throw e;
+            } catch (NotFound e) {
+                throw e;
+            } catch (NotImplemented e) {
+                throw e;
+            } catch (BaseException e) {
+                throw new ServiceFailure("1000",
+                        "Method threw improper exception: " + e.getMessage());
+            }
+        } else {
+            is = rd.getContentStream();
+        }
+
+        return is;
+    }
+    
+    /**
+     * Get the system metadata from a resource with the specified guid. Used
+     * by both the CNode and MNode implementations.
+     */
+    public SystemMetadata getSystemMetadata(AuthToken token, Identifier guid)
+            throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
+            InvalidRequest, NotImplemented {
+
+        String resource = RESOURCE_META + "/" + guid.getValue();
+        InputStream is = null;
+        ResponseData rd = sendRequest(token, resource, GET, null, null, null, null);
+        int code = rd.getCode();
+        if (code != HttpURLConnection.HTTP_OK) {
+            InputStream errorStream = rd.getErrorStream();
+            try {
+                deserializeAndThrowException(errorStream);
+            } catch (InvalidToken e) {
+                throw e;
+            } catch (ServiceFailure e) {
+                throw e;
+            } catch (NotAuthorized e) {
+                throw e;
+            } catch (NotFound e) {
+                throw e;
+            } catch (NotImplemented e) {
+                throw e;
+            } catch (BaseException e) {
+                throw new ServiceFailure("1000",
+                        "Method threw improper exception: " + e.getMessage());
+            }
+        } else {
+            is = rd.getContentStream();
+        }
+
+        // TODO: this block should be inside the above else conditional, right?
+        try {
+            return deserializeSystemMetadata(is);
+        } catch (Exception e) {
+            throw new ServiceFailure("1090",
+                    "Could not deserialize the systemMetadata: "
+                            + e.getMessage());
+        }
+    }
 	
 	/**
 	 * convert a date to GMT
@@ -222,7 +289,7 @@ public class D1Node {
 	 */
 	protected ResponseData sendRequest(AuthToken token, String resource,
 			String method, String urlParamaters, String contentType,
-			InputStream dataStream) throws ServiceFailure {
+			InputStream dataStream, String acceptHeader) throws ServiceFailure {
 
 		ResponseData resData = new ResponseData();
 		HttpURLConnection connection = null;
@@ -260,6 +327,9 @@ public class D1Node {
 			connection = (HttpURLConnection) u.openConnection();
 			if (contentType != null) {
 				connection.setRequestProperty("Content-Type", contentType);
+			}
+			if (acceptHeader != null) {
+			    connection.setRequestProperty("Accept", acceptHeader);    
 			}
 
 			connection.setDoOutput(true);
@@ -305,16 +375,15 @@ public class D1Node {
 		return resData;
 	}
 
-	protected void deserializeAndThrowException(InputStream errorStream)
+    protected void deserializeAndThrowException(InputStream errorStream)
 			throws NotFound, InvalidToken, ServiceFailure, NotAuthorized,
 			NotFound, IdentifierNotUnique, UnsupportedType,
 			InsufficientResources, InvalidSystemMetadata, NotImplemented,
 			InvalidCredentials, InvalidRequest {
-		// TODO: remove dead code that is now just cruft
-		// BaseException b = null;
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		Document doc;
-		boolean parseFailed = false;
+
 		try {
 			DocumentBuilder db = dbf.newDocumentBuilder();
 			doc = db.parse(errorStream);
@@ -344,16 +413,14 @@ public class D1Node {
 				throw new ServiceFailure(detailCode, description);
 			}
 		} catch (SAXException e) {
-			parseFailed = true;
+            throw new ServiceFailure("1000",
+            "Service failed, but error message not parsed correctly: " + e.getMessage());
 		} catch (IOException e) {
-			parseFailed = true;
+            throw new ServiceFailure("1000",
+                    "Service failed, but error message not parsed correctly: " + e.getMessage());
 		} catch (ParserConfigurationException e) {
-			parseFailed = true;
-		}
-
-		if (parseFailed) {
-			throw new ServiceFailure("1000",
-					"Service failed, but error message not parsed correctly.");
+            throw new ServiceFailure("1000",
+                    "Service failed, but error message not parsed correctly: " + e.getMessage());
 		}
 	}
 

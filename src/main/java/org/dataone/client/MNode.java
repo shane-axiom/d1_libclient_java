@@ -87,7 +87,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
                 + permissionType + "&permissionOrder=" + permissionOrder
                 + "&op=setaccess&setsystemmetadata=true";
         String resource = RESOURCE_SESSION + "/";
-        ResponseData rd = sendRequest(token, resource, POST, params, null, null);
+        ResponseData rd = sendRequest(token, resource, POST, params, null, null, null);
         int code = rd.getCode();
         if (code != HttpURLConnection.HTTP_OK) {
             throw new ServiceFailure("1000", "Error setting acces on document");
@@ -114,7 +114,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
         String resource = RESOURCE_SESSION + "/";
 
         ResponseData rd = sendRequest(null, resource, POST, params, null,
-                new ByteArrayInputStream(postData.getBytes()));
+                new ByteArrayInputStream(postData.getBytes()), null);
         String sessionid = null;
 
         int code = rd.getCode();
@@ -217,7 +217,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
         params += "&";
         params += "count=" + count;
 
-        ResponseData rd = sendRequest(token, resource, GET, params, null, null);
+        ResponseData rd = sendRequest(token, resource, GET, params, null, null, null);
         int code = rd.getCode();
         if (code != HttpURLConnection.HTTP_OK) {
             InputStream errorStream = rd.getErrorStream();
@@ -279,7 +279,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
         };
 
         ResponseData rd = sendRequest(token, resource, POST, null,
-                "multipart/mixed", multipartStream);
+                "multipart/mixed", multipartStream, null);
 
         // Handle any errors that were generated
         int code = rd.getCode();
@@ -360,7 +360,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
         // TODO: what if obsoletedGuid is null? Safe?
         String urlParams = "obsoletedGuid=" + obsoletedGuid.getValue();
         ResponseData rd = sendRequest(token, resource, PUT, urlParams,
-                "multipart/mixed", multipartStream);
+                "multipart/mixed", multipartStream, null);
 
         // Handle any errors that were generated
         int code = rd.getCode();
@@ -398,82 +398,18 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
         return guid;
     }
 
-    /**
-     * get the system metadata from a resource with the specified guid.
-     */
-    public SystemMetadata getSystemMetadata(AuthToken token, Identifier guid)
-            throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
-            InvalidRequest, NotImplemented {
-
-        String resource = RESOURCE_META + "/" + guid.getValue();
-        InputStream is = null;
-        ResponseData rd = sendRequest(token, resource, GET, null, null, null);
-        int code = rd.getCode();
-        if (code != HttpURLConnection.HTTP_OK) {
-            InputStream errorStream = rd.getErrorStream();
-            try {
-                deserializeAndThrowException(errorStream);
-            } catch (InvalidToken e) {
-                throw e;
-            } catch (ServiceFailure e) {
-                throw e;
-            } catch (NotAuthorized e) {
-                throw e;
-            } catch (NotFound e) {
-                throw e;
-            } catch (NotImplemented e) {
-                throw e;
-            } catch (BaseException e) {
-                throw new ServiceFailure("1000",
-                        "Method threw improper exception: " + e.getMessage());
-            }
-        } else {
-            is = rd.getContentStream();
-        }
-
-        // TODO: this block should be inside the above else conditional, right?
-        try {
-            return deserializeSystemMetadata(is);
-        } catch (Exception e) {
-            throw new ServiceFailure("1090",
-                    "Could not deserialize the systemMetadata: "
-                            + e.getMessage());
-        }
-    }
-
-    /**
-     * get the resource with the specified guid
-     */
+    @Override
     public InputStream get(AuthToken token, Identifier guid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
             NotImplemented {
-        String resource = RESOURCE_OBJECTS + "/" + guid.getValue();
-        InputStream is = null;
-        ResponseData rd = sendRequest(token, resource, GET, null, null, null);
-        int code = rd.getCode();
-        if (code != HttpURLConnection.HTTP_OK) {
-            InputStream errorStream = rd.getErrorStream();
-            try {
-                deserializeAndThrowException(errorStream);
-            } catch (InvalidToken e) {
-                throw e;
-            } catch (ServiceFailure e) {
-                throw e;
-            } catch (NotAuthorized e) {
-                throw e;
-            } catch (NotFound e) {
-                throw e;
-            } catch (NotImplemented e) {
-                throw e;
-            } catch (BaseException e) {
-                throw new ServiceFailure("1000",
-                        "Method threw improper exception: " + e.getMessage());
-            }
-        } else {
-            is = rd.getContentStream();
-        }
+        return super.get(token, guid);
+    }
 
-        return is;
+    @Override
+    public SystemMetadata getSystemMetadata(AuthToken token, Identifier guid)
+            throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
+            InvalidRequest, NotImplemented {
+        return super.getSystemMetadata(token, guid);
     }
 
     /**
@@ -545,7 +481,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
         }
 
         InputStream is = null;
-        ResponseData rd = sendRequest(token, resource, GET, params, null, null);
+        ResponseData rd = sendRequest(token, resource, GET, params, null, null, null);
         int code = rd.getCode();
         if (code != HttpURLConnection.HTTP_OK) {
             InputStream errorStream = rd.getErrorStream();
