@@ -26,6 +26,7 @@ import static org.junit.Assert.assertThat;
 import java.util.concurrent.Callable;
 
 import org.dataone.service.exceptions.BaseException;
+import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.types.AuthToken;
 import org.dataone.service.types.Identifier;
 import org.dataone.service.types.ObjectLocation;
@@ -97,15 +98,9 @@ public class D1ClientCNodeTest  {
         guid.setValue(badIdentifier);
         try {
             ObjectLocationList oll = cn.resolve(token, guid);
-            for (ObjectLocation ol : oll.getLocations()) {
-                System.out.println("Location: " + ol.getNode().getValue()
-                        + " (" + ol.getUrl() + ")");
-                checkTrue(ol.getUrl().contains(identifier));
-            }
+            checkEquals("Should not reach this check, exception should have been generated.", "");
         } catch (BaseException e) {
-            e.printStackTrace();
-            errorCollector.addError(new Throwable(createAssertMessage()
-                    + " error in testResolve: " + e.getMessage()));
+            checkTrue(e instanceof NotFound);
         }
     }
     
