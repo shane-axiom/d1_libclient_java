@@ -112,7 +112,7 @@ public abstract class D1Node {
 	 * Constructor to create a new instance.
 	 */
 	public D1Node(String nodeBaseServiceUrl) {
-		this.nodeBaseServiceUrl = nodeBaseServiceUrl;
+	    setNodeBaseServiceUrl(nodeBaseServiceUrl);
 	}
 
 	// TODO: this constructor should not exist
@@ -139,6 +139,9 @@ public abstract class D1Node {
      * @param nodeBaseServiceUrl String representing the service URL
      */
     public void setNodeBaseServiceUrl(String nodeBaseServiceUrl) {
+        if (!nodeBaseServiceUrl.endsWith("/")) {
+            nodeBaseServiceUrl = nodeBaseServiceUrl + "/";
+        }
         this.nodeBaseServiceUrl = nodeBaseServiceUrl;
     }
     
