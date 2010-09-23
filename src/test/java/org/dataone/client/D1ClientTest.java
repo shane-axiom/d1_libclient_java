@@ -57,8 +57,6 @@ import org.dataone.service.types.NodeReference;
 import org.dataone.service.types.ObjectFormat;
 import org.dataone.service.types.ObjectInfo;
 import org.dataone.service.types.ObjectList;
-import org.dataone.service.types.ObjectLocation;
-import org.dataone.service.types.ObjectLocationList;
 import org.dataone.service.types.Principal;
 import org.dataone.service.types.SystemMetadata;
 import org.jibx.runtime.BindingDirectory;
