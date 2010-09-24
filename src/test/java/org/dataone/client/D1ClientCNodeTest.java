@@ -43,7 +43,7 @@ import org.junit.rules.ErrorCollector;
 public class D1ClientCNodeTest  {
 
     private static final String cnUrl = "http://cn-dev.dataone.org/cn/";
-    private static final String identifier = "MD_ORNLDAAC_749_03032010095920";
+    private static final String identifier = "kgordon.25.3";
     private static final String badIdentifier = "ThisIdentifierShouldNotExist";
 
         
