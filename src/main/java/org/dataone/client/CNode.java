@@ -20,6 +20,10 @@
 
 package org.dataone.client;
 
+import org.apache.commons.io.IOUtils;
+import com.gc.iotools.stream.is.InputStreamFromOutputStream;
+import com.gc.iotools.stream.utils.Base64.OutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -27,21 +31,30 @@ import java.net.HttpURLConnection;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import org.apache.commons.io.IOUtils;
+import org.dataone.service.cn.CoordinatingNodeAuthorization;
 
 import org.dataone.service.cn.CoordinatingNodeCrud;
+import org.dataone.service.exceptions.AuthenticationTimeout;
 import org.dataone.service.exceptions.BaseException;
+import org.dataone.service.exceptions.IdentifierNotUnique;
+import org.dataone.service.exceptions.InsufficientResources;
+import org.dataone.service.exceptions.InvalidCredentials;
 import org.dataone.service.exceptions.InvalidRequest;
+import org.dataone.service.exceptions.InvalidSystemMetadata;
 import org.dataone.service.exceptions.InvalidToken;
 import org.dataone.service.exceptions.NotAuthorized;
 import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
+import org.dataone.service.exceptions.UnsupportedType;
 import org.dataone.service.types.AuthToken;
 import org.dataone.service.types.Identifier;
 import org.dataone.service.types.IdentifierFormat;
 import org.dataone.service.types.NodeReference;
 import org.dataone.service.types.ObjectLocation;
 import org.dataone.service.types.ObjectLocationList;
+import org.dataone.service.types.Principal;
 import org.dataone.service.types.SystemMetadata;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -52,7 +65,7 @@ import org.xml.sax.SAXException;
  * CNode represents a DataONE Coordinating Node, and allows calling classes to
  * execute CN services.
  */
-public class CNode extends D1Node implements CoordinatingNodeCrud {
+public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingNodeAuthorization {
 
     /**
      * Construct a Coordinating Node, passing in the base url for node services.
@@ -145,7 +158,80 @@ public class CNode extends D1Node implements CoordinatingNodeCrud {
         
         return oll;
     }
+    /**
+     * create both a system metadata resource and science metadata resource with
+     * the specified guid
+     */
+    public Identifier create(AuthToken token, Identifier guid,
+            InputStream object, SystemMetadata sysmeta) throws InvalidToken,
+            ServiceFailure, NotAuthorized, IdentifierNotUnique,
+            UnsupportedType, InsufficientResources, InvalidSystemMetadata,
+            NotImplemented {
 
+        String resource = RESOURCE_OBJECTS + "/" + guid.getValue();
+        // TODO: This input stream is assigned below but not used.
+        InputStream is = null;
+
+        final String mmp = createMimeMultipart(object, sysmeta);
+
+        final InputStreamFromOutputStream<String> multipartStream = new InputStreamFromOutputStream<String>() {
+            @Override
+            public String produce(java.io.OutputStream dataSink) throws Exception {
+                // mmp.writeTo(dataSink);
+                // TODO: this appears memory bound and therefore not scalable; avoid getBytes()
+                IOUtils.write(mmp.getBytes(), dataSink);
+                IOUtils.closeQuietly(dataSink);
+                return "Complete";
+            }
+        };
+
+        ResponseData rd = sendRequest(token, resource, POST, null,
+                "multipart/mixed", multipartStream, null);
+
+        // Handle any errors that were generated
+        int code = rd.getCode();
+        if (code != HttpURLConnection.HTTP_OK) {
+            InputStream errorStream = rd.getErrorStream();
+            try {
+                byte[] b = new byte[1024];
+                int numread = errorStream.read(b, 0, 1024);
+                StringBuffer sb = new StringBuffer();
+                while (numread != -1) {
+                    sb.append(new String(b, 0, numread));
+                    numread = errorStream.read(b, 0, 1024);
+                }
+                deserializeAndThrowException(errorStream);
+            } catch (InvalidToken e) {
+                throw e;
+            } catch (ServiceFailure e) {
+                throw e;
+            } catch (NotAuthorized e) {
+                throw e;
+            } catch (IdentifierNotUnique e) {
+                throw e;
+            } catch (UnsupportedType e) {
+                throw e;
+            } catch (InsufficientResources e) {
+                throw e;
+            } catch (InvalidSystemMetadata e) {
+                throw e;
+            } catch (NotImplemented e) {
+                throw e;
+            } catch (BaseException e) {
+                throw new ServiceFailure("1000",
+                        "Method threw improper exception: " + e.getMessage());
+            } catch (IOException e) {
+                System.out.println("io exception: " + e.getMessage());
+            }
+
+        // TODO: Unclear why the conditional below exists; need to refactor;
+        // probably is meant to check the return value to make sure the guid matches
+        } else {
+            is = rd.getContentStream();
+        }
+
+        return guid;
+    }
     @Override
     public Identifier reserveIdentifier(AuthToken token, String scope,
             IdentifierFormat format) throws InvalidToken, ServiceFailure,
@@ -180,5 +266,119 @@ public class CNode extends D1Node implements CoordinatingNodeCrud {
             NotImplemented {
         throw new NotImplemented("4221", "Client does not implement this method.");
     }
+
+    /**
+     * login and get an AuthToken
+     *
+     * @param username
+     * @param password
+     * @return
+     * @throws ServiceFailure
+     */
+    @Override
+    public AuthToken login(String username, String password)
+            throws InvalidCredentials, AuthenticationTimeout, ServiceFailure {
+        // TODO: reassess the exceptions thrown here.  Look at the Authentication interface.
+        // TODO: this method assumes an access control model that is not finalized, refactor when it is
+        String postData = "username=" + username + "&password=" + password;
+        String params = "qformat=xml&op=login";
+        String resource = RESOURCE_SESSION + "/";
+
+        ResponseData rd = sendRequest(null, resource, POST, params, null,
+                new ByteArrayInputStream(postData.getBytes()), null);
+        String sessionid = null;
+
+        int code = rd.getCode();
+        if (code != HttpURLConnection.HTTP_OK) { // deal with the error
+            // TODO: detail codes are wrong, and exception is the wrong one too I think
+            throw new ServiceFailure("1000", "Error logging in.");
+        } else {
+            try {
+                // TODO: use IOUtils to get the string, as this code is error prone
+                InputStream is = rd.getContentStream();
+                byte[] b = new byte[1024];
+                int numread = is.read(b, 0, 1024);
+                StringBuffer sb = new StringBuffer();
+                while (numread != -1) {
+                    sb.append(new String(b, 0, numread));
+                    numread = is.read(b, 0, 1024);
+                }
+                String response = sb.toString();
+                //String response = IOUtils.toString(is);
+
+
+                int successIndex = response.indexOf("<sessionId>");
+                if (successIndex != -1) {
+                    sessionid = response.substring(
+                            response.indexOf("<sessionId>")
+                                    + "<sessionId>".length(),
+                            response.indexOf("</sessionId>"));
+                } else {
+                    // TODO: wrong exception thrown, wrong detail code?
+                    throw new ServiceFailure("1000", "Error authenticating: "
+                            + response.substring(response.indexOf("<error>")
+                                    + "<error>".length(),
+                                    response.indexOf("</error>")));
+                }
+            } catch (Exception e) {
+                throw new ServiceFailure("1000",
+                        "Error getting response from metacat: "
+                                + e.getMessage());
+            }
+        }
+
+        return new AuthToken(sessionid);
+    }
+
+    /**
+     * set the access perms for a document
+     *
+     * @param token
+     * @param id
+     * @param principal
+     * @param permission
+     * @param permissionType
+     * @param permissionOrder
+     */
+    @Override
+    public boolean setAccess(AuthToken token, Identifier id, String principal,
+            String permission, String permissionType, String permissionOrder)
+            throws ServiceFailure {
+        // TODO: this method assumes an access control model that is not finalized, refactor when it is
+        String params = "guid=" + id.getValue() + "&principal=" + principal
+                + "&permission=" + permission + "&permissionType="
+                + permissionType + "&permissionOrder=" + permissionOrder
+                + "&op=setaccess&setsystemmetadata=true";
+        String resource = RESOURCE_SESSION + "/";
+        ResponseData rd = sendRequest(token, resource, POST, params, null, null, null);
+        int code = rd.getCode();
+        if (code != HttpURLConnection.HTTP_OK) {
+            throw new ServiceFailure("1000", "Error setting acces on document");
+        }
+        return true;
+        // TODO: also set the system metadata to the same perms
+
+    }
+
+    @Override
+    public Identifier setOwner(AuthToken token, Identifier guid, Principal userId) throws InvalidToken, NotAuthorized, NotFound {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public Principal newAccount(String username, String password) throws IdentifierNotUnique, InvalidCredentials {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public boolean verify(AuthToken token) throws NotAuthorized {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public boolean isAuthorized(AuthToken token, Identifier guid, String operation) throws InvalidToken, NotFound, NotAuthorized {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
 
 }

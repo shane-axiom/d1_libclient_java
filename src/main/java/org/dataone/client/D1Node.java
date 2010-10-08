@@ -457,7 +457,8 @@ public abstract class D1Node {
 		 * ByteArrayOutputStream sysmetaOut = new ByteArrayOutputStream();
 		 * mctx.marshalDocument(sysmeta, "UTF-8", null, sysmetaOut);
 		 * ByteArrayInputStream sysmetaStream = new
-		 * ByteArrayInputStream(sysmetaOut.toByteArray()); return sysmetaStream;
+		 * ByteArrayInputStream(sysmetaOut.toByteArray());
+                 * return sysmetaStream;
 		 */
 
 		ByteArrayOutputStream sysmetaOut = new ByteArrayOutputStream();

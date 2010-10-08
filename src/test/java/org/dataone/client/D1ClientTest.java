@@ -81,7 +81,7 @@ public class D1ClientTest  {
     //String contextUrl = "http://cn-dev.dataone.org/knb/";
     //String contextUrl = "http://cn-ucsb-1.dataone.org/knb/";
     //String contextUrl = "http://cn-unm-1.dataone.org/knb/";
-    String contextUrl = "http://cn-orc-1.dataone.org/knb/";
+    String contextUrl = "http://cn-dev.dataone.org/knb/";
     
     private static final String prefix = "knb:testid:";
     private static final String bogusId = "foobarbaz214";
@@ -127,13 +127,13 @@ public class D1ClientTest  {
         Node n3 = new Node();
         Node n4 = new Node();
 //        n1.setBaseURL("http://knb-mn.ecoinformatics.org/knb/");
-        n2.setBaseURL("http://cn-unm-1.dataone.org/knb/");
-        n3.setBaseURL("http://cn-ucsb-1.dataone.org/knb/");
-        n4.setBaseURL("http://cn-orc-1.dataone.org/knb/");
+        n2.setBaseURL("http://cn-dev.dataone.org/knb/");
+//        n3.setBaseURL("http://cn-ucsb-1.dataone.org/knb/");
+//        n4.setBaseURL("http://cn-orc-1.dataone.org/knb/");
 //        nodeList.add(n1);
         nodeList.add(n2);
-        nodeList.add(n3);
-        nodeList.add(n4);
+//        nodeList.add(n3);
+//       nodeList.add(n4);
         
         if(nodeList == null || nodeList.size() == 0 || !useNodeList)
         {
@@ -545,7 +545,7 @@ public class D1ClientTest  {
     /**
      * test various create and get scenarios with different access rules
      */
-    @Test
+//    @Test
     public void testGet() 
     {
         for(int i=0; i<nodeList.size(); i++)
@@ -600,7 +600,7 @@ public class D1ClientTest  {
     /**
      * test the creation of the desribes and describedBy sysmeta elements
      */
-    @Test
+//    @Test
     public void testCreateDescribedDataAndMetadata()
     {
         try
