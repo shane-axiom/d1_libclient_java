@@ -76,11 +76,6 @@ import org.junit.rules.ErrorCollector;
 public class D1ClientTest  {
 
     //String contextUrl = "http://localhost:8080/knb/";
-    //String contextUrl = "http://knb-mn.ecoinformatics.org/knb/";
-    //String contextUrl = "http://mn-rpw/mn/";
-    //String contextUrl = "http://cn-dev.dataone.org/knb/";
-    //String contextUrl = "http://cn-ucsb-1.dataone.org/knb/";
-    //String contextUrl = "http://cn-unm-1.dataone.org/knb/";
     String contextUrl = "http://cn-dev.dataone.org/knb/";
     
     private static final String prefix = "knb:testid:";
@@ -122,16 +117,16 @@ public class D1ClientTest  {
         }*/
         
         nodeList = new Vector<Node>();
-//        Node n1 = new Node();
-        Node n2 = new Node();
-        Node n3 = new Node();
-        Node n4 = new Node();
-//        n1.setBaseURL("http://knb-mn.ecoinformatics.org/knb/");
-        n2.setBaseURL("http://cn-dev.dataone.org/knb/");
-//        n3.setBaseURL("http://cn-ucsb-1.dataone.org/knb/");
-//        n4.setBaseURL("http://cn-orc-1.dataone.org/knb/");
-//        nodeList.add(n1);
-        nodeList.add(n2);
+        Node n1 = new Node();
+//        Node n2 = new Node();
+//        Node n3 = new Node();
+//        Node n4 = new Node();
+        n1.setBaseURL("http://cn-dev.dataone.org/knb/");
+//        n2.setBaseURL("http://cn-unm-stage.dataone.org/knb/");
+//        n3.setBaseURL("http://cn-ucsb-stage.dataone.org/knb/");
+//        n4.setBaseURL("http://cn-orc-stage.dataone.org/knb/");
+        nodeList.add(n1);
+//        nodeList.add(n2);
 //        nodeList.add(n3);
 //       nodeList.add(n4);
         

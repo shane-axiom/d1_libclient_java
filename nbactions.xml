@@ -20,13 +20,39 @@
     limitations under the License.
 
 -->
-
 <actions>
-        <action>
-            <actionName>CUSTOM-Client Test</actionName>
-            <displayName>Client Test</displayName>
-            <goals>
-                <goal>test</goal>
-            </goals>
-        </action>
-    </actions>
+	<action>
+		<actionName>CUSTOM-Client Test</actionName>
+		<displayName>Client Test</displayName>
+		<goals>
+			<goal>test</goal>
+		</goals>
+	</action>
+	<action>
+		<actionName>CUSTOM-Client Package no tests</actionName>
+		<displayName>Client Package no tests</displayName>
+		<goals>
+			<goal>package</goal>
+		</goals>
+		<properties>
+			<maven.test.skip>true</maven.test.skip>
+		</properties>
+	</action>
+	<action>
+		<actionName>CUSTOM-Client Install</actionName>
+		<displayName>Client Install</displayName>
+		<goals>
+			<goal>install</goal>
+		</goals>
+	</action>
+	<action>
+		<actionName>CUSTOM-Client Install no tests</actionName>
+		<displayName>Client Install no tests</displayName>
+		<goals>
+			<goal>install</goal>
+		</goals>
+		<properties>
+			<maven.test.skip>true</maven.test.skip>
+		</properties>
+	</action>
+</actions>

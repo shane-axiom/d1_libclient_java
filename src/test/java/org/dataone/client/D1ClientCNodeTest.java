@@ -59,7 +59,7 @@ public class D1ClientCNodeTest  {
     /**
      * test the resolve() operation on Coordinating Nodes
      */
-    @Test
+//    @Test
     public void testResolve() {
         D1Client d1 = new D1Client(cnUrl);
         CNode cn = d1.getCN();
