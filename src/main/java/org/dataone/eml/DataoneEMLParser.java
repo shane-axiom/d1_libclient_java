@@ -94,7 +94,12 @@ public class DataoneEMLParser
         System.out.println("namespace: " + namespace);
         
         //switch on the namespace
-        if(namespace.equals(ObjectFormat.EML_2_0_0.toString()))
+        if(namespace == null)
+        {
+            System.out.println("WARNING: No namespace is declared.  Cannot parse this document.");
+            return null;
+        }
+        else if(namespace.equals(ObjectFormat.EML_2_0_0.toString()))
         {
             return parseEML200Document(d);
         }
@@ -163,37 +168,52 @@ public class DataoneEMLParser
         EMLDocument emld = new EMLDocument();
         NodeList result = runXPath("//distribution", d);        
         
-        for (int i = 0; i < result.getLength(); i++) 
+        System.out.println("result: " + result);
+        if(result != null)
         {
-            String url = runXPath("online/url", result.item(i)).item(0).getFirstChild().getNodeValue();
-            String mimeType = "";
-            Node physicalNode = result.item(i).getParentNode();
-            NodeList nl1 = runXPath("dataFormat/textFormat", physicalNode);
-            NodeList nl2 = runXPath("dataFormat/binaryRasterFormat", physicalNode);
-            NodeList nl3 = runXPath("dataFormat/externallyDefinedFormat", physicalNode);
-            //TODO: this isn't entirely right, but it's a good start.  Need to 
-            //figure out how to property parse the EML to get a better idea
-            //of what the mime type is
-            if(nl1.getLength() > 0)
-            { //found a text format
-                //TODO: it's possible here to do a bit more parsing to determine if this
-                //is text/plain or text/csv
-                mimeType = ObjectFormat.TEXT_PLAIN.toString();
-            }
-            else if(nl2.getLength() > 0)
+            for (int i = 0; i < result.getLength(); i++) 
             {
-                //TODO: could do a bit more parsing and refine this type more
-                mimeType = ObjectFormat.OCTET_STREAM.toString();
+                Node n = result.item(i);
+                NodeList nl = runXPath("online/url", n);
+                if(nl.getLength() == 0)
+                {
+                    continue;
+                }
+                Node firstChild = nl.item(0).getFirstChild();
+                if(firstChild == null)
+                {
+                    continue;
+                }
+                String url = firstChild.getNodeValue();
+                String mimeType = "";
+                Node physicalNode = result.item(i).getParentNode();
+                NodeList nl1 = runXPath("dataFormat/textFormat", physicalNode);
+                NodeList nl2 = runXPath("dataFormat/binaryRasterFormat", physicalNode);
+                NodeList nl3 = runXPath("dataFormat/externallyDefinedFormat", physicalNode);
+                //TODO: this isn't entirely right, but it's a good start.  Need to 
+                //figure out how to property parse the EML to get a better idea
+                //of what the mime type is
+                if(nl1.getLength() > 0)
+                { //found a text format
+                    //TODO: it's possible here to do a bit more parsing to determine if this
+                    //is text/plain or text/csv
+                    mimeType = ObjectFormat.TEXT_PLAIN.toString();
+                }
+                else if(nl2.getLength() > 0)
+                {
+                    //TODO: could do a bit more parsing and refine this type more
+                    mimeType = ObjectFormat.OCTET_STREAM.toString();
+                }
+                else if(nl3.getLength() > 0)
+                {
+                    //TODO: could do a bit more parsing and refine this type more
+                    mimeType = ObjectFormat.OCTET_STREAM.toString();
+                }
+
+                System.out.println("mime type: " + mimeType); 
+                System.out.println("url: " + url);
+                emld.addDistributionMetadata(url, mimeType);
             }
-            else if(nl3.getLength() > 0)
-            {
-                //TODO: could do a bit more parsing and refine this type more
-                mimeType = ObjectFormat.OCTET_STREAM.toString();
-            }
-            
-            System.out.println("mime type: " + mimeType); 
-            System.out.println("url: " + url);
-            emld.addDistributionMetadata(url, mimeType);
         }
         
         emld.setObjectFormat(docType);
