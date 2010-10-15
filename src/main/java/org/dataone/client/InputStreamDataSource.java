@@ -37,6 +37,11 @@ public class InputStreamDataSource implements DataSource {
     private InputStream stream;
     private boolean readOnce;
     
+    /**
+     * construct an InputStreamDataSource object
+     * @param name
+     * @param stream
+     */
     public InputStreamDataSource(String name, InputStream stream) {
         super();
         this.name = name;
@@ -44,10 +49,16 @@ public class InputStreamDataSource implements DataSource {
         this.readOnce = false;
     }
 
+    /**
+     * get the content type of this stream
+     */
     public String getContentType() {
         return "application/octet-stream";
     }
 
+    /**
+     * get the InputStream from this data source
+     */
     public InputStream getInputStream() throws IOException {
         if (readOnce) {
             throw new IOException("Only call getInputStream() once.");
@@ -57,10 +68,16 @@ public class InputStreamDataSource implements DataSource {
         return stream;
     }
 
+    /**
+     * get the name of the data source.
+     */
     public String getName() {
         return this.name;
     }
 
+    /**
+     * get an output stream for this data source.
+     */
     public OutputStream getOutputStream() throws IOException {
         throw new IOException("Can't get an OutputStream from an InputStreamDataSource.");
     }

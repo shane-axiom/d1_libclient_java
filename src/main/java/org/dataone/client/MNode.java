@@ -27,6 +27,8 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.util.Date;
 
+import org.jibx.runtime.JiBXException;
+
 import org.apache.commons.io.IOUtils;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.IdentifierNotUnique;
@@ -92,9 +94,6 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
         if (code != HttpURLConnection.HTTP_OK) {
             throw new ServiceFailure("1000", "Error setting acces on document");
         }
-
-        // TODO: also set the system metadata to the same perms
-
     }
 
     /**
@@ -123,18 +122,8 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
             throw new ServiceFailure("1000", "Error logging in.");
         } else {
             try {
-                // TODO: use IOUtils to get the string, as this code is error prone
                 InputStream is = rd.getContentStream();
-                byte[] b = new byte[1024];
-                int numread = is.read(b, 0, 1024);
-                StringBuffer sb = new StringBuffer();
-                while (numread != -1) {
-                    sb.append(new String(b, 0, numread));
-                    numread = is.read(b, 0, 1024);
-                }
-                String response = sb.toString();
-                //String response = IOUtils.toString(is);
-
+                String response = IOUtils.toString(is);
                 
                 int successIndex = response.indexOf("<sessionId>");
                 if (successIndex != -1) {
@@ -189,7 +178,11 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
             params += "startTime=" + convertDateToGMT(startTime);
         }
         
-        // TODO: should check that endTime >= startTime, throw InvalidRequest if not
+        if (endTime != null && startTime != null && !endTime.after(startTime))
+        {
+            throw new InvalidRequest("1000", "startTime must be after stopTime in NMode.listObjects");
+        }
+        
         if (endTime != null) {
             if (!params.equals("")) {
                 params += "&";
@@ -210,7 +203,6 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
             params += "&";
         }
         
-        // TODO: what if these are null?  Safely ignored?
         params += "replicaStatus=" + replicaStatus;
         params += "&";
         params += "start=" + start;
@@ -240,12 +232,9 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
             is = rd.getContentStream();
         }
         
-        // TODO: this block should be inside the preceding conditional I think
         try {
             return deserializeObjectList(is);
-            
-        // TODO: never catch an Exception per se -- it masks bad behavior
-        } catch (Exception e) {
+        } catch (JiBXException e) {
             throw new ServiceFailure("500",
                     "Could not deserialize the ObjectList: " + e.getMessage());
         }
@@ -262,8 +251,6 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
             NotImplemented {
 
         String resource = RESOURCE_OBJECTS + "/" + guid.getValue();
-        // TODO: This input stream is assigned below but not used.
-        InputStream is = null;
 
         final String mmp = createMimeMultipart(object, sysmeta);
 
@@ -316,12 +303,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
             } catch (IOException e) {
                 System.out.println("io exception: " + e.getMessage());
             }
-            
-        // TODO: Unclear why the conditional below exists; need to refactor;
-        // probably is meant to check the return value to make sure the guid matches
-        } else {
-            is = rd.getContentStream();
-        }
+        } 
 
         return guid;
     }
@@ -336,9 +318,6 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
             NotFound, InvalidSystemMetadata, NotImplemented {
 
         String resource = RESOURCE_OBJECTS + "/" + guid.getValue();
-        // TODO: This input stream is assigned below but not used.
-        InputStream is = null;
-
         // TODO: Much of the code in this method is a direct copy of the code in
         // insert() above -- factor out duplication
 
@@ -357,7 +336,10 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
             }
         };
 
-        // TODO: what if obsoletedGuid is null? Safe?
+        if(obsoletedGuid == null)
+        {
+            throw new NullPointerException("obsoletedGuid must not be null in MNode.update");
+        }
         String urlParams = "obsoletedGuid=" + obsoletedGuid.getValue();
         ResponseData rd = sendRequest(token, resource, PUT, urlParams,
                 "multipart/mixed", multipartStream, null);
@@ -388,11 +370,6 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
                 throw new ServiceFailure("1000",
                         "Method threw improper exception: " + e.getMessage());
             }
-            
-        // TODO: Unclear why the conditional below exists; need to refactor;
-        // probably is meant to check the return value to make sure the guid matches
-        } else {
-            is = rd.getContentStream();
         }
 
         return guid;

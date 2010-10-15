@@ -76,8 +76,6 @@ public abstract class D1Node {
 
 	// TODO: This class should implement the MemberNodeAuthorization interface as well
 	
-	// TODO: Need Javadocs throughout
-
 	/** HTTP Verb GET */
 	public static final String GET = "GET";
 	/** HTTP Verb POST */
@@ -118,6 +116,10 @@ public abstract class D1Node {
 	// TODO: this constructor should not exist
 	// lest we end up with a client that is not attached to a particular node; 
 	// No code calls it in Java, but it is called by the R client; evaluate if this can change
+	/**
+	 * default constructor needed by some clients.  This constructor will probably
+	 * go away so don't depend on it.  Use public D1Node(String nodeBaseServiceUrl) instead.
+	 */
 	public D1Node() {
 	}
 
@@ -283,12 +285,12 @@ public abstract class D1Node {
 			mime += "\n";
 		}
 
-		mime += boundary + "--";
+		mime += boundary + "--";		
 		return mime;
 	}
 
 	/**
-	 * send a request to the resource
+	 * send a request to the resource and get the response
 	 */
 	protected ResponseData sendRequest(AuthToken token, String resource,
 			String method, String urlParamaters, String contentType,
@@ -339,7 +341,7 @@ public abstract class D1Node {
 			connection.setDoInput(true);
 			connection.setRequestMethod(method);
 			connection.connect();
-
+			
 			if (!method.equals(GET)) {
 				if (dataStream != null) {
 					OutputStream out = connection.getOutputStream();
@@ -442,11 +444,23 @@ public abstract class D1Node {
 		return text;
 	}
 
+	/**
+	 * return an xml attribute as an int
+	 * @param e
+	 * @param attName
+	 * @return
+	 */
 	protected int getIntAttribute(Element e, String attName) {
 		String attText = e.getAttribute(attName);
 		return Integer.parseInt(attText);
 	}
 
+	/**
+	 * Serialize the system metadata object to a ByteArrayInputStream
+	 * @param sysmeta
+	 * @return
+	 * @throws JiBXException
+	 */
 	protected ByteArrayInputStream serializeSystemMetadata(SystemMetadata sysmeta)
 			throws JiBXException {
 
@@ -468,11 +482,23 @@ public abstract class D1Node {
 		return sysmetaStream;
 	}
 
+	/**
+	 * deserialize an InputStream to a SystemMetadata object
+	 * @param is
+	 * @return
+	 * @throws JiBXException
+	 */
 	protected SystemMetadata deserializeSystemMetadata(InputStream is)
 			throws JiBXException {
 		return (SystemMetadata) deserializeServiceType(SystemMetadata.class, is);
 	}
 
+	/**
+	 * deserialize and ObjectList from an InputStream
+	 * @param is
+	 * @return
+	 * @throws JiBXException
+	 */
 	protected ObjectList deserializeObjectList(InputStream is)
 			throws JiBXException {
 		return (ObjectList) deserializeServiceType(ObjectList.class, is);
@@ -517,12 +543,17 @@ public abstract class D1Node {
 		return o;
 	}
 
-	// TODO: Document class and methods
+	/**
+	 * A class to contain the data from a server response
+	 */
 	protected class ResponseData {
 		private int code;
 		private InputStream contentStream;
 		private InputStream errorStream;
 
+		/**
+		 * constructor
+		 */
 		protected ResponseData() {
 			super();
 		}
