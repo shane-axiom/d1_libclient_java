@@ -50,7 +50,7 @@ public class D1ClientCNodeTest  {
     @Rule 
     public ErrorCollector errorCollector = new ErrorCollector();
 
-    @Before
+//    @Before
     public void setUp() throws Exception 
     {
         
@@ -59,7 +59,7 @@ public class D1ClientCNodeTest  {
     /**
      * test the resolve() operation on Coordinating Nodes
      */
-//    @Test
+    @Test
     public void testResolve() {
         D1Client d1 = new D1Client(cnUrl);
         CNode cn = d1.getCN();
@@ -71,8 +71,9 @@ public class D1ClientCNodeTest  {
         guid.setValue(identifier);
         try {
             ObjectLocationList oll = cn.resolve(token, guid);
-            for (ObjectLocation ol : oll.getLocations()) {
-                System.out.println("Location: " + ol.getNode().getValue()
+
+            for (ObjectLocation ol : oll.getObjectLocationList()) {
+                System.out.println("Location: " + ol.getNodeIdentifier().getValue()
                         + " (" + ol.getUrl() + ")");
                 checkTrue(ol.getUrl().contains(identifier));
             }

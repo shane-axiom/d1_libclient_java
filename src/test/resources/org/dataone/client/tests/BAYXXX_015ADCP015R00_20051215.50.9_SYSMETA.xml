@@ -21,10 +21,10 @@
 
 -->
 
-<d1:systemMetadata xmlns:common="http://dataone.org/service/types/common/0.1"
- xmlns:d1="http://dataone.org/service/types/SystemMetadata/0.1"
+<d1:systemMetadata xmlns:common="http://dataone.org/service/types/common/0.5"
+ xmlns:d1="http://dataone.org/service/types/SystemMetadata/0.5"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
- xsi:schemaLocation="http://dataone.org/service/types/SystemMetadata/0.1 file:/home/rwaltz/Projects/NetBeans/DataONE-CnPrototype/DataONE-CnDomain/src/main/resources/org/dataone/service/resources/schema/systemmetadata.xsd">
+ xsi:schemaLocation="http://dataone.org/service/types/SystemMetadata/0.5 https://repository.dataone.org/software/cicore/tags/D1_SCHEMA_0_5/systemmetadata.xsd">
     <identifier>BAYXXX_015ADCP015R00_20051215.50.9</identifier>
     <objectFormat>eml://ecoinformatics.org/eml-2.0.1</objectFormat>
     <size>34543</size>

@@ -21,10 +21,10 @@
 
 -->
 
-<d1:nodeList xmlns:d1="http://dataone.org/service/types/NodeList/0.1"
- xmlns:common="http://dataone.org/service/types/common/0.1"
+<d1:nodeList xmlns:d1="http://dataone.org/service/types/NodeList/0.5"
+ xmlns:common="http://dataone.org/service/types/common/0.5"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
- xsi:schemaLocation="http://dataone.org/service/types/NodeList/0.1 https://repository.dataone.org/software/cicore/trunk/schemas/nodelist.xsd">
+ xsi:schemaLocation="http://dataone.org/service/types/NodeList/0.5 https://repository.dataone.org/software/cicore/tags/D1_SCHEMA_0_5/nodelist.xsd">
 
 <!-- CN-RPW
     <node type="member" synchronize="true" replicate="true">

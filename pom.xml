@@ -4,9 +4,25 @@
   <groupId>org.dataone</groupId>
   <artifactId>d1-java-client</artifactId>
   <packaging>jar</packaging>
-  <version>0.4.0</version>
+  <version>0.5.0</version>
   <name>DataONE Java Client Library</name>
   <url>http://dataone.org</url>
+    <repositories>
+        <repository>
+            <id>sonatype.org</id>
+            <url>http://repository.sonatype.org/content/repositories/central</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>Jibx Maven Repository</id>
+            <url>http://jibx.sourceforge.net/maven/</url>
+        </repository>
+    </repositories>
   <dependencies>
         <dependency>
             <groupId>junit</groupId>
@@ -22,10 +38,15 @@
 	<scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>net.sf.jsignature.io-tools</groupId>
+      <artifactId>easystream</artifactId>
+      <version>1.2.9</version>
+    </dependency>
+<!--    <dependency>
     	<groupId>net.sf.jsignature.io-tools</groupId>
     	<artifactId>easystream</artifactId>
     	<version>1.2.5</version>
-    </dependency>
+    </dependency> -->
     <dependency>
     	<groupId>javax.mail</groupId>
     	<artifactId>mail</artifactId>
@@ -49,9 +70,8 @@
     <dependency>
     	<groupId>org.dataone</groupId>
     	<artifactId>dataone-service-api</artifactId>
-    	<version>0.4.0</version>
-    	<type>jar</type>
-    	<scope>compile</scope>
+    	<version>0.5.0</version>
+      <type>jar</type>
     </dependency>
   </dependencies>
   <build>
@@ -59,7 +79,6 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-compiler-plugin</artifactId>
-            <version>2.0.2</version>
             <configuration>
               <source>1.6</source>
               <target>1.6</target>

@@ -20,9 +20,7 @@
 
 package org.dataone.client;
 
-import org.apache.commons.io.IOUtils;
 import com.gc.iotools.stream.is.InputStreamFromOutputStream;
-import com.gc.iotools.stream.utils.Base64.OutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,6 +31,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.apache.commons.io.IOUtils;
 import org.dataone.service.cn.CoordinatingNodeAuthorization;
+
 
 import org.dataone.service.cn.CoordinatingNodeCrud;
 import org.dataone.service.exceptions.AuthenticationTimeout;
@@ -52,10 +51,11 @@ import org.dataone.service.types.AuthToken;
 import org.dataone.service.types.Identifier;
 import org.dataone.service.types.IdentifierFormat;
 import org.dataone.service.types.NodeReference;
-import org.dataone.service.types.ObjectLocation;
 import org.dataone.service.types.ObjectLocationList;
 import org.dataone.service.types.Principal;
 import org.dataone.service.types.SystemMetadata;
+//import org.omg.CosNaming.NamingContextPackage.NotFound;
+import org.jibx.runtime.JiBXException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -65,6 +65,7 @@ import org.xml.sax.SAXException;
  * CNode represents a DataONE Coordinating Node, and allows calling classes to
  * execute CN services.
  */
+
 public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingNodeAuthorization {
 
     /**
@@ -97,7 +98,6 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
         InputStream is = null;
         ResponseData rd = sendRequest(token, resource, GET, null, null, null, "text/xml");
 
-        ObjectLocationList oll = null;
         int code = rd.getCode();
         if (code != HttpURLConnection.HTTP_OK) {
             InputStream errorStream = rd.getErrorStream();
@@ -119,44 +119,14 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
             }
         } else {
             is = rd.getContentStream();
-            oll = new ObjectLocationList();
-            DocumentBuilderFactory df = DocumentBuilderFactory.newInstance();
-            df.setValidating(false);
-            try {
-                // Extract the list of locations from the XML resolve response,
-                // and create ObjectLocation instances for each location
-                DocumentBuilder db = df.newDocumentBuilder();
-                Document resolveDoc = db.parse(is);
-                NodeList nl = resolveDoc.getElementsByTagName("objectLocation");
-                for (int i = 0; i < nl.getLength(); i++) {
-                    Node olNode = nl.item(i);
-                    olNode.normalize();
-                    Node idNode = olNode.getFirstChild();
-                    String mnId = idNode.getFirstChild().getNodeValue();
-                    NodeReference mnRef = new NodeReference();
-                    mnRef.setValue(mnId);
-                    Node urlNode = olNode.getLastChild();
-                    String url = urlNode.getLastChild().getNodeValue();
-                    ObjectLocation ol = new ObjectLocation(mnRef, url);
-                    oll.add(ol);
-                }
-            } catch (ParserConfigurationException e) {
-                throw new ServiceFailure("1000",
-                        "Failed to parse object location list XML: "
-                                + e.getMessage());
-            } catch (SAXException e) {
-                throw new ServiceFailure("1000",
-                        "SAX failure while parsing object location list XML: "
-                                + e.getMessage());
-            } catch (IOException e) {
-                throw new ServiceFailure("1000",
-                        "Failure to get object location list stream for parsing: "
-                                + e.getMessage());
-            }
-
         }
-        
-        return oll;
+        try {
+            return deserializeResolve(is);
+        } catch (Exception e) {
+            throw new ServiceFailure("1090",
+                    "Could not deserialize the systemMetadata: "
+                            + e.getMessage());
+        }
     }
     /**
      * create both a system metadata resource and science metadata resource with
@@ -379,6 +349,15 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
     public boolean isAuthorized(AuthToken token, Identifier guid, String operation) throws InvalidToken, NotFound, NotAuthorized {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-
+    /**
+     * deserialize an InputStream to a SystemMetadata object
+     * @param is
+     * @return
+     * @throws JiBXException
+     */
+    protected ObjectLocationList deserializeResolve(InputStream is)
+                    throws JiBXException {
+            return (ObjectLocationList) deserializeServiceType(ObjectLocationList.class, is);
+    }
 
 }
