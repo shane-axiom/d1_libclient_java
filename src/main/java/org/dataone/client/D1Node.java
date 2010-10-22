@@ -58,6 +58,7 @@ import org.dataone.service.types.AuthToken;
 import org.dataone.service.types.Identifier;
 import org.dataone.service.types.ObjectList;
 import org.dataone.service.types.SystemMetadata;
+import org.dataone.service.Constants;
 import org.jibx.runtime.BindingDirectory;
 import org.jibx.runtime.IBindingFactory;
 import org.jibx.runtime.IMarshallingContext;
@@ -75,37 +76,9 @@ import org.xml.sax.SAXException;
 public abstract class D1Node {
 
 	// TODO: This class should implement the MemberNodeAuthorization interface as well
-	
-	/** HTTP Verb GET */
-	public static final String GET = "GET";
-	/** HTTP Verb POST */
-	public static final String POST = "POST";
-	/** HTTP Verb PUT */
-	public static final String PUT = "PUT";
-	/** HTTP Verb DELETE */
-	public static final String DELETE = "DELETE";
-
-	/*
-	 * API Resources
-	 */
-	
-	// TODO: Move these constants into service-api-java so they can be shared across clients
-	/** API OBJECTS Resource which handles with document operations */
-	public static final String RESOURCE_OBJECTS = "object";
-	/** API META Resource which handles SystemMetadata operations */
-	public static final String RESOURCE_META = "meta";
-	/** API SESSION Resource which handles with user session operations */
-	public static final String RESOURCE_SESSION = "session";
-	/** API RESOLVE Resource which handles resolve operations */
-    public static final String RESOURCE_RESOLVE = "resolve";
-	/** API IDENTIFIER Resource which controls object identifier operations */
-	public static final String RESOURCE_IDENTIFIER = "identifier";
-	/** API LOG controls logging events */
-	public static final String RESOURCE_LOG = "log";
-
-	/** The URL string for the node REST API */
+    /** The URL string for the node REST API */
     private String nodeBaseServiceUrl;
-
+    
 	/**
 	 * Constructor to create a new instance.
 	 */
@@ -131,7 +104,7 @@ public abstract class D1Node {
      * @return String representing the service URL
      */
     public String getNodeBaseServiceUrl() {
-        return nodeBaseServiceUrl;
+        return this.nodeBaseServiceUrl;
     }
 
     /**
@@ -154,9 +127,9 @@ public abstract class D1Node {
     public InputStream get(AuthToken token, Identifier guid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
             NotImplemented {
-        String resource = RESOURCE_OBJECTS + "/" + guid.getValue();
+        String resource = Constants.RESOURCE_OBJECTS + "/" + guid.getValue();
         InputStream is = null;
-        ResponseData rd = sendRequest(token, resource, GET, null, null, null, null);
+        ResponseData rd = sendRequest(token, resource, Constants.GET, null, null, null, null);
         int code = rd.getCode();
         if (code != HttpURLConnection.HTTP_OK) {
             InputStream errorStream = rd.getErrorStream();
@@ -191,9 +164,9 @@ public abstract class D1Node {
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
             InvalidRequest, NotImplemented {
 
-        String resource = RESOURCE_META + "/" + guid.getValue();
+        String resource = Constants.RESOURCE_META + "/" + guid.getValue();
         InputStream is = null;
-        ResponseData rd = sendRequest(token, resource, GET, null, null, null, null);
+        ResponseData rd = sendRequest(token, resource, Constants.GET, null, null, null, null);
         int code = rd.getCode();
         if (code != HttpURLConnection.HTTP_OK) {
             InputStream errorStream = rd.getErrorStream();
@@ -342,7 +315,7 @@ public abstract class D1Node {
 			connection.setRequestMethod(method);
 			connection.connect();
 			
-			if (!method.equals(GET)) {
+			if (!method.equals(Constants.GET)) {
 				if (dataStream != null) {
 					OutputStream out = connection.getOutputStream();
 					IOUtils.copy(dataStream, out);

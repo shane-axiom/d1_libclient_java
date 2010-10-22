@@ -54,6 +54,7 @@ import org.dataone.service.types.NodeReference;
 import org.dataone.service.types.ObjectLocationList;
 import org.dataone.service.types.Principal;
 import org.dataone.service.types.SystemMetadata;
+import org.dataone.service.Constants;
 //import org.omg.CosNaming.NamingContextPackage.NotFound;
 import org.jibx.runtime.JiBXException;
 import org.w3c.dom.Document;
@@ -94,9 +95,9 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
     public ObjectLocationList resolve(AuthToken token, Identifier guid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
             InvalidRequest, NotImplemented {
-        String resource = RESOURCE_RESOLVE + "/" + guid.getValue();
+        String resource = Constants.RESOURCE_RESOLVE + "/" + guid.getValue();
         InputStream is = null;
-        ResponseData rd = sendRequest(token, resource, GET, null, null, null, "text/xml");
+        ResponseData rd = sendRequest(token, resource, Constants.GET, null, null, null, "text/xml");
 
         int code = rd.getCode();
         if (code != HttpURLConnection.HTTP_OK) {
@@ -138,7 +139,7 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
             UnsupportedType, InsufficientResources, InvalidSystemMetadata,
             NotImplemented {
 
-        String resource = RESOURCE_OBJECTS + "/" + guid.getValue();
+        String resource = Constants.RESOURCE_OBJECTS + "/" + guid.getValue();
         // TODO: This input stream is assigned below but not used.
         InputStream is = null;
 
@@ -155,7 +156,7 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
             }
         };
 
-        ResponseData rd = sendRequest(token, resource, POST, null,
+        ResponseData rd = sendRequest(token, resource, Constants.POST, null,
                 "multipart/mixed", multipartStream, null);
 
         // Handle any errors that were generated
@@ -252,9 +253,9 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
         // TODO: this method assumes an access control model that is not finalized, refactor when it is
         String postData = "username=" + username + "&password=" + password;
         String params = "qformat=xml&op=login";
-        String resource = RESOURCE_SESSION + "/";
+        String resource = Constants.RESOURCE_SESSION + "/";
 
-        ResponseData rd = sendRequest(null, resource, POST, params, null,
+        ResponseData rd = sendRequest(null, resource, Constants.POST, params, null,
                 new ByteArrayInputStream(postData.getBytes()), null);
         String sessionid = null;
 
@@ -319,8 +320,8 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
                 + "&permission=" + permission + "&permissionType="
                 + permissionType + "&permissionOrder=" + permissionOrder
                 + "&op=setaccess&setsystemmetadata=true";
-        String resource = RESOURCE_SESSION + "/";
-        ResponseData rd = sendRequest(token, resource, POST, params, null, null, null);
+        String resource = Constants.RESOURCE_SESSION + "/";
+        ResponseData rd = sendRequest(token, resource, Constants.POST, params, null, null, null);
         int code = rd.getCode();
         if (code != HttpURLConnection.HTTP_OK) {
             throw new ServiceFailure("1000", "Error setting acces on document");

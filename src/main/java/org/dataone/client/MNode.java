@@ -52,6 +52,7 @@ import org.dataone.service.types.Log;
 import org.dataone.service.types.ObjectFormat;
 import org.dataone.service.types.ObjectList;
 import org.dataone.service.types.SystemMetadata;
+import org.dataone.service.Constants;
 
 import com.gc.iotools.stream.is.InputStreamFromOutputStream;
 
@@ -88,8 +89,8 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
                 + "&permission=" + permission + "&permissionType="
                 + permissionType + "&permissionOrder=" + permissionOrder
                 + "&op=setaccess&setsystemmetadata=true";
-        String resource = RESOURCE_SESSION + "/";
-        ResponseData rd = sendRequest(token, resource, POST, params, null, null, null);
+        String resource = Constants.RESOURCE_SESSION + "/";
+        ResponseData rd = sendRequest(token, resource, Constants.POST, params, null, null, null);
         int code = rd.getCode();
         if (code != HttpURLConnection.HTTP_OK) {
             throw new ServiceFailure("1000", "Error setting acces on document");
@@ -110,9 +111,9 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
         // TODO: this method assumes an access control model that is not finalized, refactor when it is
         String postData = "username=" + username + "&password=" + password;
         String params = "qformat=xml&op=login";
-        String resource = RESOURCE_SESSION + "/";
+        String resource = Constants.RESOURCE_SESSION + "/";
 
-        ResponseData rd = sendRequest(null, resource, POST, params, null,
+        ResponseData rd = sendRequest(null, resource, Constants.POST, params, null,
                 new ByteArrayInputStream(postData.getBytes()), null);
         String sessionid = null;
 
@@ -171,7 +172,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
             int start, int count) throws NotAuthorized, InvalidRequest,
             NotImplemented, ServiceFailure, InvalidToken {
         InputStream is = null;
-        String resource = RESOURCE_OBJECTS;
+        String resource = Constants.RESOURCE_OBJECTS;
         String params = "";
 
         if (startTime != null) {
@@ -209,7 +210,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
         params += "&";
         params += "count=" + count;
 
-        ResponseData rd = sendRequest(token, resource, GET, params, null, null, null);
+        ResponseData rd = sendRequest(token, resource, Constants.GET, params, null, null, null);
         int code = rd.getCode();
         if (code != HttpURLConnection.HTTP_OK) {
             InputStream errorStream = rd.getErrorStream();
@@ -327,7 +328,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
     public Log getLogRecords(AuthToken token, Date fromDate, Date toDate,
             Event event) throws InvalidToken, ServiceFailure, NotAuthorized,
             InvalidRequest, NotImplemented {
-        String resource = RESOURCE_LOG + "?";
+        String resource = Constants.RESOURCE_LOG + "?";
         String params = null;
         if (fromDate != null) {
             params = "fromDate=" + convertDateToGMT(fromDate);
@@ -348,7 +349,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
         }
 
         InputStream is = null;
-        ResponseData rd = sendRequest(token, resource, GET, params, null, null, null);
+        ResponseData rd = sendRequest(token, resource, Constants.GET, params, null, null, null);
         int code = rd.getCode();
         if (code != HttpURLConnection.HTTP_OK) {
             InputStream errorStream = rd.getErrorStream();
@@ -389,7 +390,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
             UnsupportedType, InsufficientResources, InvalidSystemMetadata,
             NotImplemented
     {
-        String resource = RESOURCE_OBJECTS + "/" + guid.getValue();
+        String resource = Constants.RESOURCE_OBJECTS + "/" + guid.getValue();
 
         final String mmp = createMimeMultipart(object, sysmeta);
 
@@ -408,7 +409,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
         
         if(action.equals("create"))
         {
-            rd = sendRequest(token, resource, POST, null,
+            rd = sendRequest(token, resource, Constants.POST, null,
                 "multipart/mixed", multipartStream, null);
         }
         else if(action.equals("update"))
@@ -418,7 +419,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
                 throw new NullPointerException("obsoletedGuid must not be null in MNode.update");
             }
             String urlParams = "obsoletedGuid=" + obsoletedGuid.getValue();
-            rd = sendRequest(token, resource, PUT, urlParams,
+            rd = sendRequest(token, resource, Constants.PUT, urlParams,
                     "multipart/mixed", multipartStream, null);
         }
 
