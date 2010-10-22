@@ -86,7 +86,7 @@ public class D1ClientTest  {
     private static String currentUrl;
     //set this to false if you don't want to use the node list to get the urls for 
     //the test.  
-    private static boolean useNodeList = true;
+    private static boolean useNodeList = false;
         
     @Rule 
     public ErrorCollector errorCollector = new ErrorCollector();

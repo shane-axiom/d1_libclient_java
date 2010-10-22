@@ -250,7 +250,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
             UnsupportedType, InsufficientResources, InvalidSystemMetadata,
             NotImplemented {
 
-        String resource = RESOURCE_OBJECTS + "/" + guid.getValue();
+        /*String resource = RESOURCE_OBJECTS + "/" + guid.getValue();
 
         final String mmp = createMimeMultipart(object, sysmeta);
 
@@ -305,7 +305,8 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
             }
         } 
 
-        return guid;
+        return guid;*/
+        return handleCreateOrUpdate(token, guid, object, sysmeta, null, "create");
     }
 
     /**
@@ -317,9 +318,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
             IdentifierNotUnique, UnsupportedType, InsufficientResources,
             NotFound, InvalidSystemMetadata, NotImplemented {
 
-        String resource = RESOURCE_OBJECTS + "/" + guid.getValue();
-        // TODO: Much of the code in this method is a direct copy of the code in
-        // insert() above -- factor out duplication
+        /*String resource = RESOURCE_OBJECTS + "/" + guid.getValue();
 
         // Create a multipart message containing the data and sysmeta
         final String mmp = createMimeMultipart(object, sysmeta);
@@ -372,7 +371,8 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
             }
         }
 
-        return guid;
+        return guid;*/
+        return handleCreateOrUpdate(token, guid, object, sysmeta, obsoletedGuid, "update");
     }
 
     @Override
@@ -487,6 +487,89 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
                     + e.getMessage());
         }
 
+    }
+    
+    /**
+     * set action="create" for insert and action="update" for update
+     */
+    private Identifier handleCreateOrUpdate(AuthToken token, Identifier guid,
+        InputStream object, SystemMetadata sysmeta, Identifier obsoletedGuid, 
+        String action)
+        throws InvalidToken,ServiceFailure, NotAuthorized, IdentifierNotUnique,
+            UnsupportedType, InsufficientResources, InvalidSystemMetadata,
+            NotImplemented
+    {
+        String resource = RESOURCE_OBJECTS + "/" + guid.getValue();
+
+        final String mmp = createMimeMultipart(object, sysmeta);
+
+        final InputStreamFromOutputStream<String> multipartStream = new InputStreamFromOutputStream<String>() {
+            @Override
+            public String produce(final OutputStream dataSink) throws Exception {
+                // mmp.writeTo(dataSink);
+                // TODO: this appears memory bound and therefore not scalable; avoid getBytes()
+                IOUtils.write(mmp.getBytes(), dataSink);
+                IOUtils.closeQuietly(dataSink);
+                return "Complete";
+            }
+        };
+        
+        ResponseData rd = null;
+        
+        if(action.equals("create"))
+        {
+            rd = sendRequest(token, resource, POST, null,
+                "multipart/mixed", multipartStream, null);
+        }
+        else if(action.equals("update"))
+        {
+            if(obsoletedGuid == null)
+            {
+                throw new NullPointerException("obsoletedGuid must not be null in MNode.update");
+            }
+            String urlParams = "obsoletedGuid=" + obsoletedGuid.getValue();
+            rd = sendRequest(token, resource, PUT, urlParams,
+                    "multipart/mixed", multipartStream, null);
+        }
+
+        // Handle any errors that were generated
+        int code = rd.getCode();
+        if (code != HttpURLConnection.HTTP_OK) {
+            InputStream errorStream = rd.getErrorStream();
+            try {
+                byte[] b = new byte[1024];
+                int numread = errorStream.read(b, 0, 1024);
+                StringBuffer sb = new StringBuffer();
+                while (numread != -1) {
+                    sb.append(new String(b, 0, numread));
+                    numread = errorStream.read(b, 0, 1024);
+                }
+                deserializeAndThrowException(errorStream);
+            } catch (InvalidToken e) {
+                throw e;
+            } catch (ServiceFailure e) {
+                throw e;
+            } catch (NotAuthorized e) {
+                throw e;
+            } catch (IdentifierNotUnique e) {
+                throw e;
+            } catch (UnsupportedType e) {
+                throw e;
+            } catch (InsufficientResources e) {
+                throw e;
+            } catch (InvalidSystemMetadata e) {
+                throw e;
+            } catch (NotImplemented e) {
+                throw e;
+            } catch (BaseException e) {
+                throw new ServiceFailure("1000",
+                        "Method threw improper exception: " + e.getMessage());
+            } catch (IOException e) {
+                System.out.println("io exception: " + e.getMessage());
+            }
+        } 
+
+        return guid;
     }
 
 }
