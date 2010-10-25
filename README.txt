@@ -32,5 +32,4 @@ understanding of the REST API.
 
 See the test classes under src/test for example usage.
 
-See LICENSE.txt for the details of distributing this software.
-
+See LICENSE.txt for the details of distributing this software. 
