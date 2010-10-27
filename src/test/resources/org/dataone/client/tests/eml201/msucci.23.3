@@ -1,0 +1,122 @@
+<?xml version="1.0"?>
+<eml:eml xmlns:eml="eml://ecoinformatics.org/eml-2.0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" packageId="msucci.23.3" system="knb" xsi:schemaLocation="eml://ecoinformatics.org/eml-2.0.1 eml.xsd" scope="system">
+    <dataset scope="document">
+        <title>(***Dados de exemplo - nao utilizar . Example data - don&apos;t use***) Stingless Bees Experiment - Experimento com abelhas sem ferr&#227;o Thermoregulation Research/ Pesquisa em Termoregula&#231;&#227;o Parte do Projeto ViNCES do programa TiDIA-Kyatera da FAPESP</title>
+        <creator id="1181751666923" scope="document">
+            <individualName>
+                <salutation>Mr.</salutation>
+                <givenName>Marcelo</givenName>
+                <surName>Succi</surName>
+            </individualName>
+            <organizationName>Laboratorio de Automacao Agricola</organizationName>
+            <positionName>Escola Politecnica da USP</positionName>
+            <address scope="document">
+                <deliveryPoint>Av. Prof. Luciano Gualberto, travessa 3, n&#186; 158, sala C2-56</deliveryPoint>
+                <deliveryPoint>Edif&#237;cio de Engenharia El&#233;trica - Cidade Universit&#225;ria,</deliveryPoint>
+                <city>S&#227;o Paulo</city>
+                <administrativeArea>SP</administrativeArea>
+                <postalCode>05508-900</postalCode>
+                <country>Brazil</country>
+            </address>
+            <phone phonetype="voice">+55-11-3091-5366</phone>
+            <electronicMailAddress>marcelo.succi@poli.usp.br</electronicMailAddress>
+        </creator>
+        <abstract>
+            <para>Dados obtidos no Laboratorio da Abelhas-Instituto de Biociencias-USP em uma colonia de Melipona quadrifasciata anthidioides monitorada, parte do projeto ViNCES do programa TiDIA-Kyatera da FAPESP. Pesquisa ficiticia sobre termoregula&#231;&#227;o</para>
+        </abstract>
+        <keywordSet>
+            <keyword>Meliponini</keyword>
+            <keyword>Melipona</keyword>
+            <keyword>Termoregula&#231;&#227;o</keyword>
+        </keywordSet>
+        <intellectualRights>
+            <para>Copyleft - GNU FDL</para>
+        </intellectualRights>
+        <coverage scope="document">
+            <geographicCoverage scope="document">
+                <geographicDescription>Laborat&#243;rio de Abelhas - Instituto de Bioci&#234;ncias - USP</geographicDescription>
+                <boundingCoordinates>
+                    <westBoundingCoordinate>-46.7308</westBoundingCoordinate>
+                    <eastBoundingCoordinate>-46.7308</eastBoundingCoordinate>
+                    <northBoundingCoordinate>-23.56472</northBoundingCoordinate>
+                    <southBoundingCoordinate>-23.56472</southBoundingCoordinate>
+                </boundingCoordinates>
+            </geographicCoverage>
+            <temporalCoverage scope="document">
+                <singleDateTime>
+                    <calendarDate>2007-04-11</calendarDate>
+                </singleDateTime>
+            </temporalCoverage>
+        </coverage>
+        <contact scope="document">
+            <references>1181751666923</references>
+        </contact>
+        <access authSystem="knb" order="denyFirst" scope="document">
+            <allow>
+                <principal>public</principal>
+                <permission>read</permission>
+            </allow>
+        </access>
+        <dataTable id="1181756746831" scope="document">
+            <entityName>t_ext.txt</entityName>
+            <entityDescription>Temperatura Externa</entityDescription>
+            <physical id="1181756743797" scope="document">
+                <objectName>t_ext.txt</objectName>
+                <size unit="byte">35743</size>
+                <dataFormat>
+                    <textFormat>
+                        <numHeaderLines>1</numHeaderLines>
+                        <recordDelimiter>#x0A</recordDelimiter>
+                        <attributeOrientation>column</attributeOrientation>
+                        <simpleDelimited>
+                            <fieldDelimiter>#x20</fieldDelimiter>
+                        </simpleDelimited>
+                    </textFormat>
+                </dataFormat>
+                <distribution scope="document">
+                    <online>
+                        <url function="download">ecogrid://knb/msucci.24.1</url>
+                    </online>
+                </distribution>
+            </physical>
+            <attributeList>
+                <attribute id="1181756746841" scope="document">
+                    <attributeName>data</attributeName>
+                    <attributeDefinition>data da medi&#231;&#227;o .</attributeDefinition>
+                    <measurementScale>
+                        <datetime>
+                            <formatString>YYYY-MM-DD</formatString>
+                            <dateTimePrecision>1 day</dateTimePrecision>
+                        </datetime>
+                    </measurementScale>
+                </attribute>
+                <attribute id="1181756746851" scope="document">
+                    <attributeName>hora</attributeName>
+                    <attributeDefinition>hora da medi&#231;&#224;o</attributeDefinition>
+                    <measurementScale>
+                        <datetime>
+                            <formatString>hh:mm:ss</formatString>
+                            <dateTimePrecision>1  second</dateTimePrecision>
+                        </datetime>
+                    </measurementScale>
+                </attribute>
+                <attribute id="1181756746881" scope="document">
+                    <attributeName>temperatura</attributeName>
+                    <attributeDefinition>temperatura externa</attributeDefinition>
+                    <measurementScale>
+                        <interval>
+                            <unit>
+                                <standardUnit>celsius</standardUnit>
+                            </unit>
+                            <precision>0.1</precision>
+                            <numericDomain>
+                                <numberType>real</numberType>
+                            </numericDomain>
+                        </interval>
+                    </measurementScale>
+                </attribute>
+            </attributeList>
+            <numberOfRecords>1443</numberOfRecords>
+        </dataTable>
+    </dataset>
+</eml:eml>

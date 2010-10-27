@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    This work was created by participants in the DataONE project, and is
+    jointly copyrighted by participating institutions in DataONE. For
+    more information on DataONE, see our web site at http://dataone.org.
+
+      Copyright ${year}
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+
+<d1:systemMetadata xmlns:common="http://dataone.org/service/types/common/0.5"
+ xmlns:d1="http://dataone.org/service/types/SystemMetadata/0.5"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://dataone.org/service/types/SystemMetadata/0.5 https://repository.dataone.org/software/cicore/tags/D1_SCHEMA_0_5/systemmetadata.xsd">
+    <identifier>BAYXXX_015ADCP015R00_20051215.50.9</identifier>
+    <objectFormat>eml://ecoinformatics.org/eml-2.0.1</objectFormat>
+    <size>34543</size>
+    <submitter>Dr. Libe Washburn</submitter>
+    <rightsHolder>Partnership for Interdisciplinary Studies of Coastal Oceans (PISCO)</rightsHolder>
+    <describes>BAYXXX_015ADCP015R00_20051215.40</describes>
+    <checksum algorithm="MD5">884f1452814899d7ba988d187491f493</checksum>
+    <embargoExpires>2010-05-04T12:13:51.0Z</embargoExpires>
+    <accessRule rule="allow" service="read" principal="public"/>
+    <replicationPolicy replicationAllowed="true" numberReplicas="2">
+        <preferredMemberNode>MN2</preferredMemberNode>
+        <blockedMemberNode>MN2341</blockedMemberNode>
+    </replicationPolicy>
+    <dateUploaded>2010-05-04T12:13:51.0Z</dateUploaded>
+    <dateSysMetadataModified>2010-05-04T15:13:51.0Z</dateSysMetadataModified>
+    <originMemberNode>MN1</originMemberNode>
+    <authoritativeMemberNode>MN1</authoritativeMemberNode>
+</d1:systemMetadata>
