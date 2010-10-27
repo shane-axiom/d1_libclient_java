@@ -2,9 +2,9 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.dataone</groupId>
-  <artifactId>d1_client_java</artifactId>
+  <artifactId>d1_libclient_java</artifactId>
   <packaging>jar</packaging>
-  <version>0.5.1</version>
+  <version>0.5.2</version>
   <name>DataONE Java Client Library</name>
   <url>http://dataone.org</url>
     <repositories>
