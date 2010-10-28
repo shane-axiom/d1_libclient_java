@@ -27,6 +27,16 @@ import java.util.SimpleTimeZone;
 import java.util.TimeZone;
 import java.util.Vector;
 
+import org.dataone.service.types.Checksum;
+import org.dataone.service.types.ChecksumAlgorithm;
+import org.dataone.service.types.Identifier;
+import org.dataone.service.types.NodeReference;
+import org.dataone.service.types.ObjectFormat;
+import org.dataone.service.types.Principal;
+import org.dataone.service.types.Replica;
+import org.dataone.service.types.ReplicationStatus;
+import org.dataone.service.types.SystemMetadata;
+
 /**
  * Utilities that are useful for generating test data.
  */
@@ -307,4 +317,42 @@ public class ExampleUtilities {
 
         return guid.toString();
     }
+    
+    
+    /** Generate a SystemMetadata object with bogus data. */
+    protected static SystemMetadata generateSystemMetadata(Identifier guid, ObjectFormat objectFormat) 
+    {
+        SystemMetadata sysmeta = new SystemMetadata();
+        sysmeta.setIdentifier(guid);
+        sysmeta.setObjectFormat(objectFormat);
+        sysmeta.setSize(12);
+        Principal submitter = new Principal();
+        String dn = "uid=jones,o=NCEAS,dc=ecoinformatics,dc=org";
+        submitter.setValue(dn);
+        sysmeta.setSubmitter(submitter);
+        Principal rightsHolder = new Principal();
+        rightsHolder.setValue(dn);
+        sysmeta.setRightsHolder(rightsHolder);
+        sysmeta.setDateSysMetadataModified(new Date());
+        sysmeta.setDateUploaded(new Date());
+        NodeReference originMemberNode = new NodeReference();
+        originMemberNode.setValue("mn1");
+        sysmeta.setOriginMemberNode(originMemberNode);
+        NodeReference authoritativeMemberNode = new NodeReference();
+        authoritativeMemberNode.setValue("mn1");
+        sysmeta.setAuthoritativeMemberNode(authoritativeMemberNode);
+        Replica firstReplica = new Replica();
+        NodeReference replicaNodeReference = new NodeReference();
+        replicaNodeReference.setValue("cn-dev");
+        firstReplica.setReplicaMemberNode(replicaNodeReference);
+        firstReplica.setReplicationStatus(ReplicationStatus.COMPLETED);
+        firstReplica.setReplicaVerified(new Date());
+        sysmeta.addReplica(firstReplica);
+        Checksum checksum = new Checksum();
+        checksum.setValue("4d6537f48d2967725bfcc7a9f0d5094ce4088e0975fcd3f1a361f15f46e49f83");
+        checksum.setAlgorithm(ChecksumAlgorithm.SH_A256);
+        sysmeta.setChecksum(checksum);
+        return sysmeta;
+    }
+ 
 }
