@@ -109,7 +109,7 @@ public class D1ClientCNodeTest  {
             for (ObjectLocation ol : oll.getObjectLocationList()) {
                 System.out.println("Location: " + ol.getNodeIdentifier().getValue()
                         + " (" + ol.getUrl() + ")");
-                checkTrue(ol.getUrl().contains(identifier));
+                checkTrue(ol.getUrl().contains(idString));
             }
         } catch (BaseException e) {
             e.printStackTrace();
