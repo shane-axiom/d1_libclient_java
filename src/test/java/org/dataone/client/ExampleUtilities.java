@@ -109,7 +109,7 @@ public class ExampleUtilities {
 		return getAccessBlock(principal, grantAccess, read, write, changePermission, all,
 				ALLOWFIRST);
 	}
-
+	
 	/**
 	 * This function returns an access block based on the params passed
 	 */

@@ -167,7 +167,7 @@ public class D1ClientTest  {
                 Identifier guid = new Identifier();
                 guid.setValue(idString);
                 InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-luq.76.2-broken.xml");
-                SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.EML_2_1_0);
+                SystemMetadata sysmeta = ExampleUtilities.generateSystemMetadata(guid, ObjectFormat.EML_2_1_0);
                 Identifier rGuid = null;
 
                 try {
@@ -208,7 +208,7 @@ public class D1ClientTest  {
                Identifier guid = new Identifier();
                guid.setValue(idString);
                InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-cdr.329066.1.data");
-               SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
+               SystemMetadata sysmeta = ExampleUtilities.generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
 
                Identifier rGuid = mn.create(token, guid, objectStream, sysmeta);
                InputStream data = mn.get(token, rGuid);
@@ -273,7 +273,7 @@ public class D1ClientTest  {
                 guid.setValue(idString);
                 
                 InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-cdr.329066.1.data");
-                SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
+                SystemMetadata sysmeta = ExampleUtilities.generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
 
                 Identifier rGuid = mn.create(token, guid, objectStream, sysmeta);
                 
@@ -309,7 +309,7 @@ public class D1ClientTest  {
                 guid = new Identifier();
                 guid.setValue(idString);
                 objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-cdr.329066.1.data");
-                sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
+                sysmeta = ExampleUtilities.generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
 
                 rGuid = mn.create(token, guid, objectStream, sysmeta);
                 System.out.println("inserted doc with id " + rGuid.getValue());
@@ -381,7 +381,7 @@ public class D1ClientTest  {
                 Identifier guid = new Identifier();
                 guid.setValue(idString);
                 InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-cdr.329066.1.data");
-                SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
+                SystemMetadata sysmeta = ExampleUtilities.generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
                 Identifier rGuid = mn.create(token, guid, objectStream, sysmeta);
                 checkEquals(guid.getValue(), rGuid.getValue());
                 //System.out.println("create success, id returned is " + rGuid.getValue());
@@ -420,7 +420,7 @@ public class D1ClientTest  {
                 Identifier guid = new Identifier();
                 guid.setValue(idString);
                 InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-cdr.329066.1.data");
-                SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
+                SystemMetadata sysmeta = ExampleUtilities.generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
                 System.out.println("d1 create");
                 Identifier rGuid = mn.create(token, guid, objectStream, sysmeta);
                 System.out.println("d1 created " + rGuid.getValue());
@@ -439,7 +439,7 @@ public class D1ClientTest  {
                 newguid.setValue(prefix + ExampleUtilities.generateIdentifier());
                 str = str.replaceAll("61", "0");
                 objectStream = IOUtils.toInputStream(str);
-                SystemMetadata updatedSysmeta = generateSystemMetadata(newguid, ObjectFormat.TEXT_CSV);
+                SystemMetadata updatedSysmeta = ExampleUtilities.generateSystemMetadata(newguid, ObjectFormat.TEXT_CSV);
 
                 //update the document
                 System.out.println("d1 update newguid: "+ newguid.getValue() + " old guid: " + rGuid);
@@ -516,7 +516,7 @@ public class D1ClientTest  {
                 System.out.println("guid is " + guid.getValue());
                 //InputStream objectStream = IOUtils.toInputStream("x,y,z\n1,2,3\n");
                 InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/BAYXXX_015ADCP015R00_20051215.50.9.xml");
-                SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
+                SystemMetadata sysmeta = ExampleUtilities.generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
                 Identifier rGuid = null;
 
                 //insert
@@ -560,7 +560,7 @@ public class D1ClientTest  {
                 guid.setValue(idString);
                 InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-luq.76.2.xml");
                 //InputStream objectStream = IOUtils.toInputStream("<?xml version=\"1.0\"?><test></test>");
-                SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.EML_2_1_0);
+                SystemMetadata sysmeta = ExampleUtilities.generateSystemMetadata(guid, ObjectFormat.EML_2_1_0);
                 Identifier rGuid = null;
                 rGuid = mn.create(token, guid, objectStream, sysmeta);
                 checkEquals(guid.getValue(), rGuid.getValue());
@@ -679,7 +679,7 @@ public class D1ClientTest  {
                 Identifier guid = new Identifier();
                 guid.setValue(idString);
                 InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-cdr.329066.1.data");
-                SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
+                SystemMetadata sysmeta = ExampleUtilities.generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
                 Identifier rGuid = null;
 
                 try {
@@ -729,7 +729,7 @@ public class D1ClientTest  {
                 Identifier guid = new Identifier();
                 guid.setValue(idString);
                 InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-luq.76.2.xml");
-                SystemMetadata sysmeta = generateSystemMetadata(guid, ObjectFormat.EML_2_1_0);
+                SystemMetadata sysmeta = ExampleUtilities.generateSystemMetadata(guid, ObjectFormat.EML_2_1_0);
                 Identifier rGuid = null;
 
                 try {
@@ -858,7 +858,7 @@ public class D1ClientTest  {
         Identifier mdId = new Identifier();
         mdId.setValue(idString);
         
-        SystemMetadata mdSm = generateSystemMetadata(mdId, emld.format);
+        SystemMetadata mdSm = ExampleUtilities.generateSystemMetadata(mdId, emld.format);
 
         //get the document(s) listed in the EML distribution elements
         //for the sake of this method, we're just going to get them from the resources directory
@@ -883,7 +883,7 @@ public class D1ClientTest  {
             Identifier id = new Identifier();
             id.setValue(idString);
             //create system metadata for the dist documents with a describedBy tag
-            SystemMetadata sm = generateSystemMetadata(id, ObjectFormat.convert(emld.distributionMetadata.elementAt(i).mimeType));
+            SystemMetadata sm = ExampleUtilities.generateSystemMetadata(id, ObjectFormat.convert(emld.distributionMetadata.elementAt(i).mimeType));
             //add desrviedBy
             sm.addDescribedBy(mdId);
             //add describes to the metadata doc's sm
@@ -909,35 +909,6 @@ public class D1ClientTest  {
     private static String createAssertMessage()
     {
         return "test failed at url " + currentUrl;
-    }
-
-    /** Generate a SystemMetadata object with bogus data. */
-    private static SystemMetadata generateSystemMetadata(Identifier guid, ObjectFormat objectFormat) 
-    {
-        SystemMetadata sysmeta = new SystemMetadata();
-        sysmeta.setIdentifier(guid);
-        sysmeta.setObjectFormat(objectFormat);
-        sysmeta.setSize(12);
-        Principal submitter = new Principal();
-        String dn = "uid=jones,o=NCEAS,dc=ecoinformatics,dc=org";
-        submitter.setValue(dn);
-        sysmeta.setSubmitter(submitter);
-        Principal rightsHolder = new Principal();
-        rightsHolder.setValue(dn);
-        sysmeta.setRightsHolder(rightsHolder);
-        sysmeta.setDateSysMetadataModified(new Date());
-        sysmeta.setDateUploaded(new Date());
-        NodeReference originMemberNode = new NodeReference();
-        originMemberNode.setValue("mn1");
-        sysmeta.setOriginMemberNode(originMemberNode);
-        NodeReference authoritativeMemberNode = new NodeReference();
-        authoritativeMemberNode.setValue("mn1");
-        sysmeta.setAuthoritativeMemberNode(authoritativeMemberNode);
-        Checksum checksum = new Checksum();
-        checksum.setValue("4d6537f48d2967725bfcc7a9f0d5094ce4088e0975fcd3f1a361f15f46e49f83");
-        checksum.setAlgorithm(ChecksumAlgorithm.SH_A256);
-        sysmeta.setChecksum(checksum);
-        return sysmeta;
     }
 
     /** Generate a science metadata object for testing. */
