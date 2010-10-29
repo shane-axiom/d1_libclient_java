@@ -89,11 +89,11 @@ public class D1ClientCNodeTest  {
             
             //insert a data file
             InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-cdr.329066.1.data");
-            SystemMetadata sysmeta = (new D1ClientTest()).generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
+            SystemMetadata sysmeta = ExampleUtilities.generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
             
             //inser EML file
             //InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-luq.76.2.xml");
-            //SystemMetadata sysmeta = (new D1ClientTest()).generateSystemMetadata(guid, ObjectFormat.EML_2_1_0));
+            //SystemMetadata sysmeta = ExampleUtilities.generateSystemMetadata(guid, ObjectFormat.EML_2_1_0));
             
             Identifier rGuid = null;
             try {
