@@ -64,6 +64,52 @@ public class D1ClientCNodeTest  {
     {
         
     }
+    
+    /**
+     * test the resolve() operation on Coordinating Nodes
+     */
+    @Test
+    public void testResolveNew() {
+        try {
+            D1Client d1 = new D1Client(cnUrl);
+            CNode cn = d1.getCN();
+
+            //insert a doc to resolv
+            printHeader("testResolve - node " + cnUrl);
+            //AuthToken token = new AuthToken();
+            Identifier guid = new Identifier();
+            guid.setValue(identifier);
+            String currentUrl = "http://cn-dev.dataone.org/knb/";
+            d1 = new D1Client(currentUrl);
+            MNode mn = d1.getMN(currentUrl);
+            String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
+            AuthToken token = mn.login(principal, "kepler");
+            String idString = "test" + ExampleUtilities.generateIdentifier();
+            guid.setValue(idString);
+            InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-luq.76.2.xml");
+            SystemMetadata sysmeta = (new D1ClientTest()).generateSystemMetadata(guid, ObjectFormat.EML_2_1_0);
+            Identifier rGuid = null;
+            try {
+                rGuid = mn.create(token, guid, objectStream, sysmeta);
+                mn.setAccess(token, rGuid, "public", "read", "allow", "allowFirst");
+                checkEquals(guid.getValue(), rGuid.getValue());
+            } catch (Exception e) {
+                errorCollector.addError(new Throwable(createAssertMessage() + " error in testCreateScienceMetadata: " + e.getMessage()));
+            }
+        
+            ObjectLocationList oll = cn.resolve(token, rGuid);
+
+            for (ObjectLocation ol : oll.getObjectLocationList()) {
+                System.out.println("Location: " + ol.getNodeIdentifier().getValue()
+                        + " (" + ol.getUrl() + ")");
+                checkTrue(ol.getUrl().contains(identifier));
+            }
+        } catch (BaseException e) {
+            e.printStackTrace();
+            errorCollector.addError(new Throwable(createAssertMessage()
+                    + " error in testResolve: " + e.getMessage()));
+        }
+    }
         
     /**
      * test the resolve() operation on Coordinating Nodes
