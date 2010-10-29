@@ -34,7 +34,6 @@ import org.dataone.service.types.ObjectFormat;
 import org.dataone.service.types.ObjectLocation;
 import org.dataone.service.types.ObjectLocationList;
 import org.dataone.service.types.SystemMetadata;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ErrorCollector;
@@ -63,7 +62,7 @@ public class D1ClientCNodeTest  {
      * test the resolve() operation on Coordinating Nodes
      */
     @Test
-    public void testResolveNew() {
+    public void testResolve() {
         try {
             D1Client d1 = new D1Client(cnUrl);
             CNode cn = d1.getCN();
