@@ -75,7 +75,7 @@ public class D1ClientCNodeTest  {
             CNode cn = d1.getCN();
 
             //insert a doc to resolv
-            printHeader("testResolve - node " + cnUrl);
+            printHeader("testResolveNew - node " + cnUrl);
             //AuthToken token = new AuthToken();
             Identifier guid = new Identifier();
             guid.setValue(identifier);
@@ -86,8 +86,15 @@ public class D1ClientCNodeTest  {
             AuthToken token = mn.login(principal, "kepler");
             String idString = "test" + ExampleUtilities.generateIdentifier();
             guid.setValue(idString);
-            InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-luq.76.2.xml");
-            SystemMetadata sysmeta = (new D1ClientTest()).generateSystemMetadata(guid, ObjectFormat.EML_2_1_0);
+            
+            //insert a data file
+            InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-cdr.329066.1.data");
+            SystemMetadata sysmeta = (new D1ClientTest()).generateSystemMetadata(guid, ObjectFormat.TEXT_CSV);
+            
+            //inser EML file
+            //InputStream objectStream = this.getClass().getResourceAsStream("/org/dataone/client/tests/knb-lter-luq.76.2.xml");
+            //SystemMetadata sysmeta = (new D1ClientTest()).generateSystemMetadata(guid, ObjectFormat.EML_2_1_0));
+            
             Identifier rGuid = null;
             try {
                 rGuid = mn.create(token, guid, objectStream, sysmeta);
@@ -115,7 +122,7 @@ public class D1ClientCNodeTest  {
      * test the resolve() operation on Coordinating Nodes
      * @throws InterruptedException 
      */
-    @Test
+    //@Test
     public void testResolve() throws InterruptedException {
         D1Client d1 = new D1Client(cnUrl);
         CNode cn = d1.getCN();
