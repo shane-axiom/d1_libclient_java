@@ -63,19 +63,40 @@ public class D1ClientCNodeTest  {
      */
     @Test
     public void testResolve() {
-        try {
+    	String idString = "test" + ExampleUtilities.generateIdentifier();
+    	resolveRunner(idString);
+    }
+    
+//    @Test
+    public void testResolve_IdEncoding_trailingSlash() {
+    	String idString = "test:" + ExampleUtilities.generateIdentifier() + "/";
+    	resolveRunner(idString);
+    }
+    
+//    @Test
+    public void testResolve_IdEncoding2() {
+    	String idString = "test:" + "Günther's DataSet#1" + ExampleUtilities.generateIdentifier();
+    	resolveRunner(idString);
+    }
+
+    
+    
+    
+    /*
+     * procedure for creating and testing the return from resolve for different
+     * identifier strings
+     */
+    private void resolveRunner(String idString) {
+    	
+    	try {
             D1Client d1 = new D1Client(cnUrl);
             CNode cn = d1.getCN();
 
-            //insert a doc to resolve
-            printHeader("testResolveNew - node " + cnUrl);
-
-            // identifier for the document
-            String idString = "test" + ExampleUtilities.generateIdentifier();
             Identifier guid = new Identifier();
             guid.setValue(idString);
             
-            
+            //insert a doc to resolve
+            printHeader("testResolve - node " + cnUrl);
             d1 = new D1Client(mnUrl);
             MNode mn = d1.getMN(mnUrl);
             String principal = "uid%3Dkepler,o%3Dunaffiliated,dc%3Decoinformatics,dc%3Dorg";
