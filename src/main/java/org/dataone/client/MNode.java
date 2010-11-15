@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.security.MessageDigest;
 import java.util.Date;
 
 import org.jibx.runtime.JiBXException;
@@ -307,8 +308,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
     public Checksum getChecksum(AuthToken token, Identifier guid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
             InvalidRequest, NotImplemented {
-        // TODO: Implement client getChecksum method
-        throw new NotImplemented("1000", "Method not yet implemented.");
+        return getChecksum(token, guid, null);
     }
 
     /**
@@ -317,9 +317,56 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
      */
     public Checksum getChecksum(AuthToken token, Identifier guid,
             String checksumAlgorithm) throws InvalidToken, ServiceFailure,
-            NotAuthorized, NotFound, InvalidRequest, NotImplemented {
-        // TODO: Implement client getChecksum method
-        throw new NotImplemented("1000", "Method not yet implemented.");
+            NotAuthorized, NotFound, InvalidRequest, NotImplemented 
+    {
+        String resource = Constants.RESOURCE_CHECKSUM;
+        String params = "";
+        if(token == null)
+        {
+            token = new AuthToken("public");
+        }
+        if(guid == null || guid.getValue().trim().equals(""))
+        {
+            throw new InvalidRequest("1402", "GUID cannot be null.");
+        }
+        
+        params += "token=" + token.getToken() + "&id=" + guid.getValue();
+        
+        if(!checksumAlgorithm.trim().equals("") && checksumAlgorithm != null)
+        {
+            params += "&checksumAlgorithm=" + checksumAlgorithm;
+        }
+        
+        InputStream is = null;
+        ResponseData rd = sendRequest(token, resource, Constants.GET, params, null, null, null);
+        int code = rd.getCode();
+        if (code != HttpURLConnection.HTTP_OK) {
+            InputStream errorStream = rd.getErrorStream();
+            try {
+                deserializeAndThrowException(errorStream);
+            } catch (InvalidToken e) {
+                throw e;
+            } catch (ServiceFailure e) {
+                throw e;
+            } catch (NotAuthorized e) {
+                throw e;
+            } catch (NotImplemented e) {
+                throw e;
+            } catch (BaseException e) {
+                throw new ServiceFailure("1000",
+                        "Method threw improper exception: " + e.getMessage());
+            }
+
+        } else {
+            is = rd.getContentStream();
+            try {
+                return (Checksum) deserializeServiceType(Checksum.class, is);
+            } catch (JiBXException e) {
+                throw new ServiceFailure("500",
+                        "Could not deserialize the ObjectList: " + e.getMessage());
+            }
+        }
+        return null;
     }
 
     /**
