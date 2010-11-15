@@ -134,7 +134,7 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
      * the specified guid
      */
     public Identifier create(AuthToken token, Identifier guid,
-            InputStream object, SystemMetadata sysmeta) throws InvalidToken,
+            final InputStream object, final SystemMetadata sysmeta) throws InvalidToken,
             ServiceFailure, NotAuthorized, IdentifierNotUnique,
             UnsupportedType, InsufficientResources, InvalidSystemMetadata,
             NotImplemented {
@@ -143,14 +143,11 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
         // TODO: This input stream is assigned below but not used.
         InputStream is = null;
 
-        final String mmp = createMimeMultipart(object, sysmeta);
-
         final InputStreamFromOutputStream<String> multipartStream = new InputStreamFromOutputStream<String>() {
             @Override
-            public String produce(java.io.OutputStream dataSink) throws Exception {
-                // mmp.writeTo(dataSink);
-                // TODO: this appears memory bound and therefore not scalable; avoid getBytes()
-                IOUtils.write(mmp.getBytes(), dataSink);
+            public String produce(java.io.OutputStream dataSink) throws Exception 
+            {
+                createMimeMultipart(dataSink, object, sysmeta);
                 IOUtils.closeQuietly(dataSink);
                 return "Complete";
             }

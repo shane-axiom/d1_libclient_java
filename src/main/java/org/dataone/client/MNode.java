@@ -384,7 +384,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
      * set action="create" for insert and action="update" for update
      */
     private Identifier handleCreateOrUpdate(AuthToken token, Identifier guid,
-        InputStream object, SystemMetadata sysmeta, Identifier obsoletedGuid, 
+        final InputStream object, final SystemMetadata sysmeta, Identifier obsoletedGuid, 
         String action)
         throws InvalidToken,ServiceFailure, NotAuthorized, IdentifierNotUnique,
             UnsupportedType, InsufficientResources, InvalidSystemMetadata,
@@ -392,14 +392,11 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
     {
         String resource = Constants.RESOURCE_OBJECTS + "/" + guid.getValue();
 
-        final String mmp = createMimeMultipart(object, sysmeta);
-
         final InputStreamFromOutputStream<String> multipartStream = new InputStreamFromOutputStream<String>() {
             @Override
-            public String produce(final OutputStream dataSink) throws Exception {
-                // mmp.writeTo(dataSink);
-                // TODO: this appears memory bound and therefore not scalable; avoid getBytes()
-                IOUtils.write(mmp.getBytes(), dataSink);
+            public String produce(final OutputStream dataSink) throws Exception 
+            {
+                createMimeMultipart(dataSink, object, sysmeta);
                 IOUtils.closeQuietly(dataSink);
                 return "Complete";
             }

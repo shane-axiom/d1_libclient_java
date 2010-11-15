@@ -214,17 +214,17 @@ public abstract class D1Node {
 	}
 	
 	/**
-	 * create a mime multipart message from object and sysmeta
+	 * create a mime multipart message from object and sysmeta and write it to out
 	 */
-	protected String createMimeMultipart(InputStream object,
-			SystemMetadata sysmeta) throws ServiceFailure,
-			InvalidSystemMetadata {
+	protected void createMimeMultipart(OutputStream out, InputStream object,
+			SystemMetadata sysmeta) throws Exception
+	{
 		if (sysmeta == null) {
 			throw new InvalidSystemMetadata("1000",
 					"System metadata was null.  Can't create multipart form.");
 		}
 
-		String sysmetaString = null;
+		/*String sysmetaString = null;
 		try {
 			ByteArrayInputStream sysmetaStream = serializeSystemMetadata(sysmeta);
 			sysmetaString = IOUtils.toString(sysmetaStream);
@@ -232,7 +232,7 @@ public abstract class D1Node {
 			throw new ServiceFailure("1000",
 					"Could not serialize the system metadata: "
 							+ e.getMessage());
-		}
+		}*/
 
 		Date d = new Date();
 		String boundary = d.getTime() + "";
@@ -242,24 +242,40 @@ public abstract class D1Node {
 		boundary = "--" + boundary + "\n";
 		mime += boundary;
 		mime += "Content-Disposition: attachment; filename=systemmetadata\n\n";
-		mime += sysmetaString;
-		mime += "\n";
+		out.write(mime.getBytes());
+		out.flush();
+		
+		//write the sys meta
+		try
+		{
+		    IOUtils.copy(serializeSystemMetadata(sysmeta), out);
+		}
+		catch(Exception e)
+		{
+		    throw new ServiceFailure("1000",
+                    "Could not serialize the system metadata to multipart: "
+                            + e.getMessage());
+		}
+		
+		out.write("\n".getBytes());
 
 		if (object != null) {
-			mime += boundary;
-			mime += "Content-Disposition: attachment; filename=object\n\n";
+		    
+			out.write(boundary.getBytes());
+			out.write("Content-Disposition: attachment; filename=object\n\n".getBytes());
 			try {
-				mime += IOUtils.toString(object);
-			} catch (IOException ioe) {
+				mime += IOUtils.copy(object, out);
+			} 
+			catch (IOException ioe) 
+			{
 				throw new ServiceFailure("1000",
-						"Error serializing object to multipart form: "
+						"Error serializing object to multipart: "
 								+ ioe.getMessage());
 			}
-			mime += "\n";
+			out.write("\n".getBytes());
 		}
 
-		mime += boundary + "--";		
-		return mime;
+		out.write((boundary + "--").getBytes());		
 	}
 
 	/**
