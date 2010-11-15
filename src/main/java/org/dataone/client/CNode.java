@@ -140,8 +140,6 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
             NotImplemented {
 
         String resource = Constants.RESOURCE_OBJECTS + "/" + guid.getValue();
-        // TODO: This input stream is assigned below but not used.
-        InputStream is = null;
 
         final InputStreamFromOutputStream<String> multipartStream = new InputStreamFromOutputStream<String>() {
             @Override
@@ -191,13 +189,7 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
             } catch (IOException e) {
                 System.out.println("io exception: " + e.getMessage());
             }
-
-        // TODO: Unclear why the conditional below exists; need to refactor;
-        // probably is meant to check the return value to make sure the guid matches
-        } else {
-            is = rd.getContentStream();
-        }
-
+        } 
         return guid;
     }
     @Override
