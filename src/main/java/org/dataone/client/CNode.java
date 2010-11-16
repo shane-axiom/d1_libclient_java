@@ -55,6 +55,7 @@ import org.dataone.service.types.ObjectLocationList;
 import org.dataone.service.types.Principal;
 import org.dataone.service.types.SystemMetadata;
 import org.dataone.service.Constants;
+import org.dataone.service.EncodingUtilities;
 //import org.omg.CosNaming.NamingContextPackage.NotFound;
 import org.jibx.runtime.JiBXException;
 import org.w3c.dom.Document;
@@ -95,7 +96,7 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
     public ObjectLocationList resolve(AuthToken token, Identifier guid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
             InvalidRequest, NotImplemented {
-        String resource = Constants.RESOURCE_RESOLVE + "/" + guid.getValue();
+        String resource = Constants.RESOURCE_RESOLVE + "/" + EncodingUtilities.encodeUrlPathSegment(guid.getValue());
         InputStream is = null;
         ResponseData rd = sendRequest(token, resource, Constants.GET, null, null, null, "text/xml");
 
@@ -139,7 +140,7 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
             UnsupportedType, InsufficientResources, InvalidSystemMetadata,
             NotImplemented {
 
-        String resource = Constants.RESOURCE_OBJECTS + "/" + guid.getValue();
+        String resource = Constants.RESOURCE_OBJECTS + "/" + EncodingUtilities.encodeUrlPathSegment(guid.getValue());
 
         final InputStreamFromOutputStream<String> multipartStream = new InputStreamFromOutputStream<String>() {
             @Override
@@ -305,7 +306,7 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
             String permission, String permissionType, String permissionOrder)
             throws ServiceFailure {
         // TODO: this method assumes an access control model that is not finalized, refactor when it is
-        String params = "guid=" + id.getValue() + "&principal=" + principal
+        String params = "guid=" + EncodingUtilities.encodeUrlQuerySegment(id.getValue()) + "&principal=" + principal
                 + "&permission=" + permission + "&permissionType="
                 + permissionType + "&permissionOrder=" + permissionOrder
                 + "&op=setaccess&setsystemmetadata=true";
