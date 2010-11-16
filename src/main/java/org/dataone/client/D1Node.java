@@ -59,6 +59,7 @@ import org.dataone.service.types.Identifier;
 import org.dataone.service.types.ObjectList;
 import org.dataone.service.types.SystemMetadata;
 import org.dataone.service.Constants;
+import org.dataone.service.EncodingUtilities;
 import org.jibx.runtime.BindingDirectory;
 import org.jibx.runtime.IBindingFactory;
 import org.jibx.runtime.IMarshallingContext;
@@ -127,7 +128,7 @@ public abstract class D1Node {
     public InputStream get(AuthToken token, Identifier guid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
             NotImplemented {
-        String resource = Constants.RESOURCE_OBJECTS + "/" + guid.getValue();
+        String resource = Constants.RESOURCE_OBJECTS + "/" + EncodingUtilities.encodeUrlPathSegment(guid.getValue());
         InputStream is = null;
         ResponseData rd = sendRequest(token, resource, Constants.GET, null, null, null, null);
         int code = rd.getCode();
@@ -164,7 +165,7 @@ public abstract class D1Node {
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
             InvalidRequest, NotImplemented {
 
-        String resource = Constants.RESOURCE_META + "/" + guid.getValue();
+        String resource = Constants.RESOURCE_META + "/" + EncodingUtilities.encodeUrlPathSegment(guid.getValue());
         InputStream is = null;
         ResponseData rd = sendRequest(token, resource, Constants.GET, null, null, null, null);
         int code = rd.getCode();

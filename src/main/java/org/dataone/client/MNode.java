@@ -54,6 +54,7 @@ import org.dataone.service.types.ObjectFormat;
 import org.dataone.service.types.ObjectList;
 import org.dataone.service.types.SystemMetadata;
 import org.dataone.service.Constants;
+import org.dataone.service.EncodingUtilities;
 
 import com.gc.iotools.stream.is.InputStreamFromOutputStream;
 
@@ -86,7 +87,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
             String permission, String permissionType, String permissionOrder)
             throws ServiceFailure {
         // TODO: this method assumes an access control model that is not finalized, refactor when it is
-        String params = "guid=" + id.getValue() + "&principal=" + principal
+        String params = "guid=" + EncodingUtilities.encodeUrlQuerySegment(id.getValue()) + "&principal=" + principal
                 + "&permission=" + permission + "&permissionType="
                 + permissionType + "&permissionOrder=" + permissionOrder
                 + "&op=setaccess&setsystemmetadata=true";
@@ -330,7 +331,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
             throw new InvalidRequest("1402", "GUID cannot be null.");
         }
         
-        params += "token=" + token.getToken() + "&id=" + guid.getValue();
+        params += "token=" + token.getToken() + "&id=" + EncodingUtilities.encodeUrlQuerySegment(guid.getValue());
         
         if(!checksumAlgorithm.trim().equals("") && checksumAlgorithm != null)
         {
@@ -437,7 +438,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
             UnsupportedType, InsufficientResources, InvalidSystemMetadata,
             NotImplemented
     {
-        String resource = Constants.RESOURCE_OBJECTS + "/" + guid.getValue();
+        String resource = Constants.RESOURCE_OBJECTS + "/" + EncodingUtilities.encodeUrlPathSegment(guid.getValue());
 
         final InputStreamFromOutputStream<String> multipartStream = new InputStreamFromOutputStream<String>() {
             @Override
@@ -462,7 +463,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
             {
                 throw new NullPointerException("obsoletedGuid must not be null in MNode.update");
             }
-            String urlParams = "obsoletedGuid=" + obsoletedGuid.getValue();
+            String urlParams = "obsoletedGuid=" + EncodingUtilities.encodeUrlQuerySegment(obsoletedGuid.getValue());
             rd = sendRequest(token, resource, Constants.PUT, urlParams,
                     "multipart/mixed", multipartStream, null);
         }
