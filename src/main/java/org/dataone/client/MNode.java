@@ -26,7 +26,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.security.MessageDigest;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 import org.jibx.runtime.JiBXException;
 
@@ -46,6 +50,7 @@ import org.dataone.service.mn.MemberNodeCrud;
 import org.dataone.service.mn.MemberNodeReplication;
 import org.dataone.service.types.AuthToken;
 import org.dataone.service.types.Checksum;
+import org.dataone.service.types.ChecksumAlgorithm;
 import org.dataone.service.types.DescribeResponse;
 import org.dataone.service.types.Event;
 import org.dataone.service.types.Identifier;
@@ -297,9 +302,55 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
      */
     public DescribeResponse describe(AuthToken token, Identifier guid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
-            NotImplemented {
-        // TODO: Implement client describe method
-        throw new NotImplemented("1000", "Method not yet implemented.");
+            NotImplemented, InvalidRequest
+    {
+        String resource = Constants.RESOURCE_OBJECTS + "/" + guid.getValue();
+        String params = "";
+        if(token == null)
+        {
+            token = new AuthToken("public");
+        }
+        if(guid == null || guid.getValue().trim().equals(""))
+        {
+            throw new InvalidRequest("1362", "GUID cannot be null.");
+        }
+        
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+        params += "token=" + token.getToken();
+        ResponseData rd = sendRequest(token, resource, Constants.HEAD, params, null, null, null);
+        Map<String, List<String>> m = rd.getHeaderFields();
+        String formatStr = m.get("format").get(0);
+        String last_modifiedStr = m.get("last_modified").get(0);
+        String content_lengthStr = m.get("content_length").get(0);
+        String checksumStr = m.get("checksum").get(0);
+        String checksum_algorithmStr = m.get("checksum_algorithm").get(0);
+        ObjectFormat format = ObjectFormat.convert(formatStr);
+        long content_length = new Long(content_lengthStr).longValue();
+        Date last_modified = null;
+        System.out.println("parsing date");
+        try
+        {
+            last_modified = dateFormat.parse(last_modifiedStr.trim());
+            /*Date d = new Date();
+            dateFormat.setLenient(false);
+            String dStr = dateFormat.format(d);
+            System.out.println("d: " + d);
+            System.out.println("dStr: " + dStr);
+            Date e = dateFormat.parse(dStr);
+            System.out.println("e: " + e);*/
+        }
+        catch(java.text.ParseException pe)
+        {
+            throw new InvalidRequest("1362", "Could not parse the date string " + 
+                    last_modifiedStr + ". It should be in the format 'yyyy-MM-dd'T'hh:mm:ss.SZ': " +
+                    pe.getMessage());
+        }
+        Checksum checksum = new Checksum();
+        checksum.setAlgorithm(ChecksumAlgorithm.convert(checksum_algorithmStr));
+        checksum.setValue(checksumStr);
+        
+        DescribeResponse dr = new DescribeResponse(format, content_length, last_modified, checksum);
+        return dr;
     }
 
     /**

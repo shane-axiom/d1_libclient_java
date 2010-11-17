@@ -35,6 +35,8 @@ import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -350,6 +352,7 @@ public abstract class D1Node {
 			}
 
 			int code = connection.getResponseCode();
+			resData.setHeaderFields(connection.getHeaderFields());
 			resData.setCode(code);
 			if (code != HttpURLConnection.HTTP_OK) {
 				resData.setCode(code);
@@ -540,6 +543,7 @@ public abstract class D1Node {
 		private int code;
 		private InputStream contentStream;
 		private InputStream errorStream;
+		private Map<String, List<String>> headerFields;
 
 		/**
 		 * constructor
@@ -553,6 +557,24 @@ public abstract class D1Node {
 		 */
 		protected int getCode() {
 			return code;
+		}
+		
+		/**
+		 * set the header fields from the response
+		 * @param m
+		 */
+		protected void setHeaderFields(Map<String, List<String>> m)
+		{
+		    this.headerFields = m;
+		}
+		
+		/**
+		 * get the header fields associated with this response
+		 * @return Map<String, List<String>>
+		 */
+		protected Map<String, List<String>> getHeaderFields()
+		{
+		    return this.headerFields;
 		}
 
 		/**
@@ -592,6 +614,8 @@ public abstract class D1Node {
 		protected void setErrorStream(InputStream errorStream) {
 			this.errorStream = errorStream;
 		}
+		
+		
 
 	}
 
