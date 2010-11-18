@@ -23,10 +23,19 @@ package org.dataone.client;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.InputStream;
+
+import org.dataone.client.D1Node.ResponseData;
+import org.dataone.service.Constants;
+import org.dataone.service.exceptions.InvalidRequest;
+import org.dataone.service.types.AuthToken;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ErrorCollector;
+import org.dataone.client.D1Node;
+
+import org.apache.commons.io.IOUtils;
 
 /**
  * Unit tests for the DataONE Java client methods.
@@ -40,6 +49,47 @@ public class D1ClientUnitTest  {
     @Before
     public void setUp() throws Exception 
     {
+    }
+    
+    /**
+     * test that trailing slashes do not affect the response of the node
+     */
+    @Test
+    public void testTrailingSlashes()
+    {
+        try
+        {
+            InputStream is = null;
+            String resource = Constants.RESOURCE_OBJECTS;
+            String params = "";
+
+            if (!params.equals("")) {
+                params += "&";
+            }
+
+            params += "replicaStatus=false";
+            params += "&";
+            params += "start=0";
+            params += "&";
+            params += "count=100";
+            
+            AuthToken token = new AuthToken("public");
+            MNode node = new MNode("http://localhost:8080/knb");
+            //without trailing slash
+            ResponseData rd1 = node.sendRequest(token, resource, 
+                    Constants.GET, params, null, null, null);
+            //with trailing slash
+            ResponseData rd2 = node.sendRequest(token, resource + "/", 
+                    Constants.GET, params, null, null, null);
+            String rd1response = IOUtils.toString(rd1.getContentStream());
+            String rd2response = IOUtils.toString(rd2.getContentStream());
+            assertEquals(rd1response, rd2response);
+        }
+        catch(Exception e)
+        {
+            errorCollector.addError(new Throwable(
+                    "Unexpected Exception in testTrailingSlashes: " + e.getMessage()));
+        }
     }
     
     /**
