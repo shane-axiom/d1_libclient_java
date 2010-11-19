@@ -83,7 +83,7 @@ public class D1ClientUnitTest  {
                     Constants.GET, params, null, null, null);
             String rd1response = IOUtils.toString(rd1.getContentStream());
             String rd2response = IOUtils.toString(rd2.getContentStream());
-            assertEquals(rd1response, rd2response);
+            assertEquals(rd1response.trim(), rd2response.trim());
         }
         catch(Exception e)
         {
