@@ -539,7 +539,7 @@ public abstract class D1Node {
 	/**
 	 * A class to contain the data from a server response
 	 */
-	protected class ResponseData {
+	public class ResponseData {
 		private int code;
 		private InputStream contentStream;
 		private InputStream errorStream;
