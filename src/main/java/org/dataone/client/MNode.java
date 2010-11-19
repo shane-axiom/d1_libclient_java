@@ -292,9 +292,58 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
      */
     public Identifier delete(AuthToken token, Identifier guid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
-            NotImplemented {
-        // TODO: Implement client delete method
-        throw new NotImplemented("1000", "Method not yet implemented.");
+            NotImplemented, InvalidRequest
+    {
+        String resource = Constants.RESOURCE_OBJECTS + "/" + guid.getValue();
+        
+        if(token == null)
+        {
+            token = new AuthToken("public");
+        }
+        if(guid == null || guid.getValue().trim().equals(""))
+        {
+            throw new InvalidRequest("1322", "GUID cannot be null.");
+        }
+        
+        ResponseData rd = sendRequest(token, resource, Constants.DELETE, null, null, null, null);
+        InputStream is = rd.getContentStream();
+        int code = rd.getCode();
+        if (code != HttpURLConnection.HTTP_OK) 
+        {
+            InputStream errorStream = rd.getErrorStream();
+            try {
+                deserializeAndThrowException(errorStream);
+            } catch (InvalidToken e) {
+                throw e;
+            } catch (ServiceFailure e) {
+                throw e;
+            } catch (NotAuthorized e) {
+                throw e;
+            } catch (NotImplemented e) {
+                throw e;
+            }  catch(InvalidRequest ir) {
+                throw ir;
+            } catch (BaseException e) {
+                throw new ServiceFailure("1000",
+                        "Method threw improper exception: " + e.getMessage());
+            }
+            
+
+        } 
+        else 
+        {
+            is = rd.getContentStream();
+            try 
+            {
+                return (Identifier) deserializeServiceType(Identifier.class, is);
+            } 
+            catch (JiBXException e) 
+            {
+                throw new ServiceFailure("500",
+                        "Could not deserialize the ObjectList: " + e.getMessage());
+            }
+        }
+        return null;
     }
 
     /**
