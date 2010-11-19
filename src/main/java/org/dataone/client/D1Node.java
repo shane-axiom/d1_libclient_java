@@ -226,17 +226,6 @@ public abstract class D1Node {
 			throw new InvalidSystemMetadata("1000",
 					"System metadata was null.  Can't create multipart form.");
 		}
-
-		/*String sysmetaString = null;
-		try {
-			ByteArrayInputStream sysmetaStream = serializeSystemMetadata(sysmeta);
-			sysmetaString = IOUtils.toString(sysmetaStream);
-		} catch (Exception e) {
-			throw new ServiceFailure("1000",
-					"Could not serialize the system metadata: "
-							+ e.getMessage());
-		}*/
-
 		Date d = new Date();
 		String boundary = d.getTime() + "";
 
@@ -262,8 +251,8 @@ public abstract class D1Node {
 		
 		out.write("\n".getBytes());
 
-		if (object != null) {
-		    
+		if (object != null) 
+		{    
 			out.write(boundary.getBytes());
 			out.write("Content-Disposition: attachment; filename=object\n\n".getBytes());
 			try {
