@@ -294,7 +294,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
             NotImplemented, InvalidRequest
     {
-        String resource = Constants.RESOURCE_OBJECTS + "/" + guid.getValue();
+        String resource = Constants.RESOURCE_OBJECTS + "/" + EncodingUtilities.encodeUrlPathSegment(guid.getValue());
         
         if(token == null)
         {
@@ -353,7 +353,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
             NotImplemented, InvalidRequest
     {
-        String resource = Constants.RESOURCE_OBJECTS + "/" + guid.getValue();
+        String resource = Constants.RESOURCE_OBJECTS + "/" + EncodingUtilities.encodeUrlPathSegment(guid.getValue());
         String params = "";
         if(token == null)
         {
