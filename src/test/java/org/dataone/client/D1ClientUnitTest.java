@@ -54,43 +54,12 @@ public class D1ClientUnitTest  {
     /**
      * test that trailing slashes do not affect the response of the node
      */
-    @Test
+//    @Test
     public void testTrailingSlashes()
     {
-        try
-        {
-            InputStream is = null;
-            String resource = Constants.RESOURCE_OBJECTS;
-            String params = "";
-
-            if (!params.equals("")) {
-                params += "&";
-            }
-
-            params += "replicaStatus=false";
-            params += "&";
-            params += "start=0";
-            params += "&";
-            params += "count=100";
-            
-            AuthToken token = new AuthToken("public");
-            MNode node = new MNode("http://localhost:8080/knb");
-            //without trailing slash
-            ResponseData rd1 = node.sendRequest(token, resource, 
-                    Constants.GET, params, null, null, null);
-            //with trailing slash
-            ResponseData rd2 = node.sendRequest(token, resource + "/", 
-                    Constants.GET, params, null, null, null);
-            String rd1response = IOUtils.toString(rd1.getContentStream());
-            String rd2response = IOUtils.toString(rd2.getContentStream());
-            assertEquals(rd1response.trim(), rd2response.trim());
-        }
-        catch(Exception e)
-        {
-            errorCollector.addError(new Throwable(
-                    "Unexpected Exception in testTrailingSlashes: " + e.getMessage()));
-        }
+    	// moved to d1_integration product because of dependency on knb instance 
     }
+
     
     /**
      * test the failed creation of a doc
