@@ -210,7 +210,7 @@ public abstract class D1Node {
 	 * @return
 	 */
 	protected String convertDateToGMT(Date d) {
-		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 		dateFormat.setTimeZone(TimeZone.getTimeZone("GMT-0"));
 		String s = dateFormat.format(d);
 		return s;
@@ -249,7 +249,7 @@ public abstract class D1Node {
                             + e.getMessage());
 		}
 		
-		out.write("\n".getBytes());
+		out.write("\n".getBytes());	
 
 		if (object != null) 
 		{    
