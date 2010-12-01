@@ -21,6 +21,10 @@
 package org.dataone.client;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -31,6 +35,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.jibx.runtime.JiBXException;
 
@@ -538,9 +544,10 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
             UnsupportedType, InsufficientResources, InvalidSystemMetadata,
             NotImplemented
     {
+        File outputFile = null;
         String resource = Constants.RESOURCE_OBJECTS + "/" + EncodingUtilities.encodeUrlPathSegment(guid.getValue());
 
-        final InputStreamFromOutputStream<String> multipartStream = new InputStreamFromOutputStream<String>() {
+        /*final InputStreamFromOutputStream<String> multipartStream = new InputStreamFromOutputStream<String>() {
             @Override
             public String produce(final OutputStream dataSink) throws Exception 
             {
@@ -548,7 +555,27 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
                 IOUtils.closeQuietly(dataSink);
                 return "Complete";
             }
-        };
+        };*/
+        
+        InputStream multipartStream;
+        try
+        {
+            Date d = new Date();
+            File tmpDir = new File(Constants.TEMP_DIR);
+            outputFile = new File(tmpDir, "mmp.output." + d.getTime());
+            FileOutputStream dataSink = new FileOutputStream(outputFile);
+
+            createMimeMultipart(dataSink, object, sysmeta);
+
+            multipartStream = new FileInputStream(outputFile);
+        }
+        catch(Exception e)
+        {
+            outputFile.delete();
+            throw new ServiceFailure("1000", 
+                    "Error creating MMP stream in MNode.handleCreateOrUpdate: " + 
+                    e.getMessage());
+        }
         
         ResponseData rd = null;
         
@@ -581,6 +608,10 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
             throw new ServiceFailure("500",
                     "Could not deserialize the returned Identifier: " + e.getMessage());
         }
+        finally
+        {
+            outputFile.delete();
+        }
 
         // Handle any errors that were generated
         int code = rd.getCode();
@@ -594,30 +625,46 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
                     sb.append(new String(b, 0, numread));
                     numread = errorStream.read(b, 0, 1024);
                 }
+                outputFile.delete();
                 deserializeAndThrowException(errorStream);
             } catch (InvalidToken e) {
+                outputFile.delete();
                 throw e;
             } catch (ServiceFailure e) {
+                outputFile.delete();
                 throw e;
             } catch (NotAuthorized e) {
+                outputFile.delete();
                 throw e;
             } catch (IdentifierNotUnique e) {
+                outputFile.delete();
                 throw e;
             } catch (UnsupportedType e) {
+                outputFile.delete();
                 throw e;
             } catch (InsufficientResources e) {
+                outputFile.delete();
                 throw e;
             } catch (InvalidSystemMetadata e) {
+                outputFile.delete();
                 throw e;
             } catch (NotImplemented e) {
+                outputFile.delete();
                 throw e;
             } catch (BaseException e) {
+                outputFile.delete();
                 throw new ServiceFailure("1000",
                         "Method threw improper exception: " + e.getMessage());
             } catch (IOException e) {
-                System.out.println("io exception: " + e.getMessage());
+                outputFile.delete();
+                throw new ServiceFailure("1000",
+                        "IOException in processing: " + e.getMessage());
+            } finally {
+                outputFile.delete();
             }
+            
         } 
+        outputFile.delete();
         return id;
     }
 
