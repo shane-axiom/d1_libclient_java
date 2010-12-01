@@ -340,7 +340,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
             catch (JiBXException e) 
             {
                 throw new ServiceFailure("500",
-                        "Could not deserialize the ObjectList: " + e.getMessage());
+                        "Could not deserialize the returned Identifier: " + e.getMessage());
             }
         }
         return null;
@@ -464,7 +464,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
                 return (Checksum) deserializeServiceType(Checksum.class, is);
             } catch (JiBXException e) {
                 throw new ServiceFailure("500",
-                        "Could not deserialize the ObjectList: " + e.getMessage());
+                        "Could not deserialize the returned Checksum: " + e.getMessage());
             }
         }
         return null;
