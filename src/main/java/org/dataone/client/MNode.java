@@ -556,6 +556,8 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
         {
             rd = sendRequest(token, resource, Constants.POST, null,
                 "multipart/mixed", multipartStream, null);
+            InputStream responseStream = rd.getContentStream();
+            
         }
         else if(action.equals("update"))
         {
@@ -566,6 +568,17 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
             String urlParams = "obsoletedGuid=" + EncodingUtilities.encodeUrlQuerySegment(obsoletedGuid.getValue());
             rd = sendRequest(token, resource, Constants.PUT, urlParams,
                     "multipart/mixed", multipartStream, null);
+        }
+        
+        InputStream is = rd.getContentStream();
+        try 
+        {
+            return (Identifier) deserializeServiceType(Identifier.class, is);
+        } 
+        catch (JiBXException e) 
+        {
+            throw new ServiceFailure("500",
+                    "Could not deserialize the returned Identifier: " + e.getMessage());
         }
 
         // Handle any errors that were generated
@@ -604,8 +617,6 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
                 System.out.println("io exception: " + e.getMessage());
             }
         } 
-
-        return guid;
     }
 
 }
