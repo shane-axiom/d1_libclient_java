@@ -22,9 +22,13 @@ package org.dataone.client;
 
 import com.gc.iotools.stream.is.InputStreamFromOutputStream;
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.util.Date;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -142,7 +146,7 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
 
         String resource = Constants.RESOURCE_OBJECTS + "/" + EncodingUtilities.encodeUrlPathSegment(guid.getValue());
 
-        final InputStreamFromOutputStream<String> multipartStream = new InputStreamFromOutputStream<String>() {
+        /*final InputStreamFromOutputStream<String> multipartStream = new InputStreamFromOutputStream<String>() {
             @Override
             public String produce(java.io.OutputStream dataSink) throws Exception 
             {
@@ -150,7 +154,29 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
                 IOUtils.closeQuietly(dataSink);
                 return "Complete";
             }
-        };
+        };*/
+        
+        File outputFile = null;
+        InputStream multipartStream;
+        try
+        {
+            Date d = new Date();
+            File tmpDir = new File(Constants.TEMP_DIR);
+            outputFile = new File(tmpDir, "mmp.output." + d.getTime());
+            FileOutputStream dataSink = new FileOutputStream(outputFile);
+
+            createMimeMultipart(dataSink, object, sysmeta);
+
+            multipartStream = new FileInputStream(outputFile);
+        }
+        catch(Exception e)
+        {
+            outputFile.delete();
+            throw new ServiceFailure("1000", 
+                    "Error creating MMP stream in MNode.handleCreateOrUpdate: " + 
+                    e.getMessage());
+        }
+
 
         ResponseData rd = sendRequest(token, resource, Constants.POST, null,
                 "multipart/mixed", multipartStream, null);
@@ -167,30 +193,43 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
                     sb.append(new String(b, 0, numread));
                     numread = errorStream.read(b, 0, 1024);
                 }
+                outputFile.delete();
                 deserializeAndThrowException(errorStream);
             } catch (InvalidToken e) {
+                outputFile.delete();
                 throw e;
             } catch (ServiceFailure e) {
+                outputFile.delete();
                 throw e;
             } catch (NotAuthorized e) {
+                outputFile.delete();
                 throw e;
             } catch (IdentifierNotUnique e) {
+                outputFile.delete();
                 throw e;
             } catch (UnsupportedType e) {
+                outputFile.delete();
                 throw e;
             } catch (InsufficientResources e) {
+                outputFile.delete();
                 throw e;
             } catch (InvalidSystemMetadata e) {
+                outputFile.delete();
                 throw e;
             } catch (NotImplemented e) {
+                outputFile.delete();
                 throw e;
             } catch (BaseException e) {
+                outputFile.delete();
                 throw new ServiceFailure("1000",
                         "Method threw improper exception: " + e.getMessage());
             } catch (IOException e) {
-                System.out.println("io exception: " + e.getMessage());
+                outputFile.delete();
+                throw new ServiceFailure("1000",
+                        "IOException in CNode.create: " + e.getMessage());
             }
         } 
+        outputFile.delete();
         return guid;
     }
     @Override
