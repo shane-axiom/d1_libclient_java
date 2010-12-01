@@ -571,9 +571,10 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
         }
         
         InputStream is = rd.getContentStream();
+        Identifier id;
         try 
         {
-            return (Identifier) deserializeServiceType(Identifier.class, is);
+            id = (Identifier)deserializeServiceType(Identifier.class, is);
         } 
         catch (JiBXException e) 
         {
@@ -617,6 +618,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
                 System.out.println("io exception: " + e.getMessage());
             }
         } 
+        return id;
     }
 
 }
