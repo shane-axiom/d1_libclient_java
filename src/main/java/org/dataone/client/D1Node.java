@@ -24,7 +24,10 @@ package org.dataone.client;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -524,6 +527,128 @@ public abstract class D1Node {
 		Object o = (Object) uctx.unmarshalDocument(is, null);
 		return o;
 	}
+	
+	/**
+     * set action="create" for insert and action="update" for update
+     */
+    protected Identifier handleCreateOrUpdate(AuthToken token, Identifier guid,
+        final InputStream object, final SystemMetadata sysmeta, Identifier obsoletedGuid, 
+        String action)
+        throws InvalidToken,ServiceFailure, NotAuthorized, IdentifierNotUnique,
+            UnsupportedType, InsufficientResources, InvalidSystemMetadata,
+            NotImplemented
+    {
+        String resource = Constants.RESOURCE_OBJECTS + "/" + EncodingUtilities.encodeUrlPathSegment(guid.getValue());
+
+        File outputFile = null;
+        InputStream multipartStream;
+        try
+        {
+            Date d = new Date();
+            File tmpDir = new File(Constants.TEMP_DIR);
+            outputFile = new File(tmpDir, "mmp.output." + d.getTime());
+            FileOutputStream dataSink = new FileOutputStream(outputFile);
+            createMimeMultipart(dataSink, object, sysmeta);
+            multipartStream = new FileInputStream(outputFile);
+        }
+        catch(Exception e)
+        {
+            outputFile.delete();
+            throw new ServiceFailure("1000", 
+                    "Error creating MMP stream in MNode.handleCreateOrUpdate: " + 
+                    e.getMessage());
+        }
+        
+        ResponseData rd = null;
+        
+        if(action.equals("create"))
+        {
+            rd = sendRequest(token, resource, Constants.POST, null,
+                "multipart/mixed", multipartStream, null);
+            InputStream responseStream = rd.getContentStream();
+            
+        }
+        else if(action.equals("update"))
+        {
+            if(obsoletedGuid == null)
+            {
+                throw new NullPointerException("obsoletedGuid must not be null in MNode.update");
+            }
+            String urlParams = "obsoletedGuid=" + EncodingUtilities.encodeUrlQuerySegment(obsoletedGuid.getValue());
+            rd = sendRequest(token, resource, Constants.PUT, urlParams,
+                    "multipart/mixed", multipartStream, null);
+        }
+        
+        InputStream is = rd.getContentStream();
+        Identifier id;
+        try 
+        {
+            id = (Identifier)deserializeServiceType(Identifier.class, is);
+        } 
+        catch (JiBXException e) 
+        {
+            throw new ServiceFailure("500",
+                    "Could not deserialize the returned Identifier: " + e.getMessage());
+        }
+        finally
+        {
+            outputFile.delete();
+        }
+
+        // Handle any errors that were generated
+        int code = rd.getCode();
+        if (code != HttpURLConnection.HTTP_OK) {
+            InputStream errorStream = rd.getErrorStream();
+            try {
+                byte[] b = new byte[1024];
+                int numread = errorStream.read(b, 0, 1024);
+                StringBuffer sb = new StringBuffer();
+                while (numread != -1) {
+                    sb.append(new String(b, 0, numread));
+                    numread = errorStream.read(b, 0, 1024);
+                }
+                outputFile.delete();
+                deserializeAndThrowException(errorStream);
+            } catch (InvalidToken e) {
+                outputFile.delete();
+                throw e;
+            } catch (ServiceFailure e) {
+                outputFile.delete();
+                throw e;
+            } catch (NotAuthorized e) {
+                outputFile.delete();
+                throw e;
+            } catch (IdentifierNotUnique e) {
+                outputFile.delete();
+                throw e;
+            } catch (UnsupportedType e) {
+                outputFile.delete();
+                throw e;
+            } catch (InsufficientResources e) {
+                outputFile.delete();
+                throw e;
+            } catch (InvalidSystemMetadata e) {
+                outputFile.delete();
+                throw e;
+            } catch (NotImplemented e) {
+                outputFile.delete();
+                throw e;
+            } catch (BaseException e) {
+                outputFile.delete();
+                throw new ServiceFailure("1000",
+                        "Method threw improper exception: " + e.getMessage());
+            } catch (IOException e) {
+                outputFile.delete();
+                throw new ServiceFailure("1000",
+                        "IOException in processing: " + e.getMessage());
+            } finally {
+                outputFile.delete();
+            }
+            
+        } 
+        outputFile.delete();
+        return id;
+    }
 
 	/**
 	 * A class to contain the data from a server response
@@ -603,9 +728,6 @@ public abstract class D1Node {
 		protected void setErrorStream(InputStream errorStream) {
 			this.errorStream = errorStream;
 		}
-		
-		
-
 	}
 
 }
