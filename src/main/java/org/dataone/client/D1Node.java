@@ -40,6 +40,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.TimeZone;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -223,7 +224,7 @@ public abstract class D1Node {
 	 * create a mime multipart message from object and sysmeta and write it to out
 	 */
 	protected void createMimeMultipart(OutputStream out, InputStream object,
-			SystemMetadata sysmeta) throws Exception
+			SystemMetadata sysmeta) throws IOException, BaseException
 	{
 		if (sysmeta == null) {
 			throw new InvalidSystemMetadata("1000",
@@ -243,9 +244,10 @@ public abstract class D1Node {
 		//write the sys meta
 		try
 		{
-		    IOUtils.copy(serializeSystemMetadata(sysmeta), out);
+		    ByteArrayInputStream bais = serializeSystemMetadata(sysmeta);
+			IOUtils.copy(bais, out);
 		}
-		catch(Exception e)
+		catch(JiBXException e)
 		{
 		    throw new ServiceFailure("1000",
                     "Could not serialize the system metadata to multipart: "
@@ -276,6 +278,7 @@ public abstract class D1Node {
 	/**
 	 * send a request to the resource and get the response
 	 */
+	
 	protected ResponseData sendRequest(AuthToken token, String resource,
 			String method, String urlParamaters, String contentType,
 			InputStream dataStream, String acceptHeader) throws ServiceFailure {
@@ -337,34 +340,40 @@ public abstract class D1Node {
 				content = connection.getInputStream();
 				resData.setContentStream(content);
 			} catch (IOException ioe) {
-				System.out
-						.println("tried to get content and failed.  getting error stream instead");
-				content = connection.getErrorStream();
-				// resData.setContentStream(content);
+				// the connection error stream contains the error xml from metacat
+				// make note that an error stream is being returned instead.
+				System.out.println("tried to get content and failed.  Receiving an error stream instead.");
+				//+
+					//	" connection error stream: " + IOUtils.toString(connection.getErrorStream()));
+//				resData.setCode(HttpURLConnection.HTTP_INTERNAL_ERROR);				
+//				resData.setErrorStream(connection.getErrorStream());
+
+				// going to map the exception's error message to the response's error stream
+//				ByteArrayInputStream inputStream = new ByteArrayInputStream(ioe.getMessage().getBytes());					
+//				resData.setErrorStream(inputStream);
 			}
 
 			int code = connection.getResponseCode();
-			resData.setHeaderFields(connection.getHeaderFields());
 			resData.setCode(code);
-			if (code != HttpURLConnection.HTTP_OK) {
-				resData.setCode(code);
+			resData.setHeaderFields(connection.getHeaderFields());
+			if (code != HttpURLConnection.HTTP_OK) 
 				resData.setErrorStream(connection.getErrorStream());
-			}
+			
 		} catch (MalformedURLException e) {
 			throw new ServiceFailure("1000", restURL + " " + e.getMessage());
 		} catch (ProtocolException e) {
 			throw new ServiceFailure("1000", restURL + " " + e.getMessage());
 		} catch (FileNotFoundException e) {
-			resData.setCode(404);
+			resData.setCode(HttpURLConnection.HTTP_NOT_FOUND);
 			resData.setErrorStream(connection.getErrorStream());
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw new ServiceFailure("1000", restURL + " " + e.getMessage());
 		}
-
 		return resData;
 	}
 
+	
     protected void deserializeAndThrowException(InputStream errorStream)
 			throws NotFound, InvalidToken, ServiceFailure, NotAuthorized,
 			NotFound, IdentifierNotUnique, UnsupportedType,
@@ -532,8 +541,7 @@ public abstract class D1Node {
      * set action="create" for insert and action="update" for update
      */
     protected Identifier handleCreateOrUpdate(AuthToken token, Identifier guid,
-        final InputStream object, final SystemMetadata sysmeta, Identifier obsoletedGuid, 
-        String action)
+        final InputStream object, final SystemMetadata sysmeta, Identifier obsoletedGuid, String action)
         throws InvalidToken,ServiceFailure, NotAuthorized, IdentifierNotUnique,
             UnsupportedType, InsufficientResources, InvalidSystemMetadata,
             NotImplemented
@@ -556,7 +564,7 @@ public abstract class D1Node {
             outputFile.delete();
             throw new ServiceFailure("1000", 
                     "Error creating MMP stream in MNode.handleCreateOrUpdate: " + 
-                    e.getMessage());
+                    e.getMessage() + " " + e.getStackTrace());
         }
         
         ResponseData rd = null;
@@ -565,7 +573,7 @@ public abstract class D1Node {
         {
             rd = sendRequest(token, resource, Constants.POST, null,
                 "multipart/mixed", multipartStream, null);
-            InputStream responseStream = rd.getContentStream();
+            //InputStream responseStream = rd.getContentStream();
             
         }
         else if(action.equals("update"))
@@ -578,24 +586,8 @@ public abstract class D1Node {
             rd = sendRequest(token, resource, Constants.PUT, urlParams,
                     "multipart/mixed", multipartStream, null);
         }
-        
-        InputStream is = rd.getContentStream();
-        Identifier id;
-        try 
-        {
-            id = (Identifier)deserializeServiceType(Identifier.class, is);
-        } 
-        catch (JiBXException e) 
-        {
-            throw new ServiceFailure("500",
-                    "Could not deserialize the returned Identifier: " + e.getMessage());
-        }
-        finally
-        {
-            outputFile.delete();
-        }
-
-        // Handle any errors that were generated
+ 
+        // First handle any errors that were generated
         int code = rd.getCode();
         if (code != HttpURLConnection.HTTP_OK) {
             InputStream errorStream = rd.getErrorStream();
@@ -646,6 +638,30 @@ public abstract class D1Node {
             }
             
         } 
+        
+       
+        InputStream is = rd.getContentStream();
+        Identifier id = null;
+       	try
+       	{
+       		if (is != null)
+         		id = (Identifier)deserializeServiceType(Identifier.class, is);
+       		else
+       			throw new IOException("Unexpected empty inputStream for the request");
+       	}
+       	catch (JiBXException e) {
+       		throw new ServiceFailure("500",
+       				"Could not deserialize the returned Identifier: " + e.getMessage());
+       	}
+       	catch (IOException e) {
+       		throw new ServiceFailure("1000",
+                        "IOException in processing: " + e.getMessage());
+       	}
+       	finally {
+       		outputFile.delete();
+       	}
+        
+        
         outputFile.delete();
         return id;
     }
