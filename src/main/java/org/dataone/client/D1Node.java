@@ -595,31 +595,22 @@ public abstract class D1Node {
                 outputFile.delete();
                 deserializeAndThrowException(errorStream);
             } catch (InvalidToken e) {
-                outputFile.delete();
                 throw e;
             } catch (ServiceFailure e) {
-                outputFile.delete();
                 throw e;
             } catch (NotAuthorized e) {
-                outputFile.delete();
                 throw e;
             } catch (IdentifierNotUnique e) {
-                outputFile.delete();
                 throw e;
             } catch (UnsupportedType e) {
-                outputFile.delete();
                 throw e;
             } catch (InsufficientResources e) {
-                outputFile.delete();
                 throw e;
             } catch (InvalidSystemMetadata e) {
-                outputFile.delete();
                 throw e;
             } catch (NotImplemented e) {
-                outputFile.delete();
                 throw e;
             } catch (BaseException e) {
-                outputFile.delete();
                 throw new ServiceFailure("1000",
                         "Method threw improper exception: " + e.getMessage());
             } finally {
