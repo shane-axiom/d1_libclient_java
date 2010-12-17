@@ -592,13 +592,6 @@ public abstract class D1Node {
         if (code != HttpURLConnection.HTTP_OK) {
             InputStream errorStream = rd.getErrorStream();
             try {
-                byte[] b = new byte[1024];
-                int numread = errorStream.read(b, 0, 1024);
-                StringBuffer sb = new StringBuffer();
-                while (numread != -1) {
-                    sb.append(new String(b, 0, numread));
-                    numread = errorStream.read(b, 0, 1024);
-                }
                 outputFile.delete();
                 deserializeAndThrowException(errorStream);
             } catch (InvalidToken e) {
@@ -629,17 +622,12 @@ public abstract class D1Node {
                 outputFile.delete();
                 throw new ServiceFailure("1000",
                         "Method threw improper exception: " + e.getMessage());
-            } catch (IOException e) {
-                outputFile.delete();
-                throw new ServiceFailure("1000",
-                        "IOException in processing: " + e.getMessage());
             } finally {
                 outputFile.delete();
-            }
-            
+            }     
         } 
         
-       
+        // Now only handling non-http-error cases
         InputStream is = rd.getContentStream();
         Identifier id = null;
        	try
@@ -660,8 +648,7 @@ public abstract class D1Node {
        	finally {
        		outputFile.delete();
        	}
-        
-        
+       	
         outputFile.delete();
         return id;
     }
