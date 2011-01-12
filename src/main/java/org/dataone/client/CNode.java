@@ -34,6 +34,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.apache.commons.io.IOUtils;
+import org.dataone.client.D1Node.ResponseData;
 import org.dataone.service.cn.CoordinatingNodeAuthorization;
 
 
@@ -55,6 +56,7 @@ import org.dataone.service.types.AuthToken;
 import org.dataone.service.types.Identifier;
 import org.dataone.service.types.IdentifierFormat;
 import org.dataone.service.types.NodeReference;
+import org.dataone.service.types.ObjectList;
 import org.dataone.service.types.ObjectLocationList;
 import org.dataone.service.types.Principal;
 import org.dataone.service.types.SystemMetadata;
@@ -295,7 +297,7 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
         throw new UnsupportedOperationException("Not supported yet.");
     }
     /**
-     * deserialize an InputStream to a SystemMetadata object
+     * deserialize an InputStream to an ObjectLocationList object
      * @param is
      * @return
      * @throws JiBXException
