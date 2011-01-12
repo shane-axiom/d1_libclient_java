@@ -22,6 +22,7 @@
 
 package org.dataone.client;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -62,6 +63,7 @@ import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.exceptions.UnsupportedType;
 import org.dataone.service.types.AuthToken;
 import org.dataone.service.types.Identifier;
+import org.dataone.service.types.ObjectFormat;
 import org.dataone.service.types.ObjectList;
 import org.dataone.service.types.SystemMetadata;
 import org.dataone.service.Constants;
@@ -126,6 +128,58 @@ public abstract class D1Node {
         }
         this.nodeBaseServiceUrl = nodeBaseServiceUrl;
     }
+    
+    /**
+     *   listObjects is the simple implementation of /<service>/object (no query parameters, or additional path segments)
+     *   use this when no parameters  being used
+     *   
+     * @param token
+     * @return
+     * @throws NotAuthorized
+     * @throws InvalidRequest
+     * @throws NotImplemented
+     * @throws ServiceFailure
+     * @throws InvalidToken
+     */
+    public ObjectList listObjects()
+    throws NotAuthorized, InvalidRequest, NotImplemented, ServiceFailure, InvalidToken {
+        InputStream is = null;
+        String resource = Constants.RESOURCE_OBJECTS;
+
+        ResponseData rd = sendRequest(null, resource, Constants.GET, null, null, null, null);
+        int code = rd.getCode();
+        if (code != HttpURLConnection.HTTP_OK) {
+            InputStream errorStream = rd.getErrorStream();
+            try {
+                deserializeAndThrowException(errorStream);
+            } catch (InvalidToken e) {
+                throw e;
+            } catch (ServiceFailure e) {
+                throw e;
+            } catch (NotAuthorized e) {
+                throw e;
+            } catch (NotImplemented e) {
+                throw e;
+            } catch (BaseException e) {
+                throw new ServiceFailure("1000",
+                        "Method threw improper exception: " + e.getMessage());
+            }
+        } else {
+            is = rd.getContentStream();
+        }
+        
+        try {
+            return deserializeObjectList(is);
+        } catch (JiBXException e) {
+            throw new ServiceFailure("500",
+                    "Could not deserialize the ObjectList: " + e.getMessage());
+        }
+    }
+    
+//    public ObjectList listObjects()
+//    throws NotAuthorized, InvalidRequest, NotImplemented, ServiceFailure, InvalidToken {
+//    	return listObjects(null);
+//    }
     
     /**
      * Get the resource with the specified guid.  Used by both the CNode and 
@@ -280,22 +334,27 @@ public abstract class D1Node {
 	 */
 	
 	protected ResponseData sendRequest(AuthToken token, String resource,
-			String method, String urlParamaters, String contentType,
+			String method, String urlParameters, String contentType,
 			InputStream dataStream, String acceptHeader) throws ServiceFailure {
 
 		ResponseData resData = new ResponseData();
 		HttpURLConnection connection = null;
 
 		String restURL = nodeBaseServiceUrl + resource;
-
-		if (urlParamaters != null) {
-			if (restURL.indexOf("?") == -1)
-				restURL += "?";
-			restURL += urlParamaters;
-			if (restURL.indexOf(" ") != -1) {
-				restURL = restURL.replaceAll("\\s", "%20");
+		
+		// normalize empty string and all-whitespace strings to the null case
+		if (urlParameters != null) 
+		{
+			if (urlParameters.trim().length() == 0)
+				urlParameters = null;
+			else {
+				if (restURL.indexOf("?") == -1)
+					restURL += "?";
+				restURL += urlParameters;
 			}
 		}
+		// convert all internal whitespace to escaped space
+		restURL = restURL.replaceAll("\\s", "%20");
 
 		if (token != null) {
 			if (restURL.indexOf("?") == -1) {
@@ -383,9 +442,12 @@ public abstract class D1Node {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		Document doc;
 
+		BufferedInputStream bErrorStream = new BufferedInputStream(errorStream);
+		bErrorStream.mark(100000);  // good for resetting up to 100000 bytes
+		String errorString = null;		
 		try {
 			DocumentBuilder db = dbf.newDocumentBuilder();
-			doc = db.parse(errorStream);
+			doc = db.parse(bErrorStream);
 			Element root = doc.getDocumentElement();
 			root.normalize();
 			int code = getIntAttribute(root, "errorCode");
@@ -412,14 +474,36 @@ public abstract class D1Node {
 				throw new ServiceFailure(detailCode, description);
 			}
 		} catch (SAXException e) {
+			// probably because errorStream did not contain xml
+			try {
+				bErrorStream.reset();
+				errorString = IOUtils.toString(bErrorStream);
+			} catch (IOException e1) {
+				errorString = "errorStream could not be reset";
+			}
             throw new ServiceFailure("1000",
-            "Service failed, but error message not parsed correctly: " + e.getMessage());
+            "Service failed, but error message not parsed correctly: " + e.getMessage() 
+            + "errorStream = " + errorString);
 		} catch (IOException e) {
+			try {
+				bErrorStream.reset();
+				errorString = IOUtils.toString(bErrorStream);
+			} catch (IOException e1) {
+				errorString = "errorStream could not be reset";
+			}
             throw new ServiceFailure("1000",
-                    "Service failed, but error message not parsed correctly: " + e.getMessage());
+                    "Service failed, but error message not parsed correctly: " + e.getMessage() 
+                    + "errorStream = " + errorString);
 		} catch (ParserConfigurationException e) {
+			try {
+				bErrorStream.reset();
+				errorString = IOUtils.toString(bErrorStream);
+			} catch (IOException e1) {
+				errorString = "errorStream could not be reset";
+			}
             throw new ServiceFailure("1000",
-                    "Service failed, but error message not parsed correctly: " + e.getMessage());
+                    "Service failed, but error message not parsed correctly: " + e.getMessage() 
+                    + "errorStream = " + errorString);
 		}
 	}
 
