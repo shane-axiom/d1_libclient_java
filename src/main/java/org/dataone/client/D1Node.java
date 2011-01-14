@@ -143,31 +143,17 @@ public abstract class D1Node {
      */
     public ObjectList listObjects()
     throws NotAuthorized, InvalidRequest, NotImplemented, ServiceFailure, InvalidToken {
-        InputStream is = null;
+     
         String resource = Constants.RESOURCE_OBJECTS;
-
-        ResponseData rd = sendRequest(null, resource, Constants.GET, null, null, null, null);
-        int code = rd.getCode();
-        if (code != HttpURLConnection.HTTP_OK) {
-            InputStream errorStream = rd.getErrorStream();
-            try {
-                deserializeAndThrowException(errorStream);
-            } catch (InvalidToken e) {
-                throw e;
-            } catch (ServiceFailure e) {
-                throw e;
-            } catch (NotAuthorized e) {
-                throw e;
-            } catch (NotImplemented e) {
-                throw e;
-            } catch (BaseException e) {
-                throw new ServiceFailure("1000",
-                        "Method threw improper exception: " + e.getMessage());
-            }
-        } else {
-            is = rd.getContentStream();
-        }
-        
+        InputStream is;
+		try {
+			is = handleHttpGet(null,resource);
+		} catch (NotFound eNF) {
+			// convert notfound error to service failure
+			// because it is not valid in the listObjects case
+			throw new ServiceFailure("1000", "Method threw unexpected exception: " + eNF.getMessage());
+		}
+         
         try {
             return deserializeObjectList(is);
         } catch (JiBXException e) {
@@ -189,32 +175,8 @@ public abstract class D1Node {
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
             NotImplemented {
         String resource = Constants.RESOURCE_OBJECTS + "/" + EncodingUtilities.encodeUrlPathSegment(guid.getValue());
-        InputStream is = null;
-        ResponseData rd = sendRequest(token, resource, Constants.GET, null, null, null, null);
-        int code = rd.getCode();
-        if (code != HttpURLConnection.HTTP_OK) {
-            InputStream errorStream = rd.getErrorStream();
-            try {
-                deserializeAndThrowException(errorStream);
-            } catch (InvalidToken e) {
-                throw e;
-            } catch (ServiceFailure e) {
-                throw e;
-            } catch (NotAuthorized e) {
-                throw e;
-            } catch (NotFound e) {
-                throw e;
-            } catch (NotImplemented e) {
-                throw e;
-            } catch (BaseException e) {
-                throw new ServiceFailure("1000",
-                        "Method threw improper exception: " + e.getMessage());
-            }
-        } else {
-            is = rd.getContentStream();
-        }
-
-        return is;
+ 
+        return handleHttpGet(token,resource);
     }
     
     /**
@@ -222,42 +184,17 @@ public abstract class D1Node {
      * by both the CNode and MNode implementations.
      */
     public SystemMetadata getSystemMetadata(AuthToken token, Identifier guid)
-            throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
-            InvalidRequest, NotImplemented {
+     throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
+     InvalidRequest, NotImplemented {
 
         String resource = Constants.RESOURCE_META + "/" + EncodingUtilities.encodeUrlPathSegment(guid.getValue());
-        InputStream is = null;
-        ResponseData rd = sendRequest(token, resource, Constants.GET, null, null, null, null);
-        int code = rd.getCode();
-        if (code != HttpURLConnection.HTTP_OK) {
-            InputStream errorStream = rd.getErrorStream();
-            try {
-                deserializeAndThrowException(errorStream);
-            } catch (InvalidToken e) {
-                throw e;
-            } catch (ServiceFailure e) {
-                throw e;
-            } catch (NotAuthorized e) {
-                throw e;
-            } catch (NotFound e) {
-                throw e;
-            } catch (NotImplemented e) {
-                throw e;
-            } catch (BaseException e) {
-                throw new ServiceFailure("1000",
-                        "Method threw improper exception: " + e.getMessage());
-            }
-        } else {
-            is = rd.getContentStream();
-        }
-
-        // TODO: this block should be inside the above else conditional, right?
+        InputStream is = handleHttpGet(token,resource);
+        
         try {
             return deserializeSystemMetadata(is);
         } catch (Exception e) {
             throw new ServiceFailure("1090",
-                    "Could not deserialize the systemMetadata: "
-                            + e.getMessage());
+                    "Could not deserialize the systemMetadata: " + e.getMessage());
         }
     }
 	
@@ -432,8 +369,25 @@ public abstract class D1Node {
 		return resData;
 	}
 
-	
-    protected void deserializeAndThrowException(InputStream errorStream)
+	/**
+	 *  converts the serialized errorStream to the appropriate Java Exception
+	 *  errorStream is not guaranteed to hold xml
+	 *  
+	 * @param errorStream
+	 * @throws NotFound
+	 * @throws InvalidToken
+	 * @throws ServiceFailure
+	 * @throws NotAuthorized
+	 * @throws NotFound
+	 * @throws IdentifierNotUnique
+	 * @throws UnsupportedType
+	 * @throws InsufficientResources
+	 * @throws InvalidSystemMetadata
+	 * @throws NotImplemented
+	 * @throws InvalidCredentials
+	 * @throws InvalidRequest
+	 */
+    protected void deserializeAndThrowException(int code, InputStream errorStream)
 			throws NotFound, InvalidToken, ServiceFailure, NotAuthorized,
 			NotFound, IdentifierNotUnique, UnsupportedType,
 			InsufficientResources, InvalidSystemMetadata, NotImplemented,
@@ -443,70 +397,70 @@ public abstract class D1Node {
 		Document doc;
 
 		BufferedInputStream bErrorStream = new BufferedInputStream(errorStream);
-		bErrorStream.mark(100000);  // good for resetting up to 100000 bytes
-		String errorString = null;		
+		bErrorStream.mark(100000);  // good for resetting up to 100000 bytes	
+		
+		String detailCode = null;
+		String description = null;
 		try {
 			DocumentBuilder db = dbf.newDocumentBuilder();
 			doc = db.parse(bErrorStream);
 			Element root = doc.getDocumentElement();
 			root.normalize();
-			int code = getIntAttribute(root, "errorCode");
-			String detailCode = root.getAttribute("detailCode");
-			String description = getTextValue(root, "description");
-			switch (code) {
-			case 400:
-			    // TODO: change this to a startsWith since error codes can have text after the number.
-				if (detailCode.equals("1180")) {
-					throw new InvalidSystemMetadata("1180", description);
-				} else {
-					throw new InvalidRequest(detailCode, description);
-				}
-			case 401:
-				throw new InvalidCredentials(detailCode, description);
-			case 404:
-				throw new NotFound(detailCode, description);
-			case 409:
-				throw new IdentifierNotUnique(detailCode, description);
-			case 500:
-				throw new ServiceFailure(detailCode, description);
-				// TODO: Handle other exception codes properly
-			default:
-				throw new ServiceFailure(detailCode, description);
+			try {
+				code = getIntAttribute(root, "errorCode");
+			} catch (NumberFormatException nfe){
+				System.out.println("  errorCode unexpectedly not able to parse to int");
 			}
+			detailCode = root.getAttribute("detailCode");
+			description = getTextValue(root, "description");
+			
 		} catch (SAXException e) {
-			// probably because errorStream did not contain xml
-			try {
-				bErrorStream.reset();
-				errorString = IOUtils.toString(bErrorStream);
-			} catch (IOException e1) {
-				errorString = "errorStream could not be reset";
-			}
-            throw new ServiceFailure("1000",
-            "Service failed, but error message not parsed correctly: " + e.getMessage() 
-            + "errorStream = " + errorString);
+			description = deserializeNonXMLErrorStream(bErrorStream,e);
 		} catch (IOException e) {
-			try {
-				bErrorStream.reset();
-				errorString = IOUtils.toString(bErrorStream);
-			} catch (IOException e1) {
-				errorString = "errorStream could not be reset";
-			}
-            throw new ServiceFailure("1000",
-                    "Service failed, but error message not parsed correctly: " + e.getMessage() 
-                    + "errorStream = " + errorString);
+			description = deserializeNonXMLErrorStream(bErrorStream,e);
 		} catch (ParserConfigurationException e) {
-			try {
-				bErrorStream.reset();
-				errorString = IOUtils.toString(bErrorStream);
-			} catch (IOException e1) {
-				errorString = "errorStream could not be reset";
+			description = deserializeNonXMLErrorStream(bErrorStream,e);
+		}
+		
+		switch (code) {
+		case 400:
+		    // TODO: change this to a startsWith since error codes can have text after the number.
+			if (detailCode.equals("1180")) {
+				throw new InvalidSystemMetadata("1180", description);
+			} else {
+				throw new InvalidRequest(detailCode, description);
 			}
-            throw new ServiceFailure("1000",
-                    "Service failed, but error message not parsed correctly: " + e.getMessage() 
-                    + "errorStream = " + errorString);
+		case 401:
+			throw new InvalidCredentials(detailCode, description);
+		case 404:
+			throw new NotFound(detailCode, description);
+		case 409:
+			throw new IdentifierNotUnique(detailCode, description);
+		case 500:
+			throw new ServiceFailure(detailCode, description);
+			// TODO: Handle other exception codes properly
+		default:
+			throw new ServiceFailure(detailCode, description);
 		}
 	}
 
+    /*
+     * helper method for deserializeAndThrowException.  Used for problems parsing errorStream as XML
+     */
+    private String deserializeNonXMLErrorStream(BufferedInputStream errorStream, Exception e) 
+    {
+    	String errorString = null;
+    	try {
+    		errorStream.reset();
+    		errorString = IOUtils.toString(errorStream);
+    	} catch (IOException e1) {
+    		errorString = "errorStream could not be reset/reread";
+    	}
+    	return errorString;
+    }
+    
+    
+    
 	/**
 	 * Take a xml element and the tag name, return the text content of the child
 	 * element.
@@ -528,9 +482,11 @@ public abstract class D1Node {
 	 * @param attName
 	 * @return
 	 */
-	protected int getIntAttribute(Element e, String attName) {
+	protected int getIntAttribute(Element e, String attName)
+	throws NumberFormatException {
 		String attText = e.getAttribute(attName);
-		return Integer.parseInt(attText);
+		int x = Integer.parseInt(attText);
+		return x;
 	}
 
 	/**
@@ -620,6 +576,53 @@ public abstract class D1Node {
 		Object o = (Object) uctx.unmarshalDocument(is, null);
 		return o;
 	}
+
+	/**
+	 *  internal service method to standardize exception handling for http GET calls
+	 *  Needs to handle html error returns as well as xml
+	 *  
+	 * @param token
+	 * @param resource
+	 * @return
+	 * @throws InvalidToken
+	 * @throws ServiceFailure
+	 * @throws NotAuthorized
+	 * @throws NotFound
+	 * @throws NotImplemented
+	 */
+	protected InputStream handleHttpGet(AuthToken token, String resource)
+	 throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
+	{
+     InputStream is = null;
+     ResponseData rd = sendRequest(token, resource, Constants.GET, null, null, null, null);
+     
+     // First handle any errors that were generated	
+     int code = rd.getCode();
+     if (code != HttpURLConnection.HTTP_OK) {
+         InputStream errorStream = rd.getErrorStream();
+         try {
+             deserializeAndThrowException(code,errorStream);
+         } catch (InvalidToken e) {
+             throw e;
+         } catch (ServiceFailure e) {
+             throw e;
+         } catch (NotAuthorized e) {
+             throw e;
+         } catch (NotFound e) {
+             throw e;
+         } catch (NotImplemented e) {
+             throw e;
+         } catch (BaseException e) {
+             throw new ServiceFailure("1000",
+                     "Method threw improper exception: " + e.getMessage());
+         }
+     } else {
+    	// Non-http-error cases
+         is = rd.getContentStream();
+     }
+     return is;
+	}
+	
 	
 	/**
      * set action="create" for insert and action="update" for update
@@ -677,7 +680,7 @@ public abstract class D1Node {
             InputStream errorStream = rd.getErrorStream();
             try {
                 outputFile.delete();
-                deserializeAndThrowException(errorStream);
+                deserializeAndThrowException(code,errorStream);
             } catch (InvalidToken e) {
                 throw e;
             } catch (ServiceFailure e) {
