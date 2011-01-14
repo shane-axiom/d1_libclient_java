@@ -110,7 +110,7 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
         if (code != HttpURLConnection.HTTP_OK) {
             InputStream errorStream = rd.getErrorStream();
             try {
-                deserializeAndThrowException(errorStream);
+                deserializeAndThrowException(code, errorStream);
             } catch (InvalidToken e) {
                 throw e;
             } catch (ServiceFailure e) {

@@ -229,7 +229,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
         if (code != HttpURLConnection.HTTP_OK) {
             InputStream errorStream = rd.getErrorStream();
             try {
-                deserializeAndThrowException(errorStream);
+                deserializeAndThrowException(code,errorStream);
             } catch (InvalidToken e) {
                 throw e;
             } catch (ServiceFailure e) {
@@ -319,7 +319,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
         {
             InputStream errorStream = rd.getErrorStream();
             try {
-                deserializeAndThrowException(errorStream);
+                deserializeAndThrowException(code,errorStream);
             } catch (InvalidToken e) {
                 throw e;
             } catch (ServiceFailure e) {
@@ -451,7 +451,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
         if (code != HttpURLConnection.HTTP_OK) {
             InputStream errorStream = rd.getErrorStream();
             try {
-                deserializeAndThrowException(errorStream);
+                deserializeAndThrowException(code,errorStream);
             } catch (InvalidToken e) {
                 throw e;
             } catch (ServiceFailure e) {
@@ -509,7 +509,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
         if (code != HttpURLConnection.HTTP_OK) {
             InputStream errorStream = rd.getErrorStream();
             try {
-                deserializeAndThrowException(errorStream);
+                deserializeAndThrowException(code, errorStream);
             } catch (InvalidToken e) {
                 throw e;
             } catch (ServiceFailure e) {
