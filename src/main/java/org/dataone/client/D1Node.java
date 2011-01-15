@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.TimeZone;
+import java.util.Vector;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -143,23 +144,24 @@ public abstract class D1Node {
      */
     public ObjectList listObjects()
     throws NotAuthorized, InvalidRequest, NotImplemented, ServiceFailure, InvalidToken {
-     
-        String resource = Constants.RESOURCE_OBJECTS;
-        InputStream is;
-		try {
-			is = handleHttpGet(null,resource);
-		} catch (NotFound eNF) {
-			// convert notfound error to service failure
-			// because it is not valid in the listObjects case
-			throw new ServiceFailure("1000", "Method threw unexpected exception: " + eNF.getMessage());
-		}
-         
-        try {
-            return deserializeObjectList(is);
-        } catch (JiBXException e) {
-            throw new ServiceFailure("500",
-                    "Could not deserialize the ObjectList: " + e.getMessage());
-        }
+  
+    	return listObjects(null,null,null,null,null,null,null);
+        
+//        InputStream is;
+//		try {
+//			is = handleHttpGet(null,resource);
+//		} catch (NotFound eNF) {
+//			// convert notfound error to service failure
+//			// because it is not valid in the listObjects case
+//			throw new ServiceFailure("1000", "Method threw unexpected exception: " + eNF.getMessage());
+//		}
+//         
+//        try {
+//            return deserializeObjectList(is);
+//        } catch (JiBXException e) {
+//            throw new ServiceFailure("500",
+//                    "Could not deserialize the ObjectList: " + e.getMessage());
+//        }
     }
     
 //    public ObjectList listObjects()
@@ -197,7 +199,54 @@ public abstract class D1Node {
                     "Could not deserialize the systemMetadata: " + e.getMessage());
         }
     }
-	
+
+    
+    public ObjectList listObjects(AuthToken token, Date startTime,
+            Date endTime, ObjectFormat objectFormat, Boolean replicaStatus,
+            Integer start, Integer count) throws NotAuthorized, InvalidRequest,
+            NotImplemented, ServiceFailure, InvalidToken {
+        
+    	String resource = Constants.RESOURCE_OBJECTS;
+
+        if (endTime != null && startTime != null && !endTime.after(startTime))
+            throw new InvalidRequest("1000", "startTime must be after stopTime in NMode.listObjects");
+
+        // TODO: Check that the format is valid, throw InvalidRequest if not
+        String params = "";
+        if (startTime != null)
+            params += "startTime=" + convertDateToGMT(startTime) + "&";
+        if (endTime != null) 
+        	params += "endTime=" + convertDateToGMT(endTime) + "&";
+        if (objectFormat != null)
+        	params += "objectFormat=" + objectFormat + "&";
+        if (replicaStatus != null)   
+        	params += "replicaStatus=" + replicaStatus + "&";
+        if (start != null)
+        	params += "start=" + start + "&";
+        if (count != null)
+        	params += "count=" + count + "&";
+
+        // clean up param string
+        if (params.endsWith("&"))
+        	params = params.substring(0, params.length()-1);
+                   
+        InputStream is;
+		try {
+			is = handleHttpGet(token,resource,params);
+		} catch (NotFound eNF) {
+			// convert notfound error to service failure
+			// because it is not valid in the listObjects case
+			throw new ServiceFailure("1000", "Method threw unexpected exception: " + eNF.getMessage());
+		}
+         
+        try {
+            return deserializeObjectList(is);
+        } catch (JiBXException e) {
+            throw new ServiceFailure("500",
+                    "Could not deserialize the ObjectList: " + e.getMessage());
+        }
+    }
+    
 	/**
 	 * convert a date to GMT
 	 * 
@@ -371,9 +420,11 @@ public abstract class D1Node {
 
 	/**
 	 *  converts the serialized errorStream to the appropriate Java Exception
-	 *  errorStream is not guaranteed to hold xml
+	 *  errorStream is not guaranteed to hold xml.  Code is passed in to preserve
+	 *  http code in the case of non-dataone errors.
 	 *  
 	 * @param errorStream
+	 * @param httpCode
 	 * @throws NotFound
 	 * @throws InvalidToken
 	 * @throws ServiceFailure
@@ -387,7 +438,7 @@ public abstract class D1Node {
 	 * @throws InvalidCredentials
 	 * @throws InvalidRequest
 	 */
-    protected void deserializeAndThrowException(int code, InputStream errorStream)
+    protected void deserializeAndThrowException(int httpCode, InputStream errorStream)
 			throws NotFound, InvalidToken, ServiceFailure, NotAuthorized,
 			NotFound, IdentifierNotUnique, UnsupportedType,
 			InsufficientResources, InvalidSystemMetadata, NotImplemented,
@@ -407,7 +458,7 @@ public abstract class D1Node {
 			Element root = doc.getDocumentElement();
 			root.normalize();
 			try {
-				code = getIntAttribute(root, "errorCode");
+				httpCode = getIntAttribute(root, "errorCode");
 			} catch (NumberFormatException nfe){
 				System.out.println("  errorCode unexpectedly not able to parse to int");
 			}
@@ -422,7 +473,7 @@ public abstract class D1Node {
 			description = deserializeNonXMLErrorStream(bErrorStream,e);
 		}
 		
-		switch (code) {
+		switch (httpCode) {
 		case 400:
 		    // TODO: change this to a startsWith since error codes can have text after the number.
 			if (detailCode.equals("1180")) {
@@ -577,6 +628,13 @@ public abstract class D1Node {
 		return o;
 	}
 
+	protected InputStream handleHttpGet(AuthToken token, String resource)
+	 throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented	
+	 {
+		return handleHttpGet(token,resource, null);
+	 }
+
+	
 	/**
 	 *  internal service method to standardize exception handling for http GET calls
 	 *  Needs to handle html error returns as well as xml
@@ -590,11 +648,11 @@ public abstract class D1Node {
 	 * @throws NotFound
 	 * @throws NotImplemented
 	 */
-	protected InputStream handleHttpGet(AuthToken token, String resource)
+	protected InputStream handleHttpGet(AuthToken token, String resource, String param)
 	 throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
 	{
      InputStream is = null;
-     ResponseData rd = sendRequest(token, resource, Constants.GET, null, null, null, null);
+     ResponseData rd = sendRequest(token, resource, Constants.GET, param, null, null, null);
      
      // First handle any errors that were generated	
      int code = rd.getCode();
