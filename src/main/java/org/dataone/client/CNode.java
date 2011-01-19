@@ -56,6 +56,7 @@ import org.dataone.service.types.AuthToken;
 import org.dataone.service.types.Identifier;
 import org.dataone.service.types.IdentifierFormat;
 import org.dataone.service.types.NodeReference;
+import org.dataone.service.types.ObjectFormat;
 import org.dataone.service.types.ObjectList;
 import org.dataone.service.types.ObjectLocationList;
 import org.dataone.service.types.Principal;
@@ -84,6 +85,45 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
         super(nodeBaseServiceUrl);
     }
 
+    public ObjectList search(AuthToken token,String paramString) 
+    throws NotAuthorized, InvalidRequest,
+    NotImplemented, ServiceFailure, InvalidToken {
+
+    	String resource = Constants.RESOURCE_OBJECTS;
+    	String paramAdditions = "";
+    	if (!paramString.contains("qt=solr")) {
+    		paramAdditions = "qt=solr&";
+    	}
+    	if (!paramString.contains("pageSize=\\d+")) {
+    		paramAdditions += "pageSize=200&";
+    	}
+    	if (!paramString.contains("start=\\d+")) {
+    		paramAdditions += "start=0&";
+    	}
+    	// clean up paramAdditions string
+    	if (paramAdditions.endsWith("&"))
+    		paramAdditions = paramAdditions.substring(0, paramAdditions.length()-1);
+
+    	String paramsComplete = paramAdditions + paramString;
+
+    	InputStream is;
+    	try {
+    		is = handleHttpGet(token,resource,paramsComplete);
+    	} catch (NotFound eNF) {
+    		// convert notfound error to service failure
+    		// because it is not valid in the listObjects case
+    		throw new ServiceFailure("1000", "Method threw unexpected exception: " + eNF.getMessage());
+    	}
+
+    	try {
+    		return deserializeObjectList(is);
+    	} catch (JiBXException e) {
+    		throw new ServiceFailure("500",
+    				"Could not deserialize the ObjectList: " + e.getMessage());
+    	}
+    }
+
+    
     @Override
     public InputStream get(AuthToken token, Identifier guid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
