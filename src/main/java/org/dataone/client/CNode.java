@@ -100,11 +100,14 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
     	if (!paramString.contains("start=\\d+")) {
     		paramAdditions += "start=0&";
     	}
-    	// clean up paramAdditions string
-    	if (paramAdditions.endsWith("&"))
-    		paramAdditions = paramAdditions.substring(0, paramAdditions.length()-1);
 
     	String paramsComplete = paramAdditions + paramString;
+    	
+    	// clean up paramsComplete string
+    	if (paramsComplete.endsWith("&"))
+    		paramsComplete = paramsComplete.substring(0, paramsComplete.length()-1);
+
+
 
     	InputStream is;
     	try {
