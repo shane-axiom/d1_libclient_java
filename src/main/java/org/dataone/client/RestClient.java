@@ -58,6 +58,7 @@ import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
@@ -104,7 +105,6 @@ import org.xml.sax.SAXException;
 public class RestClient {
 
     /** The URL string for the node REST API */
-    private String nodeBaseServiceUrl;
     private DefaultHttpClient httpClient;
     
 	/**
@@ -119,7 +119,7 @@ public class RestClient {
     /**
      * assembles url components into a properly encoded complete url
      */
-	protected static String assembleAndEncodeUrl(String baseURL, String resource, 
+	public static String assembleAndEncodeUrl(String baseURL, String resource, 
 			String[] pathElements, Map<String,Object> queryParams) {
 		
 		if (baseURL == null)
@@ -195,26 +195,23 @@ public class RestClient {
     /**
 	 * send a POST request to the resource and get the response
      * @throws IOException 
-     * @throws ClientProtocolException 
-     * @throws ServiceFailure 
+     * @throws ClientProtocolException  
 	 */
 	// TODO: figure out how to get the multipart bits into the method signature
-	public HttpResponse doPostRequest(String url) throws ClientProtocolException, IOException   {
-		MultipartRequestHandler h = new MultipartRequestHandler(url, Constants.POST);
-		return httpClient.execute(h.getRequest());
+	public HttpResponse doPostRequest(String url, MultipartEntity mpe) throws ClientProtocolException, IOException   {
+		return doRequestMMBody(url,Constants.POST,mpe);
 	}
 
     /**
 	 * send a PUT request to the resource and get the response
      * @throws IOException 
      * @throws ClientProtocolException 
-     * @throws ServiceFailure 
 	 */
 	// TODO: figure out how to get the multipart bits into the method signature
-	public HttpResponse doPutRequest(String url) throws ClientProtocolException, IOException  {
-		MultipartRequestHandler h = new MultipartRequestHandler(url, Constants.PUT);
-		return httpClient.execute(h.getRequest());
+	public HttpResponse doPutRequest(String url, MultipartEntity mpe) throws ClientProtocolException, IOException  {
+		return doRequestMMBody(url,Constants.PUT,mpe);
 	}
+	
 	
 	private HttpResponse doRequestNoBody(String url,String httpMethod) throws ClientProtocolException, IOException  {
 
@@ -228,267 +225,17 @@ public class RestClient {
 		return httpClient.execute(req);
 	}
 	
+	private HttpResponse doRequestMMBody(String url,String httpMethod, MultipartEntity mpe) throws ClientProtocolException, IOException {
+		HttpEntityEnclosingRequestBase req = null;
+		if (httpMethod == Constants.PUT)
+			req = new HttpPut(url);
+		if (httpMethod == Constants.POST)
+			req = new HttpPost(url);
 	
-
-	
-
-	
-// ========================  original handlers ==============================//
-    
-  
-	/**
-	 * convert a date to GMT
-	 * 
-	 * @param d
-	 * @return
-	 */
-	protected String convertDateToGMT(Date d) {
-		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-		dateFormat.setTimeZone(TimeZone.getTimeZone("GMT-0"));
-		String s = dateFormat.format(d);
-		return s;
-	}
-	
-
-
-	
-
-	
-	
-
-
-
-    
-    
-	/**
-	 * Take a xml element and the tag name, return the text content of the child
-	 * element.
-	 */
-	protected String getTextValue(Element e, String tag) {
-		String text = null;
-		NodeList nl = e.getElementsByTagName(tag);
-		if (nl != null && nl.getLength() > 0) {
-			Element el = (Element) nl.item(0);
-			text = el.getFirstChild().getNodeValue();
-		}
-
-		return text;
-	}
-
-	/**
-	 * return an xml attribute as an int
-	 * @param e
-	 * @param attName
-	 * @return
-	 */
-	protected int getIntAttribute(Element e, String attName)
-	throws NumberFormatException {
-		String attText = e.getAttribute(attName);
-		int x = Integer.parseInt(attText);
-		return x;
-	}
-
-	/**
-	 * Serialize the system metadata object to a ByteArrayInputStream
-	 * @param sysmeta
-	 * @return
-	 * @throws JiBXException
-	 */
-	protected ByteArrayInputStream serializeSystemMetadata(SystemMetadata sysmeta)
-			throws JiBXException {
-
-		/*
-		 * IBindingFactory bfact =
-		 * BindingDirectory.getFactory(SystemMetadata.class);
-		 * IMarshallingContext mctx = bfact.createMarshallingContext();
-		 * ByteArrayOutputStream sysmetaOut = new ByteArrayOutputStream();
-		 * mctx.marshalDocument(sysmeta, "UTF-8", null, sysmetaOut);
-		 * ByteArrayInputStream sysmetaStream = new
-		 * ByteArrayInputStream(sysmetaOut.toByteArray());
-                 * return sysmetaStream;
-		 */
-
-		ByteArrayOutputStream sysmetaOut = new ByteArrayOutputStream();
-		serializeServiceType(SystemMetadata.class, sysmeta, sysmetaOut);
-		ByteArrayInputStream sysmetaStream = new ByteArrayInputStream(
-				sysmetaOut.toByteArray());
-		return sysmetaStream;
-	}
-
-	/**
-	 * deserialize an InputStream to a SystemMetadata object
-	 * @param is
-	 * @return
-	 * @throws JiBXException
-	 */
-	protected SystemMetadata deserializeSystemMetadata(InputStream is)
-			throws JiBXException {
-		return (SystemMetadata) deserializeServiceType(SystemMetadata.class, is);
-	}
-
-	/**
-	 * deserialize and ObjectList from an InputStream
-	 * @param is
-	 * @return
-	 * @throws JiBXException
-	 */
-	protected ObjectList deserializeObjectList(InputStream is)
-			throws JiBXException {
-		return (ObjectList) deserializeServiceType(ObjectList.class, is);
-	}
-
-	/**
-	 * serialize an object of type to out
-	 * 
-	 * @param type
-	 *            the class of the object to serialize (i.e.
-	 *            SystemMetadata.class)
-	 * @param object
-	 *            the object to serialize
-	 * @param out
-	 *            the stream to serialize it to
-	 * @throws JiBXException
-	 */
-	@SuppressWarnings("rawtypes")
-	protected void serializeServiceType(Class type, Object object,
-			OutputStream out) throws JiBXException {
-		IBindingFactory bfact = BindingDirectory.getFactory(type);
-		IMarshallingContext mctx = bfact.createMarshallingContext();
-		mctx.marshalDocument(object, "UTF-8", null, out);
-	}
-
-	/**
-	 * deserialize an object of type from is
-	 * 
-	 * @param type
-	 *            the class of the object to serialize (i.e.
-	 *            SystemMetadata.class)
-	 * @param is
-	 *            the stream to deserialize from
-	 * @throws JiBXException
-	 */
-	@SuppressWarnings("rawtypes")
-	protected Object deserializeServiceType(Class type, InputStream is)
-			throws JiBXException {
-		IBindingFactory bfact = BindingDirectory.getFactory(type);
-		IUnmarshallingContext uctx = bfact.createUnmarshallingContext();
-		Object o = (Object) uctx.unmarshalDocument(is, null);
-		return o;
-	}
-
-	public class ErrorElements {
-		private int code;
-		private String detailCode;
-		private String description;
-
-		protected ErrorElements() {
-			super();
-		}
-	
-		protected int getCode() {
-			return code;
-		}
+		if (mpe != null)
+			req.setEntity(mpe);
 		
-		protected void setCode(int c) {
-			this.code = c;
-		}
-
-		protected String getDetailCode() {
-			return detailCode;
-		}
+		return httpClient.execute(req);
 		
-		protected void setDetailCode(String dc) {
-			this.detailCode = dc;
-		}
-
-		protected String getDescription() {
-			return this.description;
-		}
-		
-		protected void setDescription(String d) {
-			this.description = d;
-		}
 	}
-	
-
-//	/**
-//	 * A class to contain the data from a server response
-//	 */
-//	public class ResponseData {
-//		private int code;
-//		private InputStream contentStream;
-//		private InputStream errorStream;
-//		private Map<String, List<String>> headerFields;
-//
-//		/**
-//		 * constructor
-//		 */
-//		protected ResponseData() {
-//			super();
-//		}
-//
-//		/**
-//		 * @return the code
-//		 */
-//		protected int getCode() {
-//			return code;
-//		}
-//		
-//		/**
-//		 * set the header fields from the response
-//		 * @param m
-//		 */
-//		protected void setHeaderFields(Map<String, List<String>> m)
-//		{
-//		    this.headerFields = m;
-//		}
-//		
-//		/**
-//		 * get the header fields associated with this response
-//		 * @return Map<String, List<String>>
-//		 */
-//		protected Map<String, List<String>> getHeaderFields()
-//		{
-//		    return this.headerFields;
-//		}
-//
-//		/**
-//		 * @param code
-//		 *            the code to set
-//		 */
-//		protected void setCode(int code) {
-//			this.code = code;
-//		}
-//
-//		/**
-//		 * @return the contentStream
-//		 */
-//		protected InputStream getContentStream() {
-//			return contentStream;
-//		}
-//
-//		/**
-//		 * @param contentStream
-//		 *            the contentStream to set
-//		 */
-//		protected void setContentStream(InputStream contentStream) {
-//			this.contentStream = contentStream;
-//		}
-//
-//		/**
-//		 * @return the errorStream
-//		 */
-//		protected InputStream getErrorStream() {
-//			return errorStream;
-//		}
-//
-//		/**
-//		 * @param errorStream
-//		 *            the errorStream to set
-//		 */
-//		protected void setErrorStream(InputStream errorStream) {
-//			this.errorStream = errorStream;
-//		}
-//	}
-
 }
