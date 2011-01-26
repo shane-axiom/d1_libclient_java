@@ -20,24 +20,13 @@
 
 package org.dataone.client;
 
-import com.gc.iotools.stream.is.InputStreamFromOutputStream;
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.util.Date;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import org.apache.commons.io.IOUtils;
-import org.dataone.client.D1Node.ResponseData;
+import org.dataone.service.Constants;
+import org.dataone.service.EncodingUtilities;
 import org.dataone.service.cn.CoordinatingNodeAuthorization;
-
-
 import org.dataone.service.cn.CoordinatingNodeCrud;
 import org.dataone.service.exceptions.AuthenticationTimeout;
 import org.dataone.service.exceptions.BaseException;
@@ -55,20 +44,11 @@ import org.dataone.service.exceptions.UnsupportedType;
 import org.dataone.service.types.AuthToken;
 import org.dataone.service.types.Identifier;
 import org.dataone.service.types.IdentifierFormat;
-import org.dataone.service.types.NodeReference;
-import org.dataone.service.types.ObjectFormat;
 import org.dataone.service.types.ObjectList;
 import org.dataone.service.types.ObjectLocationList;
 import org.dataone.service.types.Principal;
 import org.dataone.service.types.SystemMetadata;
-import org.dataone.service.Constants;
-import org.dataone.service.EncodingUtilities;
-//import org.omg.CosNaming.NamingContextPackage.NotFound;
 import org.jibx.runtime.JiBXException;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 /**
  * CNode represents a DataONE Coordinating Node, and allows calling classes to

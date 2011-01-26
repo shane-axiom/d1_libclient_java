@@ -21,30 +21,21 @@
 package org.dataone.client;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.security.MessageDigest;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
-
-import org.jibx.runtime.JiBXException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.dataone.mimemultipart.MultipartRequestHandler;
+import org.dataone.service.Constants;
+import org.dataone.service.EncodingUtilities;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.IdentifierNotUnique;
 import org.dataone.service.exceptions.InsufficientResources;
@@ -59,7 +50,6 @@ import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.exceptions.UnsupportedType;
 import org.dataone.service.mn.MemberNodeCrud;
 import org.dataone.service.mn.MemberNodeReplication;
-import org.dataone.service.streaming.util.StreamUtil;
 import org.dataone.service.types.AuthToken;
 import org.dataone.service.types.Checksum;
 import org.dataone.service.types.ChecksumAlgorithm;
@@ -70,10 +60,7 @@ import org.dataone.service.types.Log;
 import org.dataone.service.types.ObjectFormat;
 import org.dataone.service.types.ObjectList;
 import org.dataone.service.types.SystemMetadata;
-import org.dataone.service.Constants;
-import org.dataone.service.EncodingUtilities;
-
-import com.gc.iotools.stream.is.InputStreamFromOutputStream;
+import org.jibx.runtime.JiBXException;
 
 /**
  * MNode represents a MemberNode, and exposes the services associated with a
