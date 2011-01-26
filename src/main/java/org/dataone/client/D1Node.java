@@ -41,15 +41,15 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
 import java.util.TimeZone;
-import java.util.Vector;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.io.IOUtils;
+import org.dataone.service.Constants;
+import org.dataone.service.EncodingUtilities;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.IdentifierNotUnique;
 import org.dataone.service.exceptions.InsufficientResources;
@@ -67,8 +67,6 @@ import org.dataone.service.types.Identifier;
 import org.dataone.service.types.ObjectFormat;
 import org.dataone.service.types.ObjectList;
 import org.dataone.service.types.SystemMetadata;
-import org.dataone.service.Constants;
-import org.dataone.service.EncodingUtilities;
 import org.jibx.runtime.BindingDirectory;
 import org.jibx.runtime.IBindingFactory;
 import org.jibx.runtime.IMarshallingContext;
