@@ -100,8 +100,8 @@ import org.xml.sax.SAXException;
  * A generic client class that contains base functionality for making REST calls
  * to remote REST servers.  
  * It is built to encapsulate the communication conventions dataONE is following
- * but does not implement the dataONE REST api itself.
- */
+ * but does not know about dataone objects 
+ * */
 public class RestClient {
 
     /** The URL string for the node REST API */

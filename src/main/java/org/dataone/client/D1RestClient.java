@@ -66,6 +66,7 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.dataone.mimemultipart.MultipartRequestHandler;
+import org.dataone.service.exceptions.AuthenticationTimeout;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.IdentifierNotUnique;
 import org.dataone.service.exceptions.InsufficientResources;
@@ -84,6 +85,7 @@ import org.dataone.service.types.ObjectFormat;
 import org.dataone.service.types.ObjectList;
 import org.dataone.service.types.SystemMetadata;
 import org.dataone.service.Constants;
+import org.dataone.service.D1Url;
 import org.dataone.service.EncodingUtilities;
 import org.jibx.runtime.BindingDirectory;
 import org.jibx.runtime.IBindingFactory;
@@ -101,7 +103,7 @@ import org.xml.sax.SAXException;
  * It is built to encapsulate the communication conventions dataONE is following
  * but does not implement the dataONE REST api itself.
  */
-public abstract class D1RestClientWrapper extends RestClient {
+public abstract class D1RestClient extends RestClient {
 
 	// TODO: This class should implement the MemberNodeAuthorization interface as well
     /** The URL string for the node REST API */
@@ -110,7 +112,7 @@ public abstract class D1RestClientWrapper extends RestClient {
 	/**
 	 * Constructor to create a new instance.
 	 */
-	public D1RestClientWrapper(String nodeBaseServiceUrl) {
+	public D1RestClient(String nodeBaseServiceUrl) {
 		super();
 		nodeBaseServiceUrl = nodeBaseServiceUrl;
 	}
@@ -122,54 +124,43 @@ public abstract class D1RestClientWrapper extends RestClient {
 	 * default constructor needed by some clients.  This constructor will probably
 	 * go away so don't depend on it.  Use public D1Node(String nodeBaseServiceUrl) instead.
 	 */
-	public D1RestClientWrapper() {
+	public D1RestClient() {
 	}
-
-
 
 	public ObjectList example_listObjects(AuthToken token, Date startTime,
 			Date endTime, ObjectFormat objectFormat, Boolean replicaStatus,
 			Integer start, Integer count) throws NotAuthorized, InvalidRequest,
-			NotImplemented, ServiceFailure, InvalidToken {
+			NotImplemented, ServiceFailure, InvalidToken, 
+			ClientProtocolException, IOException, JiBXException, AuthenticationTimeout {
 
-		String resource = Constants.RESOURCE_OBJECTS;
 
 		if (endTime != null && startTime != null && !endTime.after(startTime))
 			throw new InvalidRequest("1000", "startTime must be after stopTime in NMode.listObjects");
 
-
-		Hashtable paramMap = new Hashtable();
-		if (startTime != null)
-			paramMap.put("startTime", convertDateToGMT(startTime));
-		if (endTime != null) 
-			paramMap.put("endTime", convertDateToGMT(endTime));
-		if (objectFormat != null)
-			paramMap.put("objectFormat", objectFormat.toString());
-		if (replicaStatus != null)   
-			paramMap.put("replicaStatus", replicaStatus);
-		if (start != null)
-			paramMap.put("start",start);
-		if (count != null)
-			paramMap.put("count",count);
+		D1Url url = new D1Url(nodeBaseServiceUrl,Constants.RESOURCE_OBJECTS);
+		
+		url.addNonEmptyParamPair("startTime", convertDateToGMT(startTime));
+		url.addNonEmptyParamPair("endTime", convertDateToGMT(endTime));
+		url.addNonEmptyParamPair("objectFormat", objectFormat.toString());
+		url.addNonEmptyParamPair("replicaStatus", replicaStatus.toString());
+		url.addNonEmptyParamPair("start",start.toString());
+		url.addNonEmptyParamPair("count",count.toString());
 
 
-
-		String url = assembleAndEncodeUrl(this.nodeBaseServiceUrl,Constants.RESOURCE_OBJECTS, null,
-				paramMap);
-
-		HttpResponse r = doGetRequest(url);
-
-		ObjectList ol = null;
+		HttpResponse response = doGetRequest(url.getUrl());
+		InputStream is = null;
 		try {
-			ol = deserializeObjectList(r.getEntity().getContent());
-		} catch (JiBXException e) {
-			throw new ServiceFailure("500",
-					"Could not deserialize the ObjectList: " + e.getMessage());
+			is = filterErrors(response);
+		} catch (NotFound e) {
+		} catch (IdentifierNotUnique e) {
+		} catch (UnsupportedType e) {
+		} catch (InsufficientResources e) {
+		} catch (InvalidSystemMetadata e) {
+		} catch (InvalidCredentials e) {
 		} catch (IllegalStateException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		} // these errors not thrown by the server
+
+		ObjectList ol = deserializeObjectList(is);
 		return ol;
 	}
  
@@ -179,17 +170,16 @@ public abstract class D1RestClientWrapper extends RestClient {
 	
 	
 	
-	private void handleResponseExceptions(HttpResponse res) throws NotFound, InvalidToken, ServiceFailure, NotAuthorized,
+	public InputStream filterErrors(HttpResponse res) throws NotFound, InvalidToken, ServiceFailure, NotAuthorized,
 	IdentifierNotUnique, UnsupportedType, InsufficientResources, InvalidSystemMetadata,
-	NotImplemented, InvalidCredentials, InvalidRequest, IOException {
+	NotImplemented, InvalidCredentials, InvalidRequest, IllegalStateException, IOException, AuthenticationTimeout {
 
 		int code = res.getStatusLine().getStatusCode();
 		if (code != HttpURLConnection.HTTP_OK) {
 			// error, so throw exception
 			deserializeAndThrowException(res);
-		}
-		if (res.getEntity() == null || res.getEntity().getContent() == null)
-			throw new IOException("Unexpected empty inputStream for the request");
+		}		
+		return res.getEntity().getContent();
 	}
 
 	
@@ -215,12 +205,8 @@ public abstract class D1RestClientWrapper extends RestClient {
 
 
 	/**
-	 *  converts the serialized errorStream to the appropriate Java Exception
-	 *  errorStream is not guaranteed to hold xml.  Code is passed in to preserve
-	 *  http code in the case of non-dataone errors.
-	 *  
-	 * @param errorStream
-	 * @param httpCode
+	 * 
+	 * @param response
 	 * @throws NotFound
 	 * @throws InvalidToken
 	 * @throws ServiceFailure
@@ -233,13 +219,14 @@ public abstract class D1RestClientWrapper extends RestClient {
 	 * @throws NotImplemented
 	 * @throws InvalidCredentials
 	 * @throws InvalidRequest
-	 * @throws IOException 
+	 * @throws IOException
+	 * @throws AuthenticationTimeout 
 	 */
-    protected void deserializeAndThrowException(HttpResponse response)
+    public void deserializeAndThrowException(HttpResponse response)
 			throws NotFound, InvalidToken, ServiceFailure, NotAuthorized,
 			NotFound, IdentifierNotUnique, UnsupportedType,
 			InsufficientResources, InvalidSystemMetadata, NotImplemented,
-			InvalidCredentials, InvalidRequest, IOException {
+			InvalidCredentials, InvalidRequest, IOException, AuthenticationTimeout {
 
     	
     	// use content-type to determine what format the response is
@@ -265,6 +252,8 @@ public abstract class D1RestClientWrapper extends RestClient {
  
     	
     	switch (ee.getCode()) {
+		// last updated 26-Jan-2011
+		// Note: there are a few conflicts that don't allow us to determine the proper Exception 	
     	case 400:
     		if (ee.getDetailCode().startsWith("1180")) {
     			throw new InvalidSystemMetadata("1180", ee.getDescription());
@@ -275,8 +264,12 @@ public abstract class D1RestClientWrapper extends RestClient {
     		throw new InvalidCredentials(ee.getDetailCode(), ee.getDescription());
     	case 404:
     		throw new NotFound(ee.getDetailCode(), ee.getDescription());
+		case 408:
+			throw new AuthenticationTimeout(ee.getDetailCode(), ee.getDescription());
     	case 409:
     		throw new IdentifierNotUnique(ee.getDetailCode(), ee.getDescription());
+		case 413:
+			throw new InsufficientResources(ee.getDetailCode(), ee.getDescription());
     	case 500:
     		throw new ServiceFailure(ee.getDetailCode(), ee.getDescription());
     		// TODO: Handle other exception codes properly
