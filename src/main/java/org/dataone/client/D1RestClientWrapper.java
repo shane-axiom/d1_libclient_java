@@ -111,7 +111,8 @@ public abstract class D1RestClientWrapper extends RestClient {
 	 * Constructor to create a new instance.
 	 */
 	public D1RestClientWrapper(String nodeBaseServiceUrl) {
-	    super();
+		super();
+		nodeBaseServiceUrl = nodeBaseServiceUrl;
 	}
 
 	// TODO: this constructor should not exist
@@ -153,10 +154,10 @@ public abstract class D1RestClientWrapper extends RestClient {
 
 
 
-		String url = assembleAndEncodeUrl(this.getNodeBaseServiceUrl(),Constants.RESOURCE_OBJECTS, null,
+		String url = assembleAndEncodeUrl(this.nodeBaseServiceUrl,Constants.RESOURCE_OBJECTS, null,
 				paramMap);
 
-		HttpResponse r = handleGetRequest(url);
+		HttpResponse r = doGetRequest(url);
 
 		ObjectList ol = null;
 		try {
@@ -486,6 +487,31 @@ public abstract class D1RestClientWrapper extends RestClient {
 		return o;
 	}
 
+	protected Identifier parseResponseForIdentifer(HttpResponse resp) throws ServiceFailure {
+		
+		Identifier id = null;
+		try {
+			InputStream is = resp.getEntity().getContent();
+			Header type = resp.getEntity().getContentType();
+			System.out.println("Response content-type: "+ type.getValue());
+			if (is != null)
+				id = (Identifier)deserializeServiceType(Identifier.class, is);
+			else
+				throw new IOException("Unexpected empty inputStream for the request");
+		}
+		catch (JiBXException e) {
+			throw new ServiceFailure("500",
+					"Could not deserialize the returned Identifier: " + e.getMessage());
+		}
+		catch (IOException e) {
+			throw new ServiceFailure("1000",
+					"IOException in processing: " + e.getMessage());
+		}
+		return id;
+	}
+	
+	
+	
 	public class ErrorElements {
 		private int code;
 		private String detailCode;

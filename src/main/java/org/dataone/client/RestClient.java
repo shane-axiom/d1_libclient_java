@@ -101,54 +101,19 @@ import org.xml.sax.SAXException;
  * It is built to encapsulate the communication conventions dataONE is following
  * but does not implement the dataONE REST api itself.
  */
-public abstract class RestClient {
+public class RestClient {
 
-	// TODO: This class should implement the MemberNodeAuthorization interface as well
     /** The URL string for the node REST API */
     private String nodeBaseServiceUrl;
+    private DefaultHttpClient httpClient;
     
 	/**
 	 * Constructor to create a new instance.
 	 */
-	public RestClient(String nodeBaseServiceUrl) {
-	    setNodeBaseServiceUrl(nodeBaseServiceUrl);
-	}
-
-	// TODO: this constructor should not exist
-	// lest we end up with a client that is not attached to a particular node; 
-	// No code calls it in Java, but it is called by the R client; evaluate if this can change
-	/**
-	 * default constructor needed by some clients.  This constructor will probably
-	 * go away so don't depend on it.  Use public D1Node(String nodeBaseServiceUrl) instead.
-	 */
 	public RestClient() {
+	    httpClient = new DefaultHttpClient();
 	}
 
-
-    /**
-     * Retrieve the service URL for this node.  The service URL can be used with
-     * knowledge of the DataONE REST API to construct endpoints for each of the
-     * DataONE REST services that are available on the node.
-     * @return String representing the service URL
-     */
-    public String getNodeBaseServiceUrl() {
-        return this.nodeBaseServiceUrl;
-    }
-
-    /**
-     * Set the service URL for this node.  The service URL can be used with
-     * knowledge of the DataONE REST API to construct endpoints for each of the
-     * DataONE REST services that are available on the node.
-     * @param nodeBaseServiceUrl String representing the service URL
-     */
-    public void setNodeBaseServiceUrl(String nodeBaseServiceUrl) {
-        if (!nodeBaseServiceUrl.endsWith("/")) {
-            nodeBaseServiceUrl = nodeBaseServiceUrl + "/";
-        }
-        this.nodeBaseServiceUrl = nodeBaseServiceUrl;
-    }
-
-    
     // ==========================  New Handlers ===========================//
 
     /**
@@ -196,118 +161,75 @@ public abstract class RestClient {
     
     /**
 	 * send a GET request to the resource and get the response
+     * @throws IOException 
+     * @throws ClientProtocolException 
      * @throws ServiceFailure 
 	 */
-	public HttpResponse handleGetRequest(String url) throws ServiceFailure {
+	public HttpResponse doGetRequest(String url) throws ClientProtocolException, IOException  {
 		return doRequestNoBody(url,Constants.GET);
 	}
 
     /**
 	 * send a Head request to the resource and get the response
+     * @throws IOException 
+     * @throws ClientProtocolException 
      * @throws ServiceFailure 
 	 */
 
-	public HttpResponse handleHeadRequest(String url) throws ServiceFailure {
+	public HttpResponse doHeadRequest(String url) throws ClientProtocolException, IOException  {
 		return doRequestNoBody(url,Constants.HEAD);
 	}
 
     /**
 	 * send a Delete request to the resource and get the response
      * @throws ServiceFailure 
+     * @throws IOException 
+     * @throws ClientProtocolException 
 	 */
 
-	public HttpResponse handleDeleteRequest(String url) throws ServiceFailure {
+	public HttpResponse doDeleteRequest(String url) throws ClientProtocolException, IOException {
 		return doRequestNoBody(url,Constants.DELETE);
 	}
 	
 	
     /**
 	 * send a POST request to the resource and get the response
+     * @throws IOException 
+     * @throws ClientProtocolException 
      * @throws ServiceFailure 
 	 */
 	// TODO: figure out how to get the multipart bits into the method signature
-	public HttpResponse doPostRequest(String url) throws ServiceFailure {
+	public HttpResponse doPostRequest(String url) throws ClientProtocolException, IOException   {
 		MultipartRequestHandler h = new MultipartRequestHandler(url, Constants.POST);
-		HttpResponse resp = null;
-		try {
-			resp = h.executeRequest();
-		} catch (ClientProtocolException e) {
-			throw new ServiceFailure("1000",e.getClass() + " ERROR:" + e.getMessage());
-		} catch (IOException e) {
-			throw new ServiceFailure("1000",e.getClass() + " ERROR:" + e.getMessage());
-		}
-		return resp;
+		return httpClient.execute(h.getRequest());
 	}
 
     /**
 	 * send a PUT request to the resource and get the response
+     * @throws IOException 
+     * @throws ClientProtocolException 
      * @throws ServiceFailure 
 	 */
 	// TODO: figure out how to get the multipart bits into the method signature
-	public HttpResponse doPutRequest(String url) throws ServiceFailure {
+	public HttpResponse doPutRequest(String url) throws ClientProtocolException, IOException  {
 		MultipartRequestHandler h = new MultipartRequestHandler(url, Constants.PUT);
-		HttpResponse resp = null;
-		try {
-			resp = h.executeRequest();
-		} catch (ClientProtocolException e) {
-			throw new ServiceFailure("1000",e.getClass() + " ERROR:" + e.getMessage());
-		} catch (IOException e) {
-			throw new ServiceFailure("1000",e.getClass() + " ERROR:" + e.getMessage());
-		}
-		return resp;
+		return httpClient.execute(h.getRequest());
 	}
 	
-	private HttpResponse doRequestNoBody(String url,String httpMethod) throws ServiceFailure {
+	private HttpResponse doRequestNoBody(String url,String httpMethod) throws ClientProtocolException, IOException  {
 
-		HttpUriRequest method = null;
-
-		DefaultHttpClient httpClient = new DefaultHttpClient();
+		HttpUriRequest req = null;
 		if (httpMethod == Constants.GET) 
-			method = new HttpGet(url);        	
+			req = new HttpGet(url);        	
 		if (httpMethod == Constants.HEAD) 
-			method = new HttpHead(url);       
+			req = new HttpHead(url);       
 		if (httpMethod == Constants.DELETE)
-			method = new HttpDelete(url);       
-
-		HttpResponse resp = null;
-		try {
-			resp = httpClient.execute(method);
-		} catch (ClientProtocolException e) {
-			throw new ServiceFailure("1000",e.getClass() + " ERROR:" + e.getMessage());
-		} catch (IOException e) {
-			throw new ServiceFailure("1000",e.getClass() + " ERROR:" + e.getMessage());
-		}
-		return resp;
+			req = new HttpDelete(url);       
+		return httpClient.execute(req);
 	}
 	
 	
-	
 
-
-	
-	protected Identifier parseResponseForIdentifer(HttpResponse resp) throws ServiceFailure {
-		
-		Identifier id = null;
-		try {
-			InputStream is = resp.getEntity().getContent();
-			Header type = resp.getEntity().getContentType();
-			System.out.println("Response content-type: "+ type.getValue());
-			if (is != null)
-				id = (Identifier)deserializeServiceType(Identifier.class, is);
-			else
-				throw new IOException("Unexpected empty inputStream for the request");
-		}
-		catch (JiBXException e) {
-			throw new ServiceFailure("500",
-					"Could not deserialize the returned Identifier: " + e.getMessage());
-		}
-		catch (IOException e) {
-			throw new ServiceFailure("1000",
-					"IOException in processing: " + e.getMessage());
-		}
-		return id;
-	}
-	
 	
 
 	
