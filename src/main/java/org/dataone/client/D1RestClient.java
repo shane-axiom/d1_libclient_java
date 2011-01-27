@@ -25,49 +25,25 @@ package org.dataone.client;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
-import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
-import java.util.Set;
 import java.util.TimeZone;
-import java.util.Vector;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpHead;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.entity.mime.MultipartEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.dataone.mimemultipart.MultipartRequestHandler;
+
 import org.dataone.service.exceptions.AuthenticationTimeout;
-import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.IdentifierNotUnique;
 import org.dataone.service.exceptions.InsufficientResources;
 import org.dataone.service.exceptions.InvalidCredentials;
@@ -86,15 +62,17 @@ import org.dataone.service.types.ObjectList;
 import org.dataone.service.types.SystemMetadata;
 import org.dataone.service.Constants;
 import org.dataone.service.D1Url;
-import org.dataone.service.EncodingUtilities;
+
 import org.jibx.runtime.BindingDirectory;
 import org.jibx.runtime.IBindingFactory;
 import org.jibx.runtime.IMarshallingContext;
 import org.jibx.runtime.IUnmarshallingContext;
 import org.jibx.runtime.JiBXException;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+
 import org.xml.sax.SAXException;
 
 /**
@@ -103,28 +81,13 @@ import org.xml.sax.SAXException;
  * It is built to encapsulate the communication conventions dataONE is following
  * but does not implement the dataONE REST api itself.
  */
-public abstract class D1RestClient extends RestClient {
-
-	// TODO: This class should implement the MemberNodeAuthorization interface as well
-    /** The URL string for the node REST API */
-    private String nodeBaseServiceUrl;
+public class D1RestClient extends RestClient {
     
 	/**
 	 * Constructor to create a new instance.
 	 */
-	public D1RestClient(String nodeBaseServiceUrl) {
-		super();
-		nodeBaseServiceUrl = nodeBaseServiceUrl;
-	}
-
-	// TODO: this constructor should not exist
-	// lest we end up with a client that is not attached to a particular node; 
-	// No code calls it in Java, but it is called by the R client; evaluate if this can change
-	/**
-	 * default constructor needed by some clients.  This constructor will probably
-	 * go away so don't depend on it.  Use public D1Node(String nodeBaseServiceUrl) instead.
-	 */
 	public D1RestClient() {
+		super();
 	}
 
 	public ObjectList example_listObjects(AuthToken token, Date startTime,
@@ -137,7 +100,7 @@ public abstract class D1RestClient extends RestClient {
 		if (endTime != null && startTime != null && !endTime.after(startTime))
 			throw new InvalidRequest("1000", "startTime must be after stopTime in NMode.listObjects");
 
-		D1Url url = new D1Url(nodeBaseServiceUrl,Constants.RESOURCE_OBJECTS);
+		D1Url url = new D1Url("nodeBaseServiceUrl",Constants.RESOURCE_OBJECTS);
 		
 		url.addNonEmptyParamPair("startTime", convertDateToGMT(startTime));
 		url.addNonEmptyParamPair("endTime", convertDateToGMT(endTime));
@@ -167,9 +130,6 @@ public abstract class D1RestClient extends RestClient {
     // ==========================  New Handlers ===========================//
 
  
-	
-	
-	
 	public InputStream filterErrors(HttpResponse res) throws NotFound, InvalidToken, ServiceFailure, NotAuthorized,
 	IdentifierNotUnique, UnsupportedType, InsufficientResources, InvalidSystemMetadata,
 	NotImplemented, InvalidCredentials, InvalidRequest, IllegalStateException, IOException, AuthenticationTimeout {
@@ -245,6 +205,8 @@ public abstract class D1RestClient extends RestClient {
     		ee = deserializeHtml(response);
     	else if (contentType.contains("json"))
     		ee = deserializeJson(response);
+       	else if (contentType.contains("csv"))
+    		ee = deserializeCsv(response);
     	else 
     		// attempt the default...
     		ee = deserializeXml(response);
@@ -280,22 +242,44 @@ public abstract class D1RestClient extends RestClient {
     	
     }
     	
-    private ErrorElements deserializeHtml(HttpResponse response) throws NotImplemented {
-    	// TODO complete implementation of this method according to the specs.
-    	throw new NotImplemented("1000","handler for deserializing HTML not written yet.");
+    private ErrorElements deserializeHtml(HttpResponse response) throws IllegalStateException, IOException {
+    	ErrorElements ee = new ErrorElements();
+    	ee.setCode(response.getStatusLine().getStatusCode());
+//    	ee.setDetailCode(detailCode);
+    	String body = IOUtils.toString(response.getEntity().getContent());
+    	ee.setDescription("parser for deserializing HTML not written yet.  Providing message body:\n" + body);
+    	
+    	return ee;
     }
 
-    private ErrorElements deserializeJson(HttpResponse response) throws NotImplemented {
-    	// TODO complete implementation of this method according to the specs.
-    	throw new NotImplemented("1000","handler for deserializing JSON not written yet.");
+    private ErrorElements deserializeJson(HttpResponse response) throws IllegalStateException, IOException {
+    	ErrorElements ee = new ErrorElements();
+    	
+    	ee.setCode(response.getStatusLine().getStatusCode());
+//    	ee.setDetailCode(detailCode);
+    	String body = IOUtils.toString(response.getEntity().getContent());
+    	ee.setDescription("parser for deserializing JSON not written yet.  Providing message body:\n" + body);
+    	
+    	return ee;
     }
+  
+    private ErrorElements deserializeCsv(HttpResponse response) throws IllegalStateException, IOException {
+    	ErrorElements ee = new ErrorElements();
+    	ee.setCode(response.getStatusLine().getStatusCode());
+//    	ee.setDetailCode(detailCode);
+    	String body = IOUtils.toString(response.getEntity().getContent());
+    	ee.setDescription("parser for deserializing CSV not written yet.  Providing message body:\n" + body);
+    	
+    	return ee;
+    }
+   
     
-    private ErrorElements deserializeXml(HttpResponse response)
-    throws NotFound, InvalidToken, ServiceFailure, NotAuthorized,
-    NotFound, IdentifierNotUnique, UnsupportedType,
-    InsufficientResources, InvalidSystemMetadata, NotImplemented,
-    InvalidCredentials, InvalidRequest, IOException {
-
+    private ErrorElements deserializeXml(HttpResponse response) throws IllegalStateException, IOException
+//    throws NotFound, InvalidToken, ServiceFailure, NotAuthorized,
+//    NotFound, IdentifierNotUnique, UnsupportedType,
+//    InsufficientResources, InvalidSystemMetadata, NotImplemented,
+//    InvalidCredentials, InvalidRequest, IOException {
+    {
     	ErrorElements ee = new ErrorElements();
     	
     	DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -502,8 +486,6 @@ public abstract class D1RestClient extends RestClient {
 		}
 		return id;
 	}
-	
-	
 	
 	public class ErrorElements {
 		private int code;
