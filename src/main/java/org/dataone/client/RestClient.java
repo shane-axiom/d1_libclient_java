@@ -161,7 +161,8 @@ public class RestClient {
 	
 	
 	private HttpResponse doRequestNoBody(String url,String httpMethod) throws ClientProtocolException, IOException  {
-
+		System.out.println("restURL: " + url);
+		System.out.println("method: " + httpMethod);
 		HttpUriRequest req = null;
 		if (httpMethod == Constants.GET) 
 			req = new HttpGet(url);        	
@@ -173,15 +174,20 @@ public class RestClient {
 	}
 	
 	private HttpResponse doRequestMMBody(String url,String httpMethod, MultipartEntity mpe) throws ClientProtocolException, IOException {
+		System.out.println("restURL: " + url);
+		System.out.println("method: " + httpMethod);
 		HttpEntityEnclosingRequestBase req = null;
 		if (httpMethod == Constants.PUT)
 			req = new HttpPut(url);
 		if (httpMethod == Constants.POST)
 			req = new HttpPost(url);
 	
-		if (mpe != null)
+		if (mpe != null) {
 			req.setEntity(mpe);
-		
+			System.out.println("entity: present");
+		} else {
+			System.out.println("entity: null");
+		}
 		return httpClient.execute(req);
 		
 	}
