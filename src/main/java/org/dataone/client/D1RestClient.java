@@ -40,6 +40,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
+import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.entity.mime.MultipartEntity;
@@ -55,6 +56,7 @@ import org.dataone.service.exceptions.NotAuthorized;
 import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
+import org.dataone.service.exceptions.UnsupportedMetadataType;
 import org.dataone.service.exceptions.UnsupportedType;
 import org.dataone.service.types.AuthToken;
 import org.dataone.service.types.Identifier;
@@ -95,7 +97,7 @@ public class D1RestClient {
 			Date endTime, ObjectFormat objectFormat, Boolean replicaStatus,
 			Integer start, Integer count) throws NotAuthorized, InvalidRequest,
 			NotImplemented, ServiceFailure, InvalidToken, 
-			ClientProtocolException, IOException, JiBXException, AuthenticationTimeout {
+			ClientProtocolException, IOException, JiBXException, AuthenticationTimeout, UnsupportedMetadataType, HttpException {
 
 
 		if (endTime != null && startTime != null && !endTime.after(startTime))
@@ -131,7 +133,7 @@ public class D1RestClient {
 	throws NotFound, InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, 
 	UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented,
 	InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout,
-	ClientProtocolException, IOException 
+	ClientProtocolException, IOException, UnsupportedMetadataType, HttpException 
 	{
 		return filterErrors(rc.doGetRequest(url));
 	}
@@ -140,7 +142,7 @@ public class D1RestClient {
 	throws NotFound, InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, 
 	UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented,
 	InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout,
-	ClientProtocolException, IOException 
+	ClientProtocolException, IOException, UnsupportedMetadataType, HttpException 
 	{
 		return filterErrors(rc.doDeleteRequest(url));
 	}
@@ -149,7 +151,7 @@ public class D1RestClient {
 	throws NotFound, InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, 
 	UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented,
 	InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout,
-	ClientProtocolException, IOException 
+	ClientProtocolException, IOException, UnsupportedMetadataType, HttpException 
 	{
 		return filterErrorsHeader(rc.doHeadRequest(url));
 	}
@@ -158,7 +160,7 @@ public class D1RestClient {
 	throws NotFound, InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, 
 	UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented,
 	InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout,
-	ClientProtocolException, IOException 
+	ClientProtocolException, IOException, UnsupportedMetadataType, HttpException 
 	{
 		return filterErrors(rc.doPutRequest(url, entity));
 	}
@@ -167,14 +169,14 @@ public class D1RestClient {
 	throws NotFound, InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, 
 	UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented,
 	InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout,
-	ClientProtocolException, IOException 
+	ClientProtocolException, IOException, UnsupportedMetadataType, HttpException 
 	{
 		return filterErrors(rc.doPostRequest(url,entity));
 	}
 	
 	public InputStream filterErrors(HttpResponse res) throws NotFound, InvalidToken, ServiceFailure, NotAuthorized,
 	IdentifierNotUnique, UnsupportedType, InsufficientResources, InvalidSystemMetadata,
-	NotImplemented, InvalidCredentials, InvalidRequest, IllegalStateException, IOException, AuthenticationTimeout {
+	NotImplemented, InvalidCredentials, InvalidRequest, IllegalStateException, IOException, AuthenticationTimeout, UnsupportedMetadataType, HttpException {
 
 		int code = res.getStatusLine().getStatusCode();
 		if (code != HttpURLConnection.HTTP_OK) {
@@ -186,7 +188,7 @@ public class D1RestClient {
 
 	public Header[] filterErrorsHeader(HttpResponse res) throws NotFound, InvalidToken, ServiceFailure, NotAuthorized,
 	IdentifierNotUnique, UnsupportedType, InsufficientResources, InvalidSystemMetadata,
-	NotImplemented, InvalidCredentials, InvalidRequest, IllegalStateException, IOException, AuthenticationTimeout {
+	NotImplemented, InvalidCredentials, InvalidRequest, IllegalStateException, IOException, AuthenticationTimeout, UnsupportedMetadataType, HttpException {
 
 		int code = res.getStatusLine().getStatusCode();
 		if (code != HttpURLConnection.HTTP_OK) {
@@ -233,12 +235,14 @@ public class D1RestClient {
 	 * @throws InvalidRequest
 	 * @throws IOException
 	 * @throws AuthenticationTimeout 
+	 * @throws UnsupportedMetadataType 
+	 * @throws HttpException 
 	 */
     public void deserializeAndThrowException(HttpResponse response)
 			throws NotFound, InvalidToken, ServiceFailure, NotAuthorized,
 			NotFound, IdentifierNotUnique, UnsupportedType,
 			InsufficientResources, InvalidSystemMetadata, NotImplemented,
-			InvalidCredentials, InvalidRequest, IOException, AuthenticationTimeout {
+			InvalidCredentials, InvalidRequest, IOException, AuthenticationTimeout, UnsupportedMetadataType, HttpException {
 
     	
     	// use content-type to determine what format the response is
@@ -264,36 +268,43 @@ public class D1RestClient {
     		ee = deserializeXml(response);
     	
  
+    	String exceptionName = ee.getName();
+    	if (exceptionName == null) 
+    		throw new HttpException(response.getStatusLine().getReasonPhrase() + ": " + ee.getDescription());
     	
-    	switch (ee.getCode()) {
-		// last updated 26-Jan-2011
-		// Note: there are a few conflicts that don't allow us to determine the proper Exception 	
-    	case 400:
-    		// TODO: better detail codes to decide exception type
-    		if (ee.getDetailCode().startsWith("1180")) {
-    			throw new InvalidSystemMetadata("1180", ee.getDescription());
-    		} else {
-    			throw new InvalidRequest(ee.getDetailCode(), ee.getDescription());
-    		}
-    	case 401:
-    		// TODO: better detail codes to decide exception type
-    		throw new InvalidCredentials(ee.getDetailCode(), ee.getDescription());
-    	case 404:
-    		throw new NotFound(ee.getDetailCode(), ee.getDescription());
-		case 408:
-			throw new AuthenticationTimeout(ee.getDetailCode(), ee.getDescription());
-    	case 409:
+    	
+		// last updated 27-Jan-2011
+       	if (ee.getName().equals("AuthenticationTimeout"))
+    		throw new AuthenticationTimeout(ee.getDetailCode(), ee.getDescription());  
+       	else if (ee.getName().equals("IdentifierNotUnique"))
     		throw new IdentifierNotUnique(ee.getDetailCode(), ee.getDescription());
-		case 413:
-			throw new InsufficientResources(ee.getDetailCode(), ee.getDescription());
-    	case 500:
+    	else if (ee.getName().equals("InsufficientResources"))
+    		throw new InsufficientResources(ee.getDetailCode(), ee.getDescription());
+       	else if (ee.getName().equals("InvalidCredentials"))
+    		throw new InvalidCredentials(ee.getDetailCode(), ee.getDescription());
+      	else if (ee.getName().equals("InvalidRequest"))
+    		throw new InvalidRequest(ee.getDetailCode(), ee.getDescription());
+    	else if (exceptionName.equals("InvalidSystemMetadata"))
+    		throw new InvalidSystemMetadata("1180", ee.getDescription());
+    	else if (ee.getName().equals("InvalidToken"))
+    		throw new InvalidToken(ee.getDetailCode(), ee.getDescription()); 
+    	else if (ee.getName().equals("NotAuthorized"))
+    		throw new NotAuthorized(ee.getDetailCode(), ee.getDescription());
+    	else if (ee.getName().equals("NotFound"))
+    		throw new NotFound(ee.getDetailCode(), ee.getDescription());
+    	else if (ee.getName().equals("NotImplemented"))
+    		throw new NotImplemented(ee.getDetailCode(), ee.getDescription());
+       	else if (ee.getName().equals("ServiceFailure"))
     		throw new ServiceFailure(ee.getDetailCode(), ee.getDescription());
-    	default:
+    	else if (ee.getName().equals("UnsupportedMetadataType"))
+    		throw new UnsupportedMetadataType(ee.getDetailCode(), ee.getDescription());
+       	else if (ee.getName().equals("UnsupportedType"))
+    		throw new UnsupportedType(ee.getDetailCode(), ee.getDescription()); 
+    	else 
     		throw new ServiceFailure(ee.getDetailCode(), ee.getDescription());
-    	}
-
-    	
     }
+    	
+
     	
     private ErrorElements deserializeHtml(HttpResponse response) throws IllegalStateException, IOException {
     	ErrorElements ee = new ErrorElements();
@@ -352,6 +363,7 @@ public class D1RestClient {
 
     		String detailCode = null;
     		String description = null;
+    		String name = null;
     		int errorCode = -1;
     		try {
     			DocumentBuilder db = dbf.newDocumentBuilder();
@@ -372,6 +384,7 @@ public class D1RestClient {
 
 
     			detailCode = root.getAttribute("detailCode");
+    			name = root.getAttribute("name");
     			description = getTextValue(root, "description");
 
     		} catch (SAXException e) {
@@ -383,6 +396,7 @@ public class D1RestClient {
     		}
 
     		ee.setCode(errorCode);
+    		ee.setName(name);
     		ee.setDetailCode(detailCode);
     		ee.setDescription(description);
     	}  	
@@ -550,6 +564,7 @@ public class D1RestClient {
 	
 	public class ErrorElements {
 		private int code;
+		private String name;
 		private String detailCode;
 		private String description;
 
@@ -565,6 +580,13 @@ public class D1RestClient {
 			this.code = c;
 		}
 
+		protected String getName() {
+			return name;
+		}
+		
+		protected void setName(String n) {
+			this.name = n;
+		}
 		protected String getDetailCode() {
 			return detailCode;
 		}
