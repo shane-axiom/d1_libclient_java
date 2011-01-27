@@ -30,22 +30,16 @@ package org.dataone.client;
  */
 public class D1Client {
 
-    private CNode cn = null;
-
-    /**
-	 * Constructor to create a new instance. This initializes the Coordinating
-	 * node for the client, and passes through calls to the CN or MN as appropriate.
-	 * @param nodeBaseServiceUrl the base service URL for the CoordinatingNode to use
-	 */
-	public D1Client(String nodeBaseServiceUrl) {
-		// Create a new CN instance for all calls
-		cn = new CNode(nodeBaseServiceUrl);
-	}
+    private static final String CN_URI = "http://cn-dev.dataone.org/cn";
+    private static CNode cn = null;
 
 	/**
      * @return the cn
      */
-    public CNode getCN() {
+    public static CNode getCN() {
+        if (cn == null) {
+            cn = new CNode(CN_URI);
+        }
         return cn;
     }
     
@@ -54,7 +48,7 @@ public class D1Client {
      * @param mnBaseUrl the service URL for the Member Node
      * @return the mn at a particular URL
      */
-    public MNode getMN(String mnBaseUrl) {
+    public static MNode getMN(String mnBaseUrl) {
         MNode mn = new MNode(mnBaseUrl);
         return mn;
     }
