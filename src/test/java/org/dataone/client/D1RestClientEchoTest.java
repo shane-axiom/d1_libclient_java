@@ -11,8 +11,19 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.D1Url;
+import org.dataone.service.exceptions.AuthenticationTimeout;
 import org.dataone.service.exceptions.BaseException;
+import org.dataone.service.exceptions.IdentifierNotUnique;
+import org.dataone.service.exceptions.InsufficientResources;
+import org.dataone.service.exceptions.InvalidCredentials;
+import org.dataone.service.exceptions.InvalidRequest;
+import org.dataone.service.exceptions.InvalidSystemMetadata;
+import org.dataone.service.exceptions.InvalidToken;
+import org.dataone.service.exceptions.NotAuthorized;
 import org.dataone.service.exceptions.NotFound;
+import org.dataone.service.exceptions.NotImplemented;
+import org.dataone.service.exceptions.ServiceFailure;
+import org.dataone.service.exceptions.UnsupportedType;
 import org.junit.Test;
 
 
@@ -22,13 +33,13 @@ public class D1RestClientEchoTest {
 	private static String mmEchoResource = "echomm";
 	
 	@Test
-	public void testDoGetRequest() throws ClientProtocolException, IOException {
+	public void testDoGetRequest() throws ClientProtocolException, IOException, NotFound, InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout {
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
 		D1RestClient rc = new D1RestClient();
-		HttpResponse resp = rc.doGetRequest(u.getUrl());
-		InputStream is = resp.getEntity().getContent();
+//		HttpResponse resp = rc.doGetRequest(u.getUrl());
+		InputStream is = rc.doGetRequest(u.getUrl());
 		String contentString = IOUtils.toString(is);
 		System.out.println(contentString);
 		assertTrue("",contentString.contains("request.META[ REQUEST_METHOD ] = GET"));		
@@ -37,13 +48,13 @@ public class D1RestClientEchoTest {
 	}
 
 	@Test
-	public void testdoDeleteRequest() throws ClientProtocolException, IOException {
+	public void testdoDeleteRequest() throws ClientProtocolException, IOException, NotFound, InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout {
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
 		D1RestClient rc = new D1RestClient();
-		HttpResponse resp = rc.doDeleteRequest(u.getUrl());
-		InputStream is = resp.getEntity().getContent();
+//		HttpResponse resp = 
+		InputStream is = rc.doDeleteRequest(u.getUrl());
 		String contentString = IOUtils.toString(is);
 		System.out.println(contentString);
 		assertTrue("",contentString.contains("request.META[ REQUEST_METHOD ] = DELETE"));		
@@ -52,13 +63,13 @@ public class D1RestClientEchoTest {
 	}
 	
 	@Test
-	public void testDoHeadRequest() throws ClientProtocolException, IOException {
+	public void testDoHeadRequest() throws ClientProtocolException, IOException, NotFound, InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout {
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
 		D1RestClient rc = new D1RestClient();
-		HttpResponse resp = rc.doHeadRequest(u.getUrl());
-		Header[] headers = resp.getAllHeaders();
+//		HttpResponse resp = rc.doHeadRequest(u.getUrl());
+		Header[] headers = rc.doHeadRequest(u.getUrl());
 		String hString = null;
 		for (int j=0; j<headers.length; j++) {
 			hString += headers[j].getName() + " : " + headers[j].getValue() + "\n";
@@ -67,13 +78,13 @@ public class D1RestClientEchoTest {
 	}
 	
 	@Test
-	public void testdoPutRequestNullBody() throws ClientProtocolException, IOException {
+	public void testdoPutRequestNullBody() throws ClientProtocolException, IOException, NotFound, InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout {
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
 		D1RestClient rc = new D1RestClient();
-		HttpResponse resp = rc.doPutRequest(u.getUrl(),null);
-		InputStream is = resp.getEntity().getContent();
+//		HttpResponse resp = rc.doPutRequest(u.getUrl(),null);
+		InputStream is = rc.doPutRequest(u.getUrl(),null);
 		String contentString = IOUtils.toString(is);
 		System.out.println(contentString);
 		assertTrue("",contentString.contains("request.META[ REQUEST_METHOD ] = PUT"));		
@@ -82,13 +93,12 @@ public class D1RestClientEchoTest {
 	}
 	
 	@Test
-	public void testdoPostRequestNullBody() throws ClientProtocolException, IOException {
+	public void testdoPostRequestNullBody() throws ClientProtocolException, IOException, NotFound, InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout {
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
 		D1RestClient rc = new D1RestClient();
-		HttpResponse resp = rc.doPostRequest(u.getUrl(),null);
-		InputStream is = resp.getEntity().getContent();
+		InputStream is = rc.doPostRequest(u.getUrl(),null);
 		String contentString = IOUtils.toString(is);
 		System.out.println(contentString);
 		assertTrue("",contentString.contains("request.META[ REQUEST_METHOD ] = POST"));		
@@ -97,7 +107,7 @@ public class D1RestClientEchoTest {
 	}
 	
 	@Test
-	public void testdoPutRequest() throws ClientProtocolException, IOException {
+	public void testdoPutRequest() throws ClientProtocolException, IOException, NotFound, InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout {
 		D1Url u = new D1Url(echoNode, mmEchoResource);
 		u.addNextPathElement("bizz");
 //		u.addNonEmptyParamPair("x", "y");
@@ -105,8 +115,7 @@ public class D1RestClientEchoTest {
 		ent.addParamPart("Jabberwocky", "Twas brillig and the slithy tove, did gyre and gimble in the wabe");
 		ent.addFilePart("Jabberwocky2", "All mimsy was the borogrove, and the mome wrath ungrabe.");
 		D1RestClient rc = new D1RestClient();
-		HttpResponse resp = rc.doPutRequest(u.getUrl(),ent);
-		InputStream is = resp.getEntity().getContent();
+		InputStream is = rc.doPutRequest(u.getUrl(),ent);
 		String contentString = IOUtils.toString(is);
 		System.out.println(contentString);
 		assertTrue("",contentString.contains("request.META[ CONTENT_TYPE ] = multipart/form-data"));		
@@ -115,7 +124,7 @@ public class D1RestClientEchoTest {
 	}
 	
 	@Test
-	public void testdoPostRequest() throws ClientProtocolException, IOException {
+	public void testdoPostRequest() throws ClientProtocolException, IOException, NotFound, InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout {
 		D1Url u = new D1Url(echoNode, mmEchoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
@@ -123,8 +132,8 @@ public class D1RestClientEchoTest {
 		ent.addParamPart("Jabberwocky", "Twas brillig and the slithy tove, did gyre and gimble in the wabe");
 		ent.addFilePart("Jabberwocky2", "All mimsy was the borogrove, and the mome wrath ungrabe.");
 		D1RestClient rc = new D1RestClient();
-		HttpResponse resp = rc.doPostRequest(u.getUrl(),ent);
-		InputStream is = resp.getEntity().getContent();
+//		HttpResponse resp = rc.doPostRequest(u.getUrl(),ent);
+		InputStream is = rc.doPostRequest(u.getUrl(),ent);
 		String contentString = IOUtils.toString(is);
 		System.out.println(contentString);
 		assertTrue("",contentString.contains("request.META[ CONTENT_TYPE ] = multipart/form-data"));		
@@ -138,12 +147,13 @@ public class D1RestClientEchoTest {
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
 		D1RestClient rc = new D1RestClient();
-		HttpResponse resp = rc.doGetRequest(u.getUrl());
-		int status = resp.getStatusLine().getStatusCode();
-		System.out.println("status code = " + status);
-		InputStream is = null;
+//		HttpResponse resp = rc.doGetRequest(u.getUrl());
+//		int status = resp.getStatusLine().getStatusCode();
+//		System.out.println("status code = " + status);
+		
 		try {
-			is = rc.filterErrors(resp);
+//			is = rc.filterErrors(resp);
+			InputStream is = rc.doGetRequest(u.getUrl());
 			String contentString = IOUtils.toString(is);
 			System.out.println(contentString);
 			fail("should not have reached here");
