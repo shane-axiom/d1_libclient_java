@@ -23,19 +23,11 @@ package org.dataone.client;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.io.InputStream;
-
-import org.dataone.client.D1Node.ResponseData;
-import org.dataone.service.Constants;
-import org.dataone.service.exceptions.InvalidRequest;
-import org.dataone.service.types.AuthToken;
+import org.dataone.service.types.Identifier;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ErrorCollector;
-import org.dataone.client.D1Node;
-
-import org.apache.commons.io.IOUtils;
 
 /**
  * Unit tests for the DataONE Java client methods.
@@ -62,7 +54,7 @@ public class D1ClientUnitTest  {
 
     
     /**
-     * test the failed creation of a doc
+     * test the unit test harness
      */
     @Test
     public void testHarness()
@@ -70,6 +62,21 @@ public class D1ClientUnitTest  {
         printHeader("testHarness");
         assertTrue(true);
         assertEquals("1", "1");
+    }
+ 
+    /**
+     * test creation of a D1Object and its download
+     */
+    @Test
+    public void testD1Object()
+    {
+        printHeader("testD1Object");
+        Identifier id = new Identifier();
+        String TEST_IDENTIFIER = "repl:testID201120161032499";
+        id.setValue(TEST_IDENTIFIER );
+        D1Object d1o = new D1Object(id);
+        assertTrue(d1o != null);
+        assertEquals(id.getValue(), d1o.getIdentifier().getValue());
     }
     
     private void printHeader(String methodName)
