@@ -42,6 +42,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.entity.mime.MultipartEntity;
 
 import org.dataone.service.exceptions.AuthenticationTimeout;
 import org.dataone.service.exceptions.IdentifierNotUnique;
@@ -81,13 +82,13 @@ import org.xml.sax.SAXException;
  * It is built to encapsulate the communication conventions dataONE is following
  * but does not implement the dataONE REST api itself.
  */
-public class D1RestClient extends RestClient {
-    
+public class D1RestClient {
+    protected RestClient rc;
 	/**
 	 * Constructor to create a new instance.
 	 */
 	public D1RestClient() {
-		super();
+		this.rc = new RestClient();
 	}
 
 	public ObjectList example_listObjects(AuthToken token, Date startTime,
@@ -110,10 +111,9 @@ public class D1RestClient extends RestClient {
 		url.addNonEmptyParamPair("count",count.toString());
 
 
-		HttpResponse response = doGetRequest(url.getUrl());
 		InputStream is = null;
 		try {
-			is = filterErrors(response);
+			is = doGetRequest(url.getUrl());
 		} catch (NotFound e) {
 		} catch (IdentifierNotUnique e) {
 		} catch (UnsupportedType e) {
@@ -127,9 +127,51 @@ public class D1RestClient extends RestClient {
 		return ol;
 	}
  
-    // ==========================  New Handlers ===========================//
+	public InputStream doGetRequest(String url) 
+	throws NotFound, InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, 
+	UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented,
+	InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout,
+	ClientProtocolException, IOException 
+	{
+		return filterErrors(rc.doGetRequest(url));
+	}
 
- 
+	public InputStream doDeleteRequest(String url) 
+	throws NotFound, InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, 
+	UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented,
+	InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout,
+	ClientProtocolException, IOException 
+	{
+		return filterErrors(rc.doDeleteRequest(url));
+	}
+	
+	public Header[] doHeadRequest(String url) 
+	throws NotFound, InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, 
+	UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented,
+	InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout,
+	ClientProtocolException, IOException 
+	{
+		return filterErrorsHeader(rc.doHeadRequest(url));
+	}
+	
+	public InputStream doPutRequest(String url, MultipartEntity entity) 
+	throws NotFound, InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, 
+	UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented,
+	InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout,
+	ClientProtocolException, IOException 
+	{
+		return filterErrors(rc.doPutRequest(url, entity));
+	}
+	
+	public InputStream doPostRequest(String url, MultipartEntity entity) 
+	throws NotFound, InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, 
+	UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented,
+	InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout,
+	ClientProtocolException, IOException 
+	{
+		return filterErrors(rc.doPostRequest(url,entity));
+	}
+	
 	public InputStream filterErrors(HttpResponse res) throws NotFound, InvalidToken, ServiceFailure, NotAuthorized,
 	IdentifierNotUnique, UnsupportedType, InsufficientResources, InvalidSystemMetadata,
 	NotImplemented, InvalidCredentials, InvalidRequest, IllegalStateException, IOException, AuthenticationTimeout {
@@ -142,7 +184,17 @@ public class D1RestClient extends RestClient {
 		return res.getEntity().getContent();
 	}
 
-	
+	public Header[] filterErrorsHeader(HttpResponse res) throws NotFound, InvalidToken, ServiceFailure, NotAuthorized,
+	IdentifierNotUnique, UnsupportedType, InsufficientResources, InvalidSystemMetadata,
+	NotImplemented, InvalidCredentials, InvalidRequest, IllegalStateException, IOException, AuthenticationTimeout {
+
+		int code = res.getStatusLine().getStatusCode();
+		if (code != HttpURLConnection.HTTP_OK) {
+			// error, so throw exception
+			deserializeAndThrowException(res);
+		}		
+		return res.getAllHeaders();
+	}	
 
 	
 
@@ -217,12 +269,14 @@ public class D1RestClient extends RestClient {
 		// last updated 26-Jan-2011
 		// Note: there are a few conflicts that don't allow us to determine the proper Exception 	
     	case 400:
+    		// TODO: better detail codes to decide exception type
     		if (ee.getDetailCode().startsWith("1180")) {
     			throw new InvalidSystemMetadata("1180", ee.getDescription());
     		} else {
     			throw new InvalidRequest(ee.getDetailCode(), ee.getDescription());
     		}
     	case 401:
+    		// TODO: better detail codes to decide exception type
     		throw new InvalidCredentials(ee.getDetailCode(), ee.getDescription());
     	case 404:
     		throw new NotFound(ee.getDetailCode(), ee.getDescription());
@@ -234,7 +288,6 @@ public class D1RestClient extends RestClient {
 			throw new InsufficientResources(ee.getDetailCode(), ee.getDescription());
     	case 500:
     		throw new ServiceFailure(ee.getDetailCode(), ee.getDescription());
-    		// TODO: Handle other exception codes properly
     	default:
     		throw new ServiceFailure(ee.getDetailCode(), ee.getDescription());
     	}
@@ -246,9 +299,11 @@ public class D1RestClient extends RestClient {
     	ErrorElements ee = new ErrorElements();
     	ee.setCode(response.getStatusLine().getStatusCode());
 //    	ee.setDetailCode(detailCode);
-    	String body = IOUtils.toString(response.getEntity().getContent());
-    	ee.setDescription("parser for deserializing HTML not written yet.  Providing message body:\n" + body);
-    	
+    	if (response.getEntity() != null)
+    	{
+    		String body = IOUtils.toString(response.getEntity().getContent());
+    		ee.setDescription("parser for deserializing HTML not written yet.  Providing message body:\n" + body);
+    	}
     	return ee;
     }
 
@@ -257,9 +312,11 @@ public class D1RestClient extends RestClient {
     	
     	ee.setCode(response.getStatusLine().getStatusCode());
 //    	ee.setDetailCode(detailCode);
-    	String body = IOUtils.toString(response.getEntity().getContent());
-    	ee.setDescription("parser for deserializing JSON not written yet.  Providing message body:\n" + body);
-    	
+    	if (response.getEntity() != null)
+    	{
+    		String body = IOUtils.toString(response.getEntity().getContent());
+    		ee.setDescription("parser for deserializing JSON not written yet.  Providing message body:\n" + body);
+    	}
     	return ee;
     }
   
@@ -267,9 +324,11 @@ public class D1RestClient extends RestClient {
     	ErrorElements ee = new ErrorElements();
     	ee.setCode(response.getStatusLine().getStatusCode());
 //    	ee.setDetailCode(detailCode);
-    	String body = IOUtils.toString(response.getEntity().getContent());
-    	ee.setDescription("parser for deserializing CSV not written yet.  Providing message body:\n" + body);
-    	
+    	if (response.getEntity() != null)
+    	{
+    		String body = IOUtils.toString(response.getEntity().getContent());
+    		ee.setDescription("parser for deserializing CSV not written yet.  Providing message body:\n" + body);
+    	}
     	return ee;
     }
    
@@ -286,45 +345,47 @@ public class D1RestClient extends RestClient {
     	Document doc;
 
     	int httpCode = response.getStatusLine().getStatusCode();
-    	BufferedInputStream bErrorStream = new BufferedInputStream(response.getEntity().getContent());
-    	bErrorStream.mark(5000);  // good for resetting up to 5000 bytes	
+    	if (response.getEntity() != null)
+    	{
+    		BufferedInputStream bErrorStream = new BufferedInputStream(response.getEntity().getContent());
+    		bErrorStream.mark(5000);  // good for resetting up to 5000 bytes	
 
-    	String detailCode = null;
-    	String description = null;
-    	int errorCode = -1;
-    	try {
-    		DocumentBuilder db = dbf.newDocumentBuilder();
-    		doc = db.parse(bErrorStream);
-    		Element root = doc.getDocumentElement();
-    		root.normalize();
+    		String detailCode = null;
+    		String description = null;
+    		int errorCode = -1;
     		try {
-    			errorCode = getIntAttribute(root, "errorCode");
-    		} catch (NumberFormatException nfe){
-    			System.out.println("errorCode unexpectedly not able to parse to int," +
-    					" using http status for creating exception");
-    			errorCode = httpCode;
-    		}    		
-    		if (errorCode != httpCode)
-//				throw new ServiceFailure("1000","errorCode in message body doesn't match httpStatus");
-				System.out.println("errorCode in message body doesn't match httpStatus," +
-						" using errorCode for creating exception");
-    		
-    		
-    		detailCode = root.getAttribute("detailCode");
-    		description = getTextValue(root, "description");
+    			DocumentBuilder db = dbf.newDocumentBuilder();
+    			doc = db.parse(bErrorStream);
+    			Element root = doc.getDocumentElement();
+    			root.normalize();
+    			try {
+    				errorCode = getIntAttribute(root, "errorCode");
+    			} catch (NumberFormatException nfe){
+    				System.out.println("errorCode unexpectedly not able to parse to int," +
+    				" using http status for creating exception");
+    				errorCode = httpCode;
+    			}    		
+    			if (errorCode != httpCode)
+    				//				throw new ServiceFailure("1000","errorCode in message body doesn't match httpStatus");
+    				System.out.println("errorCode in message body doesn't match httpStatus," +
+    				" using errorCode for creating exception");
 
-    	} catch (SAXException e) {
-    		description = deserializeNonXMLErrorStream(bErrorStream,e);
-    	} catch (IOException e) {
-    		description = deserializeNonXMLErrorStream(bErrorStream,e);
-    	} catch (ParserConfigurationException e) {
-    		description = deserializeNonXMLErrorStream(bErrorStream,e);
-    	}
 
-    	ee.setCode(errorCode);
-    	ee.setDetailCode(detailCode);
-    	ee.setDescription(description);
-    	
+    			detailCode = root.getAttribute("detailCode");
+    			description = getTextValue(root, "description");
+
+    		} catch (SAXException e) {
+    			description = deserializeNonXMLErrorStream(bErrorStream,e);
+    		} catch (IOException e) {
+    			description = deserializeNonXMLErrorStream(bErrorStream,e);
+    		} catch (ParserConfigurationException e) {
+    			description = deserializeNonXMLErrorStream(bErrorStream,e);
+    		}
+
+    		ee.setCode(errorCode);
+    		ee.setDetailCode(detailCode);
+    		ee.setDescription(description);
+    	}  	
     	return ee;
     }
 
