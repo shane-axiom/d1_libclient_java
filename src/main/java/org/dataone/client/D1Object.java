@@ -101,14 +101,23 @@ public class D1Object {
         this.data = data;
     }
 
+    /**
+     * @return the list of objects this describes
+     */
     public List<Identifier> getDescribeList() {
         return sysmeta.getDescribeList();
     }
     
+    /**
+     * @return the list of objects that describe this
+     */
     public List<Identifier> getDescribeByList() {
         return sysmeta.getDescribedByList();
     }
 
+    /**
+     * @return the list of objects that obsolete this
+     */
     public List<Identifier> getObsoletedByList() {
         return sysmeta.getObsoletedByList();
     }
