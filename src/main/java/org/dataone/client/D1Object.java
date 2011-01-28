@@ -22,6 +22,7 @@ package org.dataone.client;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.dataone.service.exceptions.InvalidRequest;
@@ -56,64 +57,6 @@ public class D1Object {
         download(id);
     }
 
-    /**
-     * Contact D1 services to download the metadata and data.
-     * @param id identifier to be downloaded
-     */
-    private void download(Identifier id) {
-        D1Object o = null;
-
-        CNode cn = D1Client.getCN();
-        AuthToken token = new AuthToken();
-       
-        ObjectLocationList oll;
-        try {
-            // Get the system metadata for the object
-            SystemMetadata m = cn.getSystemMetadata(token, id);
-            if (m != null) {
-                setSystemMetadata(m);
-            }
-            
-            // Resolve the MNs that contain the object
-            oll = cn.resolve(token, id);
-            // Try each of the locations until we find the object
-            for (ObjectLocation ol : oll.getObjectLocationList()) {
-                System.out.println("   === Trying Location: "
-                        + ol.getNodeIdentifier().getValue() + " ("
-                        + ol.getUrl() + ")");
-                               
-                // Get the contents of the object itself
-                MNode mn = D1Client.getMN(ol.getBaseURL());
-                InputStream is = mn.get(token, id);
-                try {
-                    setData(IOUtils.toByteArray(is));
-                } catch (IOException e) {
-                    // Couldn't get the object from this object location
-                    // So move on to the next
-                    e.printStackTrace();
-                }
-            }
-        } catch (InvalidToken e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (ServiceFailure e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (NotAuthorized e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (NotFound e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (InvalidRequest e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (NotImplemented e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-    }
-    
     /**
      * @return the identifier
      */
@@ -156,5 +99,69 @@ public class D1Object {
     public void setData(byte[] data) {
         assert(data != null);
         this.data = data;
+    }
+
+    public List<Identifier> getDescribeList() {
+        return sysmeta.getDescribeList();
+    }
+    
+    public List<Identifier> getDescribeByList() {
+        return sysmeta.getDescribedByList();
+    }
+
+    public List<Identifier> getObsoletedByList() {
+        return sysmeta.getObsoletedByList();
+    }
+    
+    /**
+     * Contact D1 services to download the metadata and data.
+     * @param id identifier to be downloaded
+     */
+    private void download(Identifier id) {
+        D1Object o = null;
+    
+        CNode cn = D1Client.getCN();
+        AuthToken token = new AuthToken();
+    
+        ObjectLocationList oll;
+        try {
+            // Get the system metadata for the object
+            SystemMetadata m = cn.getSystemMetadata(token, id);
+            if (m != null) {
+                setSystemMetadata(m);
+            }
+            
+            // Resolve the MNs that contain the object
+            oll = cn.resolve(token, id);
+            // Try each of the locations until we find the object
+            for (ObjectLocation ol : oll.getObjectLocationList()) {
+                System.out.println("   === Trying Location: "
+                        + ol.getNodeIdentifier().getValue() + " ("
+                        + ol.getUrl() + ")");
+                               
+                // Get the contents of the object itself
+                MNode mn = D1Client.getMN(ol.getBaseURL());
+                InputStream is = mn.get(token, id);
+                try {
+                    setData(IOUtils.toByteArray(is));
+                } catch (IOException e) {
+                    // Couldn't get the object from this object location
+                    // So move on to the next
+                    e.printStackTrace();
+                }
+            }
+        } catch (InvalidToken e) {
+            e.printStackTrace();
+        } catch (ServiceFailure e) {
+            e.printStackTrace();
+        } catch (NotAuthorized e) {
+            e.printStackTrace();
+        } catch (NotFound e) {
+            e.printStackTrace();
+        } catch (InvalidRequest e) {
+            e.printStackTrace();
+        } catch (NotImplemented e) {
+            e.printStackTrace();
+        }
     }
 }
