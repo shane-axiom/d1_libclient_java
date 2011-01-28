@@ -64,9 +64,11 @@ public class DataPackage {
      * @param id the identifier of the object to be added
      */
     public void add(Identifier id) {
-        D1Object o = new D1Object(id);
-        if (o != null) {
-            objects.put(id, o);
+        if (!contains(id)) {
+            D1Object o = new D1Object(id);
+            if (o != null) {
+                objects.put(id, o);
+            }
         }
     }
     
@@ -78,8 +80,17 @@ public class DataPackage {
     }
     
     /**
+     * Determine if an object with the given Identifier is already present in the package.
+     * @param id the Identifier to be checked
+     * @return boolean true if the Identifier is in the package
+     */
+    public boolean contains(Identifier id) {
+        return objects.containsKey(id);
+    }
+    
+    /**
      * Get the D1Object associated with a given Identifier.
-     * @param id the identifer of the object to be retrieved
+     * @param id the identifier of the object to be retrieved
      * @return the D1Object for that identifier, or null if not found
      */
     public D1Object get(Identifier id) {
@@ -95,7 +106,7 @@ public class DataPackage {
     }
     
     /**
-     * Retrun the set of Identifiers that are part of this package.
+     * Return the set of Identifiers that are part of this package.
      * @return a Set of Identifiers in the package
      */
     public Set<Identifier> identifiers() {
@@ -103,28 +114,27 @@ public class DataPackage {
     }
     
     /**
-     * Bootstrap the package from a file, downloading all associated objects.
+     * Bootstrap the package from a file, downloading all associated objects by 
+     * recursing through the describes and describedBy lists.
      * @param id the identifier to be used in bootstrapping a package
      */
     private void buildPackage(Identifier id) {
-        // Add the object itself to the package
-        add(id);
         
-        // Add all of the objects that this one describes
-        List<Identifier> describes = get(id).getDescribeList();
-        for (Identifier current_id : describes) {
-            add(current_id);
-        }
-        
-        // Add all of the objects that this id is described by, and
-        // any objects that those in turn describe
-        List<Identifier> describedBy = get(id).getDescribeByList();
-        for (Identifier current_id : describes) {
-            add(current_id);
-            // TODO: this probably should recurse, rather than halting here
-            List<Identifier> db2 = get(id).getDescribeByList();
-            for (Identifier db2_current : describes) {
-                add(db2_current);
+        if (!contains(id)) {
+
+            // Add the object itself to the package
+            add(id);
+
+            // Add all of the objects that this one describes
+            List<Identifier> describes = get(id).getDescribeList();
+            for (Identifier current_id : describes) {
+                buildPackage(current_id);
+            }
+
+            // Add all of the objects that this id is described by
+            List<Identifier> describedBy = get(id).getDescribeByList();
+            for (Identifier current_id : describes) {
+                buildPackage(current_id);
             }
         }
     }
