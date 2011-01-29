@@ -47,7 +47,10 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.commons.httpclient.params.DefaultHttpParams;
+import org.apache.commons.httpclient.params.HttpConnectionParams;
 import org.apache.commons.io.IOUtils;
+import org.dataone.mimemultipart.MultipartRequestHandler;
 import org.dataone.service.Constants;
 import org.dataone.service.EncodingUtilities;
 import org.dataone.service.exceptions.BaseException;
@@ -67,6 +70,7 @@ import org.dataone.service.types.Identifier;
 import org.dataone.service.types.ObjectFormat;
 import org.dataone.service.types.ObjectList;
 import org.dataone.service.types.SystemMetadata;
+import org.dataone.service.types.util.ServiceTypeUtil;
 import org.jibx.runtime.BindingDirectory;
 import org.jibx.runtime.IBindingFactory;
 import org.jibx.runtime.IMarshallingContext;
@@ -76,6 +80,10 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.params.HttpParams;
 
 /**
  * An abstract node class that contains base functionality shared between 
@@ -256,61 +264,6 @@ public abstract class D1Node {
 		dateFormat.setTimeZone(TimeZone.getTimeZone("GMT-0"));
 		String s = dateFormat.format(d);
 		return s;
-	}
-	
-	/**
-	 * create a mime multipart message from object and sysmeta and write it to out
-	 */
-	protected void createMimeMultipart(OutputStream out, InputStream object,
-			SystemMetadata sysmeta) throws IOException, BaseException
-	{
-		if (sysmeta == null) {
-			throw new InvalidSystemMetadata("1000",
-					"System metadata was null.  Can't create multipart form.");
-		}
-		Date d = new Date();
-		String boundary = d.getTime() + "";
-
-		String mime = "MIME-Version:1.0\n";
-		mime += "Content-type:multipart/mixed; boundary=\"" + boundary + "\"\n";
-		boundary = "--" + boundary + "\n";
-		mime += boundary;
-		mime += "Content-Disposition: attachment; filename=systemmetadata\n\n";
-		out.write(mime.getBytes());
-		out.flush();
-		
-		//write the sys meta
-		try
-		{
-		    ByteArrayInputStream bais = serializeSystemMetadata(sysmeta);
-			IOUtils.copy(bais, out);
-		}
-		catch(JiBXException e)
-		{
-		    throw new ServiceFailure("1000",
-                    "Could not serialize the system metadata to multipart: "
-                            + e.getMessage());
-		}
-		
-		out.write("\n".getBytes());	
-
-		if (object != null) 
-		{    
-			out.write(boundary.getBytes());
-			out.write("Content-Disposition: attachment; filename=object\n\n".getBytes());
-			try {
-				mime += IOUtils.copy(object, out);
-			} 
-			catch (IOException ioe) 
-			{
-				throw new ServiceFailure("1000",
-						"Error serializing object to multipart: "
-								+ ioe.getMessage());
-			}
-			out.write("\n".getBytes());
-		}
-
-		out.write((boundary + "--").getBytes());		
 	}
 
 	/**
@@ -602,9 +555,7 @@ public abstract class D1Node {
 	@SuppressWarnings("rawtypes")
 	protected void serializeServiceType(Class type, Object object,
 			OutputStream out) throws JiBXException {
-		IBindingFactory bfact = BindingDirectory.getFactory(type);
-		IMarshallingContext mctx = bfact.createMarshallingContext();
-		mctx.marshalDocument(object, "UTF-8", null, out);
+		ServiceTypeUtil.serializeServiceType(type, object, out);
 	}
 
 	/**
@@ -620,10 +571,7 @@ public abstract class D1Node {
 	@SuppressWarnings("rawtypes")
 	protected Object deserializeServiceType(Class type, InputStream is)
 			throws JiBXException {
-		IBindingFactory bfact = BindingDirectory.getFactory(type);
-		IUnmarshallingContext uctx = bfact.createUnmarshallingContext();
-		Object o = (Object) uctx.unmarshalDocument(is, null);
-		return o;
+		return ServiceTypeUtil.deserializeServiceType(type, is);
 	}
 
 	protected InputStream handleHttpGet(AuthToken token, String resource)
@@ -689,18 +637,48 @@ public abstract class D1Node {
             UnsupportedType, InsufficientResources, InvalidSystemMetadata,
             NotImplemented
     {
-        String resource = Constants.RESOURCE_OBJECTS + "/" + EncodingUtilities.encodeUrlPathSegment(guid.getValue());
+        String resource = Constants.RESOURCE_OBJECTS + "/" + 
+            EncodingUtilities.encodeUrlPathSegment(guid.getValue()) + 
+            "?sessionid=" + token.getToken();
 
         File outputFile = null;
         InputStream multipartStream;
+        HttpResponse response = null;
+        HttpUriRequest request = null;
         try
         {
             Date d = new Date();
             File tmpDir = new File(Constants.TEMP_DIR);
-            outputFile = new File(tmpDir, "mmp.output." + d.getTime());
-            FileOutputStream dataSink = new FileOutputStream(outputFile);
-            createMimeMultipart(dataSink, object, sysmeta);
-            multipartStream = new FileInputStream(outputFile);
+            MultipartRequestHandler mrhandler = null;
+            String serviceUrl = nodeBaseServiceUrl + resource;
+            System.out.println("requesting create or update to url " + serviceUrl);
+            if(action.equals("create"))
+            {
+                mrhandler = new MultipartRequestHandler(serviceUrl, Constants.POST);
+            }
+            else if(action.equals("update"))
+            {
+                if(obsoletedGuid == null)
+                {
+                    throw new NullPointerException("obsoletedGuid must not be null in MNode.update");
+                }
+                mrhandler = new MultipartRequestHandler(nodeBaseServiceUrl, Constants.PUT);
+                mrhandler.addParamPart("obsoletedGuid", 
+                        EncodingUtilities.encodeUrlQuerySegment(obsoletedGuid.getValue()));
+            }
+            
+            //write object and sysmeta to mmp files
+            mrhandler.addFilePart(object, "object");
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            serializeServiceType(SystemMetadata.class, sysmeta, baos);
+            mrhandler.addFilePart("sysmeta", baos.toString());
+            //why the following code to add the sessionid does not work, i do not know
+            //DefaultHttpParams params = new DefaultHttpParams();
+            //HttpParams httpparams = params.setParameter("sessionid", token.getToken());
+            //mrhandler.getRequest().setParams(httpparams);
+            
+            response = mrhandler.executeRequest();
+            request = mrhandler.getRequest();
         }
         catch(Exception e)
         {
@@ -710,33 +688,14 @@ public abstract class D1Node {
                     e.getMessage() + " " + e.getStackTrace());
         }
         
-        ResponseData rd = null;
-        
-        if(action.equals("create"))
-        {
-            rd = sendRequest(token, resource, Constants.POST, null,
-                "multipart/mixed", multipartStream, null);
-            //InputStream responseStream = rd.getContentStream();
-            
-        }
-        else if(action.equals("update"))
-        {
-            if(obsoletedGuid == null)
-            {
-                throw new NullPointerException("obsoletedGuid must not be null in MNode.update");
-            }
-            String urlParams = "obsoletedGuid=" + EncodingUtilities.encodeUrlQuerySegment(obsoletedGuid.getValue());
-            rd = sendRequest(token, resource, Constants.PUT, urlParams,
-                    "multipart/mixed", multipartStream, null);
-        }
  
         // First handle any errors that were generated
-        int code = rd.getCode();
-        if (code != HttpURLConnection.HTTP_OK) {
-            InputStream errorStream = rd.getErrorStream();
+        String statusLine = response.getStatusLine().toString();
+        System.out.println("response status: " + statusLine);
+        
+        /*if (statusLine.indexOf("200") == -1) {
             try {
-                outputFile.delete();
-                deserializeAndThrowException(code,errorStream);
+                //deserializeAndThrowException(code,errorStream);
             } catch (InvalidToken e) {
                 throw e;
             } catch (ServiceFailure e) {
@@ -758,11 +717,11 @@ public abstract class D1Node {
                         "Method threw improper exception: " + e.getMessage());
             } finally {
                 outputFile.delete();
-            }     
-        } 
+            }   
+        } */
         
         // Now only handling non-http-error cases
-        InputStream is = rd.getContentStream();
+        /*InputStream is = rd.getContentStream();
         Identifier id = null;
        	try
        	{
@@ -784,7 +743,8 @@ public abstract class D1Node {
        	}
        	
         outputFile.delete();
-        return id;
+        return id;*/
+        return guid;
     }
 
 	/**
