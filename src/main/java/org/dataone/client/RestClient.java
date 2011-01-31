@@ -166,10 +166,12 @@ public class RestClient {
 		HttpUriRequest req = null;
 		if (httpMethod == Constants.GET) 
 			req = new HttpGet(url);        	
-		if (httpMethod == Constants.HEAD) 
+		else if (httpMethod == Constants.HEAD) 
 			req = new HttpHead(url);       
-		if (httpMethod == Constants.DELETE)
+		else if (httpMethod == Constants.DELETE)
 			req = new HttpDelete(url);       
+		else 
+			throw new ClientProtocolException("method requested not defined: " + httpMethod);
 		return httpClient.execute(req);
 	}
 	
@@ -179,8 +181,10 @@ public class RestClient {
 		HttpEntityEnclosingRequestBase req = null;
 		if (httpMethod == Constants.PUT)
 			req = new HttpPut(url);
-		if (httpMethod == Constants.POST)
+		else if (httpMethod == Constants.POST)
 			req = new HttpPost(url);
+		else 
+			throw new ClientProtocolException("method requested not defined: " + httpMethod);
 	
 		if (mpe != null) {
 			req.setEntity(mpe);
