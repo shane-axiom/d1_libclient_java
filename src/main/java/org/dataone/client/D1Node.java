@@ -52,7 +52,9 @@ import org.apache.commons.httpclient.params.HttpConnectionParams;
 import org.apache.commons.io.IOUtils;
 import org.dataone.mimemultipart.MultipartRequestHandler;
 import org.dataone.service.Constants;
+import org.dataone.service.D1Url;
 import org.dataone.service.EncodingUtilities;
+import org.dataone.service.exceptions.AuthenticationTimeout;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.IdentifierNotUnique;
 import org.dataone.service.exceptions.InsufficientResources;
@@ -64,6 +66,7 @@ import org.dataone.service.exceptions.NotAuthorized;
 import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
+import org.dataone.service.exceptions.UnsupportedMetadataType;
 import org.dataone.service.exceptions.UnsupportedType;
 import org.dataone.service.types.AuthToken;
 import org.dataone.service.types.Identifier;
@@ -80,8 +83,10 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.params.HttpParams;
 
@@ -136,6 +141,90 @@ public abstract class D1Node {
         this.nodeBaseServiceUrl = nodeBaseServiceUrl;
     }
     
+  
+    /**
+     * Get the resource with the specified guid.  Used by both the CNode and 
+     * MNode implementations.
+     */
+    public InputStream get(AuthToken token, Identifier guid)
+            throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
+            NotImplemented {
+       
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(),Constants.RESOURCE_OBJECTS);
+    	url.addNextPathElement(guid.getValue());
+       	if (token != null)
+    		url.addNonEmptyParamPair("sessionid",token.getToken());
+
+		D1RestClient client = new D1RestClient();
+		
+		InputStream is = null;
+		try {
+			is = client.doGetRequest(url.getUrl());
+		} catch (IdentifierNotUnique e) {
+		} catch (UnsupportedType e) {
+		} catch (InsufficientResources e) {
+		} catch (InvalidSystemMetadata e) {
+		} catch (InvalidCredentials e) {
+		} catch (UnsupportedMetadataType e) {
+		} catch (InvalidRequest e) {
+		} catch (AuthenticationTimeout e) {
+		} catch (ClientProtocolException e) {
+			throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+		} catch (IllegalStateException e) {
+			throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+		} catch (IOException e) {
+			throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+		} catch (HttpException e) {
+			throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+		}
+		return is;
+    	
+    }
+    
+    /**
+     * Get the system metadata from a resource with the specified guid. Used
+     * by both the CNode and MNode implementations.
+     */
+    public SystemMetadata getSystemMetadata(AuthToken token, Identifier guid)
+     throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
+     InvalidRequest, NotImplemented {
+
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(),Constants.RESOURCE_META);
+    	url.addNextPathElement(guid.getValue());
+       	if (token != null)
+    		url.addNonEmptyParamPair("sessionid",token.getToken());
+
+		D1RestClient client = new D1RestClient();
+		
+		InputStream is = null;
+	
+		try {
+			is = client.doGetRequest(url.getUrl());
+		
+		} catch (IdentifierNotUnique e1) {
+		} catch (UnsupportedType e1) {
+		} catch (InsufficientResources e1) {
+		} catch (InvalidSystemMetadata e1) {
+		} catch (InvalidCredentials e1) {
+		} catch (AuthenticationTimeout e1) {
+		} catch (UnsupportedMetadataType e) {
+		} catch (ClientProtocolException e) {
+			throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+		} catch (IllegalStateException e) {
+			throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+		} catch (IOException e) {
+			throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+		} catch (HttpException e) {
+			throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+		}
+		try {
+            return deserializeSystemMetadata(is);
+        } catch (Exception e) {
+            throw new ServiceFailure("1090",
+                    "Could not deserialize the systemMetadata: " + e.getMessage());
+        }
+    }
+
     /**
      *   listObjects is the simple implementation of /<service>/object (no query parameters, or additional path segments)
      *   use this when no parameters  being used
@@ -153,96 +242,56 @@ public abstract class D1Node {
   
     	return listObjects(null,null,null,null,null,null,null);
         
-//        InputStream is;
-//		try {
-//			is = handleHttpGet(null,resource);
-//		} catch (NotFound eNF) {
-//			// convert notfound error to service failure
-//			// because it is not valid in the listObjects case
-//			throw new ServiceFailure("1000", "Method threw unexpected exception: " + eNF.getMessage());
-//		}
-//         
-//        try {
-//            return deserializeObjectList(is);
-//        } catch (JiBXException e) {
-//            throw new ServiceFailure("500",
-//                    "Could not deserialize the ObjectList: " + e.getMessage());
-//        }
     }
-    
-//    public ObjectList listObjects()
-//    throws NotAuthorized, InvalidRequest, NotImplemented, ServiceFailure, InvalidToken {
-//    	return listObjects(null);
-//    }
-    
-    /**
-     * Get the resource with the specified guid.  Used by both the CNode and 
-     * MNode implementations.
-     */
-    public InputStream get(AuthToken token, Identifier guid)
-            throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
-            NotImplemented {
-        String resource = Constants.RESOURCE_OBJECTS + "/" + EncodingUtilities.encodeUrlPathSegment(guid.getValue());
- 
-        return handleHttpGet(token,resource);
-    }
-    
-    /**
-     * Get the system metadata from a resource with the specified guid. Used
-     * by both the CNode and MNode implementations.
-     */
-    public SystemMetadata getSystemMetadata(AuthToken token, Identifier guid)
-     throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
-     InvalidRequest, NotImplemented {
-
-        String resource = Constants.RESOURCE_META + "/" + EncodingUtilities.encodeUrlPathSegment(guid.getValue());
-        InputStream is = handleHttpGet(token,resource);
-        
-        try {
-            return deserializeSystemMetadata(is);
-        } catch (Exception e) {
-            throw new ServiceFailure("1090",
-                    "Could not deserialize the systemMetadata: " + e.getMessage());
-        }
-    }
-
+  
     
     public ObjectList listObjects(AuthToken token, Date startTime,
             Date endTime, ObjectFormat objectFormat, Boolean replicaStatus,
             Integer start, Integer count) throws NotAuthorized, InvalidRequest,
             NotImplemented, ServiceFailure, InvalidToken {
         
-    	String resource = Constants.RESOURCE_OBJECTS;
+    	if (endTime != null && startTime != null && !endTime.after(startTime))
+			throw new InvalidRequest("1000", "startTime must be after stopTime in NMode.listObjects");
 
-        if (endTime != null && startTime != null && !endTime.after(startTime))
-            throw new InvalidRequest("1000", "startTime must be after stopTime in NMode.listObjects");
+		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
+		
+//		url.addNonEmptyParamPair("startTime", convertDateToGMT(startTime));
+//		url.addNonEmptyParamPair("endTime", convertDateToGMT(endTime));
+		url.addDateParamPair("startTime", startTime);
+		url.addDateParamPair("endTime", endTime);
+		if (objectFormat != null) 
+			url.addNonEmptyParamPair("objectFormat", objectFormat.toString());
+		if (replicaStatus != null)
+			url.addNonEmptyParamPair("replicaStatus", replicaStatus.toString());
+		url.addNonEmptyParamPair("start",start);
+		url.addNonEmptyParamPair("count",count);
+    	if (token != null)
+    		url.addNonEmptyParamPair("sessionid",token.getToken());
 
-        // TODO: Check that the format is valid, throw InvalidRequest if not
-        String params = "";
-        if (startTime != null)
-            params += "startTime=" + convertDateToGMT(startTime) + "&";
-        if (endTime != null) 
-        	params += "endTime=" + convertDateToGMT(endTime) + "&";
-        if (objectFormat != null)
-        	params += "objectFormat=" + objectFormat + "&";
-        if (replicaStatus != null)   
-        	params += "replicaStatus=" + replicaStatus + "&";
-        if (start != null)
-        	params += "start=" + start + "&";
-        if (count != null)
-        	params += "count=" + count + "&";
+		D1RestClient client = new D1RestClient();
 
-        // clean up param string
-        if (params.endsWith("&"))
-        	params = params.substring(0, params.length()-1);
-                   
-        InputStream is;
+		InputStream is = null;
 		try {
-			is = handleHttpGet(token,resource,params);
-		} catch (NotFound eNF) {
+			is = client.doGetRequest(url.getUrl());
+		} catch (NotFound e) {
 			// convert notfound error to service failure
 			// because it is not valid in the listObjects case
-			throw new ServiceFailure("1000", "Method threw unexpected exception: " + eNF.getMessage());
+			throw new ServiceFailure("1000", "Method threw unexpected exception: " + e.getMessage());
+		} catch (IdentifierNotUnique e) {
+		} catch (UnsupportedType e) {
+		} catch (InsufficientResources e) {
+		} catch (InvalidSystemMetadata e) {
+		} catch (InvalidCredentials e) {
+		} catch (UnsupportedMetadataType e) {
+		} catch (AuthenticationTimeout e) {
+		} catch (ClientProtocolException e) {
+			throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+		} catch (IllegalStateException e) {
+			throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+		} catch (IOException e) {
+			throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+		} catch (HttpException e) {
+			throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
 		}
          
         try {
@@ -641,7 +690,7 @@ public abstract class D1Node {
             EncodingUtilities.encodeUrlPathSegment(guid.getValue()) + 
             "?sessionid=" + token.getToken();
 
-        File outputFile = null;
+ //       File outputFile = null;
         InputStream multipartStream;
         HttpResponse response = null;
         HttpUriRequest request = null;
@@ -682,7 +731,7 @@ public abstract class D1Node {
         }
         catch(Exception e)
         {
-            outputFile.delete();
+   //         outputFile.delete();
             throw new ServiceFailure("1000", 
                     "Error creating MMP stream in MNode.handleCreateOrUpdate: " + 
                     e.getMessage() + " " + e.getStackTrace());
@@ -721,32 +770,37 @@ public abstract class D1Node {
         } */
         
         // Now only handling non-http-error cases
-        /*InputStream is = rd.getContentStream();
+        InputStream is = null;
         Identifier id = null;
        	try
        	{
+       		if (response.getEntity() != null)
+       			is = response.getEntity().getContent();
        		if (is != null)
-         		id = (Identifier)deserializeServiceType(Identifier.class, is);
+       			System.out.println(IOUtils.toString(is));
+//         		id = (Identifier)deserializeServiceType(Identifier.class, is);
        		else
        			throw new IOException("Unexpected empty inputStream for the request");
        	}
-       	catch (JiBXException e) {
-       		throw new ServiceFailure("500",
-       				"Could not deserialize the returned Identifier: " + e.getMessage());
-       	}
+//       	catch (JiBXException e) {
+//       		throw new ServiceFailure("500",
+//       				"Could not deserialize the returned Identifier: " + e.getMessage());
+//       	}
        	catch (IOException e) {
        		throw new ServiceFailure("1000",
                         "IOException in processing: " + e.getMessage());
        	}
        	finally {
-       		outputFile.delete();
+ //      		outputFile.delete();
        	}
        	
-        outputFile.delete();
-        return id;*/
-        return guid;
+ //       outputFile.delete();
+        return id;
+        //return guid;
     }
 
+  
+    
 	/**
 	 * A class to contain the data from a server response
 	 */

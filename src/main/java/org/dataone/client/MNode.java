@@ -21,6 +21,7 @@
 package org.dataone.client;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -31,11 +32,15 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.dataone.mimemultipart.MultipartRequestHandler;
+import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.Constants;
+import org.dataone.service.D1Url;
 import org.dataone.service.EncodingUtilities;
+import org.dataone.service.exceptions.AuthenticationTimeout;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.IdentifierNotUnique;
 import org.dataone.service.exceptions.InsufficientResources;
@@ -47,6 +52,7 @@ import org.dataone.service.exceptions.NotAuthorized;
 import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
+import org.dataone.service.exceptions.UnsupportedMetadataType;
 import org.dataone.service.exceptions.UnsupportedType;
 import org.dataone.service.mn.MemberNodeCrud;
 import org.dataone.service.mn.MemberNodeReplication;
@@ -191,8 +197,52 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
             ServiceFailure, NotAuthorized, IdentifierNotUnique,
             UnsupportedType, InsufficientResources, InvalidSystemMetadata,
             NotImplemented {
-                
-        return handleCreateOrUpdate(token, guid, object, sysmeta, null, "create");
+ 
+    	
+      	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
+    	url.addNextPathElement(guid.getValue());
+    	if (token != null)
+    		url.addNonEmptyParamPair("sessionid", token.getToken());
+
+    	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
+    	mpe.addFilePart(object, "object");
+    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    	try {
+			serializeServiceType(SystemMetadata.class, sysmeta, baos);
+		} catch (JiBXException e) {
+			throw new ServiceFailure("1090",
+                    "Could not serialize the systemMetadata: "
+                            + e.getMessage());
+		}
+      	mpe.addFilePart("systemmetadata",baos.toString());
+    	
+    	D1RestClient client = new D1RestClient();
+    	InputStream is = null;
+
+    	try {
+    		is = client.doPostRequest(url.getUrl(),mpe);
+    	} catch (NotFound e) {
+    	} catch (InvalidCredentials e) {
+    	} catch (InvalidRequest e) {
+    	} catch (AuthenticationTimeout e) {
+    	} catch (UnsupportedMetadataType e) {
+    	} catch (ClientProtocolException e) {
+    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+    	} catch (IllegalStateException e) {
+    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+    	} catch (IOException e) {
+    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+    	} catch (HttpException e) {
+    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+    	}    	
+    	try {
+   // 		System.out.println(IOUtils.toString(is));
+            return (Identifier)deserializeServiceType(Identifier.class, is);
+        } catch (Exception e) {
+            throw new ServiceFailure("1090",
+                    "Could not deserialize the systemMetadata: " + e.getMessage());
+        }
+// //       return handleCreateOrUpdate(token, guid, object, sysmeta, null, "create");
     }
 
     public Identifier create2(AuthToken token, Identifier guid,
@@ -294,7 +344,52 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
             IdentifierNotUnique, UnsupportedType, InsufficientResources,
             NotFound, InvalidSystemMetadata, NotImplemented {
 
-        return handleCreateOrUpdate(token, guid, object, sysmeta, obsoletedGuid, "update");
+
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
+    	url.addNextPathElement(guid.getValue());
+    	if (token != null)
+    		url.addNonEmptyParamPair("sessionid", token.getToken());
+
+    	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
+    	mpe.addParamPart("obsoletedGuid", 
+                        EncodingUtilities.encodeUrlQuerySegment(obsoletedGuid.getValue()));
+    	mpe.addFilePart(object, "object");
+    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    	try {
+			serializeServiceType(SystemMetadata.class, sysmeta, baos);
+		} catch (JiBXException e) {
+			throw new ServiceFailure("1090",
+                    "Could not serialize the systemMetadata: "
+                            + e.getMessage());
+		}
+		// TODO: check the part name, create uses 'systemmetadata'
+      	mpe.addFilePart("sysmeta",baos.toString());
+    	
+    	D1RestClient client = new D1RestClient();
+    	InputStream is = null;
+    	
+    	try {
+    		is = client.doPutRequest(url.getUrl(),mpe);
+    	} catch (NotFound e) {
+    	} catch (InvalidCredentials e) {
+    	} catch (InvalidRequest e) {
+    	} catch (AuthenticationTimeout e) {
+    	} catch (UnsupportedMetadataType e) {
+    	} catch (ClientProtocolException e) {
+    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+    	} catch (IllegalStateException e) {
+    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+    	} catch (IOException e) {
+    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+    	} catch (HttpException e) {
+    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+    	}    	
+    	try {
+    		return (Identifier)deserializeServiceType(Identifier.class, is);
+    	} catch (Exception e) {
+    		throw new ServiceFailure("1090",
+    				"Could not deserialize the systemMetadata: " + e.getMessage());
+    	}
     }
 
     @Override
@@ -444,54 +539,52 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
             String checksumAlgorithm) throws InvalidToken, ServiceFailure,
             NotAuthorized, NotFound, InvalidRequest, NotImplemented 
     {
-        String resource = Constants.RESOURCE_CHECKSUM;
-        String params = "";
-        if(token == null)
-        {
+    	// validate input
+    	if(token == null)
             token = new AuthToken("public");
-        }
-        if(guid == null || guid.getValue().trim().equals(""))
-        {
-            throw new InvalidRequest("1402", "GUID cannot be null.");
-        }
-        
-        params += "token=" + token.getToken() + "&id=" + EncodingUtilities.encodeUrlQuerySegment(guid.getValue());
-        
-        if(!checksumAlgorithm.trim().equals("") && checksumAlgorithm != null)
-        {
-            params += "&checksumAlgorithm=" + checksumAlgorithm;
-        }
-        
-        InputStream is = null;
-        ResponseData rd = sendRequest(token, resource, Constants.GET, params, null, null, null);
-        int code = rd.getCode();
-        if (code != HttpURLConnection.HTTP_OK) {
-            InputStream errorStream = rd.getErrorStream();
-            try {
-                deserializeAndThrowException(code,errorStream);
-            } catch (InvalidToken e) {
-                throw e;
-            } catch (ServiceFailure e) {
-                throw e;
-            } catch (NotAuthorized e) {
-                throw e;
-            } catch (NotImplemented e) {
-                throw e;
-            } catch (BaseException e) {
-                throw new ServiceFailure("1000",
-                        "Method threw improper exception: " + e.getMessage());
-            }
 
-        } else {
-            is = rd.getContentStream();
-            try {
-                return (Checksum) deserializeServiceType(Checksum.class, is);
-            } catch (JiBXException e) {
-                throw new ServiceFailure("500",
-                        "Could not deserialize the returned Checksum: " + e.getMessage());
-            }
-        }
-        return null;
+        if(guid == null || guid.getValue().trim().equals(""))
+            throw new InvalidRequest("1402", "GUID cannot be null nor empty");
+
+        
+        
+        // assemble the url
+        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_CHECKSUM);
+        
+    	if (token != null)
+    		url.addNonEmptyParamPair("sessionid", token.getToken());
+    	url.addNonEmptyParamPair("id", guid.getValue());
+    	url.addNonEmptyParamPair("checksumAlgorithm", checksumAlgorithm);
+
+    	// send the request
+    	D1RestClient client = new D1RestClient();
+    	InputStream is = null;
+    	
+    	try {
+			is = client.doGetRequest(url.getUrl());
+		} catch (IdentifierNotUnique e1) {
+		} catch (UnsupportedType e1) {
+		} catch (InsufficientResources e1) {
+		} catch (InvalidSystemMetadata e1) {
+		} catch (InvalidCredentials e1) {
+		} catch (AuthenticationTimeout e1) {
+		} catch (UnsupportedMetadataType e1) {
+		} catch (ClientProtocolException e) {
+    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+    	} catch (IllegalStateException e) {
+    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+    	} catch (IOException e) {
+    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+    	} catch (HttpException e) {
+    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+    	}  
+
+    	try {
+    		return (Checksum) deserializeServiceType(Checksum.class, is);
+    	} catch (JiBXException e) {
+    		throw new ServiceFailure("500",
+    				"Could not deserialize the returned Checksum: " + e.getMessage());
+    	}
     }
 
     /**
@@ -500,48 +593,39 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
     public Log getLogRecords(AuthToken token, Date fromDate, Date toDate,
             Event event) throws InvalidToken, ServiceFailure, NotAuthorized,
             InvalidRequest, NotImplemented {
-        String resource = Constants.RESOURCE_LOG + "?";
-        String params = null;
-        if (fromDate != null) {
-            params = "fromDate=" + convertDateToGMT(fromDate);
-        }
-        if (toDate != null) {
-            if (params != null) {
-                params += "&toDate=" + convertDateToGMT(toDate);
-            } else {
-                params += "toDate=" + convertDateToGMT(toDate);
-            }
-        }
-        if (event != null) {
-            if (params != null) {
-                params += "&event=" + event.toString();
-            } else {
-                params = "event=" + event.toString();
-            }
-        }
 
-        InputStream is = null;
-        ResponseData rd = sendRequest(token, resource, Constants.GET, params, null, null, null);
-        int code = rd.getCode();
-        if (code != HttpURLConnection.HTTP_OK) {
-            InputStream errorStream = rd.getErrorStream();
-            try {
-                deserializeAndThrowException(code, errorStream);
-            } catch (InvalidToken e) {
-                throw e;
-            } catch (ServiceFailure e) {
-                throw e;
-            } catch (NotAuthorized e) {
-                throw e;
-            } catch (NotImplemented e) {
-                throw e;
-            } catch (BaseException e) {
-                throw new ServiceFailure("1000",
-                        "Method threw improper exception: " + e.getMessage());
-            }
-        } else {
-            is = rd.getContentStream();
-        }
+        // assemble the url
+        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_LOG);
+        
+    	if (token != null)
+    		url.addNonEmptyParamPair("sessionid", token.getToken());
+    	url.addDateParamPair("fromDate", fromDate);
+    	url.addDateParamPair("toDate", toDate);
+    	url.addNonEmptyParamPair("event", event.toString());
+
+    	// send the request
+    	D1RestClient client = new D1RestClient();
+    	InputStream is = null;
+    	
+    	try {
+			is = client.doGetRequest(url.getUrl());
+		} catch (NotFound e1) {
+		} catch (IdentifierNotUnique e1) {
+		} catch (UnsupportedType e1) {
+		} catch (InsufficientResources e1) {
+		} catch (InvalidSystemMetadata e1) {
+		} catch (InvalidCredentials e1) {
+		} catch (AuthenticationTimeout e1) {
+		} catch (UnsupportedMetadataType e1) {
+		} catch (ClientProtocolException e) {
+    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+    	} catch (IllegalStateException e) {
+    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+    	} catch (IOException e) {
+    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+    	} catch (HttpException e) {
+    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+    	}  
 
         try {
             return (Log) deserializeServiceType(Log.class, is);
