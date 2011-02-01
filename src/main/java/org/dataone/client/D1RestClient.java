@@ -263,6 +263,8 @@ public class D1RestClient {
     		ee = deserializeJson(response);
        	else if (contentType.contains("csv"))
     		ee = deserializeCsv(response);
+      	else if (contentType.contains("text/plain"))
+    		ee = deserializeTextPlain(response);
     	else 
     		// attempt the default...
     		ee = deserializeXml(response);
@@ -332,6 +334,18 @@ public class D1RestClient {
     }
   
     private ErrorElements deserializeCsv(HttpResponse response) throws IllegalStateException, IOException {
+    	ErrorElements ee = new ErrorElements();
+    	ee.setCode(response.getStatusLine().getStatusCode());
+//    	ee.setDetailCode(detailCode);
+    	if (response.getEntity() != null)
+    	{
+    		String body = IOUtils.toString(response.getEntity().getContent());
+    		ee.setDescription("parser for deserializing CSV not written yet.  Providing message body:\n" + body);
+    	}
+    	return ee;
+    }
+    
+    private ErrorElements deserializeTextPlain(HttpResponse response) throws IllegalStateException, IOException {
     	ErrorElements ee = new ErrorElements();
     	ee.setCode(response.getStatusLine().getStatusCode());
 //    	ee.setDetailCode(detailCode);
