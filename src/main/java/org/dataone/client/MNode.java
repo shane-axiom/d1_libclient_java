@@ -214,7 +214,8 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
                     "Could not serialize the systemMetadata: "
                             + e.getMessage());
 		}
-      	mpe.addFilePart("systemmetadata",baos.toString());
+//      	mpe.addFilePart("systemmetadata",baos.toString());
+      	mpe.addFilePart("sysmeta",baos.toString());
     	
     	D1RestClient client = new D1RestClient();
     	InputStream is = null;
