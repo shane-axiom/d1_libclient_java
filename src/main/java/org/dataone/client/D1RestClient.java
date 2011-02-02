@@ -179,6 +179,8 @@ public class D1RestClient {
 	NotImplemented, InvalidCredentials, InvalidRequest, IllegalStateException, IOException, AuthenticationTimeout, UnsupportedMetadataType, HttpException {
 
 		int code = res.getStatusLine().getStatusCode();
+		System.out.println("response httpCode: " + code);
+//		System.out.println(IOUtils.toString(res.getEntity().getContent()));
 		if (code != HttpURLConnection.HTTP_OK) {
 			// error, so throw exception
 			deserializeAndThrowException(res);
@@ -191,6 +193,7 @@ public class D1RestClient {
 	NotImplemented, InvalidCredentials, InvalidRequest, IllegalStateException, IOException, AuthenticationTimeout, UnsupportedMetadataType, HttpException {
 
 		int code = res.getStatusLine().getStatusCode();
+		System.out.println("response httpCode: " + code);
 		if (code != HttpURLConnection.HTTP_OK) {
 			// error, so throw exception
 			deserializeAndThrowException(res);

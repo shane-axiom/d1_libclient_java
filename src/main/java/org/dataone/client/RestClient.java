@@ -172,6 +172,7 @@ public class RestClient {
 			req = new HttpDelete(url);       
 		else 
 			throw new ClientProtocolException("method requested not defined: " + httpMethod);
+		req.setHeader("Accept", "text/xml");
 		return httpClient.execute(req);
 	}
 	
@@ -192,6 +193,7 @@ public class RestClient {
 		} else {
 			System.out.println("entity: null");
 		}
+		req.setHeader("Accept", "text/xml");
 		return httpClient.execute(req);
 		
 	}
