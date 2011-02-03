@@ -223,10 +223,15 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
     	try {
     		is = client.doPostRequest(url.getUrl(),mpe);
     	} catch (NotFound e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
     	} catch (InvalidCredentials e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
     	} catch (InvalidRequest e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
     	} catch (AuthenticationTimeout e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
     	} catch (UnsupportedMetadataType e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
     	} catch (ClientProtocolException e) {
     		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
     	} catch (IllegalStateException e) {
@@ -372,10 +377,15 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
     	try {
     		is = client.doPutRequest(url.getUrl(),mpe);
     	} catch (NotFound e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
     	} catch (InvalidCredentials e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
     	} catch (InvalidRequest e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
     	} catch (AuthenticationTimeout e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
     	} catch (UnsupportedMetadataType e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
     	} catch (ClientProtocolException e) {
     		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
     	} catch (IllegalStateException e) {
@@ -386,10 +396,11 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
     		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
     	}    	
     	try {
+    		System.out.println(IOUtils.toString(is));
     		return (Identifier)deserializeServiceType(Identifier.class, is);
     	} catch (Exception e) {
     		throw new ServiceFailure("1090",
-    				"Could not deserialize the systemMetadata: " + e.getMessage());
+    				"Could not deserialize the returned Identifier: " + e.getMessage());
     	}
     }
 
@@ -563,13 +574,20 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
     	
     	try {
 			is = client.doGetRequest(url.getUrl());
-		} catch (IdentifierNotUnique e1) {
-		} catch (UnsupportedType e1) {
-		} catch (InsufficientResources e1) {
-		} catch (InvalidSystemMetadata e1) {
-		} catch (InvalidCredentials e1) {
-		} catch (AuthenticationTimeout e1) {
-		} catch (UnsupportedMetadataType e1) {
+		} catch (IdentifierNotUnique e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (UnsupportedType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InsufficientResources e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InvalidSystemMetadata e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InvalidCredentials e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (AuthenticationTimeout e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (UnsupportedMetadataType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (ClientProtocolException e) {
     		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
     	} catch (IllegalStateException e) {
@@ -611,13 +629,20 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
     	try {
 			is = client.doGetRequest(url.getUrl());
 		} catch (NotFound e1) {
-		} catch (IdentifierNotUnique e1) {
-		} catch (UnsupportedType e1) {
-		} catch (InsufficientResources e1) {
-		} catch (InvalidSystemMetadata e1) {
-		} catch (InvalidCredentials e1) {
-		} catch (AuthenticationTimeout e1) {
-		} catch (UnsupportedMetadataType e1) {
+		} catch (IdentifierNotUnique e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (UnsupportedType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InsufficientResources e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InvalidSystemMetadata e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InvalidCredentials e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (AuthenticationTimeout e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (UnsupportedMetadataType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (ClientProtocolException e) {
     		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
     	} catch (IllegalStateException e) {
