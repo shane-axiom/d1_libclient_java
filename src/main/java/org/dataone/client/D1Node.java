@@ -452,7 +452,11 @@ public abstract class D1Node {
 			} catch (NumberFormatException nfe){
 				System.out.println("  errorCode unexpectedly not able to parse to int");
 			}
-			detailCode = root.getAttribute("detailCode");
+                        if (root.hasAttribute("detailCode")) {
+                            detailCode = root.getAttribute("detailCode");
+                        } else {
+                            detailCode = "-1";
+                        }
 			description = getTextValue(root, "description");
 			
 		} catch (SAXException e) {
@@ -511,9 +515,13 @@ public abstract class D1Node {
 		NodeList nl = e.getElementsByTagName(tag);
 		if (nl != null && nl.getLength() > 0) {
 			Element el = (Element) nl.item(0);
-			text = el.getFirstChild().getNodeValue();
+                        if ((el.getFirstChild().getNodeType() == Element.TEXT_NODE) ||
+                                el.getFirstChild().getNodeType() == Element.CDATA_SECTION_NODE) {
+                            text = el.getFirstChild().getNodeValue();
+                        } else {
+                            text = "";
+                        }
 		}
-
 		return text;
 	}
 
@@ -525,9 +533,13 @@ public abstract class D1Node {
 	 */
 	protected int getIntAttribute(Element e, String attName)
 	throws NumberFormatException {
+            if (e.hasAttribute(attName)) {
 		String attText = e.getAttribute(attName);
 		int x = Integer.parseInt(attText);
 		return x;
+            } else {
+                return -1;
+            }
 	}
 
 	/**
