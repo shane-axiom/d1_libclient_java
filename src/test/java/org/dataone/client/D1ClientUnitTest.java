@@ -23,10 +23,6 @@ package org.dataone.client;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Set;
-
-import org.dataone.service.types.Identifier;
-import org.dataone.service.types.ObjectFormat;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -37,7 +33,6 @@ import org.junit.rules.ErrorCollector;
  * @author Matthew Jones
  */
 public class D1ClientUnitTest  {
-    private static final String TEST_IDENTIFIER = "repl:testID201120161032499";
 
     @Rule 
     public ErrorCollector errorCollector = new ErrorCollector();
@@ -66,38 +61,6 @@ public class D1ClientUnitTest  {
         printHeader("testHarness");
         assertTrue(true);
         assertEquals("1", "1");
-    }
- 
-    /**
-     * test creation of a D1Object and its download
-     */
-    @Test
-    public void testD1Object()
-    {
-        printHeader("testD1Object");
-        Identifier id = new Identifier();
-        id.setValue(TEST_IDENTIFIER );
-        D1Object d1o = new D1Object(id);
-        assertTrue(d1o != null);
-        assertEquals(id.getValue(), d1o.getIdentifier().getValue());
-    }
-    
-    @Test
-    public void testDataPackage()
-    {
-        printHeader("testDataPackage");
-        Identifier id = new Identifier();
-        id.setValue(TEST_IDENTIFIER );
-        DataPackage dp = new DataPackage(id);
-        assertTrue(dp != null);
-        assertEquals(id.getValue(), dp.get(id).getIdentifier().getValue());
-        Set<Identifier> identifiers = dp.identifiers();
-        for (Identifier current_id : identifiers) {
-            D1Object o = dp.get(current_id);
-            ObjectFormat fmt = o.getType();
-            byte[] data = o.getData();
-            System.out.println(current_id.getValue() + ": " + fmt + " (" + data.length + ")");
-        }
     }
     
     private void printHeader(String methodName)
