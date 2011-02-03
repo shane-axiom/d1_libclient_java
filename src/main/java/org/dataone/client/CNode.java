@@ -23,9 +23,12 @@ package org.dataone.client;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.security.cert.X509Extension;
+import java.util.List;
 
 import org.dataone.service.Constants;
 import org.dataone.service.EncodingUtilities;
+import org.dataone.service.cn.CoordinatingNodeAuthentication;
 import org.dataone.service.cn.CoordinatingNodeAuthorization;
 import org.dataone.service.cn.CoordinatingNodeCrud;
 import org.dataone.service.exceptions.AuthenticationTimeout;
@@ -41,7 +44,10 @@ import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.exceptions.UnsupportedType;
+import org.dataone.service.types.AccessPolicy;
 import org.dataone.service.types.AuthToken;
+import org.dataone.service.types.AuthType;
+import org.dataone.service.types.Event;
 import org.dataone.service.types.Identifier;
 import org.dataone.service.types.IdentifierFormat;
 import org.dataone.service.types.ObjectList;
@@ -55,7 +61,7 @@ import org.jibx.runtime.JiBXException;
  * execute CN services.
  */
 
-public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingNodeAuthorization {
+public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingNodeAuthorization, CoordinatingNodeAuthentication {
 
     /**
      * Construct a Coordinating Node, passing in the base url for node services.
@@ -217,7 +223,7 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
      */
     @Override
     public AuthToken login(String username, String password)
-            throws InvalidCredentials, AuthenticationTimeout, ServiceFailure {
+            throws InvalidCredentials, AuthenticationTimeout, ServiceFailure, NotImplemented, InvalidRequest {
         // TODO: reassess the exceptions thrown here.  Look at the Authentication interface.
         // TODO: this method assumes an access control model that is not finalized, refactor when it is
         String postData = "username=" + username + "&password=" + password;
@@ -283,7 +289,7 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
     @Override
     public boolean setAccess(AuthToken token, Identifier id, String principal,
             String permission, String permissionType, String permissionOrder)
-            throws ServiceFailure {
+            throws InvalidToken, ServiceFailure, NotFound, NotAuthorized, NotImplemented, InvalidRequest  {
         // TODO: this method assumes an access control model that is not finalized, refactor when it is
         String params = "guid=" + EncodingUtilities.encodeUrlQuerySegment(id.getValue()) + "&principal=" + principal
                 + "&permission=" + permission + "&permissionType="
@@ -310,15 +316,6 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    @Override
-    public boolean verify(AuthToken token) throws NotAuthorized {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public boolean isAuthorized(AuthToken token, Identifier guid, String operation) throws InvalidToken, NotFound, NotAuthorized {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
     /**
      * deserialize an InputStream to an ObjectLocationList object
      * @param is
@@ -328,6 +325,51 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
     protected ObjectLocationList deserializeResolve(InputStream is)
                     throws JiBXException {
             return (ObjectLocationList) deserializeServiceType(ObjectLocationList.class, is);
+    }
+
+    @Override
+    public boolean isAuthorized(AuthToken token, Identifier pid, Event operation) throws ServiceFailure, InvalidToken, NotFound, NotAuthorized, NotImplemented, InvalidRequest {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public boolean setAccess(AuthToken token, Identifier pid, AccessPolicy accessPolicy) throws InvalidToken, ServiceFailure, NotFound, NotAuthorized, NotImplemented, InvalidRequest {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public AuthToken login(String user, String password, AuthType type) throws InvalidCredentials, AuthenticationTimeout, NotImplemented, InvalidRequest, ServiceFailure {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public AuthToken getAuthToken(X509Extension cert) throws InvalidCredentials, AuthenticationTimeout, ServiceFailure, NotImplemented, InvalidRequest {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public Principal newAccount(String username, String password, AuthType type) throws ServiceFailure, IdentifierNotUnique, InvalidCredentials, NotImplemented, InvalidRequest {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public boolean verifyToken(AuthToken token) throws ServiceFailure, NotAuthorized, NotImplemented, InvalidToken, InvalidRequest {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public boolean mapIdentity(AuthToken token1, AuthToken token2) throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented, InvalidRequest {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public Identifier createGroup(AuthToken token, Identifier groupName) throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented, InvalidRequest, IdentifierNotUnique {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public Identifier createGroup(AuthToken token, Identifier groupName, List<Identifier> members) throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented, InvalidRequest {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
 }
