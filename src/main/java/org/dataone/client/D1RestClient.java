@@ -399,9 +399,16 @@ public class D1RestClient {
     				System.out.println("errorCode in message body doesn't match httpStatus," +
     				" using errorCode for creating exception");
 
-
-    			detailCode = root.getAttribute("detailCode");
-    			name = root.getAttribute("name");
+                        if (root.hasAttribute("detailCode")) {
+                            detailCode = root.getAttribute("detailCode");
+                        }  else {
+                            detailCode = "-1";
+                        }
+                        if (root.hasAttribute("name")) {
+                            name = root.getAttribute("name");
+                        } else {
+                            name = "Unknown";
+                        }
     			description = getTextValue(root, "description");
 
     		} catch (SAXException e) {
@@ -446,7 +453,12 @@ public class D1RestClient {
 		NodeList nl = e.getElementsByTagName(tag);
 		if (nl != null && nl.getLength() > 0) {
 			Element el = (Element) nl.item(0);
-			text = el.getFirstChild().getNodeValue();
+                    if ((el.getFirstChild().getNodeType() == Element.TEXT_NODE) ||
+                                el.getFirstChild().getNodeType() == Element.CDATA_SECTION_NODE) {
+                        text = el.getFirstChild().getNodeValue();
+                    } else {
+                        text = "";
+                    }
 		}
 
 		return text;
@@ -460,9 +472,13 @@ public class D1RestClient {
 	 */
 	protected int getIntAttribute(Element e, String attName)
 	throws NumberFormatException {
+            if (e.hasAttribute(attName)) {
 		String attText = e.getAttribute(attName);
 		int x = Integer.parseInt(attText);
 		return x;
+            } else {
+                return -1;
+            }
 	}
 
 	
