@@ -151,13 +151,21 @@ public abstract class D1Node {
 		try {
 			is = client.doGetRequest(url.getUrl());
 		} catch (IdentifierNotUnique e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (UnsupportedType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (InsufficientResources e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (InvalidSystemMetadata e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (InvalidCredentials e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (UnsupportedMetadataType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (InvalidRequest e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (AuthenticationTimeout e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
 		} catch (IllegalStateException e) {
@@ -191,13 +199,20 @@ public abstract class D1Node {
 		try {
 			is = client.doGetRequest(url.getUrl());
 		
-		} catch (IdentifierNotUnique e1) {
-		} catch (UnsupportedType e1) {
-		} catch (InsufficientResources e1) {
-		} catch (InvalidSystemMetadata e1) {
-		} catch (InvalidCredentials e1) {
-		} catch (AuthenticationTimeout e1) {
+		} catch (IdentifierNotUnique e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (UnsupportedType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InsufficientResources e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InvalidSystemMetadata e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InvalidCredentials e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (AuthenticationTimeout e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (UnsupportedMetadataType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
 		} catch (IllegalStateException e) {
@@ -268,12 +283,19 @@ public abstract class D1Node {
 			// because it is not valid in the listObjects case
 			throw new ServiceFailure("1000", "Method threw unexpected exception: " + e.getMessage());
 		} catch (IdentifierNotUnique e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (UnsupportedType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (InsufficientResources e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (InvalidSystemMetadata e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (InvalidCredentials e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (UnsupportedMetadataType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (AuthenticationTimeout e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
 		} catch (IllegalStateException e) {
