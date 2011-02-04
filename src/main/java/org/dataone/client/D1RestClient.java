@@ -86,11 +86,13 @@ import org.xml.sax.SAXException;
  */
 public class D1RestClient {
     protected RestClient rc;
+    private boolean exceptionHandling = true;
 	/**
 	 * Constructor to create a new instance.
 	 */
 	public D1RestClient() {
 		this.rc = new RestClient();
+		this.exceptionHandling = true;
 	}
 
 	public ObjectList example_listObjects(AuthToken token, Date startTime,
@@ -178,13 +180,15 @@ public class D1RestClient {
 	IdentifierNotUnique, UnsupportedType, InsufficientResources, InvalidSystemMetadata,
 	NotImplemented, InvalidCredentials, InvalidRequest, IllegalStateException, IOException, AuthenticationTimeout, UnsupportedMetadataType, HttpException {
 
-		int code = res.getStatusLine().getStatusCode();
-		System.out.println("response httpCode: " + code);
-//		System.out.println(IOUtils.toString(res.getEntity().getContent()));
-		if (code != HttpURLConnection.HTTP_OK) {
-			// error, so throw exception
-			deserializeAndThrowException(res);
-		}		
+		if (this.getExceptionHandling()) {
+			int code = res.getStatusLine().getStatusCode();
+			System.out.println("response httpCode: " + code);
+			//		System.out.println(IOUtils.toString(res.getEntity().getContent()));
+			if (code != HttpURLConnection.HTTP_OK) {
+				// error, so throw exception
+				deserializeAndThrowException(res);
+			}		
+		}
 		return res.getEntity().getContent();
 	}
 
@@ -192,17 +196,27 @@ public class D1RestClient {
 	IdentifierNotUnique, UnsupportedType, InsufficientResources, InvalidSystemMetadata,
 	NotImplemented, InvalidCredentials, InvalidRequest, IllegalStateException, IOException, AuthenticationTimeout, UnsupportedMetadataType, HttpException {
 
-		int code = res.getStatusLine().getStatusCode();
-		System.out.println("response httpCode: " + code);
-		if (code != HttpURLConnection.HTTP_OK) {
-			// error, so throw exception
-			deserializeAndThrowException(res);
-		}		
+		if (this.getExceptionHandling()) {
+			int code = res.getStatusLine().getStatusCode();
+			System.out.println("response httpCode: " + code);
+			if (code != HttpURLConnection.HTTP_OK) {
+				// error, so throw exception
+				deserializeAndThrowException(res);
+			}		
+		}
 		return res.getAllHeaders();
 	}	
 
-	
+	public void setExceptionHandling(boolean b) {
+		this.exceptionHandling = b;
+	}
 
+	public boolean getExceptionHandling() {
+		return this.exceptionHandling;
+	}
+
+	
+	
 	
 // ========================  original handlers ==============================//
     
