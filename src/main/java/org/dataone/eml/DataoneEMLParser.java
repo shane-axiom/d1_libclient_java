@@ -23,6 +23,7 @@ package org.dataone.eml;
 
 import java.io.IOException;
 import java.io.InputStream;
+
 import java.util.Vector;
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -111,6 +112,10 @@ public class DataoneEMLParser
         {
             return parseEML210Document(d);
         }
+        else if(namespace.equals(ObjectFormat.EML_2_1_1.toString()))
+        {
+            return parseEML211Document(d);
+        }
         else
         {
             throw new ParserConfigurationException(
@@ -163,8 +168,21 @@ public class DataoneEMLParser
         return parseEMLDocument(d, ObjectFormat.EML_2_1_0);
     }
     
+    /**
+     * parse and EML 2.1.1 document
+     * @param d
+     * @return
+     */
+    private EMLDocument parseEML211Document(Document d) throws XPathExpressionException
+    {
+        System.out.println("Parsing an EML 2.1.1 document.");
+        return parseEMLDocument(d, ObjectFormat.EML_2_1_1);
+    }
+    
     private EMLDocument parseEMLDocument(Document d, ObjectFormat docType) throws XPathExpressionException
     {
+        System.out.println("DataoneEMLParser.parseEMLDocument() called.");
+        
         EMLDocument emld = new EMLDocument();
         NodeList result = runXPath("//distribution", d);        
         
@@ -173,6 +191,7 @@ public class DataoneEMLParser
         {
             for (int i = 0; i < result.getLength(); i++) 
             {
+                // find the data URL
                 Node n = result.item(i);
                 NodeList nl = runXPath("online/url", n);
                 if(nl.getLength() == 0)
@@ -185,6 +204,8 @@ public class DataoneEMLParser
                     continue;
                 }
                 String url = firstChild.getNodeValue();
+                
+                // determine the data mime type
                 String mimeType = "";
                 Node physicalNode = result.item(i).getParentNode();
                 NodeList nl1 = runXPath("dataFormat/textFormat", physicalNode);
@@ -195,29 +216,56 @@ public class DataoneEMLParser
                 //of what the mime type is
                 if(nl1.getLength() > 0)
                 { //found a text format
-                    //TODO: it's possible here to do a bit more parsing to determine if this
-                    //is text/plain or text/csv
+                    System.out.println("Found a text format");
                     mimeType = ObjectFormat.TEXT_PLAIN.toString();
+                    NodeList nl4 = runXPath("dataFormat/textFormat/simpleDelimited", 
+                                            physicalNode);
+                    
+                    // look for CSV files
+                    if ( nl4.getLength() > 0 )
+                    {
+                      System.out.println("Found a csv format");
+                      mimeType = ObjectFormat.TEXT_CSV.toString();
+                    }
                 }
                 else if(nl2.getLength() > 0)
                 {
                     //TODO: could do a bit more parsing and refine this type more
+                    System.out.println("Found a binary raster format");
                     mimeType = ObjectFormat.OCTET_STREAM.toString();
+                    
                 }
                 else if(nl3.getLength() > 0)
                 {
-                    //TODO: could do a bit more parsing and refine this type more
+                    // it's possible that the mime type is in this field.  
+                    // Check for it and set the object format
+                    System.out.println("Found an externally defined format");
                     mimeType = ObjectFormat.OCTET_STREAM.toString();
+                    NodeList nl5 = runXPath("dataFormat/externallyDefinedFormat/formatName", 
+                                             physicalNode);
+                    if ( nl5.getLength() > 0 )
+                    {
+                      Node childNode1 = nl5.item(0).getFirstChild();
+                      String formatName = childNode1.getNodeValue();
+                      
+                      // set the object format if it exists
+                      ObjectFormat format = ObjectFormat.convert(formatName);
+                      if ( !(format == null) )
+                      {
+                        mimeType = format.toString();
+                      }
+                    }
+                    
                 }
 
                 System.out.println("mime type: " + mimeType); 
-                System.out.println("url: " + url);
+                System.out.println("url:       " + url);
                 emld.addDistributionMetadata(url, mimeType);
             }
         }
         
         emld.setObjectFormat(docType);
-        System.out.println("document type: " + emld.format.toString());
+        System.out.println("EML document type: " + emld.format.toString());
         
         return emld;
     }
