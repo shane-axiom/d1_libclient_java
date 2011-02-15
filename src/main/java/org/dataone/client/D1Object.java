@@ -170,10 +170,23 @@ public class D1Object {
      * @throws InsufficientResources
      * @throws InvalidSystemMetadata
      * @throws NotImplemented
+     * @throws InvalidRequest 
      */
     public void create(AuthToken token) throws InvalidToken, ServiceFailure, NotAuthorized, 
-        IdentifierNotUnique, UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented {
+        IdentifierNotUnique, UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented, InvalidRequest {
         
+        // Check first that the identifier is not already in use
+        CNode cn = D1Client.getCN();
+        try {
+            ObjectLocationList oll = cn.resolve(token, sysmeta.getIdentifier());
+            // The object was found, so this ID is already used
+            throw new IdentifierNotUnique("1120", "Identifier is already in use.  Please choose another and try create() again.");
+        } catch (NotFound e) {
+            // This is good -- we don't want to find the ID (or it would be in use already), 
+            // so we purposely let this exception fall through to continue processing
+        }
+        
+        // The ID is good, so insert into the MN
         MNode mn = D1Client.getMN(sysmeta.getAuthoritativeMemberNode().getValue());
         ByteArrayInputStream bis = new ByteArrayInputStream(data);
         Identifier rGuid = mn.create(token, sysmeta.getIdentifier(), bis, sysmeta);
