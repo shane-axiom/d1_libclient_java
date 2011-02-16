@@ -86,7 +86,7 @@ public class D1Object {
      * @throws NoSuchAlgorithmException if the checksum algorithm does not exist
      * @throws IOException if the data bytes can not be read
      */
-    public D1Object(Identifier id, byte[] data, ObjectFormat format, String submitter, String nodeId, 
+    public D1Object(Identifier id, byte[] data, String format, String submitter, String nodeId, 
             String[] describes, String[] describedBy) throws NoSuchAlgorithmException, IOException {
         this.data = data;
         this.sysmeta = generateSystemMetadata(id, data, format, submitter, nodeId, describes, describedBy);
@@ -183,11 +183,12 @@ public class D1Object {
             throw new IdentifierNotUnique("1120", "Identifier is already in use.  Please choose another and try create() again.");
         } catch (NotFound e) {
             // This is good -- we don't want to find the ID (or it would be in use already), 
-            // so we purposely let this exception fall through to continue processing
+            // so we purposely let this exception fall through to continue processing the create() call
         }
         
         // The ID is good, so insert into the MN
-        MNode mn = D1Client.getMN(sysmeta.getAuthoritativeMemberNode().getValue());
+        String mn_url = D1Client.getCN().lookupNodeBaseUrl(sysmeta.getAuthoritativeMemberNode().getValue());
+        MNode mn = D1Client.getMN(mn_url);
         ByteArrayInputStream bis = new ByteArrayInputStream(data);
         Identifier rGuid = mn.create(token, sysmeta.getIdentifier(), bis, sysmeta);
     }
@@ -285,12 +286,13 @@ public class D1Object {
      * @throws NoSuchAlgorithmException if the checksum algorithm does not exist
      * @throws IOException if the data bytes can not be read
      */
-    private SystemMetadata generateSystemMetadata(Identifier id, byte[] data, ObjectFormat format, String submitter, String nodeId, 
+    private SystemMetadata generateSystemMetadata(Identifier id, byte[] data, String format, String submitter, String nodeId, 
                 String[] describes, String[] describedBy) throws NoSuchAlgorithmException, IOException {
         
             SystemMetadata sm = new SystemMetadata();
             sm.setIdentifier(id);
-            sm.setObjectFormat(format);
+            ObjectFormat fmt = ObjectFormat.convert(format);
+            sm.setObjectFormat(fmt);
             
             //create the checksum
             InputStream is = new ByteArrayInputStream(data);

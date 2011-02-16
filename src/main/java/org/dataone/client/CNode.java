@@ -25,15 +25,22 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.URL;
 import java.security.cert.X509Extension;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPathExpressionException;
+
 import org.apache.http.HttpException;
 import org.apache.http.client.ClientProtocolException;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
-
 import org.dataone.service.Constants;
 import org.dataone.service.D1Url;
 import org.dataone.service.EncodingUtilities;
+import org.dataone.service.NodeListParser;
 import org.dataone.service.cn.CoordinatingNodeAuthentication;
 import org.dataone.service.cn.CoordinatingNodeAuthorization;
 import org.dataone.service.cn.CoordinatingNodeCrud;
@@ -62,6 +69,7 @@ import org.dataone.service.types.ObjectLocationList;
 import org.dataone.service.types.Principal;
 import org.dataone.service.types.SystemMetadata;
 import org.jibx.runtime.JiBXException;
+import org.xml.sax.SAXException;
 
 /**
  * CNode represents a DataONE Coordinating Node, and allows calling classes to
@@ -70,12 +78,31 @@ import org.jibx.runtime.JiBXException;
 
 public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingNodeAuthorization, CoordinatingNodeAuthentication {
 
+    private Map<String, String> nodeMap;
     /**
-     * Construct a Coordinating Node, passing in the base url for node services.
+     * Construct a Coordinating Node, passing in the base url for node services. The CN
+     * first retrieves a list of other nodes that can be used to look up node
+     * identifiers and base urls for further service invocations.
+     * 
      * @param nodeBaseServiceUrl base url for constructing service endpoints.
      */
     public CNode(String nodeBaseServiceUrl) {
         super(nodeBaseServiceUrl);
+        try {
+            initializeNodeMap();
+        } catch (XPathExpressionException e) {
+            nodeMap = new HashMap<String, String>();
+            e.printStackTrace();
+        } catch (IOException e) {
+            nodeMap = new HashMap<String, String>();
+            e.printStackTrace();
+        } catch (SAXException e) {
+            nodeMap = new HashMap<String, String>();
+            e.printStackTrace();
+        } catch (ParserConfigurationException e) {
+            nodeMap = new HashMap<String, String>();
+            e.printStackTrace();            
+        }
     }
 
     public ObjectList search(AuthToken token,String paramString) 
@@ -444,6 +471,57 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
     @Override
     public Identifier createGroup(AuthToken token, Identifier groupName, List<Identifier> members) throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented, InvalidRequest {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+    
+    /**
+     * Find the base URL for a Node based on the Node's identifier as it was registered with the 
+     * Coordinating Node.
+     * @param nodeId the identifier of the node to look up
+     * @return the base URL of the node's service endpoints
+     */
+    public String lookupNodeBaseUrl(String nodeId) {
+        String nodeBaseUrl = nodeMap.get(nodeId);
+        return nodeBaseUrl;
+    }
+    
+    /**
+     * Find the node identifier for a Node based on the base URL that is used to access its services
+     * by looing up the registration for the node at the Coordinating Node.
+     * @param nodeBaseUrl the base url for Node service access
+     * @return the identifier of the Node
+     */
+    public String lookupNodeId(String nodeBaseUrl) {
+        String nodeId = "";
+        for (String key : nodeMap.keySet()) {
+            if (nodeBaseUrl.equals(nodeMap.get(key))) {
+                // We have a match, so record it and break
+                nodeId = key;
+                break;
+            }
+        }
+        
+        return nodeId;
+    }
+    
+    /**
+     * Initialize the map of nodes (paids of NodeId/NodeUrl) by getting the map from the CN
+     * and parsing the XML, storing the node information in the nodeMap map. These values
+     * are used later to look up a node's URL based on its ID, or its ID based on its URL.
+     * @throws IOException 
+     * @throws ParserConfigurationException 
+     * @throws SAXException 
+     * @throws XPathExpressionException 
+     */
+    private void initializeNodeMap() throws IOException, XPathExpressionException, SAXException, ParserConfigurationException {
+        StringBuffer cnUrl = new StringBuffer(this.getNodeBaseServiceUrl());
+        if (!cnUrl.toString().endsWith("/")) {
+            cnUrl.append("/");
+        }
+        cnUrl.append("node");
+        URL url;
+        url = new URL(cnUrl.toString());
+        InputStream is = url.openStream();
+        nodeMap = NodeListParser.parseNodeListFile(is);
     }
 
 }

@@ -63,6 +63,7 @@ import org.dataone.service.types.DescribeResponse;
 import org.dataone.service.types.Event;
 import org.dataone.service.types.Identifier;
 import org.dataone.service.types.Log;
+import org.dataone.service.types.NodeReference;
 import org.dataone.service.types.ObjectFormat;
 import org.dataone.service.types.ObjectList;
 import org.dataone.service.types.SystemMetadata;
@@ -81,6 +82,23 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
      */
     public MNode(String nodeBaseServiceUrl) {
         super(nodeBaseServiceUrl);
+        // Look up the node from the CN Node list
+        CNode cn = D1Client.getCN();
+        String regNodeId = cn.lookupNodeId(nodeBaseServiceUrl);
+        this.setNodeId(regNodeId);
+    }
+    
+    /**
+     * Construct a Member Node, passing in the identifier for the node, from which the
+     * node's base url is looked up at the coordinating node.
+     * @param nodeRef the reference to the Node's identifier
+     */
+    public MNode(NodeReference nodeRef) {
+        this.setNodeId(nodeRef.getValue());
+        // Look up the node from the CN Node list
+        CNode cn = D1Client.getCN();
+        String baseUrl = cn.lookupNodeBaseUrl(nodeRef.getValue());
+        setNodeBaseServiceUrl(baseUrl);
     }
     
     /**
