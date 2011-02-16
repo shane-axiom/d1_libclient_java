@@ -199,7 +199,8 @@ public class D1Object {
      * @throws ServiceFailure
      */
     public void setPublicAccess(AuthToken token) throws ServiceFailure {
-        MNode mn = D1Client.getMN(sysmeta.getAuthoritativeMemberNode().getValue());
+        String mn_url = D1Client.getCN().lookupNodeBaseUrl(sysmeta.getAuthoritativeMemberNode().getValue());
+        MNode mn = D1Client.getMN(mn_url);
         mn.setAccess(token, sysmeta.getIdentifier(), "public", "read", "allow", "allowFirst");
     }
     
