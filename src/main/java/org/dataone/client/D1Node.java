@@ -89,6 +89,7 @@ public abstract class D1Node {
 	// TODO: This class should implement the MemberNodeAuthorization interface as well
     /** The URL string for the node REST API */
     private String nodeBaseServiceUrl;
+    private String nodeId;
     
 	/**
 	 * Constructor to create a new instance.
@@ -130,8 +131,21 @@ public abstract class D1Node {
         }
         this.nodeBaseServiceUrl = nodeBaseServiceUrl;
     }
-    
   
+    /**
+     * @return the nodeId
+     */
+    public String getNodeId() {
+        return nodeId;
+    }
+
+    /**
+     * @param nodeId the nodeId to set
+     */
+    public void setNodeId(String nodeId) {
+        this.nodeId = nodeId;
+    }
+
     /**
      * Get the resource with the specified guid.  Used by both the CNode and 
      * MNode implementations.

@@ -33,6 +33,7 @@ import org.junit.rules.ErrorCollector;
  * @author Matthew Jones
  */
 public class D1ClientUnitTest  {
+    private static final String TEST_CN_URL = "http://cn-dev.dataone.org/cn/";
 
     @Rule 
     public ErrorCollector errorCollector = new ErrorCollector();
@@ -51,6 +52,20 @@ public class D1ClientUnitTest  {
     	// moved to d1_integration product because of dependency on knb instance 
     }
 
+    @Test
+    public void testNodeMap() {
+        printHeader("testNodeMap");
+        D1Client d1 = new D1Client(TEST_CN_URL);
+        CNode cn = D1Client.getCN();
+        String nodeId = cn.lookupNodeId(TEST_CN_URL);
+        assertTrue(nodeId != null);
+        System.out.println("Found nodeId = " + nodeId);
+        assertTrue(nodeId.contains("cn-dev"));
+        String registeredUrl = cn.lookupNodeBaseUrl(nodeId);
+        assertTrue(registeredUrl != null);
+        System.out.println("Found nodeUrl = " + registeredUrl);
+        assertEquals(TEST_CN_URL, registeredUrl);
+    }
     
     /**
      * test the unit test harness
@@ -67,4 +82,5 @@ public class D1ClientUnitTest  {
     {
         System.out.println("\n***************** running test for " + methodName + " *****************");
     }
+    
 }
