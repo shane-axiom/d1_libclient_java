@@ -24,6 +24,8 @@ package org.dataone.client;
 
 
 import java.io.IOException;
+import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -56,6 +58,7 @@ public class RestClient {
 
     /** The URL string for the node REST API */
     private DefaultHttpClient httpClient;
+    private Hashtable headers = new Hashtable();
     
 	/**
 	 * Constructor to create a new instance.
@@ -108,6 +111,14 @@ public class RestClient {
 		
 		return url;
 	}
+	
+	public void setHeader(String name, String value) {
+		headers.put((String)name, (String) value);
+	}
+	
+	public Hashtable getAddedHeaders() {
+		return headers;
+	}
     
     /**
 	 * send a GET request to the resource and get the response
@@ -159,7 +170,10 @@ public class RestClient {
 		return doRequestMMBody(url,Constants.PUT,mpe);
 	}
 	
-	
+
+	/*
+	 * assembles the request for GETs, HEADs and DELETEs - assumes no message body
+	 */
 	private HttpResponse doRequestNoBody(String url,String httpMethod) throws ClientProtocolException, IOException  {
 		System.out.println("restURL: " + url);
 		System.out.println("method: " + httpMethod);
@@ -172,10 +186,14 @@ public class RestClient {
 			req = new HttpDelete(url);       
 		else 
 			throw new ClientProtocolException("method requested not defined: " + httpMethod);
-		req.setHeader("Accept", "text/xml");
-		return httpClient.execute(req);
+		
+		return doRequest(req);
 	}
 	
+
+	/*
+	 * assembles the request for POSTs and PUTs (uses a different base class for these entity-enclosing methods)
+	 */
 	private HttpResponse doRequestMMBody(String url,String httpMethod, MultipartEntity mpe) throws ClientProtocolException, IOException {
 		System.out.println("restURL: " + url);
 		System.out.println("method: " + httpMethod);
@@ -193,8 +211,21 @@ public class RestClient {
 		} else {
 			System.out.println("entity: null");
 		}
-		req.setHeader("Accept", "text/xml");
-		return httpClient.execute(req);
+		return doRequest(req);		
+	}
+
+	/*
+	 * applies the header settings and executes the request
+	 */
+	private HttpResponse doRequest(HttpUriRequest req) throws ClientProtocolException, IOException {
+
+		Enumeration names = headers.keys();
+		while (names.hasMoreElements()) 
+		{
+			String n = (String) names.nextElement();
+			req.setHeader(n,(String)headers.get(n));
+		}
 		
+		return httpClient.execute(req);
 	}
 }

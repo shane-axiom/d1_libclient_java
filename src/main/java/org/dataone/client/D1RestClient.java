@@ -32,6 +32,7 @@ import java.net.HttpURLConnection;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Hashtable;
 import java.util.TimeZone;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -79,10 +80,8 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 /**
- * A generic client class that contains base functionality for making REST calls
- * to remote REST servers.  
- * It is built to encapsulate the communication conventions dataONE is following
- * but does not implement the dataONE REST api itself.
+ * This class wraps the RestClient, adding uniform exception deserialization
+ * (subclassing the RestClient was impractical due to differences in method signatures)
  */
 public class D1RestClient {
     protected RestClient rc;
@@ -137,6 +136,7 @@ public class D1RestClient {
 	InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout,
 	ClientProtocolException, IOException, UnsupportedMetadataType, HttpException 
 	{
+		rc.setHeader("Accept", "text/xml");
 		return filterErrors(rc.doGetRequest(url));
 	}
 
@@ -146,6 +146,7 @@ public class D1RestClient {
 	InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout,
 	ClientProtocolException, IOException, UnsupportedMetadataType, HttpException 
 	{
+		rc.setHeader("Accept", "text/xml");
 		return filterErrors(rc.doDeleteRequest(url));
 	}
 	
@@ -155,6 +156,7 @@ public class D1RestClient {
 	InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout,
 	ClientProtocolException, IOException, UnsupportedMetadataType, HttpException 
 	{
+		rc.setHeader("Accept", "text/xml");
 		return filterErrorsHeader(rc.doHeadRequest(url));
 	}
 	
@@ -164,6 +166,7 @@ public class D1RestClient {
 	InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout,
 	ClientProtocolException, IOException, UnsupportedMetadataType, HttpException 
 	{
+		rc.setHeader("Accept", "text/xml");
 		return filterErrors(rc.doPutRequest(url, entity));
 	}
 	
@@ -173,6 +176,7 @@ public class D1RestClient {
 	InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout,
 	ClientProtocolException, IOException, UnsupportedMetadataType, HttpException 
 	{
+		rc.setHeader("Accept", "text/xml");
 		return filterErrors(rc.doPostRequest(url,entity));
 	}
 	
@@ -215,7 +219,13 @@ public class D1RestClient {
 		return this.exceptionHandling;
 	}
 
+	public void setHeader(String name, String value) {
+		rc.setHeader(name, value);
+	}
 	
+	public Hashtable getAddedHeaders() {
+		return rc.getAddedHeaders();
+	}
 	
 	
 // ========================  original handlers ==============================//
