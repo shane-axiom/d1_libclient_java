@@ -236,6 +236,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
       	mpe.addFilePart("sysmeta",baos.toString());
     	
     	D1RestClient client = new D1RestClient();
+    	client.setHeader("token", token.getToken());
     	InputStream is = null;
 
     	try {
@@ -260,7 +261,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
     		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
     	}    	
     	try {
-   // 		System.out.println(IOUtils.toString(is));
+ //   		System.out.println(IOUtils.toString(is));
             return (Identifier)deserializeServiceType(Identifier.class, is);
         } catch (Exception e) {
             throw new ServiceFailure("1090",
@@ -375,7 +376,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
     		url.addNonEmptyParamPair("sessionid", token.getToken());
 
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
-    	mpe.addParamPart("obsoletedGuid", 
+    	mpe.addParamPart("obsoletedPid", 
                         EncodingUtilities.encodeUrlQuerySegment(obsoletedGuid.getValue()));
     	mpe.addFilePart(object, "object");
     	ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -414,7 +415,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
     		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
     	}    	
     	try {
-    		System.out.println(IOUtils.toString(is));
+//    		System.out.println(IOUtils.toString(is));
     		return (Identifier)deserializeServiceType(Identifier.class, is);
     	} catch (Exception e) {
     		throw new ServiceFailure("1090",
@@ -580,10 +581,11 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
         
         // assemble the url
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_CHECKSUM);
+    	url.addNextPathElement(guid.getValue());
         
     	if (token != null)
     		url.addNonEmptyParamPair("sessionid", token.getToken());
-    	url.addNonEmptyParamPair("id", guid.getValue());
+//    	url.addNonEmptyParamPair("id", guid.getValue());
     	url.addNonEmptyParamPair("checksumAlgorithm", checksumAlgorithm);
 
     	// send the request
