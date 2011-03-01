@@ -130,4 +130,21 @@ public class RestClientEchoTest {
 		assertTrue("",contentString.contains("request.FILES=<MultiValueDict: {u'Jabberwocky2': [<InMemoryUploadedFile: mmp.output"));
 	}
 	
+	
+	@Test
+	public void testDoGetRequest_setHeader() throws ClientProtocolException, IOException {
+		D1Url u = new D1Url(echoNode, echoResource);
+		u.addNextPathElement("bizz");
+		u.addNonEmptyParamPair("x", "y");
+		RestClient rc = new RestClient();
+		rc.setHeader("mememe", "momomo");
+		HttpResponse resp = rc.doGetRequest(u.getUrl());
+		InputStream is = resp.getEntity().getContent();
+		String contentString = IOUtils.toString(is);
+		System.out.println(contentString);
+		assertTrue("",contentString.contains("request.META[ REQUEST_METHOD ] = GET"));		
+		assertTrue("",contentString.contains("request.META[ PATH_INFO ] = /echo/bizz"));
+		assertTrue("",contentString.contains("request.META[ QUERY_STRING ] = x=y"));
+		assertTrue("",contentString.contains("request.META[ HTTP_MEMEME ] = momomo"));
+	}
 }
