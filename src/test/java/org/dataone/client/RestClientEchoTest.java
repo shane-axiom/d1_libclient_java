@@ -94,7 +94,7 @@ public class RestClientEchoTest {
 		assertTrue("",contentString.contains("request.META[ QUERY_STRING ] = x=y"));
 	}
 	
-	@Test
+//	@Test
 	public void testdoPutRequest() throws ClientProtocolException, IOException {
 		D1Url u = new D1Url(echoNode, mmEchoResource);
 		u.addNextPathElement("bizz");
