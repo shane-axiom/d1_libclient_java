@@ -274,12 +274,11 @@ public class D1RestClient {
     	
     	// use content-type to determine what format the response is
     	Header[] h = response.getHeaders("content-type");
-    	String contentType = null; 
+    	String contentType = "unset";
     	if (h.length == 1)
     		contentType = h[0].getValue();
-    	else
+    	else if (h.length > 1)
     		throw new IOException("Should not get more than one content-type returned");
-    	
     	
     	ErrorElements ee = null;
     	if (contentType.contains("xml"))
@@ -292,9 +291,11 @@ public class D1RestClient {
     		ee = deserializeCsv(response);
       	else if (contentType.contains("text/plain"))
     		ee = deserializeTextPlain(response);
+     	else if (contentType.equals("unset"))
+    		ee = deserializeTextPlain(response);
     	else 
     		// attempt the default...
-    		ee = deserializeXml(response);
+    		ee = deserializeTextPlain(response);
     	
  
     	String exceptionName = ee.getName();
@@ -371,6 +372,7 @@ public class D1RestClient {
     	}
     	return ee;
     }
+
     
     private ErrorElements deserializeTextPlain(HttpResponse response) throws IllegalStateException, IOException {
     	ErrorElements ee = new ErrorElements();
@@ -379,11 +381,11 @@ public class D1RestClient {
     	if (response.getEntity() != null)
     	{
     		String body = IOUtils.toString(response.getEntity().getContent());
-    		ee.setDescription("parser for deserializing CSV not written yet.  Providing message body:\n" + body);
+    		ee.setDescription("Deserializing Text/Plain: Just providing message body:\n" + body + "\n{EndOfMessage}");
     	}
     	return ee;
     }
-   
+
     
     private ErrorElements deserializeXml(HttpResponse response) throws IllegalStateException, IOException
 //    throws NotFound, InvalidToken, ServiceFailure, NotAuthorized,

@@ -232,7 +232,6 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
                     "Could not serialize the systemMetadata: "
                             + e.getMessage());
 		}
-//      	mpe.addFilePart("systemmetadata",baos.toString());
       	mpe.addFilePart("sysmeta",baos.toString());
     	
     	D1RestClient client = new D1RestClient();
@@ -252,13 +251,13 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
     	} catch (UnsupportedMetadataType e) {
     		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
     	} catch (ClientProtocolException e) {
-    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+    		throw recastClientSideExceptionToServiceFailure(e);
     	} catch (IllegalStateException e) {
-    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+    		throw recastClientSideExceptionToServiceFailure(e);
     	} catch (IOException e) {
-    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+    		throw recastClientSideExceptionToServiceFailure(e);
     	} catch (HttpException e) {
-    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+    		throw recastClientSideExceptionToServiceFailure(e);
     	}    	
     	try {
  //   		System.out.println(IOUtils.toString(is));
@@ -267,99 +266,9 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
             throw new ServiceFailure("1090",
                     "Could not deserialize the systemMetadata: " + e.getMessage());
         }
-// //       return handleCreateOrUpdate(token, guid, object, sysmeta, null, "create");
     }
 
-    public Identifier create2(AuthToken token, Identifier guid,
-            InputStream object, SystemMetadata sysmeta) 
-    throws InvalidToken,ServiceFailure, NotAuthorized, IdentifierNotUnique,
-            UnsupportedType, InsufficientResources, InvalidSystemMetadata,
-            NotImplemented 
-    {
-    	Identifier id = null;
-    	
-    	String restURL = getNodeBaseServiceUrl() + Constants.RESOURCE_OBJECTS;
-
-    	MultipartRequestHandler mmpHandler = new MultipartRequestHandler(restURL,Constants.POST);
-    	
-    	
-//		mmpHandler.addParamPart("sysmeta", sysmeta.toString());
-		
-		ByteArrayInputStream is;
-		try {
-			is = serializeSystemMetadata(sysmeta);
-		} catch (JiBXException e) {
-			throw new ServiceFailure("1000","Error serializing system metadata object: " + e.getMessage());
-		}
-		mmpHandler.addFilePart(is, "systemmetadata");
-		mmpHandler.addFilePart(object, "object");
-		mmpHandler.addParamPart("pid",guid.getValue());
-
-		HttpResponse res = null;
-		try {
-			res = mmpHandler.executeRequest();
-		} catch (ClientProtocolException e) {
-			throw new ServiceFailure("1000",e.getClass() + " ERROR:" + e.getMessage());
-		} catch (IOException e) {
-			throw new ServiceFailure("1000",e.getClass() + " ERROR:" + e.getMessage());
-		}
-    	
-		int code = res.getStatusLine().getStatusCode();
-	
-		if (code != HttpURLConnection.HTTP_OK) {
-			// error, so throw exception
-			try {
-				deserializeAndThrowException(code,res.getEntity().getContent());
-			} catch (NotFound e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (InvalidCredentials e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (InvalidRequest e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IllegalStateException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			// TODO: figure out how to throw the correct error!!!!!
-//			throw new ServiceFailure("inadequate error typing",restURL);
-		}
-		
-		InputStream content = null;
-		try {
-			if (res.getEntity() != null && res.getEntity().getContent() != null)
-				content = res.getEntity().getContent();
-			String echoed = IOUtils.toString(content);
-			System.out.println("Echoed content:");
-			System.out.println(echoed);
-//		} catch (IllegalStateException e1) {
-//			// TODO Auto-generated catch block
-//			e1.printStackTrace();
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
-		try	{
-			if (content != null)
-				id = (Identifier)deserializeServiceType(Identifier.class, content);
-			else
-				throw new IOException("Unexpected empty inputStream for the request");
-		}
-		catch (JiBXException e) {
-			throw new ServiceFailure("500",
-					"Could not deserialize the returned Identifier: " + e.getMessage());
-		}
-		catch (IOException e) {
-			throw new ServiceFailure("1000",
-					"IOException in processing: " + e.getMessage());
-		}
-    	return id;
-    }
-    
+   
     /**
      * update a resource with the specified guid.
      */
@@ -387,7 +296,6 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
                     "Could not serialize the systemMetadata: "
                             + e.getMessage());
 		}
-		// TODO: check the part name, create uses 'systemmetadata'
       	mpe.addFilePart("sysmeta",baos.toString());
     	
     	D1RestClient client = new D1RestClient();
@@ -406,14 +314,14 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
     	} catch (UnsupportedMetadataType e) {
     		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
     	} catch (ClientProtocolException e) {
-    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+//    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+    		throw recastClientSideExceptionToServiceFailure(e);
     	} catch (IllegalStateException e) {
-    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+    		throw recastClientSideExceptionToServiceFailure(e);
     	} catch (IOException e) {
-    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+    		throw recastClientSideExceptionToServiceFailure(e);
     	} catch (HttpException e) {
-    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
-    	}    	
+    		throw recastClientSideExceptionToServiceFailure(e);    	}    	
     	try {
 //    		System.out.println(IOUtils.toString(is));
     		return (Identifier)deserializeServiceType(Identifier.class, is);
@@ -609,13 +517,13 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
 		} catch (UnsupportedMetadataType e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (ClientProtocolException e) {
-    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+			throw recastClientSideExceptionToServiceFailure(e);
     	} catch (IllegalStateException e) {
-    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+    		throw recastClientSideExceptionToServiceFailure(e);
     	} catch (IOException e) {
-    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+    		throw recastClientSideExceptionToServiceFailure(e);
     	} catch (HttpException e) {
-    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+    		throw recastClientSideExceptionToServiceFailure(e);
     	}  
 
     	try {
@@ -664,13 +572,13 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
 		} catch (UnsupportedMetadataType e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (ClientProtocolException e) {
-    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+			throw recastClientSideExceptionToServiceFailure(e);
     	} catch (IllegalStateException e) {
-    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+    		throw recastClientSideExceptionToServiceFailure(e);
     	} catch (IOException e) {
-    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+    		throw recastClientSideExceptionToServiceFailure(e);
     	} catch (HttpException e) {
-    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+    		throw recastClientSideExceptionToServiceFailure(e);
     	}  
 
         try {

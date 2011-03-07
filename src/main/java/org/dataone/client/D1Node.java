@@ -181,13 +181,13 @@ public abstract class D1Node {
 		} catch (AuthenticationTimeout e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (ClientProtocolException e) {
-			throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (IllegalStateException e) {
-			throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (IOException e) {
-			throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (HttpException e) {
-			throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+			throw recastClientSideExceptionToServiceFailure(e);
 		}
 		return is;
     	
@@ -228,13 +228,13 @@ public abstract class D1Node {
 		} catch (UnsupportedMetadataType e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (ClientProtocolException e) {
-			throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (IllegalStateException e) {
-			throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (IOException e) {
-			throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (HttpException e) {
-			throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+			throw recastClientSideExceptionToServiceFailure(e);
 		}
 		try {
             return deserializeSystemMetadata(is);
@@ -311,13 +311,14 @@ public abstract class D1Node {
 		} catch (AuthenticationTimeout e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (ClientProtocolException e) {
-			throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (IllegalStateException e) {
-			throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (IOException e) {
-			throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (HttpException e) {
-			throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+			throw recastClientSideExceptionToServiceFailure(e);
+		
 		}
          
         try {
@@ -327,6 +328,19 @@ public abstract class D1Node {
                     "Could not deserialize the ObjectList: " + e.getMessage());
         }
     }
+ 
+    /**
+     * A helper function to preserve the stackTrace when catching one error and throwing a new one.
+     * Also has some descriptive text which makes it clientSide specific
+     * @param e
+     * @return
+     */
+    protected ServiceFailure recastClientSideExceptionToServiceFailure(Exception e) {
+    	ServiceFailure sfe = new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+		sfe.setStackTrace(e.getStackTrace());
+    	return sfe;
+    }
+    
     
 	/**
 	 * convert a date to GMT
@@ -713,6 +727,8 @@ public abstract class D1Node {
      }
      return is;
 	}
+
+	
 	
 	
 	/**
