@@ -305,33 +305,33 @@ public class D1RestClient {
     	
 		// last updated 27-Jan-2011
        	if (ee.getName().equals("AuthenticationTimeout"))
-    		throw new AuthenticationTimeout(ee.getDetailCode(), ee.getDescription());  
+    		throw new AuthenticationTimeout(ee.getDetailCode(), ee.getDescription(), ee.getPid(), null);  
        	else if (ee.getName().equals("IdentifierNotUnique"))
-    		throw new IdentifierNotUnique(ee.getDetailCode(), ee.getDescription());
+    		throw new IdentifierNotUnique(ee.getDetailCode(), ee.getDescription(), ee.getPid(), null);
     	else if (ee.getName().equals("InsufficientResources"))
-    		throw new InsufficientResources(ee.getDetailCode(), ee.getDescription());
+    		throw new InsufficientResources(ee.getDetailCode(), ee.getDescription(), ee.getPid(), null);
        	else if (ee.getName().equals("InvalidCredentials"))
-    		throw new InvalidCredentials(ee.getDetailCode(), ee.getDescription());
+    		throw new InvalidCredentials(ee.getDetailCode(), ee.getDescription(), ee.getPid(), null);
       	else if (ee.getName().equals("InvalidRequest"))
-    		throw new InvalidRequest(ee.getDetailCode(), ee.getDescription());
+    		throw new InvalidRequest(ee.getDetailCode(), ee.getDescription(), ee.getPid(), null);
     	else if (exceptionName.equals("InvalidSystemMetadata"))
-    		throw new InvalidSystemMetadata("1180", ee.getDescription());
+    		throw new InvalidSystemMetadata("1180", ee.getDescription(), ee.getPid(), null);
     	else if (ee.getName().equals("InvalidToken"))
-    		throw new InvalidToken(ee.getDetailCode(), ee.getDescription()); 
+    		throw new InvalidToken(ee.getDetailCode(), ee.getDescription(), ee.getPid(), null); 
     	else if (ee.getName().equals("NotAuthorized"))
-    		throw new NotAuthorized(ee.getDetailCode(), ee.getDescription());
+    		throw new NotAuthorized(ee.getDetailCode(), ee.getDescription(), ee.getPid(), null);
     	else if (ee.getName().equals("NotFound"))
-    		throw new NotFound(ee.getDetailCode(), ee.getDescription());
+    		throw new NotFound(ee.getDetailCode(), ee.getDescription(), ee.getPid(), null);
     	else if (ee.getName().equals("NotImplemented"))
-    		throw new NotImplemented(ee.getDetailCode(), ee.getDescription());
+    		throw new NotImplemented(ee.getDetailCode(), ee.getDescription(), ee.getPid(), null);
        	else if (ee.getName().equals("ServiceFailure"))
-    		throw new ServiceFailure(ee.getDetailCode(), ee.getDescription());
+    		throw new ServiceFailure(ee.getDetailCode(), ee.getDescription(), ee.getPid(), null);
     	else if (ee.getName().equals("UnsupportedMetadataType"))
-    		throw new UnsupportedMetadataType(ee.getDetailCode(), ee.getDescription());
+    		throw new UnsupportedMetadataType(ee.getDetailCode(), ee.getDescription(), ee.getPid(), null);
        	else if (ee.getName().equals("UnsupportedType"))
-    		throw new UnsupportedType(ee.getDetailCode(), ee.getDescription()); 
+    		throw new UnsupportedType(ee.getDetailCode(), ee.getDescription(), ee.getPid(), null); 
     	else 
-    		throw new ServiceFailure(ee.getDetailCode(), ee.getDescription());
+    		throw new ServiceFailure(ee.getDetailCode(), ee.getDescription(), ee.getPid(), null);
     }
     	
 
@@ -407,6 +407,9 @@ public class D1RestClient {
     		String detailCode = null;
     		String description = null;
     		String name = null;
+    		Identifier pid = null;
+    		String traceInfo = null;
+    		
     		int errorCode = -1;
     		try {
     			DocumentBuilder db = dbf.newDocumentBuilder();
@@ -425,16 +428,21 @@ public class D1RestClient {
     				System.out.println("errorCode in message body doesn't match httpStatus," +
     				" using errorCode for creating exception");
 
-                        if (root.hasAttribute("detailCode")) {
-                            detailCode = root.getAttribute("detailCode");
-                        }  else {
-                            detailCode = "-1";
-                        }
-                        if (root.hasAttribute("name")) {
-                            name = root.getAttribute("name");
-                        } else {
-                            name = "Unknown";
-                        }
+    			if (root.hasAttribute("detailCode")) {
+    				detailCode = root.getAttribute("detailCode");
+    			}  else {
+    				detailCode = "-1";
+    			}
+    			if (root.hasAttribute("name")) {
+    				name = root.getAttribute("name");
+    			} else {
+    				name = "Unknown";
+    			}
+    			if (root.hasAttribute("pid")) {
+    				pid = new Identifier();
+    				pid.setValue(root.getAttribute("pid"));
+    			}
+    			traceInfo = getTextValue(root, "traceInformation");
     			description = getTextValue(root, "description");
 
     		} catch (SAXException e) {
@@ -449,6 +457,8 @@ public class D1RestClient {
     		ee.setName(name);
     		ee.setDetailCode(detailCode);
     		ee.setDescription(description);
+    		ee.setPid(pid);
+    		ee.setTraceInformation(traceInfo);
     	}  	
     	return ee;
     }
@@ -626,40 +636,53 @@ public class D1RestClient {
 		private String name;
 		private String detailCode;
 		private String description;
-
+		private Identifier pid;
+		private String traceInfo;
+		
 		protected ErrorElements() {
 			super();
 		}
 	
 		protected int getCode() {
 			return code;
-		}
-		
+		}		
 		protected void setCode(int c) {
 			this.code = c;
 		}
 
 		protected String getName() {
 			return name;
-		}
-		
+		}		
 		protected void setName(String n) {
 			this.name = n;
 		}
+		
 		protected String getDetailCode() {
 			return detailCode;
-		}
-		
+		}		
 		protected void setDetailCode(String dc) {
 			this.detailCode = dc;
 		}
 
 		protected String getDescription() {
 			return this.description;
-		}
-		
+		}		
 		protected void setDescription(String d) {
 			this.description = d;
+		}
+
+		protected Identifier getPid() {
+			return this.pid;
+		}		
+		protected void setPid(Identifier p) {
+			this.pid = p;
+		}
+		
+		protected String getTraceInformation() {
+			return this.traceInfo;
+		}		
+		protected void setTraceInformation(String ti) {
+			this.traceInfo = ti;
 		}
 	}
 }
