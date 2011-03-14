@@ -35,6 +35,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpressionException;
 
 import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.Constants;
@@ -109,7 +110,12 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
     throws NotAuthorized, InvalidRequest,
     NotImplemented, ServiceFailure, InvalidToken {
 
-    	String resource = Constants.RESOURCE_OBJECTS;
+       	if (token == null)
+    		token = new AuthToken("public");
+    	
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
+    	
+    	// set default params, if need be
     	String paramAdditions = "";
     	if (!paramString.contains("qt=solr")) {
     		paramAdditions = "qt=solr&";
@@ -120,24 +126,48 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
     	if (!paramString.contains("start=\\d+")) {
     		paramAdditions += "start=0&";
     	}
-
+    	if (!paramString.contains("sessionid=")) {
+    		paramAdditions += "sessionid=" + token.getToken() + "&";
+    	}
     	String paramsComplete = paramAdditions + paramString;
-    	
     	// clean up paramsComplete string
     	if (paramsComplete.endsWith("&"))
     		paramsComplete = paramsComplete.substring(0, paramsComplete.length()-1);
-
-
-
-    	InputStream is;
+    	
+    	url.addPreEncodedNonEmptyQueryParams(paramsComplete);
+    	
+    	D1RestClient client = new D1RestClient();
+    	client.setHeader("token", token.getToken());
+ 
+    	InputStream is = null;
     	try {
-    		is = handleHttpGet(token,resource,paramsComplete);
-    	} catch (NotFound eNF) {
-    		// convert notfound error to service failure
-    		// because it is not valid in the listObjects case
-    		throw new ServiceFailure("1000", "Method threw unexpected exception: " + eNF.getMessage());
-    	}
-
+    		is = client.doGetRequest(url.getUrl());
+    	} catch (NotFound e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (IdentifierNotUnique e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (UnsupportedType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InsufficientResources e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InvalidSystemMetadata e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InvalidCredentials e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (AuthenticationTimeout e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (UnsupportedMetadataType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (ClientProtocolException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IllegalStateException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IOException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (HttpException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} 
+ 
     	try {
     		return deserializeObjectList(is);
     	} catch (JiBXException e) {
@@ -165,32 +195,44 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
     public ObjectLocationList resolve(AuthToken token, Identifier guid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
             InvalidRequest, NotImplemented {
-        String resource = Constants.RESOURCE_RESOLVE + "/" + EncodingUtilities.encodeUrlPathSegment(guid.getValue());
-        InputStream is = null;
-        ResponseData rd = sendRequest(token, resource, Constants.GET, null, null, null, "text/xml");
 
-        int code = rd.getCode();
-        if (code != HttpURLConnection.HTTP_OK) {
-            InputStream errorStream = rd.getErrorStream();
-            try {
-                deserializeAndThrowException(code, errorStream);
-            } catch (InvalidToken e) {
-                throw e;
-            } catch (ServiceFailure e) {
-                throw e;
-            } catch (NotAuthorized e) {
-                throw e;
-            } catch (NotFound e) {
-                throw e;
-            } catch (NotImplemented e) {
-                throw e;
-            } catch (BaseException e) {
-                throw new ServiceFailure("1000",
-                        "Method threw improper exception: " + e.getMessage());
-            }
-        } else {
-            is = rd.getContentStream();
-        }
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_RESOLVE);
+    	url.addNextPathElement(guid.getValue());
+    	    	
+    	if (token == null)
+    		token = new AuthToken("public");
+    	url.addNonEmptyParamPair("sessionid", token.getToken());
+    	
+     	D1RestClient client = new D1RestClient();
+    	client.setHeader("token", token.getToken());
+ 
+    	InputStream is = null;
+    	try {
+    		is = client.doGetRequest(url.getUrl());
+    	} catch (IdentifierNotUnique e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (UnsupportedType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InsufficientResources e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InvalidSystemMetadata e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InvalidCredentials e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (AuthenticationTimeout e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (UnsupportedMetadataType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (ClientProtocolException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IllegalStateException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IOException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (HttpException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		}
+    	
         try {
             return deserializeResolve(is);
         } catch (Exception e) {
@@ -276,7 +318,6 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
             throw new ServiceFailure("1090",
                     "Could not deserialize the Identifier: " + e.getMessage());
         }
-// //       return handleCreateOrUpdate(token, guid, object, sysmeta, null, "create");
     }
     
     @Override
@@ -392,18 +433,55 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
             String permission, String permissionType, String permissionOrder)
             throws InvalidToken, ServiceFailure, NotFound, NotAuthorized, NotImplemented, InvalidRequest  {
         // TODO: this method assumes an access control model that is not finalized, refactor when it is
-        String params = "guid=" + EncodingUtilities.encodeUrlQuerySegment(id.getValue()) + "&principal=" + principal
-                + "&permission=" + permission + "&permissionType="
-                + permissionType + "&permissionOrder=" + permissionOrder
-                + "&op=setaccess&setsystemmetadata=true";
-        String resource = Constants.RESOURCE_SESSION + "/";
-        ResponseData rd = sendRequest(token, resource, Constants.POST, params, null, null, null);
-        int code = rd.getCode();
-        if (code != HttpURLConnection.HTTP_OK) {
-            throw new ServiceFailure("1000", "Error setting acces on document");
-        }
-        return true;
-        // TODO: also set the system metadata to the same perms
+   
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_SESSION);
+    	
+    	url.addNonEmptyParamPair("guid", id.getValue());
+       	url.addNonEmptyParamPair("principal", principal);
+       	url.addNonEmptyParamPair("permission", permission);
+       	url.addNonEmptyParamPair("permissionType", permissionType);
+       	url.addNonEmptyParamPair("permissionOrder", permissionOrder);
+       	url.addNonEmptyParamPair("op", "setaccess");
+       	url.addNonEmptyParamPair("setsystemmetadata", "true");
+    	
+    	
+    	if (token == null)
+    		token = new AuthToken("public");
+    	url.addNonEmptyParamPair("sessionid", token.getToken());
+    	
+     	RestClient client = new RestClient();
+    	client.setHeader("token", token.getToken());
+ 
+    	HttpResponse hr = null;
+    	try {
+    		hr = client.doPostRequest(url.getUrl(),null);
+    		int statusCode = hr.getStatusLine().getStatusCode();
+    		
+    		if (statusCode != HttpURLConnection.HTTP_OK) { 
+    			throw new ServiceFailure("1000", "Error setting access on document");
+    		}
+    	} catch (ClientProtocolException e) {
+    		throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IOException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+    	}    	
+    	
+		return true;
+    	
+    	
+    	
+//    	String params = "guid=" + EncodingUtilities.encodeUrlQuerySegment(id.getValue()) + "&principal=" + principal
+//                + "&permission=" + permission + "&permissionType="
+//                + permissionType + "&permissionOrder=" + permissionOrder
+//                + "&op=setaccess&setsystemmetadata=true";
+//        String resource = Constants.RESOURCE_SESSION + "/";
+//        ResponseData rd = sendRequest(token, resource, Constants.POST, params, null, null, null);
+//        int code = rd.getCode();
+//        if (code != HttpURLConnection.HTTP_OK) {
+//            throw new ServiceFailure("1000", "Error setting acces on document");
+//        }
+//        return true;
+//        // TODO: also set the system metadata to the same perms
 
     }
 
