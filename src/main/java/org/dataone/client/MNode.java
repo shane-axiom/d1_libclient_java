@@ -28,10 +28,13 @@ import java.net.HttpURLConnection;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.http.Header;
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -114,17 +117,40 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
     public void setAccess(AuthToken token, Identifier id, String principal,
             String permission, String permissionType, String permissionOrder)
             throws ServiceFailure {
-        // TODO: this method assumes an access control model that is not finalized, refactor when it is
-        String params = "guid=" + EncodingUtilities.encodeUrlQuerySegment(id.getValue()) + "&principal=" + principal
-                + "&permission=" + permission + "&permissionType="
-                + permissionType + "&permissionOrder=" + permissionOrder
-                + "&op=setaccess&setsystemmetadata=true";
-        String resource = Constants.RESOURCE_SESSION + "/";
-        ResponseData rd = sendRequest(token, resource, Constants.POST, params, null, null, null);
-        int code = rd.getCode();
-        if (code != HttpURLConnection.HTTP_OK) {
-            throw new ServiceFailure("1000", "Error setting acces on document");
-        }
+       
+    	// TODO: this method assumes an access control model that is not finalized, refactor when it is
+    	
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_SESSION);
+    	
+    	url.addNonEmptyParamPair("guid", id.getValue());
+       	url.addNonEmptyParamPair("principal", principal);
+       	url.addNonEmptyParamPair("permission", permission);
+       	url.addNonEmptyParamPair("permissionType", permissionType);
+       	url.addNonEmptyParamPair("permissionOrder", permissionOrder);
+       	url.addNonEmptyParamPair("op", "setaccess");
+       	url.addNonEmptyParamPair("setsystemmetadata", "true");
+    	
+    	
+    	if (token == null)
+    		token = new AuthToken("public");
+    	url.addNonEmptyParamPair("sessionid", token.getToken());
+    	
+     	RestClient client = new RestClient();
+    	client.setHeader("token", token.getToken());
+ 
+    	HttpResponse hr = null;
+    	try {
+    		hr = client.doPostRequest(url.getUrl(),null);
+    		int statusCode = hr.getStatusLine().getStatusCode();
+    		
+    		if (statusCode != HttpURLConnection.HTTP_OK) { 
+    			throw new ServiceFailure("1000", "Error setting access on document");
+    		}
+    	} catch (ClientProtocolException e) {
+    		throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IOException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+    	}    	
     }
 
     /**
@@ -139,7 +165,8 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
             throws ServiceFailure, NotImplemented {
         // TODO: reassess the exceptions thrown here.  Look at the Authentication interface.
         // TODO: this method assumes an access control model that is not finalized, refactor when it is
-        String postData = "username=" + username + "&password=" + password;
+
+    	String postData = "username=" + username + "&password=" + password;
         String params = "qformat=xml&op=login";
         String resource = Constants.RESOURCE_SESSION + "/";
 
@@ -352,57 +379,56 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
             NotImplemented, InvalidRequest
     {
-        String resource = Constants.RESOURCE_OBJECTS + "/" + EncodingUtilities.encodeUrlPathSegment(guid.getValue());
         
-        if(token == null)
-        {
-            token = new AuthToken("public");
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
+    	
+    	if(guid == null || guid.getValue().trim().equals(""))
+    		throw new InvalidRequest("1322", "GUID cannot be null.");
+    	url.addNextPathElement(guid.getValue());
+    	
+    	if (token == null)
+    		token = new AuthToken("public");
+    	url.addNonEmptyParamPair("sessionid", token.getToken());
+    	
+     	D1RestClient client = new D1RestClient();
+    	client.setHeader("token", token.getToken());
+    	
+    	InputStream is = null;
+    	try {
+    		is = client.doDeleteRequest(url.getUrl());
+    	} catch (InvalidCredentials e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+    	} catch (AuthenticationTimeout e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+    	} catch (UnsupportedMetadataType e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+    	} catch (IdentifierNotUnique e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+    	} catch (UnsupportedType e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+    	} catch (InsufficientResources e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+    	} catch (InvalidSystemMetadata e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+    	} catch (ClientProtocolException e) {
+    		throw recastClientSideExceptionToServiceFailure(e);
+    	} catch (IllegalStateException e) {
+    		throw recastClientSideExceptionToServiceFailure(e);
+    	} catch (IOException e) {
+    		throw recastClientSideExceptionToServiceFailure(e);
+    	} catch (HttpException e) {
+    		throw recastClientSideExceptionToServiceFailure(e);
+		}    	
+    	try {
+ //   		System.out.println(IOUtils.toString(is));
+            return (Identifier)deserializeServiceType(Identifier.class, is);
+        } catch (Exception e) {
+            throw new ServiceFailure("1090",
+                    "Could not deserialize the systemMetadata: " + e.getMessage());
         }
-        if(guid == null || guid.getValue().trim().equals(""))
-        {
-            throw new InvalidRequest("1322", "GUID cannot be null.");
-        }
+    }      
         
-        ResponseData rd = sendRequest(token, resource, Constants.DELETE, null, null, null, null);
-        InputStream is = rd.getContentStream();
-        int code = rd.getCode();
-        if (code != HttpURLConnection.HTTP_OK) 
-        {
-            InputStream errorStream = rd.getErrorStream();
-            try {
-                deserializeAndThrowException(code,errorStream);
-            } catch (InvalidToken e) {
-                throw e;
-            } catch (ServiceFailure e) {
-                throw e;
-            } catch (NotAuthorized e) {
-                throw e;
-            } catch (NotImplemented e) {
-                throw e;
-            }  catch(InvalidRequest ir) {
-                throw ir;
-            } catch (BaseException e) {
-                throw new ServiceFailure("1000",
-                        "Method threw improper exception: " + e.getMessage());
-            }
-            
-
-        } 
-        else 
-        {
-            is = rd.getContentStream();
-            try 
-            {
-                return (Identifier) deserializeServiceType(Identifier.class, is);
-            } 
-            catch (JiBXException e) 
-            {
-                throw new ServiceFailure("500",
-                        "Could not deserialize the returned Identifier: " + e.getMessage());
-            }
-        }
-        return null;
-    }
+ 
 
     /**
      * describe a resource with the specified guid. NOT IMPLEMENTED.
@@ -411,26 +437,57 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
             NotImplemented, InvalidRequest
     {
-        String resource = Constants.RESOURCE_OBJECTS + "/" + EncodingUtilities.encodeUrlPathSegment(guid.getValue());
-        String params = "";
-        if(token == null)
-        {
-            token = new AuthToken("public");
-        }
-        if(guid == null || guid.getValue().trim().equals(""))
-        {
-            throw new InvalidRequest("1362", "GUID cannot be null.");
-        }
-        
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-        params += "token=" + token.getToken();
-        ResponseData rd = sendRequest(token, resource, Constants.HEAD, params, null, null, null);
-        Map<String, List<String>> m = rd.getHeaderFields();
-        String formatStr = m.get("format").get(0);
-        String last_modifiedStr = m.get("last_modified").get(0);
-        String content_lengthStr = m.get("content_length").get(0);
-        String checksumStr = m.get("checksum").get(0);
-        String checksum_algorithmStr = m.get("checksum_algorithm").get(0);
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
+    	
+    	if(guid == null || guid.getValue().trim().equals(""))
+    		throw new InvalidRequest("1362", "GUID cannot be null.");
+    	url.addNextPathElement(guid.getValue());
+    	
+    	if (token == null)
+    		token = new AuthToken("public");
+    	url.addNonEmptyParamPair("sessionid", token.getToken());
+    	
+     	D1RestClient client = new D1RestClient();
+    	client.setHeader("token", token.getToken());
+    	
+    	Header[] h = null;
+    	Map<String, String> m = new HashMap<String,String>();
+    	try {
+    		h = client.doHeadRequest(url.getUrl());
+    		for (int i=0;i<h.length; i++) {
+    			m.put(h[i].getName(),h[i].getValue());
+    		}
+    	} catch (IdentifierNotUnique e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (UnsupportedType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InsufficientResources e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InvalidSystemMetadata e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InvalidCredentials e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (AuthenticationTimeout e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (UnsupportedMetadataType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (ClientProtocolException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IllegalStateException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IOException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (HttpException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} 
+    	
+  
+    	DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+        String formatStr = m.get("format");//.get(0);
+        String last_modifiedStr = m.get("last_modified");//.get(0);
+        String content_lengthStr = m.get("content_length");//.get(0);
+        String checksumStr = m.get("checksum");//.get(0);
+        String checksum_algorithmStr = m.get("checksum_algorithm");//.get(0);
         ObjectFormat format = ObjectFormat.convert(formatStr);
         long content_length = new Long(content_lengthStr).longValue();
         Date last_modified = null;
@@ -485,15 +542,12 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
         if(guid == null || guid.getValue().trim().equals(""))
             throw new InvalidRequest("1402", "GUID cannot be null nor empty");
 
-        
-        
         // assemble the url
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_CHECKSUM);
     	url.addNextPathElement(guid.getValue());
         
     	if (token != null)
     		url.addNonEmptyParamPair("sessionid", token.getToken());
-//    	url.addNonEmptyParamPair("id", guid.getValue());
     	url.addNonEmptyParamPair("checksumAlgorithm", checksumAlgorithm);
 
     	// send the request
