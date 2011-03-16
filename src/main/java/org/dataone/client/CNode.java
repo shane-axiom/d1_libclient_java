@@ -84,7 +84,7 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
      * Construct a Coordinating Node, passing in the base url for node services. The CN
      * first retrieves a list of other nodes that can be used to look up node
      * identifiers and base urls for further service invocations.
-     * 
+     *
      * @param nodeBaseServiceUrl base url for constructing service endpoints.
      */
     public CNode(String nodeBaseServiceUrl) {
@@ -102,45 +102,45 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
             e.printStackTrace();
         } catch (ParserConfigurationException e) {
             nodeMap = new HashMap<String, String>();
-            e.printStackTrace();            
+            e.printStackTrace();
         }
     }
 
-    public ObjectList search(AuthToken token,String paramString) 
-    throws NotAuthorized, InvalidRequest,
-    NotImplemented, ServiceFailure, InvalidToken {
+    public ObjectList search(AuthToken token, String paramString)
+            throws NotAuthorized, InvalidRequest,
+            NotImplemented, ServiceFailure, InvalidToken {
 
        	if (token == null)
     		token = new AuthToken("public");
-    	
+
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
-    	
+
     	// set default params, if need be
-    	String paramAdditions = "";
-    	if (!paramString.contains("qt=solr")) {
-    		paramAdditions = "qt=solr&";
-    	}
-    	if (!paramString.contains("pageSize=\\d+")) {
-    		paramAdditions += "pageSize=200&";
-    	}
-    	if (!paramString.contains("start=\\d+")) {
-    		paramAdditions += "start=0&";
-    	}
+        String paramAdditions = "";
+        if (!paramString.contains("qt=solr")) {
+            paramAdditions = "qt=solr&";
+        }
+        if (!paramString.contains("pageSize=\\d+")) {
+            paramAdditions += "pageSize=200&";
+        }
+        if (!paramString.contains("start=\\d+")) {
+            paramAdditions += "start=0&";
+        }
     	if (!paramString.contains("sessionid=")) {
     		paramAdditions += "sessionid=" + token.getToken() + "&";
     	}
-    	String paramsComplete = paramAdditions + paramString;
-    	// clean up paramsComplete string
+        String paramsComplete = paramAdditions + paramString;
+        // clean up paramsComplete string
     	if (paramsComplete.endsWith("&"))
-    		paramsComplete = paramsComplete.substring(0, paramsComplete.length()-1);
-    	
+            paramsComplete = paramsComplete.substring(0, paramsComplete.length() - 1);
+
     	url.addPreEncodedNonEmptyQueryParams(paramsComplete);
-    	
+
     	D1RestClient client = new D1RestClient();
     	client.setHeader("token", token.getToken());
- 
+
     	InputStream is = null;
-    	try {
+        try {
     		is = client.doGetRequest(url.getUrl());
     	} catch (NotFound e) {
     		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
@@ -166,17 +166,17 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
 			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (HttpException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
-		} 
- 
-    	try {
-    		return deserializeObjectList(is);
-    	} catch (JiBXException e) {
-    		throw new ServiceFailure("500",
-    				"Could not deserialize the ObjectList: " + e.getMessage());
-    	}
+        }
+
+        try {
+            return deserializeObjectList(is);
+        } catch (JiBXException e) {
+            throw new ServiceFailure("500",
+                    "Could not deserialize the ObjectList: " + e.getMessage());
+        }
     }
 
-    
+
     @Override
     public InputStream get(AuthToken token, Identifier guid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
@@ -198,16 +198,16 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
 
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_RESOLVE);
     	url.addNextPathElement(guid.getValue());
-    	    	
+
     	if (token == null)
     		token = new AuthToken("public");
     	url.addNonEmptyParamPair("sessionid", token.getToken());
-    	
+
      	D1RestClient client = new D1RestClient();
     	client.setHeader("token", token.getToken());
- 
-    	InputStream is = null;
-    	try {
+
+        InputStream is = null;
+            try {
     		is = client.doGetRequest(url.getUrl());
     	} catch (IdentifierNotUnique e) {
     		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
@@ -231,14 +231,14 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
 			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (HttpException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
-		}
-    	
+            }
+
         try {
             return deserializeResolve(is);
         } catch (Exception e) {
             throw new ServiceFailure("1090",
                     "Could not deserialize the systemMetadata: "
-                            + e.getMessage());
+                    + e.getMessage());
         }
     }
     /**
@@ -267,7 +267,7 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
         // so deal with it here ...
         // and this is how CNs are different from MNs
         // because if object is null on an MN, we should throw an exception
-        
+
         if (object == null) {
             // XXX a bit confusing with these method signatures,
             // one takes the name first
@@ -293,15 +293,15 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
         try {
             is = client.doPostRequest(url.getUrl(), mpe);
         } catch (NotFound e) {
-            throw new ServiceFailure("1090", e.getClass().getSimpleName() + ": " + e.getDetail_code() + ": "+ e.getDescription());
+            throw new ServiceFailure("1090", e.getClass().getSimpleName() + ": " + e.getDetail_code() + ": " + e.getDescription());
         } catch (InvalidCredentials e) {
-            throw new ServiceFailure("1090", e.getClass().getSimpleName() + ": " + e.getDetail_code() + ": "+ e.getDescription());
+            throw new ServiceFailure("1090", e.getClass().getSimpleName() + ": " + e.getDetail_code() + ": " + e.getDescription());
         } catch (InvalidRequest e) {
-            throw new ServiceFailure("1090", e.getClass().getSimpleName() + ": "  + e.getDetail_code() + ": "+ e.getDescription());
+            throw new ServiceFailure("1090", e.getClass().getSimpleName() + ": " + e.getDetail_code() + ": " + e.getDescription());
         } catch (AuthenticationTimeout e) {
-            throw new ServiceFailure("1090", e.getClass().getSimpleName() + ": "  + e.getDetail_code() + ": "+ e.getDescription());
+            throw new ServiceFailure("1090", e.getClass().getSimpleName() + ": " + e.getDetail_code() + ": " + e.getDescription());
         } catch (UnsupportedMetadataType e) {
-            throw new ServiceFailure("1090", e.getClass().getSimpleName() + ": " + e.getDetail_code() + ": "+ e.getDescription());
+            throw new ServiceFailure("1090", e.getClass().getSimpleName() + ": " + e.getDetail_code() + ": " + e.getDescription());
         } catch (ClientProtocolException e) {
             throw new ServiceFailure("1090", e.getClass().getSimpleName() + ": " + e.getMessage());
         } catch (IllegalStateException e) {
@@ -319,7 +319,85 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
                     "Could not deserialize the Identifier: " + e.getMessage());
         }
     }
-    
+
+    /**
+     * update a resource with the specified guid.
+     */
+    public Identifier update(AuthToken token, Identifier guid,
+            InputStream object, Identifier obsoletedGuid, SystemMetadata sysmeta)
+            throws InvalidToken, ServiceFailure, NotAuthorized,
+            IdentifierNotUnique, UnsupportedType, InsufficientResources,
+            NotFound, InvalidSystemMetadata, NotImplemented {
+
+
+        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
+        url.addNextPathElement(guid.getValue());
+        if (token != null) {
+            url.addNonEmptyParamPair("sessionid", token.getToken());
+        }
+
+        SimpleMultipartEntity mpe = new SimpleMultipartEntity();
+        mpe.addParamPart("obsoletedPid",
+                EncodingUtilities.encodeUrlQuerySegment(obsoletedGuid.getValue()));
+        // Coordinating Nodes must maintain systemmetadata of all object on dataone
+        // however Coordinating nodes do not house Science Data only Science Metadata
+        // Thus, the inputstream for an object may be null
+        // so deal with it here ...
+        // and this is how CNs are different from MNs
+        // because if object is null on an MN, we should throw an exception
+
+        if (object == null) {
+            // XXX a bit confusing with these method signatures,
+            // one takes the name first
+            // the other takes the name second???
+            mpe.addFilePart("object", "");
+        } else {
+            mpe.addFilePart(object, "object");
+        }
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try {
+            serializeServiceType(SystemMetadata.class, sysmeta, baos);
+        } catch (JiBXException e) {
+            throw new ServiceFailure("1090",
+                    "Could not serialize the systemMetadata: "
+                    + e.getMessage());
+        }
+        mpe.addFilePart("sysmeta", baos.toString());
+
+        D1RestClient client = new D1RestClient();
+        InputStream is = null;
+
+        try {
+            is = client.doPutRequest(url.getUrl(), mpe);
+        } catch (NotFound e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+        } catch (InvalidCredentials e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+        } catch (InvalidRequest e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+        } catch (AuthenticationTimeout e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+        } catch (UnsupportedMetadataType e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+        } catch (ClientProtocolException e) {
+//    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+            throw recastClientSideExceptionToServiceFailure(e);
+        } catch (IllegalStateException e) {
+            throw recastClientSideExceptionToServiceFailure(e);
+        } catch (IOException e) {
+            throw recastClientSideExceptionToServiceFailure(e);
+        } catch (HttpException e) {
+            throw recastClientSideExceptionToServiceFailure(e);
+        }
+        try {
+//    		System.out.println(IOUtils.toString(is));
+            return (Identifier) deserializeServiceType(Identifier.class, is);
+        } catch (Exception e) {
+            throw new ServiceFailure("1090",
+                    "Could not deserialize the returned Identifier: " + e.getMessage());
+        }
+    }
+
     @Override
     public Identifier reserveIdentifier(AuthToken token, String scope,
             IdentifierFormat format) throws InvalidToken, ServiceFailure,
@@ -399,19 +477,19 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
                 if (successIndex != -1) {
                     sessionid = response.substring(
                             response.indexOf("<sessionId>")
-                                    + "<sessionId>".length(),
+                            + "<sessionId>".length(),
                             response.indexOf("</sessionId>"));
                 } else {
                     // TODO: wrong exception thrown, wrong detail code?
                     throw new ServiceFailure("1000", "Error authenticating: "
                             + response.substring(response.indexOf("<error>")
-                                    + "<error>".length(),
-                                    response.indexOf("</error>")));
+                            + "<error>".length(),
+                            response.indexOf("</error>")));
                 }
             } catch (Exception e) {
                 throw new ServiceFailure("1000",
                         "Error getting response from metacat: "
-                                + e.getMessage());
+                        + e.getMessage());
             }
         }
 
@@ -431,11 +509,11 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
     @Override
     public boolean setAccess(AuthToken token, Identifier id, String principal,
             String permission, String permissionType, String permissionOrder)
-            throws InvalidToken, ServiceFailure, NotFound, NotAuthorized, NotImplemented, InvalidRequest  {
+            throws InvalidToken, ServiceFailure, NotFound, NotAuthorized, NotImplemented, InvalidRequest {
         // TODO: this method assumes an access control model that is not finalized, refactor when it is
-   
+
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_SESSION);
-    	
+
     	url.addNonEmptyParamPair("guid", id.getValue());
        	url.addNonEmptyParamPair("principal", principal);
        	url.addNonEmptyParamPair("permission", permission);
@@ -443,33 +521,33 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
        	url.addNonEmptyParamPair("permissionOrder", permissionOrder);
        	url.addNonEmptyParamPair("op", "setaccess");
        	url.addNonEmptyParamPair("setsystemmetadata", "true");
-    	
-    	
+
+
     	if (token == null)
     		token = new AuthToken("public");
     	url.addNonEmptyParamPair("sessionid", token.getToken());
-    	
+
      	RestClient client = new RestClient();
     	client.setHeader("token", token.getToken());
- 
+
     	HttpResponse hr = null;
     	try {
     		hr = client.doPostRequest(url.getUrl(),null);
     		int statusCode = hr.getStatusLine().getStatusCode();
-    		
-    		if (statusCode != HttpURLConnection.HTTP_OK) { 
+
+    		if (statusCode != HttpURLConnection.HTTP_OK) {
     			throw new ServiceFailure("1000", "Error setting access on document");
-    		}
+        }
     	} catch (ClientProtocolException e) {
     		throw recastClientSideExceptionToServiceFailure(e);
 		} catch (IOException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
-    	}    	
-    	
-		return true;
-    	
-    	
-    	
+    	}
+
+        return true;
+
+
+
 //    	String params = "guid=" + EncodingUtilities.encodeUrlQuerySegment(id.getValue()) + "&principal=" + principal
 //                + "&permission=" + permission + "&permissionType="
 //                + permissionType + "&permissionOrder=" + permissionOrder
@@ -502,8 +580,8 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
      * @throws JiBXException
      */
     protected ObjectLocationList deserializeResolve(InputStream is)
-                    throws JiBXException {
-            return (ObjectLocationList) deserializeServiceType(ObjectLocationList.class, is);
+            throws JiBXException {
+        return (ObjectLocationList) deserializeServiceType(ObjectLocationList.class, is);
     }
 
     @Override
@@ -550,9 +628,9 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
     public Identifier createGroup(AuthToken token, Identifier groupName, List<Identifier> members) throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented, InvalidRequest {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-    
+
     /**
-     * Find the base URL for a Node based on the Node's identifier as it was registered with the 
+     * Find the base URL for a Node based on the Node's identifier as it was registered with the
      * Coordinating Node.
      * @param nodeId the identifier of the node to look up
      * @return the base URL of the node's service endpoints
@@ -561,7 +639,7 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
         String nodeBaseUrl = nodeMap.get(nodeId);
         return nodeBaseUrl;
     }
-    
+
     /**
      * Find the node identifier for a Node based on the base URL that is used to access its services
      * by looing up the registration for the node at the Coordinating Node.
@@ -577,18 +655,18 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
                 break;
             }
         }
-        
+
         return nodeId;
     }
-    
+
     /**
      * Initialize the map of nodes (paids of NodeId/NodeUrl) by getting the map from the CN
      * and parsing the XML, storing the node information in the nodeMap map. These values
      * are used later to look up a node's URL based on its ID, or its ID based on its URL.
-     * @throws IOException 
-     * @throws ParserConfigurationException 
-     * @throws SAXException 
-     * @throws XPathExpressionException 
+     * @throws IOException
+     * @throws ParserConfigurationException
+     * @throws SAXException
+     * @throws XPathExpressionException
      */
     private void initializeNodeMap() throws IOException, XPathExpressionException, SAXException, ParserConfigurationException {
         StringBuffer cnUrl = new StringBuffer(this.getNodeBaseServiceUrl());
