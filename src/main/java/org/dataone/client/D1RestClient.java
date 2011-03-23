@@ -59,13 +59,10 @@ import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.exceptions.UnsupportedMetadataType;
 import org.dataone.service.exceptions.UnsupportedType;
-import org.dataone.service.types.AuthToken;
 import org.dataone.service.types.Identifier;
-import org.dataone.service.types.ObjectFormat;
 import org.dataone.service.types.ObjectList;
 import org.dataone.service.types.SystemMetadata;
-import org.dataone.service.Constants;
-import org.dataone.service.D1Url;
+
 
 import org.jibx.runtime.BindingDirectory;
 import org.jibx.runtime.IBindingFactory;
@@ -86,6 +83,7 @@ import org.xml.sax.SAXException;
 public class D1RestClient {
     protected RestClient rc;
     private boolean exceptionHandling = true;
+    private boolean verbose = false;
 	/**
 	 * Constructor to create a new instance.
 	 */
@@ -94,41 +92,6 @@ public class D1RestClient {
 		this.exceptionHandling = true;
 	}
 
-	public ObjectList example_listObjects(AuthToken token, Date startTime,
-			Date endTime, ObjectFormat objectFormat, Boolean replicaStatus,
-			Integer start, Integer count) throws NotAuthorized, InvalidRequest,
-			NotImplemented, ServiceFailure, InvalidToken, 
-			ClientProtocolException, IOException, JiBXException, AuthenticationTimeout, UnsupportedMetadataType, HttpException {
-
-
-		if (endTime != null && startTime != null && !endTime.after(startTime))
-			throw new InvalidRequest("1000", "startTime must be after stopTime in NMode.listObjects");
-
-		D1Url url = new D1Url("nodeBaseServiceUrl",Constants.RESOURCE_OBJECTS);
-		
-		url.addNonEmptyParamPair("startTime", convertDateToGMT(startTime));
-		url.addNonEmptyParamPair("endTime", convertDateToGMT(endTime));
-		url.addNonEmptyParamPair("objectFormat", objectFormat.toString());
-		url.addNonEmptyParamPair("replicaStatus", replicaStatus.toString());
-		url.addNonEmptyParamPair("start",start.toString());
-		url.addNonEmptyParamPair("count",count.toString());
-
-
-		InputStream is = null;
-		try {
-			is = doGetRequest(url.getUrl());
-		} catch (NotFound e) {
-		} catch (IdentifierNotUnique e) {
-		} catch (UnsupportedType e) {
-		} catch (InsufficientResources e) {
-		} catch (InvalidSystemMetadata e) {
-		} catch (InvalidCredentials e) {
-		} catch (IllegalStateException e) {
-		} // these errors not thrown by the server
-
-		ObjectList ol = deserializeObjectList(is);
-		return ol;
-	}
  
 	public InputStream doGetRequest(String url) 
 	throws NotFound, InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, 
@@ -186,7 +149,8 @@ public class D1RestClient {
 
 		if (this.getExceptionHandling()) {
 			int code = res.getStatusLine().getStatusCode();
-			System.out.println("response httpCode: " + code);
+			if (verbose)
+				System.out.println("response httpCode: " + code);
 			//		System.out.println(IOUtils.toString(res.getEntity().getContent()));
 			if (code != HttpURLConnection.HTTP_OK) {
 				// error, so throw exception
@@ -202,7 +166,8 @@ public class D1RestClient {
 
 		if (this.getExceptionHandling()) {
 			int code = res.getStatusLine().getStatusCode();
-			System.out.println("response httpCode: " + code);
+			if (verbose)
+				System.out.println("response httpCode: " + code);
 			if (code != HttpURLConnection.HTTP_OK) {
 				// error, so throw exception
 				deserializeAndThrowException(res);
@@ -223,8 +188,18 @@ public class D1RestClient {
 		rc.setHeader(name, value);
 	}
 	
-	public Hashtable getAddedHeaders() {
+	public Hashtable<String, String> getAddedHeaders() {
 		return rc.getAddedHeaders();
+	}
+	
+	
+	public boolean isVerbose() {
+		return this.verbose;
+	}
+	
+	public void setVerbose(boolean verbose) {
+		this.verbose = verbose;
+		rc.setVerbose(verbose);
 	}
 	
 	
@@ -614,7 +589,8 @@ public class D1RestClient {
 		try {
 			InputStream is = resp.getEntity().getContent();
 			Header type = resp.getEntity().getContentType();
-			System.out.println("Response content-type: "+ type.getValue());
+			if (verbose)
+				System.out.println("Response content-type: "+ type.getValue());
 			if (is != null)
 				id = (Identifier)deserializeServiceType(Identifier.class, is);
 			else

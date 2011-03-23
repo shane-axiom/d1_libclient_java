@@ -58,8 +58,8 @@ public class RestClient {
 
     /** The URL string for the node REST API */
     private DefaultHttpClient httpClient;
-    private Hashtable headers = new Hashtable();
-    
+    private Hashtable<String, String> headers = new Hashtable<String, String>();
+    private boolean verbose = false;
 	/**
 	 * Constructor to create a new instance.
 	 */
@@ -72,6 +72,7 @@ public class RestClient {
     /**
      * assembles url components into a properly encoded complete url
      */
+	// TODO: remove this?  now that d1_common_java.D1Url class is created
 	public static String assembleAndEncodeUrl(String baseURL, String resource, 
 			String[] pathElements, Map<String,Object> queryParams) {
 		
@@ -89,7 +90,7 @@ public class RestClient {
 		
 		Set<String> paramKeys = queryParams.keySet();
 		Iterator<String> it = paramKeys.iterator();
-		Vector<String> params = null;
+		Vector<String> params = new Vector<String>();
 		StringBuffer item = new StringBuffer(512);
 		while (it.hasNext()) {
 			String k = it.next();
@@ -105,21 +106,36 @@ public class RestClient {
 				}
 			if (it.hasNext())
 				item.append("&");
+			
+			params.add(item.toString());
 		}
-		if(!params.isEmpty()) 
-			url += "?" + params.toString();
-		
+		// validated parameters
+		Iterator<String> it2 = params.listIterator();
+		if (it2.hasNext())
+			url += "?";
+		while (it2.hasNext()) {
+			url += it2.next();
+		}
 		return url;
 	}
 	
 	public void setHeader(String name, String value) {
-		headers.put((String)name, (String) value);
+		headers.put(name, value);
 	}
 	
-	public Hashtable getAddedHeaders() {
+	public Hashtable<String, String> getAddedHeaders() {
 		return headers;
 	}
     
+	public boolean isVerbose() {
+		return this.verbose;
+	}
+	
+	public void setVerbose(boolean verbose) {
+		this.verbose = verbose;
+	}
+	
+	
     /**
 	 * send a GET request to the resource and get the response
      * @throws IOException 
@@ -155,7 +171,6 @@ public class RestClient {
      * @throws IOException 
      * @throws ClientProtocolException  
 	 */
-	// TODO: figure out how to get the multipart bits into the method signature
 	public HttpResponse doPostRequest(String url, MultipartEntity mpe) throws ClientProtocolException, IOException   {
 		return doRequestMMBody(url,Constants.POST,mpe);
 	}
@@ -165,7 +180,6 @@ public class RestClient {
      * @throws IOException 
      * @throws ClientProtocolException 
 	 */
-	// TODO: figure out how to get the multipart bits into the method signature
 	public HttpResponse doPutRequest(String url, MultipartEntity mpe) throws ClientProtocolException, IOException  {
 		return doRequestMMBody(url,Constants.PUT,mpe);
 	}
@@ -175,8 +189,10 @@ public class RestClient {
 	 * assembles the request for GETs, HEADs and DELETEs - assumes no message body
 	 */
 	private HttpResponse doRequestNoBody(String url,String httpMethod) throws ClientProtocolException, IOException  {
-		System.out.println("restURL: " + url);
-		System.out.println("method: " + httpMethod);
+		if (verbose) {
+			System.out.println("restURL: " + url);
+			System.out.println("method: " + httpMethod);
+		}
 		HttpUriRequest req = null;
 		if (httpMethod == Constants.GET) 
 			req = new HttpGet(url);        	
@@ -195,8 +211,10 @@ public class RestClient {
 	 * assembles the request for POSTs and PUTs (uses a different base class for these entity-enclosing methods)
 	 */
 	private HttpResponse doRequestMMBody(String url,String httpMethod, MultipartEntity mpe) throws ClientProtocolException, IOException {
-		System.out.println("restURL: " + url);
-		System.out.println("method: " + httpMethod);
+		if (verbose) {
+			System.out.println("restURL: " + url);
+			System.out.println("method: " + httpMethod);
+		}
 		HttpEntityEnclosingRequestBase req = null;
 		if (httpMethod == Constants.PUT)
 			req = new HttpPut(url);
@@ -207,9 +225,11 @@ public class RestClient {
 	
 		if (mpe != null) {
 			req.setEntity(mpe);
-			System.out.println("entity: present");
+			if (verbose)
+				System.out.println("entity: present");
 		} else {
-			System.out.println("entity: null");
+			if (verbose)
+				System.out.println("entity: null");
 		}
 		return doRequest(req);		
 	}
