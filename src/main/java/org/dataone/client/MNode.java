@@ -261,7 +261,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
 		}
       	mpe.addFilePart("sysmeta",baos.toString());
     	
-    	D1RestClient client = new D1RestClient();
+    	D1RestClient client = new D1RestClient(true, verbose);
     	client.setHeader("token", token.getToken());
     	InputStream is = null;
 
@@ -325,7 +325,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
 		}
       	mpe.addFilePart("sysmeta",baos.toString());
     	
-    	D1RestClient client = new D1RestClient();
+    	D1RestClient client = new D1RestClient(true, verbose);
     	InputStream is = null;
     	
     	try {
@@ -390,7 +390,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
     		token = new AuthToken("public");
     	url.addNonEmptyParamPair("sessionid", token.getToken());
     	
-     	D1RestClient client = new D1RestClient();
+     	D1RestClient client = new D1RestClient(true, verbose);
     	client.setHeader("token", token.getToken());
     	
     	InputStream is = null;
@@ -447,7 +447,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
     		token = new AuthToken("public");
     	url.addNonEmptyParamPair("sessionid", token.getToken());
     	
-     	D1RestClient client = new D1RestClient();
+     	D1RestClient client = new D1RestClient(true, verbose);
     	client.setHeader("token", token.getToken());
     	
     	Header[] h = null;
@@ -551,7 +551,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
     	url.addNonEmptyParamPair("checksumAlgorithm", checksumAlgorithm);
 
     	// send the request
-    	D1RestClient client = new D1RestClient();
+    	D1RestClient client = new D1RestClient(true, verbose);
     	InputStream is = null;
     	
     	try {
@@ -605,7 +605,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
     	url.addNonEmptyParamPair("event", event.toString());
 
     	// send the request
-    	D1RestClient client = new D1RestClient();
+    	D1RestClient client = new D1RestClient(true, verbose);
     	InputStream is = null;
     	
     	try {

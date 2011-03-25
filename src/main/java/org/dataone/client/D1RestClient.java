@@ -92,6 +92,11 @@ public class D1RestClient {
 		this.exceptionHandling = true;
 	}
 
+	public D1RestClient(boolean handlesExceptions, boolean isVerbose) {
+		this.rc = new RestClient();
+		setExceptionHandling(handlesExceptions);
+		setVerbose(isVerbose);
+	}
  
 	public InputStream doGetRequest(String url) 
 	throws NotFound, InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, 
