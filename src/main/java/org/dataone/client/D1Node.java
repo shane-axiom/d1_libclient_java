@@ -90,6 +90,7 @@ public abstract class D1Node {
     /** The URL string for the node REST API */
     private String nodeBaseServiceUrl;
     private String nodeId;
+    protected boolean verbose = false;
     
 	/**
 	 * Constructor to create a new instance.
@@ -146,6 +147,15 @@ public abstract class D1Node {
         this.nodeId = nodeId;
     }
 
+    public void setVerbose(boolean isVerbose){
+    	this.verbose = isVerbose;
+    }
+    
+    public boolean isVerbose() {
+    	return this.verbose;
+    }
+    
+    
     /**
      * Get the resource with the specified guid.  Used by both the CNode and 
      * MNode implementations.
@@ -159,7 +169,7 @@ public abstract class D1Node {
        	if (token != null)
     		url.addNonEmptyParamPair("sessionid",token.getToken());
 
-		D1RestClient client = new D1RestClient();
+		D1RestClient client = new D1RestClient(true, verbose);
 		
 		InputStream is = null;
 		try {
@@ -206,7 +216,7 @@ public abstract class D1Node {
        	if (token != null)
     		url.addNonEmptyParamPair("sessionid",token.getToken());
 
-		D1RestClient client = new D1RestClient();
+		D1RestClient client = new D1RestClient(true, verbose);
 		
 		InputStream is = null;
 	
@@ -287,7 +297,7 @@ public abstract class D1Node {
     	if (token != null)
     		url.addNonEmptyParamPair("sessionid",token.getToken());
 
-		D1RestClient client = new D1RestClient();
+		D1RestClient client = new D1RestClient(true, verbose);
 
 		InputStream is = null;
 		try {
@@ -397,9 +407,10 @@ public abstract class D1Node {
 			if (restURL.indexOf("+") != -1) {
 				restURL = restURL.replaceAll("\\+", "%2b");
 			}
-			System.out.println("restURL: " + restURL);
-			System.out.println("method: " + method);
-
+			if (verbose) {
+				System.out.println("restURL: " + restURL);
+				System.out.println("method: " + method);
+			}
 			u = new URL(restURL);
 			connection = (HttpURLConnection) u.openConnection();
 			if (contentType != null) {

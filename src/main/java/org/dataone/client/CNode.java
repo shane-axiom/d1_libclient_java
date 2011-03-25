@@ -136,7 +136,7 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
 
     	url.addPreEncodedNonEmptyQueryParams(paramsComplete);
 
-    	D1RestClient client = new D1RestClient();
+    	D1RestClient client = new D1RestClient(true, verbose);
     	client.setHeader("token", token.getToken());
 
     	InputStream is = null;
@@ -203,7 +203,7 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
     		token = new AuthToken("public");
     	url.addNonEmptyParamPair("sessionid", token.getToken());
 
-     	D1RestClient client = new D1RestClient();
+     	D1RestClient client = new D1RestClient(true, verbose);
     	client.setHeader("token", token.getToken());
 
         InputStream is = null;
@@ -287,7 +287,7 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
 //      	mpe.addFilePart("systemmetadata",baos.toString());
         mpe.addFilePart("sysmeta", baos.toString());
 
-        D1RestClient client = new D1RestClient();
+        D1RestClient client = new D1RestClient(true, verbose);
         InputStream is = null;
 
         try {
