@@ -65,6 +65,8 @@ import org.dataone.service.types.AuthType;
 import org.dataone.service.types.Event;
 import org.dataone.service.types.Identifier;
 import org.dataone.service.types.IdentifierFormat;
+import org.dataone.service.types.ObjectFormat;
+import org.dataone.service.types.ObjectFormatList;
 import org.dataone.service.types.ObjectList;
 import org.dataone.service.types.ObjectLocationList;
 import org.dataone.service.types.Principal;
@@ -574,6 +576,20 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
     }
 
     /**
+     * Deserialize an input stream to an ObjectFormatList
+     * 
+     * @param is - the input stream to deserialize
+     * @return objectFormatList - the object format list
+     * @throws JiBXException
+     */
+    protected ObjectFormatList deserializeObjectFormatList(InputStream is)
+      throws JiBXException {
+      
+      return (ObjectFormatList) deserializeServiceType(ObjectFormatList.class, is);
+      
+    }
+    
+    /**
      * deserialize an InputStream to an ObjectLocationList object
      * @param is
      * @return
@@ -680,4 +696,170 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
         nodeMap = NodeListParser.parseNodeListFile(is);
     }
 
+    /**
+     * List the object formats registered with the Coordinating Node. Object
+     * formats should be synchronized across CNs, and so results should be the
+     * the same from any given CN.
+     * 
+     * @author cjones
+     * @return objectFormatList - the list of object formats
+     * @throws ServiceFailure 
+     * @throws NotImplemented 
+     * @throws InvalidRequest 
+     * @throws NotFound 
+     */
+    @Override
+    public ObjectFormatList listFormats() 
+      throws ServiceFailure, NotImplemented, InvalidRequest, NotFound {
+      
+      ObjectFormatList objectFormatList = null;
+      
+      // create the D1 URL ("http://server/service/formats")
+      D1Url url = new D1Url(this.getNodeBaseServiceUrl(), 
+                            Constants.RESOURCE_FORMATS);
+      D1RestClient d1RestClient = new D1RestClient();
+      InputStream is = null;
+      
+      try {
+        // get the /formats collection
+        is = d1RestClient.doGetRequest(url.getUrl());
+
+      } catch ( IdentifierNotUnique e ) {
+        
+        // convert to ServiceFailure - it's not applicable to listObjectFormats()
+        throw new ServiceFailure("4841", 
+                                 "Unexpected exception from the service - " 
+                                 + e.getClass() + ": "+ e.getMessage());
+
+      } catch ( InsufficientResources e ) {
+
+      } catch ( InvalidSystemMetadata e ) {
+
+        // convert to ServiceFailure - it's not applicable to listObjectFormats()
+        throw new ServiceFailure("4841", 
+                                 "Unexpected exception from the service - " 
+                                 + e.getClass() + ": "+ e.getMessage());
+
+      } catch ( InvalidCredentials e ) {
+
+        // convert to ServiceFailure - it's not applicable to listObjectFormats()
+        throw new ServiceFailure("4841", 
+                                 "Unexpected exception from the service - " 
+                                 + e.getClass() + ": "+ e.getMessage());
+
+      } catch ( InvalidRequest e ) {
+
+        // convert to ServiceFailure if HttpExceptions occur
+        throw new InvalidRequest("4842", 
+                                 "The request was invalid - " 
+                                 + e.getClass() + ": "+ e.getMessage());
+
+      } catch ( InvalidToken e ) {
+
+        // convert to ServiceFailure - it's not applicable to listObjectFormats()
+        throw new ServiceFailure("4841", 
+                                 "Unexpected exception from the service - " 
+                                 + e.getClass() + ": "+ e.getMessage());
+
+      } catch ( AuthenticationTimeout e ) {
+
+        // convert to ServiceFailure - it's not applicable to listObjectFormats()
+        throw new ServiceFailure("4841", 
+                                 "Unexpected exception from the service - " 
+                                 + e.getClass() + ": "+ e.getMessage());
+
+      } catch ( IOException e ) {
+
+        // convert to ServiceFailure if HttpExceptions occur
+        throw new ServiceFailure("4841", 
+                                 "Unexpected exception from the service - " 
+                                 + e.getClass() + ": "+ e.getMessage());
+
+      } catch ( UnsupportedType e ) {
+
+        // convert to ServiceFailure - it's not applicable to listObjectFormats()
+        throw new ServiceFailure("4841", 
+                                 "Unexpected exception from the service - " 
+                                 + e.getClass() + ": "+ e.getMessage());
+
+      } catch ( UnsupportedMetadataType e ) {
+
+        // convert to ServiceFailure - it's not applicable to listObjectFormats()
+        throw new ServiceFailure("4841", 
+                                 "Unexpected exception from the service - " 
+                                 + e.getClass() + ": "+ e.getMessage());
+
+      } catch ( HttpException e ) {
+
+        // convert to ServiceFailure if HttpExceptions occur
+        throw new ServiceFailure("4841", 
+                                 "Unexpected exception from the service - " 
+                                 + e.getClass() + ": "+ e.getMessage());
+
+      } catch ( NotAuthorized e ) {
+
+        // convert to ServiceFailure - it's not applicable to listObjectFormats()
+        throw new ServiceFailure("4841", 
+                                 "Unexpected exception from the service - " 
+                                 + e.getClass() + ": "+ e.getMessage());
+
+      } catch ( NotImplemented e ) {
+
+        // If the service is not implemented
+        throw new NotImplemented("4840", 
+                                 "The service is not implemented - " 
+                                 + e.getClass() + ": "+ e.getMessage());
+
+      } catch ( NotFound e ) {
+
+        // convert to ServiceFailure - it's not applicable to listObjectFormats()
+        throw new NotFound("4843", 
+                           "The object formats collection could not" + 
+                           " be found at this node - " +
+                           e.getClass() + ": "+ e.getMessage());
+
+      } catch ( ServiceFailure e ) {
+        
+        // convert to ServiceFailure - it's not applicable to listObjectFormats()
+        throw new ServiceFailure("4841", 
+                                 "Unexpected exception from the service - " 
+                                 + e.getClass() + ": "+ e.getMessage());
+
+      }
+      
+      try {
+        // get the ObjectFormatList type from the input stream
+        objectFormatList = deserializeObjectFormatList(is);
+
+      } catch ( JiBXException e ) {
+        throw new ServiceFailure("4841", 
+                                 "Unexpected exception from the service - " 
+                                 + e.getClass() + ": "+ e.getMessage());
+  
+      }
+      
+      return objectFormatList;
+      
+    }
+
+    /**
+     * Get the specified object format from the registered list of object
+     * formats given the format identifier.
+     * 
+     * @throws ServiceFailure
+     * @throws NotImplemented
+     * @throws InvalidRequest
+     * @throws NotFound
+     * @throws InsufficientResources
+     */
+    @Override
+    public ObjectFormat getFormat() 
+      throws ServiceFailure, NotImplemented, InvalidRequest, NotFound,
+      InsufficientResources {
+      
+      // TODO stub only
+      return null;
+      
+    }
+    
 }
