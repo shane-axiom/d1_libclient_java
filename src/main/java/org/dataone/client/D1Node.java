@@ -641,19 +641,6 @@ public abstract class D1Node {
 		return (SystemMetadata) deserializeServiceType(SystemMetadata.class, is);
 	}
 
-  /**
-   * Deserialize an input stream to an ObjectFormat
-   * 
-   * @param is - the input stream to deserialize
-   * @return objectFormat - the object format list
-   * @throws JiBXException
-   */
-  protected ObjectFormat deserializeObjectFormat(InputStream is) 
-    throws JiBXException {
-    
-    return (ObjectFormat) deserializeServiceType(ObjectFormat.class, is);
-  }
-
 	/**
 	 * deserialize and ObjectList from an InputStream
 	 * @param is
