@@ -284,8 +284,6 @@ public abstract class D1Node {
 
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
 		
-//		url.addNonEmptyParamPair("startTime", convertDateToGMT(startTime));
-//		url.addNonEmptyParamPair("endTime", convertDateToGMT(endTime));
 		url.addDateParamPair("startTime", startTime);
 		url.addDateParamPair("endTime", endTime);
 		if (objectFormat != null) 
@@ -350,20 +348,6 @@ public abstract class D1Node {
 		sfe.setStackTrace(e.getStackTrace());
     	return sfe;
     }
-    
-    
-	/**
-	 * convert a date to GMT
-	 * 
-	 * @param d
-	 * @return
-	 */
-	protected String convertDateToGMT(Date d) {
-		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-		dateFormat.setTimeZone(TimeZone.getTimeZone("GMT-0"));
-		String s = dateFormat.format(d);
-		return s;
-	}
 
 	/**
 	 * send a request to the resource and get the response

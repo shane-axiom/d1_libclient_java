@@ -210,20 +210,6 @@ public class D1RestClient {
 	
 // ========================  original handlers ==============================//
     
-  
-	/**
-	 * convert a date to GMT
-	 * 
-	 * @param d
-	 * @return
-	 */
-	protected String convertDateToGMT(Date d) {
-		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-		dateFormat.setTimeZone(TimeZone.getTimeZone("GMT-0"));
-		String s = dateFormat.format(d);
-		return s;
-	}
-
 
 	/**
 	 * 

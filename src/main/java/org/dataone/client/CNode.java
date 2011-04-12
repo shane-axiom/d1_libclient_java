@@ -17,7 +17,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.dataone.client;
 
 import java.io.ByteArrayInputStream;
@@ -37,6 +36,7 @@ import javax.xml.xpath.XPathExpressionException;
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
+import org.dataone.cn.batch.utils.TypeMarshaller;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.Constants;
 import org.dataone.service.D1Url;
@@ -45,8 +45,8 @@ import org.dataone.service.NodeListParser;
 import org.dataone.service.cn.CoordinatingNodeAuthentication;
 import org.dataone.service.cn.CoordinatingNodeAuthorization;
 import org.dataone.service.cn.CoordinatingNodeCrud;
+import org.dataone.service.cn.CoordinatingNodeRegister;
 import org.dataone.service.exceptions.AuthenticationTimeout;
-import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.IdentifierNotUnique;
 import org.dataone.service.exceptions.InsufficientResources;
 import org.dataone.service.exceptions.InvalidCredentials;
@@ -65,9 +65,11 @@ import org.dataone.service.types.AuthType;
 import org.dataone.service.types.Event;
 import org.dataone.service.types.Identifier;
 import org.dataone.service.types.IdentifierFormat;
+import org.dataone.service.types.NodeList;
 import org.dataone.service.types.ObjectList;
 import org.dataone.service.types.ObjectLocationList;
 import org.dataone.service.types.Principal;
+import org.dataone.service.types.Services;
 import org.dataone.service.types.SystemMetadata;
 import org.jibx.runtime.JiBXException;
 import org.xml.sax.SAXException;
@@ -76,10 +78,10 @@ import org.xml.sax.SAXException;
  * CNode represents a DataONE Coordinating Node, and allows calling classes to
  * execute CN services.
  */
-
-public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingNodeAuthorization, CoordinatingNodeAuthentication {
+public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingNodeAuthorization, CoordinatingNodeAuthentication, CoordinatingNodeRegister {
 
     private Map<String, String> nodeMap;
+
     /**
      * Construct a Coordinating Node, passing in the base url for node services. The CN
      * first retrieves a list of other nodes that can be used to look up node
@@ -110,12 +112,13 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
             throws NotAuthorized, InvalidRequest,
             NotImplemented, ServiceFailure, InvalidToken {
 
-       	if (token == null)
-    		token = new AuthToken("public");
+        if (token == null) {
+            token = new AuthToken("public");
+        }
 
-    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
+        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
 
-    	// set default params, if need be
+        // set default params, if need be
         String paramAdditions = "";
         if (!paramString.contains("qt=solr")) {
             paramAdditions = "qt=solr&";
@@ -126,46 +129,47 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
         if (!paramString.contains("start=\\d+")) {
             paramAdditions += "start=0&";
         }
-    	if (!paramString.contains("sessionid=")) {
-    		paramAdditions += "sessionid=" + token.getToken() + "&";
-    	}
+        if (!paramString.contains("sessionid=")) {
+            paramAdditions += "sessionid=" + token.getToken() + "&";
+        }
         String paramsComplete = paramAdditions + paramString;
         // clean up paramsComplete string
-    	if (paramsComplete.endsWith("&"))
+        if (paramsComplete.endsWith("&")) {
             paramsComplete = paramsComplete.substring(0, paramsComplete.length() - 1);
+        }
 
-    	url.addPreEncodedNonEmptyQueryParams(paramsComplete);
+        url.addPreEncodedNonEmptyQueryParams(paramsComplete);
 
-    	D1RestClient client = new D1RestClient(true, verbose);
-    	client.setHeader("token", token.getToken());
+        D1RestClient client = new D1RestClient(true, verbose);
+        client.setHeader("token", token.getToken());
 
-    	InputStream is = null;
+        InputStream is = null;
         try {
-    		is = client.doGetRequest(url.getUrl());
-    	} catch (NotFound e) {
-    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (IdentifierNotUnique e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (UnsupportedType e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (InsufficientResources e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (InvalidSystemMetadata e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (InvalidCredentials e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (AuthenticationTimeout e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (UnsupportedMetadataType e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (ClientProtocolException e) {
-			throw recastClientSideExceptionToServiceFailure(e);
-		} catch (IllegalStateException e) {
-			throw recastClientSideExceptionToServiceFailure(e);
-		} catch (IOException e) {
-			throw recastClientSideExceptionToServiceFailure(e);
-		} catch (HttpException e) {
-			throw recastClientSideExceptionToServiceFailure(e);
+            is = client.doGetRequest(url.getUrl());
+        } catch (NotFound e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+        } catch (IdentifierNotUnique e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+        } catch (UnsupportedType e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+        } catch (InsufficientResources e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+        } catch (InvalidSystemMetadata e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+        } catch (InvalidCredentials e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+        } catch (AuthenticationTimeout e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+        } catch (UnsupportedMetadataType e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+        } catch (ClientProtocolException e) {
+            throw recastClientSideExceptionToServiceFailure(e);
+        } catch (IllegalStateException e) {
+            throw recastClientSideExceptionToServiceFailure(e);
+        } catch (IOException e) {
+            throw recastClientSideExceptionToServiceFailure(e);
+        } catch (HttpException e) {
+            throw recastClientSideExceptionToServiceFailure(e);
         }
 
         try {
@@ -175,7 +179,6 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
                     "Could not deserialize the ObjectList: " + e.getMessage());
         }
     }
-
 
     @Override
     public InputStream get(AuthToken token, Identifier guid)
@@ -196,42 +199,43 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
             InvalidRequest, NotImplemented {
 
-    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_RESOLVE);
-    	url.addNextPathElement(guid.getValue());
+        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_RESOLVE);
+        url.addNextPathElement(guid.getValue());
 
-    	if (token == null)
-    		token = new AuthToken("public");
-    	url.addNonEmptyParamPair("sessionid", token.getToken());
+        if (token == null) {
+            token = new AuthToken("public");
+        }
+        url.addNonEmptyParamPair("sessionid", token.getToken());
 
-     	D1RestClient client = new D1RestClient(true, verbose);
-    	client.setHeader("token", token.getToken());
+        D1RestClient client = new D1RestClient(true, verbose);
+        client.setHeader("token", token.getToken());
 
         InputStream is = null;
-            try {
-    		is = client.doGetRequest(url.getUrl());
-    	} catch (IdentifierNotUnique e) {
-    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (UnsupportedType e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (InsufficientResources e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (InvalidSystemMetadata e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (InvalidCredentials e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (AuthenticationTimeout e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (UnsupportedMetadataType e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (ClientProtocolException e) {
-			throw recastClientSideExceptionToServiceFailure(e);
-		} catch (IllegalStateException e) {
-			throw recastClientSideExceptionToServiceFailure(e);
-		} catch (IOException e) {
-			throw recastClientSideExceptionToServiceFailure(e);
-		} catch (HttpException e) {
-			throw recastClientSideExceptionToServiceFailure(e);
-            }
+        try {
+            is = client.doGetRequest(url.getUrl());
+        } catch (IdentifierNotUnique e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+        } catch (UnsupportedType e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+        } catch (InsufficientResources e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+        } catch (InvalidSystemMetadata e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+        } catch (InvalidCredentials e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+        } catch (AuthenticationTimeout e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+        } catch (UnsupportedMetadataType e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+        } catch (ClientProtocolException e) {
+            throw recastClientSideExceptionToServiceFailure(e);
+        } catch (IllegalStateException e) {
+            throw recastClientSideExceptionToServiceFailure(e);
+        } catch (IOException e) {
+            throw recastClientSideExceptionToServiceFailure(e);
+        } catch (HttpException e) {
+            throw recastClientSideExceptionToServiceFailure(e);
+        }
 
         try {
             return deserializeResolve(is);
@@ -241,6 +245,7 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
                     + e.getMessage());
         }
     }
+
     /**
      * create both a system metadata resource and science metadata resource with
      * the specified guid
@@ -512,37 +517,38 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
             throws InvalidToken, ServiceFailure, NotFound, NotAuthorized, NotImplemented, InvalidRequest {
         // TODO: this method assumes an access control model that is not finalized, refactor when it is
 
-    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_SESSION);
+        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_SESSION);
 
-    	url.addNonEmptyParamPair("guid", id.getValue());
-       	url.addNonEmptyParamPair("principal", principal);
-       	url.addNonEmptyParamPair("permission", permission);
-       	url.addNonEmptyParamPair("permissionType", permissionType);
-       	url.addNonEmptyParamPair("permissionOrder", permissionOrder);
-       	url.addNonEmptyParamPair("op", "setaccess");
-       	url.addNonEmptyParamPair("setsystemmetadata", "true");
+        url.addNonEmptyParamPair("guid", id.getValue());
+        url.addNonEmptyParamPair("principal", principal);
+        url.addNonEmptyParamPair("permission", permission);
+        url.addNonEmptyParamPair("permissionType", permissionType);
+        url.addNonEmptyParamPair("permissionOrder", permissionOrder);
+        url.addNonEmptyParamPair("op", "setaccess");
+        url.addNonEmptyParamPair("setsystemmetadata", "true");
 
 
-    	if (token == null)
-    		token = new AuthToken("public");
-    	url.addNonEmptyParamPair("sessionid", token.getToken());
-
-     	RestClient client = new RestClient();
-    	client.setHeader("token", token.getToken());
-
-    	HttpResponse hr = null;
-    	try {
-    		hr = client.doPostRequest(url.getUrl(),null);
-    		int statusCode = hr.getStatusLine().getStatusCode();
-
-    		if (statusCode != HttpURLConnection.HTTP_OK) {
-    			throw new ServiceFailure("1000", "Error setting access on document");
+        if (token == null) {
+            token = new AuthToken("public");
         }
-    	} catch (ClientProtocolException e) {
-    		throw recastClientSideExceptionToServiceFailure(e);
-		} catch (IOException e) {
-			throw recastClientSideExceptionToServiceFailure(e);
-    	}
+        url.addNonEmptyParamPair("sessionid", token.getToken());
+
+        RestClient client = new RestClient();
+        client.setHeader("token", token.getToken());
+
+        HttpResponse hr = null;
+        try {
+            hr = client.doPostRequest(url.getUrl(), null);
+            int statusCode = hr.getStatusLine().getStatusCode();
+
+            if (statusCode != HttpURLConnection.HTTP_OK) {
+                throw new ServiceFailure("1000", "Error setting access on document");
+            }
+        } catch (ClientProtocolException e) {
+            throw recastClientSideExceptionToServiceFailure(e);
+        } catch (IOException e) {
+            throw recastClientSideExceptionToServiceFailure(e);
+        }
 
         return true;
 
@@ -680,4 +686,70 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
         nodeMap = NodeListParser.parseNodeListFile(is);
     }
 
+    @Override
+    public NodeList listNodes(AuthToken token) throws NotImplemented, ServiceFailure {
+
+        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_NODE);
+
+        if (token == null) {
+            token = new AuthToken("public");
+        }
+        url.addNonEmptyParamPair("sessionid", token.getToken());
+
+        D1RestClient client = new D1RestClient(true, verbose);
+        client.setHeader("token", token.getToken());
+
+        InputStream is = null;
+        try {
+            is = client.doGetRequest(url.getUrl());
+        } catch (IdentifierNotUnique e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+        } catch (UnsupportedType e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+        } catch (InsufficientResources e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+        } catch (InvalidSystemMetadata e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+        } catch (InvalidCredentials e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+        } catch (AuthenticationTimeout e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+        } catch (UnsupportedMetadataType e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+        } catch (NotFound ex) {
+            throw recastClientSideExceptionToServiceFailure(ex);
+        } catch (InvalidToken ex) {
+            throw recastClientSideExceptionToServiceFailure(ex);
+        } catch (NotAuthorized ex) {
+            throw recastClientSideExceptionToServiceFailure(ex);
+        } catch (InvalidRequest ex) {
+        } catch (ClientProtocolException e) {
+            throw recastClientSideExceptionToServiceFailure(e);
+        } catch (IllegalStateException e) {
+            throw recastClientSideExceptionToServiceFailure(e);
+        } catch (IOException e) {
+            throw recastClientSideExceptionToServiceFailure(e);
+        } catch (HttpException e) {
+            throw recastClientSideExceptionToServiceFailure(e);
+        }
+
+        try {
+            return TypeMarshaller.unmarshalTypeFromStream(NodeList.class, is);
+        } catch (Exception e) {
+            throw new ServiceFailure("4801",
+                    "Could not deserialize the node list: "
+                    + e.getMessage());
+        }
+
+    }
+
+    @Override
+    public boolean addNodeCapabilities(AuthToken token, Identifier pid, Services capabilities) throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public Identifier register(AuthToken token, Services capabilities) throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }
