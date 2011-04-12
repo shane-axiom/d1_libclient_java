@@ -225,12 +225,12 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
      */
   @Override
   public ObjectList listObjects(AuthToken token, Date startTime,
-          Date endTime, ObjectFormat objectFormat, boolean replicaStatus,
-          int start, int count) throws NotAuthorized, InvalidRequest,
+          Date endTime, ObjectFormat objectFormat, Boolean replicaStatus,
+          Integer start, Integer count) throws NotAuthorized, InvalidRequest,
           NotImplemented, ServiceFailure, InvalidToken {
 
 	  return super.listObjects(token, startTime, endTime, objectFormat, 
-			  new Boolean(replicaStatus), new Integer(start), new Integer(count));
+			  replicaStatus, start, count);
   }
 
     /**
