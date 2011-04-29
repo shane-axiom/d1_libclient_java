@@ -250,7 +250,13 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
     		url.addNonEmptyParamPair("sessionid", token.getToken());
 
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
-    	mpe.addFilePart(object, "object");
+    	try {
+			mpe.addFilePart("object",object);
+		} catch (IOException e1) {
+        	throw new ServiceFailure("1090", 
+        			"IO Exception creating the filepart for object: "
+        			+ e1.getMessage());	
+		}
     	ByteArrayOutputStream baos = new ByteArrayOutputStream();
     	try {
 			serializeServiceType(SystemMetadata.class, sysmeta, baos);
@@ -259,7 +265,13 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
                     "Could not serialize the systemMetadata: "
                             + e.getMessage());
 		}
-      	mpe.addFilePart("sysmeta",baos.toString());
+      	try {
+			mpe.addFilePart("sysmeta",baos.toString());
+		} catch (IOException e1) {
+			throw new ServiceFailure("1090", 
+        			"IO Exception creating the filepart for sysmeta: "
+        			+ e1.getMessage());	
+		}
     	
     	D1RestClient client = new D1RestClient(true, verbose);
     	client.setHeader("token", token.getToken());
@@ -297,45 +309,56 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
 
    
     /**
-     * update a resource with the specified guid.
+     * update a resource with the specified pid.
      */
-    public Identifier update(AuthToken token, Identifier guid,
-            InputStream object, Identifier obsoletedGuid, SystemMetadata sysmeta)
+    public Identifier update(AuthToken token, Identifier pid,
+            InputStream object, Identifier newPid, SystemMetadata sysmeta)
             throws InvalidToken, ServiceFailure, NotAuthorized,
             IdentifierNotUnique, UnsupportedType, InsufficientResources,
-            NotFound, InvalidSystemMetadata, NotImplemented {
+            NotFound, InvalidSystemMetadata, NotImplemented, InvalidRequest {
 
 
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
-    	url.addNextPathElement(guid.getValue());
+    	url.addNextPathElement(pid.getValue());
     	if (token != null)
     		url.addNonEmptyParamPair("sessionid", token.getToken());
 
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
-    	mpe.addParamPart("obsoletedPid", 
-                        EncodingUtilities.encodeUrlQuerySegment(obsoletedGuid.getValue()));
-    	mpe.addFilePart(object, "object");
+    	mpe.addParamPart("newPid", 
+                        EncodingUtilities.encodeUrlQuerySegment(newPid.getValue()));
+    	try {
+    		mpe.addFilePart("object", object);
+    	} catch (IOException e1) {
+        	throw new ServiceFailure("1090", 
+        			"IO Exception creating the filepart for object: "
+        			+ e1.getMessage());	
+		}
     	ByteArrayOutputStream baos = new ByteArrayOutputStream();
     	try {
 			serializeServiceType(SystemMetadata.class, sysmeta, baos);
+			mpe.addFilePart("sysmeta",baos.toString());
 		} catch (JiBXException e) {
 			throw new ServiceFailure("1090",
                     "Could not serialize the systemMetadata: "
                             + e.getMessage());
+		} catch (IOException e) {
+        	throw new ServiceFailure("1090", 
+        			"IO Exception creating the filepart for sysmeta: "
+        			+ e.getMessage());	
 		}
-      	mpe.addFilePart("sysmeta",baos.toString());
+      	
     	
     	D1RestClient client = new D1RestClient(true, verbose);
     	InputStream is = null;
     	
     	try {
     		is = client.doPutRequest(url.getUrl(),mpe);
-    	} catch (NotFound e) {
-    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+//    	} catch (NotFound e) {
+//    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
     	} catch (InvalidCredentials e) {
     		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-    	} catch (InvalidRequest e) {
-    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+//    	} catch (InvalidRequest e) {
+//    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
     	} catch (AuthenticationTimeout e) {
     		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
     	} catch (UnsupportedMetadataType e) {
