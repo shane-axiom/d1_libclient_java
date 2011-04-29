@@ -273,24 +273,31 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
         // and this is how CNs are different from MNs
         // because if object is null on an MN, we should throw an exception
 
-        if (object == null) {
-            // XXX a bit confusing with these method signatures,
-            // one takes the name first
-            // the other takes the name second???
-            mpe.addFilePart("object", "");
-        } else {
-            mpe.addFilePart(object, "object");
+        try {
+        	if (object == null) {
+        		mpe.addFilePart("object", "");
+        	} else {
+        		mpe.addFilePart("object", object);
+        	}
+        } catch (IOException e) {
+        	throw new ServiceFailure("1090", 
+        			"IO Exception creating the filepart for object: "
+        			+ e.getMessage());	
         }
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
-            serializeServiceType(SystemMetadata.class, sysmeta, baos);
+            serializeServiceType(SystemMetadata.class, sysmeta, baos);            
+            mpe.addFilePart("sysmeta", baos.toString());
         } catch (JiBXException e) {
             throw new ServiceFailure("1090",
                     "Could not serialize the systemMetadata: "
                     + e.getMessage());
-        }
-//      	mpe.addFilePart("systemmetadata",baos.toString());
-        mpe.addFilePart("sysmeta", baos.toString());
+        } catch (IOException e) {
+			throw new ServiceFailure("1090", 
+					"IO Exception creating the filepart for sysmeta: "
+					+ e.getMessage());
+		}
+       
 
         D1RestClient client = new D1RestClient(true, verbose);
         InputStream is = null;
@@ -328,22 +335,22 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
     /**
      * update a resource with the specified guid.
      */
-    public Identifier update(AuthToken token, Identifier guid,
-            InputStream object, Identifier obsoletedGuid, SystemMetadata sysmeta)
+    public Identifier update(AuthToken token, Identifier pid,
+            InputStream object, Identifier newPid, SystemMetadata sysmeta)
             throws InvalidToken, ServiceFailure, NotAuthorized,
             IdentifierNotUnique, UnsupportedType, InsufficientResources,
             NotFound, InvalidSystemMetadata, NotImplemented {
 
 
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
-        url.addNextPathElement(guid.getValue());
+        url.addNextPathElement(pid.getValue());
         if (token != null) {
             url.addNonEmptyParamPair("sessionid", token.getToken());
         }
 
         SimpleMultipartEntity mpe = new SimpleMultipartEntity();
-        mpe.addParamPart("obsoletedPid",
-                EncodingUtilities.encodeUrlQuerySegment(obsoletedGuid.getValue()));
+        mpe.addParamPart("newPid",
+                EncodingUtilities.encodeUrlQuerySegment(newPid.getValue()));
         // Coordinating Nodes must maintain systemmetadata of all object on dataone
         // however Coordinating nodes do not house Science Data only Science Metadata
         // Thus, the inputstream for an object may be null
@@ -351,23 +358,31 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
         // and this is how CNs are different from MNs
         // because if object is null on an MN, we should throw an exception
 
-        if (object == null) {
-            // XXX a bit confusing with these method signatures,
-            // one takes the name first
-            // the other takes the name second???
-            mpe.addFilePart("object", "");
-        } else {
-            mpe.addFilePart(object, "object");
+        try { 
+        	if (object == null) {
+        		mpe.addFilePart("object", "");
+        	} else {
+        		mpe.addFilePart("object", object);
+        	}
+        } catch (IOException e) {
+        	throw new ServiceFailure("1090", 
+        			"IO Exception creating the filepart for object: "
+        			+ e.getMessage());	
         }
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
             serializeServiceType(SystemMetadata.class, sysmeta, baos);
+            mpe.addFilePart("sysmeta", baos.toString());
         } catch (JiBXException e) {
             throw new ServiceFailure("1090",
                     "Could not serialize the systemMetadata: "
                     + e.getMessage());
+        } catch (IOException e) {
+        	throw new ServiceFailure("1090", 
+        			"IO Exception creating the filepart for systemMetadata: "
+        			+ e.getMessage());	
         }
-        mpe.addFilePart("sysmeta", baos.toString());
+
 
         D1RestClient client = new D1RestClient();
         InputStream is = null;

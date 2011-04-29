@@ -766,7 +766,7 @@ public abstract class D1Node {
             }
             
             //write object and sysmeta to mmp files
-            mrhandler.addFilePart(object, "object");
+            mrhandler.addFilePart("object", object);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             serializeServiceType(SystemMetadata.class, sysmeta, baos);
             mrhandler.addFilePart("sysmeta", baos.toString());
