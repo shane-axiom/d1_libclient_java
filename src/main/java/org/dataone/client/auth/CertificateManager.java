@@ -32,6 +32,7 @@ import javax.net.ssl.TrustManagerFactory;
  */
 public class CertificateManager {
     private static final String truststore = "/Users/jones/Desktop/cilogon/cilogon-trusted-certs";
+    private static final String user_p12_pass = "certpwgoeshere";
     private static CertificateManager cm = null;
     private CertificateFactory cf = null;
     
@@ -129,7 +130,7 @@ public class CertificateManager {
         try {
             ks = KeyStore.getInstance("PKCS12");
             //ks.load(new FileInputStream(pk12_cert_store),"yourPassword".toCharArray());
-            ks.load(new FileInputStream(pk12_cert_store), null);
+            ks.load(new FileInputStream(pk12_cert_store), user_p12_pass.toCharArray());
             Enumeration<String> aliases = ks.aliases();
            
             while (aliases.hasMoreElements()) {
@@ -140,8 +141,11 @@ public class CertificateManager {
                     System.out.println("Certificate Type: " + cert.getType());
                 } else if (ks.isKeyEntry(alias)) {
                     System.out.println("This is a key!");
-                    Key key = ks.getKey(alias, "iusemycertforcrap".toCharArray());
+                    Key key = ks.getKey(alias, user_p12_pass.toCharArray());
                     System.out.println(key.getFormat());
+                    Certificate cert[] = ks.getCertificateChain(alias);
+                    X509Certificate x509cert = (X509Certificate) cert[0];
+                    System.out.println("Certificate subject: " + x509cert.getSubjectDN().toString());
                 }
             }
         } catch (KeyStoreException e) {
