@@ -32,6 +32,7 @@ import java.net.HttpURLConnection;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.TimeZone;
 
@@ -193,7 +194,7 @@ public class D1RestClient {
 		rc.setHeader(name, value);
 	}
 	
-	public Hashtable<String, String> getAddedHeaders() {
+	public HashMap<String, String> getAddedHeaders() {
 		return rc.getAddedHeaders();
 	}
 	
@@ -455,8 +456,8 @@ public class D1RestClient {
 		NodeList nl = e.getElementsByTagName(tag);
 		if (nl != null && nl.getLength() > 0) {
 			Element el = (Element) nl.item(0);
-                    if ((el.getFirstChild().getNodeType() == Element.TEXT_NODE) ||
-                                el.getFirstChild().getNodeType() == Element.CDATA_SECTION_NODE) {
+                    if (el.hasChildNodes() && ((el.getFirstChild().getNodeType() == Element.TEXT_NODE) ||
+                                el.getFirstChild().getNodeType() == Element.CDATA_SECTION_NODE)) {
                         text = el.getFirstChild().getNodeValue();
                     } else {
                         text = "";
