@@ -25,6 +25,7 @@ package org.dataone.client;
 
 import java.io.IOException;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
@@ -58,7 +59,7 @@ public class RestClient {
 
     /** The URL string for the node REST API */
     private DefaultHttpClient httpClient;
-    private Hashtable<String, String> headers = new Hashtable<String, String>();
+    private HashMap<String, String> headers = new HashMap<String, String>();
     private boolean verbose = false;
 	/**
 	 * Constructor to create a new instance.
@@ -123,7 +124,7 @@ public class RestClient {
 		headers.put(name, value);
 	}
 	
-	public Hashtable<String, String> getAddedHeaders() {
+	public HashMap<String, String> getAddedHeaders() {
 		return headers;
 	}
     
@@ -239,10 +240,8 @@ public class RestClient {
 	 */
 	private HttpResponse doRequest(HttpUriRequest req) throws ClientProtocolException, IOException {
 
-		Enumeration names = headers.keys();
-		while (names.hasMoreElements()) 
+		for (String n: headers.keySet())
 		{
-			String n = (String) names.nextElement();
 			req.setHeader(n,(String)headers.get(n));
 		}
 		
