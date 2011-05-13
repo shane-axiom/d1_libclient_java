@@ -171,8 +171,9 @@ public class CertificateManager {
     }
     
     /**
-     * Load a certificate from a file.
-     * @param user_cert_name the name of the file containing the certificate.
+     * Check the validity of a certificate, and be sure that it is verifiable using the given CA certificate.
+     * @param cert the X509Certificate to be verified
+     * @param caCert the X509Certificate of the trusted CertificateAuthority (CA)
      */
     public boolean verify(X509Certificate cert, X509Certificate caCert) {
         InputStream inStream;
