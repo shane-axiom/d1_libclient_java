@@ -33,7 +33,7 @@ import org.junit.rules.ErrorCollector;
  * @author Matthew Jones
  */
 public class D1ClientUnitTest  {
-    private static final String TEST_CN_URL = "http://cn-dev.dataone.org/cn/";
+    // private static final String TEST_CN_URL = "http://cn-dev.dataone.org/cn/";
 
     @Rule 
     public ErrorCollector errorCollector = new ErrorCollector();
@@ -52,6 +52,7 @@ public class D1ClientUnitTest  {
     	// moved to d1_integration product because of dependency on knb instance 
     }
 
+/* once we have a mock HttpClient client to test against, add this back in
     @Test
     public void testNodeMap() {
         printHeader("testNodeMap");
@@ -66,7 +67,7 @@ public class D1ClientUnitTest  {
         System.out.println("Found nodeUrl = " + registeredUrl);
         assertEquals(TEST_CN_URL, registeredUrl);
     }
-    
+*/
     /**
      * test the unit test harness
      */
