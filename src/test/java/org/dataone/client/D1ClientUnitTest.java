@@ -22,7 +22,14 @@ package org.dataone.client;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+
+import java.util.Arrays;
+import java.util.List;
+
+import org.dataone.service.exceptions.InvalidRequest;
+import org.dataone.service.types.Identifier;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -42,6 +49,7 @@ public class D1ClientUnitTest  {
     public void setUp() throws Exception 
     {
     }
+
     
     /**
      * test that trailing slashes do not affect the response of the node
@@ -68,6 +76,28 @@ public class D1ClientUnitTest  {
         assertEquals(TEST_CN_URL, registeredUrl);
     }
 */
+    @Test
+    public void testNullObjectCheck() {
+        Identifier id = new Identifier();
+        byte[] data = new byte[3];
+        String info = "Test";
+        List<Object> objects = Arrays.asList((Object)id, (Object)data, (Object)info);
+        try {
+            D1Object.checkNotNull(objects);
+        } catch (InvalidRequest e) {
+            fail("Object was incorrectly found to be null.");
+        }
+
+        Identifier nullId = null;
+        objects = Arrays.asList((Object)nullId, (Object)data, (Object)info);
+        try {
+            D1Object.checkNotNull(objects);
+            fail("Object nullId should have been found to be null.");
+        } catch (InvalidRequest e) {
+            // This is ok; object was null, and we should have caught an InvalidRequest
+        }
+    }
+    
     /**
      * test the unit test harness
      */
