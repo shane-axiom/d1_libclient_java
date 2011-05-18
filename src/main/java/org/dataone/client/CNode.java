@@ -68,8 +68,8 @@ import org.dataone.service.types.IdentifierFormat;
 import org.dataone.service.types.NodeList;
 import org.dataone.service.types.ObjectList;
 import org.dataone.service.types.ObjectLocationList;
-import org.dataone.service.types.Principal;
 import org.dataone.service.types.Services;
+import org.dataone.service.types.Subject;
 import org.dataone.service.types.SystemMetadata;
 import org.jibx.runtime.JiBXException;
 import org.xml.sax.SAXException;
@@ -585,12 +585,12 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
     }
 
     @Override
-    public Identifier setOwner(AuthToken token, Identifier guid, Principal userId) throws InvalidToken, NotAuthorized, NotFound {
+    public Identifier setOwner(AuthToken token, Identifier guid, Subject userId) throws InvalidToken, NotAuthorized, NotFound {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public Principal newAccount(String username, String password) throws IdentifierNotUnique, InvalidCredentials {
+    public Subject newAccount(String username, String password) throws IdentifierNotUnique, InvalidCredentials {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -626,7 +626,7 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
     }
 
     @Override
-    public Principal newAccount(String username, String password, AuthType type) throws ServiceFailure, IdentifierNotUnique, InvalidCredentials, NotImplemented, InvalidRequest {
+    public Subject newAccount(String username, String password, AuthType type) throws ServiceFailure, IdentifierNotUnique, InvalidCredentials, NotImplemented, InvalidRequest {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

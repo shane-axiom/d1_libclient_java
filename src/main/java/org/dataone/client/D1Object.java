@@ -24,6 +24,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -46,7 +47,7 @@ import org.dataone.service.types.NodeReference;
 import org.dataone.service.types.ObjectFormat;
 import org.dataone.service.types.ObjectLocation;
 import org.dataone.service.types.ObjectLocationList;
-import org.dataone.service.types.Principal;
+import org.dataone.service.types.Subject;
 import org.dataone.service.types.SystemMetadata;
 import org.dataone.service.types.util.ServiceTypeUtil;
 
@@ -63,7 +64,7 @@ public class D1Object {
     
     /**
      * Create an object that contains the system metadata and data bytes from the D1 system. The identifier
-     * is first resolved against the Coordinating Node, and then boththe data and system metadata for that
+     * is first resolved against the Coordinating Node, and then both the data and system metadata for that
      * id are downloaded from the resolved Member Node and stored in the D1Object instance for easy retrieval.
      * @param id the Identifier to be retrieved from D1
      */
@@ -290,6 +291,8 @@ public class D1Object {
     private SystemMetadata generateSystemMetadata(Identifier id, byte[] data, String format, String submitter, String nodeId, 
                 String[] describes, String[] describedBy) throws NoSuchAlgorithmException, IOException {
         
+//            validateRequest(id, data, format, submitter, nodeId, describes, describedBy);
+            
             SystemMetadata sm = new SystemMetadata();
             sm.setIdentifier(id);
             ObjectFormat fmt = ObjectFormat.convert(format);
@@ -306,7 +309,7 @@ public class D1Object {
             sm.setSize(data.length);
     
             //submitter
-            Principal p = new Principal();
+            Subject p = new Subject();
             p.setValue(submitter);
             sm.setSubmitter(p);
             sm.setRightsHolder(p);
@@ -335,4 +338,35 @@ public class D1Object {
             
             return sm;
         }
+
+    protected void validateRequest(Identifier id, byte[] data, String format, String submitter, 
+            String nodeId, String[] describes, String[] describedBy) throws InvalidRequest {
+
+        List<Object> objects = Arrays.asList((Object)id, (Object)data, (Object)format, (Object)submitter, 
+                (Object)nodeId, (Object)describes, (Object)describedBy);
+        D1Object.checkNotNull(objects);
+        List<String> strings = Arrays.asList(id.getValue(), format.toString(), submitter, nodeId);
+        D1Object.checkLength(strings);        
+    }
+    
+    /**
+     * Check if any in a list of objects are null references.  If so, throw an exception.
+     * @param objects the List of objects to check
+     * @throws InvalidRequest if any Object in the list is null
+     */
+    protected static void checkNotNull(List<Object> objects) throws InvalidRequest {
+        for (Object obj : objects) {
+            if (obj == null) {
+                throw new InvalidRequest("0", "Parameter was null.  Provide all parameters.");
+            }
+        }
+    }
+    
+    protected static void checkLength(List<String> strings) throws InvalidRequest {
+        for (String string : strings) {
+            if (string.length() < 1) {
+                throw new InvalidRequest("0", "String paramter had length 0.");
+            }
+        }
+    }
 }
