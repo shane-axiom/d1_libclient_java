@@ -4,7 +4,7 @@
   <groupId>org.dataone</groupId>
   <artifactId>d1_libclient_java</artifactId>
   <packaging>jar</packaging>
-  <version>0.6.1-SNAPSHOT</version>
+  <version>0.6.2-SNAPSHOT</version>
   <name>DataONE Java Client Library</name>
   <url>http://dataone.org</url>
     <repositories>
@@ -70,7 +70,7 @@
     <dependency>
     	<groupId>org.dataone</groupId>
     	<artifactId>d1_common_java</artifactId>
-    	<version>0.6.1-SNAPSHOT</version>
+    	<version>0.6.2-SNAPSHOT</version>
       <type>jar</type>
     </dependency>
   </dependencies>
