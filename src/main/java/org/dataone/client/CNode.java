@@ -708,8 +708,14 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
      * @return objectFormatList - the authoritative list of object formats
      * from the coordinating node
      * @throws ServiceFailure 
+     * @throws NotFound 
+     * @throws InsufficientResources 
+     * @throws NotImplemented 
+     * @throws InvalidRequest 
      */
-    public ObjectFormatList listFormats() throws ServiceFailure {
+    public ObjectFormatList listFormats() 
+      throws ServiceFailure, NotFound, InsufficientResources, NotImplemented, 
+      InvalidRequest {
       
     	// build the REST URL to call
     	ObjectFormatList objectFormatList = null;
@@ -723,7 +729,7 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
     		is = restClient.doGetRequest(d1Url.getUrl());
       
     	} catch (NotFound e) {
-      	throw new ServiceFailure("4843", "The object formats collection " + 
+      	throw new NotFound("4843", "The object formats collection " + 
       		"could not be found at this node - " + 
         	e.getClass() + ": " + e.getMessage());
         
@@ -748,7 +754,7 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
         	e.getClass() + ": " + e.getMessage());
         
       } catch (InsufficientResources e) {
-      	throw new ServiceFailure("4844", "The object formats collection " + 
+      	throw new InsufficientResources("4844", "The object formats collection " + 
         	"could not be found at this node - " + 
           e.getClass() + ": " + e.getMessage());
           
@@ -757,7 +763,7 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
         		e.getClass() + ": " + e.getMessage());
         
       } catch (NotImplemented e) {
-      	throw new ServiceFailure("4840", "the service is not implemented - " + 
+      	throw new NotImplemented("4840", "the service is not implemented - " + 
         	e.getClass() + ": " + e.getMessage());
         
       } catch (InvalidCredentials e) {
@@ -765,7 +771,7 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
         	e.getClass() + ": " + e.getMessage());
         
       } catch (InvalidRequest e) {
-      	throw new ServiceFailure("4842", "The request was invalid - " + 
+      	throw new InvalidRequest("4842", "The request was invalid - " + 
         	e.getClass() + ": " + e.getMessage());
                 
       } catch (IllegalStateException e) {
@@ -776,22 +782,18 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
       	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
         	e.getClass() + ": " + e.getMessage());
         
-      
       } catch (ClientProtocolException e) {
       	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
         		e.getClass() + ": " + e.getMessage());
         
-      
       } catch (UnsupportedMetadataType e) {
       	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
         	e.getClass() + ": " + e.getMessage());
         
-      
       } catch (IOException e) {
       	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
         	e.getClass() + ": " + e.getMessage());
         
-      
       } catch (HttpException e) {
       	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
         	e.getClass() + ": " + e.getMessage());
