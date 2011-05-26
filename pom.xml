@@ -19,6 +19,16 @@
             </snapshots>
         </repository>
         <repository>
+            <id>dataone.org</id>
+            <url>http://dev-testing.dataone.org/maven</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+        <repository>
             <id>Jibx Maven Repository</id>
             <url>http://jibx.sourceforge.net/maven/</url>
         </repository>
@@ -91,27 +101,35 @@
                   <header>src/license-header.txt</header>
               </configuration>
           </plugin>
-          <!--
           <plugin>
-        	<groupId>org.apache.maven.plugins</groupId>
-        	<artifactId>maven-surefire-plugin</artifactId>
-        	<configuration>
-          		<skip>true</skip>
-        	</configuration>
-        	<executions>
-          		<execution>
-            			<id>surefire-it</id>
-            			<phase>integration-test</phase>
-            			<goals>
-              				<goal>test</goal>
-            			</goals>
-            			<configuration>
-              				<skip>true</skip>
-            			</configuration>
-          		</execution>
-        	</executions>
-      	  </plugin>
-          -->
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <version>2.8.1</version>
+<!-- Uncomment the excludes section to skip Echo integration tests  -->
+<!-- 
+            <configuration>
+                <excludes>
+                     <exclude>**/Echo*.java</exclude>
+                </excludes>
+            </configuration>
+-->
+            <executions>
+                <execution>
+                    <id>integration-test</id>
+<!--                    <phase>integration-test</phase> -->
+                    <goals>
+                        <goal>integration-test</goal>
+                    </goals>
+                </execution>
+                <execution>
+                    <id>verify</id>
+<!--                    <phase>verify</phase> -->
+                    <goals>
+                        <goal>verify</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
       </plugins>
   </build>
   <licenses>
