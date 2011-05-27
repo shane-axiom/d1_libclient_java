@@ -511,7 +511,7 @@ public class MNode extends D1Node implements MemberNodeCrud, MemberNodeReplicati
         String content_lengthStr = m.get("content_length");//.get(0);
         String checksumStr = m.get("checksum");//.get(0);
         String checksum_algorithmStr = m.get("checksum_algorithm");//.get(0);
-        ObjectFormat format = ObjectFormat.convert(formatStr);
+        ObjectFormat format = ObjectFormatCache.getFormat(formatStr);
         long content_length = new Long(content_lengthStr).longValue();
         Date last_modified = null;
         System.out.println("parsing date");

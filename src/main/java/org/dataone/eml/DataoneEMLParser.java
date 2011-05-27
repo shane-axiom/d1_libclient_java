@@ -34,6 +34,7 @@ import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
+import org.dataone.client.ObjectFormatCache;
 import org.dataone.eml.EMLDocument.DistributionMetadata;
 import org.dataone.service.types.ObjectFormat;
 import org.dataone.service.types.SystemMetadata;
@@ -100,19 +101,23 @@ public class DataoneEMLParser
             System.out.println("WARNING: No namespace is declared.  Cannot parse this document.");
             return null;
         }
-        else if(namespace.equals(ObjectFormat.EML_2_0_0.toString()))
+        else if(namespace.equals(
+        		ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml/2.0.0").toString()))
         {
             return parseEML200Document(d);
         }
-        else if(namespace.equals(ObjectFormat.EML_2_0_1.toString()))
+        else if(namespace.equals(
+        		ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml/2.0.1").toString()))
         {
             return parseEML201Document(d);
         }
-        else if(namespace.equals(ObjectFormat.EML_2_1_0.toString()))
+        else if(namespace.equals(
+        		ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml/2.1.0").toString()))
         {
             return parseEML210Document(d);
         }
-        else if(namespace.equals(ObjectFormat.EML_2_1_1.toString()))
+        else if(namespace.equals(
+        		ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml/2.1.1").toString()))
         {
             return parseEML211Document(d);
         }
@@ -143,7 +148,8 @@ public class DataoneEMLParser
     private EMLDocument parseEML200Document(Document d) throws XPathExpressionException
     {
         System.out.println("Parsing an EML 2.0.0 document.");
-        return parseEMLDocument(d, ObjectFormat.EML_2_0_0);
+        return parseEMLDocument(d, 
+          ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml/2.0.0"));
     }
     
     /**
@@ -154,7 +160,8 @@ public class DataoneEMLParser
     private EMLDocument parseEML201Document(Document d) throws XPathExpressionException
     {
         System.out.println("Parsing an EML 2.0.1 document.");
-        return parseEMLDocument(d, ObjectFormat.EML_2_0_1);
+        return parseEMLDocument(d, 
+        	ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml/2.0.1"));
     }
     
     /**
@@ -165,7 +172,8 @@ public class DataoneEMLParser
     private EMLDocument parseEML210Document(Document d) throws XPathExpressionException
     {
         System.out.println("Parsing an EML 2.1.0 document.");
-        return parseEMLDocument(d, ObjectFormat.EML_2_1_0);
+        return parseEMLDocument(d, 
+        		ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml/2.1.0"));
     }
     
     /**
@@ -176,7 +184,8 @@ public class DataoneEMLParser
     private EMLDocument parseEML211Document(Document d) throws XPathExpressionException
     {
         System.out.println("Parsing an EML 2.1.1 document.");
-        return parseEMLDocument(d, ObjectFormat.EML_2_1_1);
+        return parseEMLDocument(d, 
+        		ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml/2.1.1"));
     }
     
     private EMLDocument parseEMLDocument(Document d, ObjectFormat docType) throws XPathExpressionException
@@ -217,7 +226,7 @@ public class DataoneEMLParser
                 if(nl1.getLength() > 0)
                 { //found a text format
                     System.out.println("Found a text format");
-                    mimeType = ObjectFormat.TEXT_PLAIN.toString();
+                    mimeType = ObjectFormatCache.getFormat("text/plain").toString();
                     NodeList nl4 = runXPath("dataFormat/textFormat/simpleDelimited", 
                                             physicalNode);
                     
@@ -225,14 +234,14 @@ public class DataoneEMLParser
                     if ( nl4.getLength() > 0 )
                     {
                       System.out.println("Found a csv format");
-                      mimeType = ObjectFormat.TEXT_CSV.toString();
+                      mimeType = ObjectFormatCache.getFormat("text/csv").toString();
                     }
                 }
                 else if(nl2.getLength() > 0)
                 {
                     //TODO: could do a bit more parsing and refine this type more
                     System.out.println("Found a binary raster format");
-                    mimeType = ObjectFormat.OCTET_STREAM.toString();
+                    mimeType = ObjectFormatCache.getFormat("application/octet-stream").toString();
                     
                 }
                 else if(nl3.getLength() > 0)
@@ -240,7 +249,7 @@ public class DataoneEMLParser
                     // it's possible that the mime type is in this field.  
                     // Check for it and set the object format
                     System.out.println("Found an externally defined format");
-                    mimeType = ObjectFormat.OCTET_STREAM.toString();
+                    mimeType = ObjectFormatCache.getFormat("application/octet-stream").toString();
                     NodeList nl5 = runXPath("dataFormat/externallyDefinedFormat/formatName", 
                                              physicalNode);
                     if ( nl5.getLength() > 0 )
@@ -249,7 +258,7 @@ public class DataoneEMLParser
                       String formatName = childNode1.getNodeValue();
                       
                       // set the object format if it exists
-                      ObjectFormat format = ObjectFormat.convert(formatName);
+                      ObjectFormat format = ObjectFormatCache.getFormat(formatName);
                       if ( !(format == null) )
                       {
                         mimeType = format.toString();

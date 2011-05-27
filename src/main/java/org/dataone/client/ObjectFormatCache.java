@@ -47,23 +47,23 @@ import org.dataone.service.types.ObjectFormatList;
 public class ObjectFormatCache {
   
   /* The instance of the logging class */
-  private Logger logger = Logger.getLogger(ObjectFormatCache.class.getName());
+  private static Logger logger = Logger.getLogger(ObjectFormatCache.class.getName());
   
-  /* The singleton instance of the object format cache */
+  /* The instance of the object format cache */
   private ObjectFormatCache objectFormatCache = null;
   
   /* The list of object formats */
-  private ObjectFormatList objectFormatList = null;
+  private static ObjectFormatList objectFormatList = null;
   
   /* The searchable map of object formats */
-  private TreeMap<ObjectFormatIdentifier, ObjectFormat> objectFormatMap = 
+  private static TreeMap<ObjectFormatIdentifier, ObjectFormat> objectFormatMap = 
     new TreeMap<ObjectFormatIdentifier, ObjectFormat>();
   
   /* The fallback object format list from the disk cache */
-  private ObjectFormatDiskCache objectFormatDiskCache = null;
+  private static ObjectFormatDiskCache objectFormatDiskCache = null;
   
   /* The D1 Coordinating Node URL used for object format lookups */
-  private String coordinatingNodeURL = null;
+  private static String coordinatingNodeURL = null;
 
   /**
    * Constructor: Creates an instance of the object format service using the
@@ -92,7 +92,7 @@ public class ObjectFormatCache {
   /**
    * Updates the object format cache re-querying the CN
    */
-  public void doRefresh() throws ServiceFailure {
+  public static void doRefresh() throws ServiceFailure {
     
     // refresh the list of object formats
     try {
@@ -117,63 +117,63 @@ public class ObjectFormatCache {
    * @throws NotFound 
    * @throws InvalidRequest 
    */
-  private void populateObjectFormatList() 
+  private static void populateObjectFormatList() 
     throws ServiceFailure {
     
   	// get the backup cache instance if needed
-  	this.objectFormatDiskCache = new ObjectFormatDiskCache();
+  	objectFormatDiskCache = new ObjectFormatDiskCache();
 
     try {
   		
     	// create the searchable map of object formats
-      this.objectFormatList = getListFromCN();
+      objectFormatList = getListFromCN();
       
     } catch (ServiceFailure se) {
 
   		logger.error("There was a problem creating the ObjectFormatCache. "    +
 	        "Reverting to the on-disk cache version.  The error message was: " + 
 	        se.getMessage());
-      this.objectFormatList = this.objectFormatDiskCache.listFormats();
+      objectFormatList = objectFormatDiskCache.listFormats();
         
     } catch ( NotFound nfe ) {
   	  
   		logger.error("There was a problem creating the ObjectFormatCache. "    +
 	        "Reverting to the on-disk cache version.  The error message was: " + 
 	        nfe.getMessage());
-  		this.objectFormatList = this.objectFormatDiskCache.listFormats();
+  		objectFormatList = objectFormatDiskCache.listFormats();
 
     } catch ( InvalidRequest ire ) {
       
   		logger.error("There was a problem creating the ObjectFormatCache. "    +
 	        "Reverting to the on-disk cache version.  The error message was: " + 
 	        ire.getMessage());
-  		this.objectFormatList = this.objectFormatDiskCache.listFormats();
+  		objectFormatList = objectFormatDiskCache.listFormats();
 
     } catch ( InsufficientResources isre ) {
       
   		logger.error("There was a problem creating the ObjectFormatCache. "    +
 	        "Reverting to the on-disk cache version.  The error message was: " + 
 	        isre.getMessage());
-  		this.objectFormatList = this.objectFormatDiskCache.listFormats();
+  		objectFormatList = objectFormatDiskCache.listFormats();
 
     } catch ( NotImplemented nie ) {
       
   		logger.error("There was a problem creating the ObjectFormatCache. "    +
 	        "Reverting to the on-disk cache version.  The error message was: " + 
 	        nie.getMessage());
-  		this.objectFormatList = this.objectFormatDiskCache.listFormats();
+  		objectFormatList = objectFormatDiskCache.listFormats();
 
     }
 
     // index the object format list based on the format identifier
-    int listSize = this.objectFormatList.sizeObjectFormats();
+    int listSize = objectFormatList.sizeObjectFormats();
     
     for (int i = 0; i < listSize; i++ ) {
       
       ObjectFormat objectFormat = 
-        this.objectFormatList.getObjectFormat(i);
+        objectFormatList.getObjectFormat(i);
       ObjectFormatIdentifier identifier = objectFormat.getFmtid();
-      this.objectFormatMap.put(identifier, objectFormat);
+      objectFormatMap.put(identifier, objectFormat);
       
     }
     
@@ -184,25 +184,25 @@ public class ObjectFormatCache {
    * @return objectFormatList - the list of object formats
    * @throws ServiceFailure
    */
-  private ObjectFormatList getListFromCN() 
+  private static ObjectFormatList getListFromCN() 
     throws InvalidRequest, ServiceFailure, NotFound, InsufficientResources,
     NotImplemented {
 	  
   	try {
 	    
     	// Get the reference to the CN
-  		D1Client d1Client = new D1Client(this.coordinatingNodeURL);
-	    CNode cn = d1Client.getCN();
+  		D1Client d1Client = new D1Client(coordinatingNodeURL);
+	    CNode cn = D1Client.getCN();
 	    
 	    // get the object format list from the CN
-	    this.objectFormatList = cn.listFormats();
+	    objectFormatList = cn.listFormats();
     
   	} catch (ServiceFailure e) {
     	throw e;
     	
     }
   	
-		return this.objectFormatList;
+		return objectFormatList;
 
   }
 
@@ -211,9 +211,9 @@ public class ObjectFormatCache {
    * 
    * @return objectFormatList - the list of object formats
    */
-  public ObjectFormatList listFormats() {
+  public static ObjectFormatList listFormats() {
     
-    return this.objectFormatList;
+    return objectFormatList;
     
   }
   
@@ -223,13 +223,48 @@ public class ObjectFormatCache {
    * @param format - the object format identifier
    * @return objectFormat - the ObjectFormat represented by the format identifier
    */
-  public ObjectFormat getFormat(ObjectFormatIdentifier fmtid) {
+  public static ObjectFormat getFormat(ObjectFormatIdentifier fmtid) {
     
     ObjectFormat objectFormat = null;
-    objectFormat = this.objectFormatMap.get(fmtid);
+    objectFormat = objectFormatMap.get(fmtid);
     
+    // ensure the list is up to date
+    if ( objectFormat == null ) {
+      
+    	try {
+	      doRefresh();
+
+    	} catch (ServiceFailure sf) {
+    		// do not throw ServiceFailure, but rather return a null format
+        logger.debug("The format specified by " + fmtid.getValue() +
+        		"was not found in the object format map.");
+    	}	
+      
+    }
+    
+    // try again with the refreshed map, may still return null
+    objectFormat = objectFormatMap.get(fmtid);
+
     return objectFormat;
     
   }
+
+  /**
+   * Get the object format based on the given identifier string.
+   * 
+   * @param format - the object format identifier string
+   * @return objectFormat - the ObjectFormat represented by the format identifier
+   */
+  public static ObjectFormat getFormat(String fmtidStr) {
+    
+    ObjectFormat objectFormat = null;
+    ObjectFormatIdentifier fmtid = new ObjectFormatIdentifier();
+    fmtid.setValue(fmtidStr);
+    objectFormat = getFormat(fmtid);
+      
+    return objectFormat;
+    
+  }
+  
   
 }

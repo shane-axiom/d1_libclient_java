@@ -295,7 +295,7 @@ public class D1Object {
             
             SystemMetadata sm = new SystemMetadata();
             sm.setIdentifier(id);
-            ObjectFormat fmt = ObjectFormat.convert(format);
+            ObjectFormat fmt = ObjectFormatCache.getFormat(format);
             sm.setObjectFormat(fmt);
             
             //create the checksum
