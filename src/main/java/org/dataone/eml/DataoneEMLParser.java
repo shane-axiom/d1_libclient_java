@@ -36,6 +36,7 @@ import javax.xml.xpath.XPathFactory;
 
 import org.dataone.client.ObjectFormatCache;
 import org.dataone.eml.EMLDocument.DistributionMetadata;
+import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.types.ObjectFormat;
 import org.dataone.service.types.SystemMetadata;
 import org.w3c.dom.Document;
@@ -77,9 +78,11 @@ public class DataoneEMLParser
      * parse an eml document and return any distribution urls
      * @param is
      * @throws XPathExpressionException 
+     * @throws NotFound 
      */
     public EMLDocument parseDocument(InputStream is)
-        throws ParserConfigurationException, IOException, SAXException, XPathExpressionException
+        throws ParserConfigurationException, IOException, SAXException, 
+        XPathExpressionException, NotFound
     {
         //info we need:
         //1) any distribution urls
@@ -102,22 +105,22 @@ public class DataoneEMLParser
             return null;
         }
         else if(namespace.equals(
-        		ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml/2.0.0").toString()))
+        		ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml/2.0.0").getFmtid().getValue()))
         {
             return parseEML200Document(d);
         }
         else if(namespace.equals(
-        		ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml/2.0.1").toString()))
+        		ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml/2.0.1").getFmtid().getValue()))
         {
             return parseEML201Document(d);
         }
         else if(namespace.equals(
-        		ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml/2.1.0").toString()))
+        		ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml/2.1.0").getFmtid().getValue()))
         {
             return parseEML210Document(d);
         }
         else if(namespace.equals(
-        		ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml/2.1.1").toString()))
+        		ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml/2.1.1").getFmtid().getValue()))
         {
             return parseEML211Document(d);
         }
@@ -144,8 +147,9 @@ public class DataoneEMLParser
      * @param d
      * @return
      * @throws XPathExpressionException 
+     * @throws NotFound 
      */
-    private EMLDocument parseEML200Document(Document d) throws XPathExpressionException
+    private EMLDocument parseEML200Document(Document d) throws XPathExpressionException, NotFound
     {
         System.out.println("Parsing an EML 2.0.0 document.");
         return parseEMLDocument(d, 
@@ -156,8 +160,10 @@ public class DataoneEMLParser
      * parse an EML 2.0.1 document
      * @param d
      * @return
+     * @throws NotFound 
      */
-    private EMLDocument parseEML201Document(Document d) throws XPathExpressionException
+    private EMLDocument parseEML201Document(Document d) 
+      throws XPathExpressionException, NotFound
     {
         System.out.println("Parsing an EML 2.0.1 document.");
         return parseEMLDocument(d, 
@@ -168,8 +174,10 @@ public class DataoneEMLParser
      * parse and EML 2.1.0 document
      * @param d
      * @return
+     * @throws NotFound 
      */
-    private EMLDocument parseEML210Document(Document d) throws XPathExpressionException
+    private EMLDocument parseEML210Document(Document d) 
+      throws XPathExpressionException, NotFound
     {
         System.out.println("Parsing an EML 2.1.0 document.");
         return parseEMLDocument(d, 
@@ -180,15 +188,18 @@ public class DataoneEMLParser
      * parse and EML 2.1.1 document
      * @param d
      * @return
+     * @throws NotFound 
      */
-    private EMLDocument parseEML211Document(Document d) throws XPathExpressionException
+    private EMLDocument parseEML211Document(Document d) 
+      throws XPathExpressionException, NotFound
     {
         System.out.println("Parsing an EML 2.1.1 document.");
         return parseEMLDocument(d, 
         		ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml/2.1.1"));
     }
     
-    private EMLDocument parseEMLDocument(Document d, ObjectFormat docType) throws XPathExpressionException
+    private EMLDocument parseEMLDocument(Document d, ObjectFormat docType) 
+      throws XPathExpressionException, NotFound
     {
         System.out.println("DataoneEMLParser.parseEMLDocument() called.");
         
