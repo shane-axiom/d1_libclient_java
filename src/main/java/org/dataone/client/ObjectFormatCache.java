@@ -22,7 +22,7 @@
 
 package org.dataone.client;
 
-import java.util.TreeMap;
+import java.util.HashMap;
 
 import org.apache.log4j.Logger;
 import org.dataone.service.ObjectFormatDiskCache;
@@ -50,21 +50,17 @@ public class ObjectFormatCache {
   private static Logger logger = Logger.getLogger(ObjectFormatCache.class.getName());
   
   /* The instance of the object format cache */
-  private ObjectFormatCache objectFormatCache = null;
+  private static ObjectFormatCache objectFormatCache;
   
   /* The list of object formats */
-  private static ObjectFormatList objectFormatList = null;
+  private ObjectFormatList objectFormatList;
   
   /* The searchable map of object formats */
-  private static TreeMap<ObjectFormatIdentifier, ObjectFormat> objectFormatMap = 
-    new TreeMap<ObjectFormatIdentifier, ObjectFormat>();
+  private HashMap<String, ObjectFormat> objectFormatMap;
   
   /* The fallback object format list from the disk cache */
-  private static ObjectFormatDiskCache objectFormatDiskCache = null;
+  private ObjectFormatDiskCache objectFormatDiskCache;
   
-  /* The D1 Coordinating Node URL used for object format lookups */
-  private static String coordinatingNodeURL = null;
-
   /**
    * Constructor: Creates an instance of the object format service using the
    * the given Coordinating Node URL to load the authoritative object format
@@ -72,43 +68,52 @@ public class ObjectFormatCache {
    * 
    * @param cnURL - the HTTP URL to the Coordinating Node to query
    */
-  public ObjectFormatCache(String cnURL) {
+  private ObjectFormatCache() {
         
   	try {
       
-  		this.coordinatingNodeURL = cnURL;
   	  // refresh the object format list
-  		doRefresh();
-  	
+      populateObjectFormatList();
+	
   	} catch (ServiceFailure sf ) {
   	  
   		logger.error("There was a problem creating the ObjectFormatCache. " +
-  				        "The error message was: " +sf.getMessage());
+  				        "The error message was: " + sf.getMessage());
   		// TODO: how should this be propagated since it is essentially fatal?
   	}
            
   }
-
-  /**
-   * Updates the object format cache re-querying the CN
+  
+  /*
+   * Create the object format cache instance if it hasn't already been created.
    */
-  public static void doRefresh() throws ServiceFailure {
+  public synchronized static ObjectFormatCache getInstance() {
     
-    // refresh the list of object formats
-    try {
-    	
-	    populateObjectFormatList();
-	    
-    } catch (ServiceFailure sf) {
-	    
-    	throw sf;
-	    
-    }
-    
-    return;
+  	if ( objectFormatCache == null ) {
+  		objectFormatCache = new ObjectFormatCache();
+  		
+  	}
+  	
+  	return objectFormatCache;
   }
-    
+  
+  /*
+   * Return the hash containing the fmtid and format mapping
+   * 
+   * @return objectFormatMap - the hash of fmtid/format pairs
+   */
+  private HashMap<String, ObjectFormat> getObjectFormatMap() {
+  	
+  	if ( objectFormatMap == null ) {
+  		objectFormatMap = new HashMap<String, ObjectFormat>();
+  		
+  	}
+  	return objectFormatMap;
+  	
+  }
+  
   /**
+
    * Populate the ObjectFormatCache's objectFormatList from the cached list.
    * 
    * @throws ServiceFailure
@@ -117,7 +122,7 @@ public class ObjectFormatCache {
    * @throws NotFound 
    * @throws InvalidRequest 
    */
-  private static void populateObjectFormatList() 
+  private  void populateObjectFormatList()
     throws ServiceFailure {
     
   	// get the backup cache instance if needed
@@ -125,8 +130,8 @@ public class ObjectFormatCache {
 
     try {
   		
-    	// create the searchable map of object formats
-      objectFormatList = getListFromCN();
+			// create the searchable map of object formats
+      objectFormatList = this.getListFromCN();
       
     } catch (ServiceFailure se) {
 
@@ -172,8 +177,8 @@ public class ObjectFormatCache {
       
       ObjectFormat objectFormat = 
         objectFormatList.getObjectFormat(i);
-      ObjectFormatIdentifier identifier = objectFormat.getFmtid();
-      objectFormatMap.put(identifier, objectFormat);
+      String identifier = objectFormat.getFmtid().getValue();
+      getObjectFormatMap().put(identifier, objectFormat);
       
     }
     
@@ -184,14 +189,13 @@ public class ObjectFormatCache {
    * @return objectFormatList - the list of object formats
    * @throws ServiceFailure
    */
-  private static ObjectFormatList getListFromCN() 
+  private  ObjectFormatList getListFromCN() 
     throws InvalidRequest, ServiceFailure, NotFound, InsufficientResources,
     NotImplemented {
 	  
   	try {
 	    
     	// Get the reference to the CN
-  		D1Client d1Client = new D1Client(coordinatingNodeURL);
 	    CNode cn = D1Client.getCN();
 	    
 	    // get the object format list from the CN
@@ -205,7 +209,7 @@ public class ObjectFormatCache {
 		return objectFormatList;
 
   }
-
+  
   /**
    * List the object formats registered with the object format service.
    * 
@@ -213,7 +217,7 @@ public class ObjectFormatCache {
    */
   public static ObjectFormatList listFormats() {
     
-    return objectFormatList;
+		return getInstance().objectFormatList;
     
   }
   
@@ -222,31 +226,13 @@ public class ObjectFormatCache {
    * 
    * @param format - the object format identifier
    * @return objectFormat - the ObjectFormat represented by the format identifier
+   * @throws NotFound 
    */
-  public static ObjectFormat getFormat(ObjectFormatIdentifier fmtid) {
+  public static ObjectFormat getFormat(ObjectFormatIdentifier fmtid) 
+    throws NotFound {
     
-    ObjectFormat objectFormat = null;
-    objectFormat = objectFormatMap.get(fmtid);
-    
-    // ensure the list is up to date
-    if ( objectFormat == null ) {
-      
-    	try {
-	      doRefresh();
-
-    	} catch (ServiceFailure sf) {
-    		// do not throw ServiceFailure, but rather return a null format
-        logger.debug("The format specified by " + fmtid.getValue() +
-        		"was not found in the object format map.");
-    	}	
-      
-    }
-    
-    // try again with the refreshed map, may still return null
-    objectFormat = objectFormatMap.get(fmtid);
-
-    return objectFormat;
-    
+    return getFormat(fmtid.toString());
+            
   }
 
   /**
@@ -254,14 +240,21 @@ public class ObjectFormatCache {
    * 
    * @param format - the object format identifier string
    * @return objectFormat - the ObjectFormat represented by the format identifier
+   * @throws NotFound 
    */
-  public static ObjectFormat getFormat(String fmtidStr) {
+  public static ObjectFormat getFormat(String fmtidStr) 
+    throws NotFound {        	
     
-    ObjectFormat objectFormat = null;
-    ObjectFormatIdentifier fmtid = new ObjectFormatIdentifier();
-    fmtid.setValue(fmtidStr);
-    objectFormat = getFormat(fmtid);
+  	ObjectFormat objectFormat = null;
+  	
+    objectFormat = getInstance().getObjectFormatMap().get(fmtidStr);
+    
+    if ( objectFormat == null ) {
       
+    	throw new NotFound("4848", "The format specified by " + fmtidStr + 
+    			               "does not exist at this node.");
+    }
+    
     return objectFormat;
     
   }
