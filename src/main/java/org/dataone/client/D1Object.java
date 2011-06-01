@@ -86,9 +86,10 @@ public class D1Object {
      * @param describedBy the list of objects described by this object
      * @throws NoSuchAlgorithmException if the checksum algorithm does not exist
      * @throws IOException if the data bytes can not be read
+     * @throws NotFound 
      */
     public D1Object(Identifier id, byte[] data, String format, String submitter, String nodeId, 
-            String[] describes, String[] describedBy) throws NoSuchAlgorithmException, IOException {
+            String[] describes, String[] describedBy) throws NoSuchAlgorithmException, IOException, NotFound {
         this.data = data;
         this.sysmeta = generateSystemMetadata(id, data, format, submitter, nodeId, describes, describedBy);
     }
@@ -287,16 +288,33 @@ public class D1Object {
      * @return the generated SystemMetadata instance
      * @throws NoSuchAlgorithmException if the checksum algorithm does not exist
      * @throws IOException if the data bytes can not be read
+     * @throws NotFound 
      */
-    private SystemMetadata generateSystemMetadata(Identifier id, byte[] data, String format, String submitter, String nodeId, 
-                String[] describes, String[] describedBy) throws NoSuchAlgorithmException, IOException {
+    private SystemMetadata generateSystemMetadata(Identifier id, byte[] data, 
+    	String format, String submitter, String nodeId, String[] describes, 
+    	String[] describedBy) throws NoSuchAlgorithmException, IOException, NotFound {
         
 //            validateRequest(id, data, format, submitter, nodeId, describes, describedBy);
             
             SystemMetadata sm = new SystemMetadata();
             sm.setIdentifier(id);
-            ObjectFormat fmt = ObjectFormatCache.getFormat(format);
-            sm.setObjectFormat(fmt);
+            ObjectFormat fmt;
+            try {
+	            fmt = ObjectFormatCache.getFormat(format);
+	            sm.setObjectFormat(fmt);
+
+            } catch (NotFound nf) {
+
+            	try {
+	              fmt = ObjectFormatCache.getFormat("application/octet-stream");
+              
+            	} catch (NotFound nfe) {
+                
+            		throw nfe;
+                
+            	}
+
+            }
             
             //create the checksum
             InputStream is = new ByteArrayInputStream(data);
