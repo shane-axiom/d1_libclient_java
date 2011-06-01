@@ -252,7 +252,7 @@ public class ObjectFormatCache {
     if ( objectFormat == null ) {
       
     	throw new NotFound("4848", "The format specified by " + fmtidStr + 
-    			               "does not exist at this node.");
+    			               " does not exist at this node.");
     }
     
     return objectFormat;
