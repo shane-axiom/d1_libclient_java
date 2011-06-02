@@ -29,7 +29,7 @@ import org.dataone.service.exceptions.UnsupportedType;
 import org.junit.Test;
 
 
-public class D1RestClientEchoTest {
+public class EchoTestD1RestClientIT {
 	private static String echoNode = "http://dev-testing.dataone.org/testsvc";
 	private static String echoResource = "echo";
 	private static String mmEchoResource = "echomm";

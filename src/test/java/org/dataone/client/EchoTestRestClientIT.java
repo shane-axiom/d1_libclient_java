@@ -14,7 +14,7 @@ import org.dataone.service.D1Url;
 import org.junit.Test;
 
 
-public class RestClientEchoTest {
+public class EchoTestRestClientIT {
 	private static String echoNode = "http://dev-testing.dataone.org/testsvc";
 	private static String echoResource = "echo";
 	private static String mmEchoResource = "echomm";
