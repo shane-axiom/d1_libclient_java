@@ -66,6 +66,9 @@ import org.dataone.service.types.Event;
 import org.dataone.service.types.Identifier;
 import org.dataone.service.types.IdentifierFormat;
 import org.dataone.service.types.NodeList;
+import org.dataone.service.types.ObjectFormat;
+import org.dataone.service.types.ObjectFormatIdentifier;
+import org.dataone.service.types.ObjectFormatList;
 import org.dataone.service.types.ObjectList;
 import org.dataone.service.types.ObjectLocationList;
 import org.dataone.service.types.Services;
@@ -700,7 +703,242 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
         InputStream is = url.openStream();
         nodeMap = NodeListParser.parseNodeListFile(is);
     }
+    
+    /**
+     * List the registered object formats from the Coordinating Node
+     * 
+     * @return objectFormatList - the authoritative list of object formats
+     * from the coordinating node
+     * @throws ServiceFailure 
+     * @throws NotFound 
+     * @throws InsufficientResources 
+     * @throws NotImplemented 
+     * @throws InvalidRequest 
+     */
+    public ObjectFormatList listFormats() 
+      throws ServiceFailure, NotFound, InsufficientResources, NotImplemented, 
+      InvalidRequest {
+      
+    	// build the REST URL to call
+    	ObjectFormatList objectFormatList = null;
+    	D1Url d1Url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_FORMATS);
+    	D1RestClient restClient = new D1RestClient(true, verbose);
+    	
+    	InputStream is = null;
+    	  
+    	try {
+	      // do the request
+    		is = restClient.doGetRequest(d1Url.getUrl());
+      
+    	} catch (NotFound e) {
+      	throw new NotFound("4843", "The object formats collection " + 
+      		"could not be found at this node - " + 
+        	e.getClass() + ": " + e.getMessage());
+        
+      } catch (InvalidToken e) {
+      	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
+        	e.getClass() + ": " + e.getMessage());
+        
+      } catch (ServiceFailure e) {
+      	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
+        	e.getClass() + ": " + e.getMessage());
+        
+      } catch (NotAuthorized e) {
+      	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
+        	e.getClass() + ": " + e.getMessage());
+        
+      } catch (IdentifierNotUnique e) {
+      	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
+        	e.getClass() + ": " + e.getMessage());
+        
+      } catch (UnsupportedType e) {
+      	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
+        	e.getClass() + ": " + e.getMessage());
+        
+      } catch (InsufficientResources e) {
+      	throw new InsufficientResources("4844", "The object formats collection " + 
+        	"could not be found at this node - " + 
+          e.getClass() + ": " + e.getMessage());
+          
+      } catch (InvalidSystemMetadata e) {
+      	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
+        		e.getClass() + ": " + e.getMessage());
+        
+      } catch (NotImplemented e) {
+      	throw new NotImplemented("4840", "the service is not implemented - " + 
+        	e.getClass() + ": " + e.getMessage());
+        
+      } catch (InvalidCredentials e) {
+      	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
+        	e.getClass() + ": " + e.getMessage());
+        
+      } catch (InvalidRequest e) {
+      	throw new InvalidRequest("4842", "The request was invalid - " + 
+        	e.getClass() + ": " + e.getMessage());
+                
+      } catch (IllegalStateException e) {
+      	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
+        	e.getClass() + ": " + e.getMessage());
+                
+      } catch (AuthenticationTimeout e) {
+      	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
+        	e.getClass() + ": " + e.getMessage());
+        
+      } catch (ClientProtocolException e) {
+      	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
+        		e.getClass() + ": " + e.getMessage());
+        
+      } catch (UnsupportedMetadataType e) {
+      	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
+        	e.getClass() + ": " + e.getMessage());
+        
+      } catch (IOException e) {
+      	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
+        	e.getClass() + ": " + e.getMessage());
+        
+      } catch (HttpException e) {
+      	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
+        	e.getClass() + ": " + e.getMessage());
+        
+      }
+    	
+      // deserialize the object format list
+      try {
+	      
+      	objectFormatList = 
+      		TypeMarshaller.unmarshalTypeFromStream(ObjectFormatList.class, is);
+      
+      } catch (IOException e) {
+      	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
+      		e.getClass() + ": " + e.getMessage());
+      
+      } catch (InstantiationException e) {
+       	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
+      		e.getClass() + ": " + e.getMessage());
+      
+      } catch (IllegalAccessException e) {
+       	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
+      		e.getClass() + ": " + e.getMessage());
+           
+      } catch (JiBXException e) {
+       	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
+      		e.getClass() + ": " + e.getMessage());
+     
+      }
+    	
+      return objectFormatList;
+    }
+    
+    /**
+     * Get the object format from the object format list based on the given
+     * object format identifier
+     * 
+     * @param fmtid - the object format identifier
+     * @return objectFormat - the requested object format from the registered
+     *                        object format list
+     * @throws ServiceFailure 
+     * @throws NotFound 
+     * @throws InsufficientResources 
+     * @throws NotImplemented 
+     * @throws InvalidRequest 
+     */
+    public ObjectFormat getFormat(ObjectFormatIdentifier fmtid)
+      throws ServiceFailure, NotFound, InsufficientResources, NotImplemented, 
+      InvalidRequest {
+			
+    	ObjectFormat objectFormat = null;
+    	
+    	// build the REST URL to call
+    	D1Url d1Url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_FORMATS);
+    	D1RestClient restClient = new D1RestClient(true, verbose);
+    	d1Url.addNextPathElement(fmtid.getValue());
+    	
+    	InputStream is = null;
+      
+    	try {
+    		// do the request
+	      is = restClient.doGetRequest(d1Url.getUrl());
+      
+    	} catch (InvalidToken e) {
+      	throw new NotFound("4848", "The format specified by " +
+      			fmtid.getValue() +
+        		"does not exist at this node - " + 
+          	e.getClass() + ": " + e.getMessage());
 
+      } catch (NotAuthorized e) {
+      	throw new ServiceFailure("4846", "Unexpected exception from the service - " +
+          	e.getClass() + ": " + e.getMessage());
+
+      } catch (IdentifierNotUnique e) {
+      	throw new ServiceFailure("4846", "Unexpected exception from the service - " +
+          	e.getClass() + ": " + e.getMessage());
+
+      } catch (UnsupportedType e) {
+      	throw new ServiceFailure("4846", "Unexpected exception from the service - " +
+          	e.getClass() + ": " + e.getMessage());
+
+      } catch (InvalidSystemMetadata e) {
+      	throw new ServiceFailure("4846", "Unexpected exception from the service - " +
+          	e.getClass() + ": " + e.getMessage());
+
+      } catch (InvalidCredentials e) {
+      	throw new ServiceFailure("4846", "Unexpected exception from the service - " +
+          	e.getClass() + ": " + e.getMessage());
+
+      } catch (IllegalStateException e) {
+      	throw new ServiceFailure("4846", "Unexpected exception from the service - " +
+          	e.getClass() + ": " + e.getMessage());
+
+      } catch (AuthenticationTimeout e) {
+      	throw new ServiceFailure("4846", "Unexpected exception from the service - " +
+          	e.getClass() + ": " + e.getMessage());
+
+      } catch (ClientProtocolException e) {
+      	throw new ServiceFailure("4846", "Unexpected exception from the service - " +
+          	e.getClass() + ": " + e.getMessage());
+
+      } catch (UnsupportedMetadataType e) {
+      	throw new ServiceFailure("4846", "Unexpected exception from the service - " +
+          	e.getClass() + ": " + e.getMessage());
+
+      } catch (IOException e) {
+      	throw new ServiceFailure("4846", "Unexpected exception from the service - " +
+          	e.getClass() + ": " + e.getMessage());
+
+      } catch (HttpException e) {
+      	throw new ServiceFailure("4846", "Unexpected exception from the service - " +
+          	e.getClass() + ": " + e.getMessage());
+
+      }
+      
+      // deserialize the object format
+    	try {
+	      
+    		objectFormat = 
+	      	TypeMarshaller.unmarshalTypeFromStream(ObjectFormat.class, is);
+      
+    	} catch (IOException e) {
+      	throw new ServiceFailure("4846", "Unexpected exception from the service - " + 
+      		e.getClass() + ": " + e.getMessage());
+      
+      } catch (InstantiationException e) {
+       	throw new ServiceFailure("4846", "Unexpected exception from the service - " + 
+      		e.getClass() + ": " + e.getMessage());
+      
+      } catch (IllegalAccessException e) {
+       	throw new ServiceFailure("4846", "Unexpected exception from the service - " + 
+      		e.getClass() + ": " + e.getMessage());
+           
+      } catch (JiBXException e) {
+       	throw new ServiceFailure("4846", "Unexpected exception from the service - " + 
+      		e.getClass() + ": " + e.getMessage());
+     
+      }
+
+    	return objectFormat;
+    	
+    }
+    
     @Override
     public NodeList listNodes(AuthToken token) throws NotImplemented, ServiceFailure {
 
