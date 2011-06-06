@@ -138,35 +138,35 @@ public class ObjectFormatCache {
   		logger.error("There was a problem creating the ObjectFormatCache. "    +
 	        "Reverting to the on-disk cache version.  The error message was: " + 
 	        se.getMessage());
-      objectFormatList = objectFormatDiskCache.listFormats();
+      objectFormatList = ObjectFormatDiskCache.listFormats();
         
     } catch ( NotFound nfe ) {
   	  
   		logger.error("There was a problem creating the ObjectFormatCache. "    +
 	        "Reverting to the on-disk cache version.  The error message was: " + 
 	        nfe.getMessage());
-  		objectFormatList = objectFormatDiskCache.listFormats();
+  		objectFormatList = ObjectFormatDiskCache.listFormats();
 
     } catch ( InvalidRequest ire ) {
       
   		logger.error("There was a problem creating the ObjectFormatCache. "    +
 	        "Reverting to the on-disk cache version.  The error message was: " + 
 	        ire.getMessage());
-  		objectFormatList = objectFormatDiskCache.listFormats();
+  		objectFormatList = ObjectFormatDiskCache.listFormats();
 
     } catch ( InsufficientResources isre ) {
       
   		logger.error("There was a problem creating the ObjectFormatCache. "    +
 	        "Reverting to the on-disk cache version.  The error message was: " + 
 	        isre.getMessage());
-  		objectFormatList = objectFormatDiskCache.listFormats();
+  		objectFormatList = ObjectFormatDiskCache.listFormats();
 
     } catch ( NotImplemented nie ) {
       
   		logger.error("There was a problem creating the ObjectFormatCache. "    +
 	        "Reverting to the on-disk cache version.  The error message was: " + 
 	        nie.getMessage());
-  		objectFormatList = objectFormatDiskCache.listFormats();
+  		objectFormatList = ObjectFormatDiskCache.listFormats();
 
     }
 
