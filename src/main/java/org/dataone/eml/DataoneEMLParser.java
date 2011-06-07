@@ -105,22 +105,22 @@ public class DataoneEMLParser
             return null;
         }
         else if(namespace.equals(
-        		ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml/2.0.0").getFmtid().getValue()))
+        		ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml-2.0.0").getFmtid().getValue()))
         {
             return parseEML200Document(d);
         }
         else if(namespace.equals(
-        		ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml/2.0.1").getFmtid().getValue()))
+        		ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml-2.0.1").getFmtid().getValue()))
         {
             return parseEML201Document(d);
         }
         else if(namespace.equals(
-        		ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml/2.1.0").getFmtid().getValue()))
+        		ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml-2.1.0").getFmtid().getValue()))
         {
             return parseEML210Document(d);
         }
         else if(namespace.equals(
-        		ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml/2.1.1").getFmtid().getValue()))
+        		ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml-2.1.1").getFmtid().getValue()))
         {
             return parseEML211Document(d);
         }
@@ -153,7 +153,7 @@ public class DataoneEMLParser
     {
         System.out.println("Parsing an EML 2.0.0 document.");
         return parseEMLDocument(d, 
-          ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml/2.0.0"));
+          ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml-2.0.0"));
     }
     
     /**
@@ -167,7 +167,7 @@ public class DataoneEMLParser
     {
         System.out.println("Parsing an EML 2.0.1 document.");
         return parseEMLDocument(d, 
-        	ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml/2.0.1"));
+        	ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml-2.0.1"));
     }
     
     /**
@@ -181,7 +181,7 @@ public class DataoneEMLParser
     {
         System.out.println("Parsing an EML 2.1.0 document.");
         return parseEMLDocument(d, 
-        		ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml/2.1.0"));
+        		ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml-2.1.0"));
     }
     
     /**
@@ -195,7 +195,7 @@ public class DataoneEMLParser
     {
         System.out.println("Parsing an EML 2.1.1 document.");
         return parseEMLDocument(d, 
-        		ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml/2.1.1"));
+        		ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml-2.1.1"));
     }
     
     private EMLDocument parseEMLDocument(Document d, ObjectFormat docType) 
