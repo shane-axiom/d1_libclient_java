@@ -231,7 +231,7 @@ public class ObjectFormatCache {
   public static ObjectFormat getFormat(ObjectFormatIdentifier fmtid) 
     throws NotFound {
     
-    return getFormat(fmtid.toString());
+    return getFormat(fmtid.getValue());
             
   }
 
