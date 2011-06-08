@@ -59,6 +59,7 @@ import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.exceptions.UnsupportedMetadataType;
+import org.dataone.service.exceptions.UnsupportedQueryType;
 import org.dataone.service.exceptions.UnsupportedType;
 import org.dataone.service.types.Identifier;
 import org.dataone.service.types.ObjectList;
@@ -100,58 +101,67 @@ public class D1RestClient {
 	}
  
 	public InputStream doGetRequest(String url) 
-	throws NotFound, InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, 
-	UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented,
-	InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout,
-	ClientProtocolException, IOException, UnsupportedMetadataType, HttpException 
+	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
+	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
+	NotAuthorized, NotFound, NotImplemented, ServiceFailure, 
+	UnsupportedMetadataType, UnsupportedQueryType, UnsupportedType,
+	IllegalStateException, ClientProtocolException, IOException, HttpException 
 	{
 		rc.setHeader("Accept", "text/xml");
 		return filterErrors(rc.doGetRequest(url));
 	}
 
 	public InputStream doDeleteRequest(String url) 
-	throws NotFound, InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, 
-	UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented,
-	InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout,
-	ClientProtocolException, IOException, UnsupportedMetadataType, HttpException 
+	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
+	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
+	NotAuthorized, NotFound, NotImplemented, ServiceFailure, 
+	UnsupportedMetadataType, UnsupportedQueryType, UnsupportedType,
+	IllegalStateException, ClientProtocolException, IOException, HttpException 
 	{
 		rc.setHeader("Accept", "text/xml");
 		return filterErrors(rc.doDeleteRequest(url));
 	}
 	
 	public Header[] doHeadRequest(String url) 
-	throws NotFound, InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, 
-	UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented,
-	InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout,
-	ClientProtocolException, IOException, UnsupportedMetadataType, HttpException 
+	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
+	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
+	NotAuthorized, NotFound, NotImplemented, ServiceFailure, 
+	UnsupportedMetadataType, UnsupportedQueryType, UnsupportedType,
+	IllegalStateException, ClientProtocolException, IOException, HttpException 
 	{
 		rc.setHeader("Accept", "text/xml");
 		return filterErrorsHeader(rc.doHeadRequest(url));
 	}
 	
 	public InputStream doPutRequest(String url, MultipartEntity entity) 
-	throws NotFound, InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, 
-	UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented,
-	InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout,
-	ClientProtocolException, IOException, UnsupportedMetadataType, HttpException 
+	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
+	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
+	NotAuthorized, NotFound, NotImplemented, ServiceFailure, 
+	UnsupportedMetadataType, UnsupportedQueryType, UnsupportedType,
+	IllegalStateException, ClientProtocolException, IOException, HttpException 
 	{
 		rc.setHeader("Accept", "text/xml");
 		return filterErrors(rc.doPutRequest(url, entity));
 	}
 	
 	public InputStream doPostRequest(String url, MultipartEntity entity) 
-	throws NotFound, InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, 
-	UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented,
-	InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout,
-	ClientProtocolException, IOException, UnsupportedMetadataType, HttpException 
+	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
+	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
+	NotAuthorized, NotFound, NotImplemented, ServiceFailure, 
+	UnsupportedMetadataType, UnsupportedQueryType, UnsupportedType,
+	IllegalStateException, ClientProtocolException, IOException, HttpException 
 	{
 		rc.setHeader("Accept", "text/xml");
 		return filterErrors(rc.doPostRequest(url,entity));
 	}
 	
-	public InputStream filterErrors(HttpResponse res) throws NotFound, InvalidToken, ServiceFailure, NotAuthorized,
-	IdentifierNotUnique, UnsupportedType, InsufficientResources, InvalidSystemMetadata,
-	NotImplemented, InvalidCredentials, InvalidRequest, IllegalStateException, IOException, AuthenticationTimeout, UnsupportedMetadataType, HttpException {
+	public InputStream filterErrors(HttpResponse res) 
+	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
+	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
+	NotAuthorized, NotFound, NotImplemented, ServiceFailure, 
+	UnsupportedMetadataType, UnsupportedQueryType, UnsupportedType,
+	IllegalStateException, IOException, HttpException 
+	{
 
 		if (this.getExceptionHandling()) {
 			int code = res.getStatusLine().getStatusCode();
@@ -166,10 +176,13 @@ public class D1RestClient {
 		return res.getEntity().getContent();
 	}
 
-	public Header[] filterErrorsHeader(HttpResponse res) throws NotFound, InvalidToken, ServiceFailure, NotAuthorized,
-	IdentifierNotUnique, UnsupportedType, InsufficientResources, InvalidSystemMetadata,
-	NotImplemented, InvalidCredentials, InvalidRequest, IllegalStateException, IOException, AuthenticationTimeout, UnsupportedMetadataType, HttpException {
-
+	public Header[] filterErrorsHeader(HttpResponse res) 
+	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
+	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
+	NotAuthorized, NotFound, NotImplemented, ServiceFailure, 
+	UnsupportedMetadataType, UnsupportedQueryType, UnsupportedType,
+	IllegalStateException, IOException, HttpException 
+	{
 		if (this.getExceptionHandling()) {
 			int code = res.getStatusLine().getStatusCode();
 			if (verbose)

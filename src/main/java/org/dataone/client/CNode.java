@@ -58,6 +58,7 @@ import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.exceptions.UnsupportedMetadataType;
+import org.dataone.service.exceptions.UnsupportedQueryType;
 import org.dataone.service.exceptions.UnsupportedType;
 import org.dataone.service.types.AccessPolicy;
 import org.dataone.service.types.AuthToken;
@@ -155,7 +156,9 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
             throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
         } catch (UnsupportedType e) {
             throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
-        } catch (InsufficientResources e) {
+		} catch (UnsupportedQueryType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InsufficientResources e) {
             throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
         } catch (InvalidSystemMetadata e) {
             throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
@@ -220,7 +223,9 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
             throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
         } catch (UnsupportedType e) {
             throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
-        } catch (InsufficientResources e) {
+		} catch (UnsupportedQueryType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InsufficientResources e) {
             throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
         } catch (InvalidSystemMetadata e) {
             throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
@@ -317,7 +322,9 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
             throw new ServiceFailure("1090", e.getClass().getSimpleName() + ": " + e.getDetail_code() + ": " + e.getDescription());
         } catch (UnsupportedMetadataType e) {
             throw new ServiceFailure("1090", e.getClass().getSimpleName() + ": " + e.getDetail_code() + ": " + e.getDescription());
-        } catch (ClientProtocolException e) {
+		} catch (UnsupportedQueryType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (ClientProtocolException e) {
             throw new ServiceFailure("1090", e.getClass().getSimpleName() + ": " + e.getMessage());
         } catch (IllegalStateException e) {
             throw new ServiceFailure("1090", e.getClass().getSimpleName() + ": " + e.getMessage());
@@ -402,7 +409,9 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
             throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
         } catch (UnsupportedMetadataType e) {
             throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
-        } catch (ClientProtocolException e) {
+		} catch (UnsupportedQueryType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (ClientProtocolException e) {
 //    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
             throw recastClientSideExceptionToServiceFailure(e);
         } catch (IllegalStateException e) {
@@ -755,6 +764,10 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
       	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
         	e.getClass() + ": " + e.getMessage());
         
+      } catch (UnsupportedQueryType e) {
+        	throw new ServiceFailure("4846", "Unexpected exception from the service - " +
+            	e.getClass() + ": " + e.getMessage());
+
       } catch (InsufficientResources e) {
       	throw new InsufficientResources("4844", "The object formats collection " + 
         	"could not be found at this node - " + 
@@ -877,6 +890,10 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
       	throw new ServiceFailure("4846", "Unexpected exception from the service - " +
           	e.getClass() + ": " + e.getMessage());
 
+      } catch (UnsupportedQueryType e) {
+        	throw new ServiceFailure("4846", "Unexpected exception from the service - " +
+            	e.getClass() + ": " + e.getMessage());
+
       } catch (InvalidSystemMetadata e) {
       	throw new ServiceFailure("4846", "Unexpected exception from the service - " +
           	e.getClass() + ": " + e.getMessage());
@@ -969,7 +986,9 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
             throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
         } catch (UnsupportedMetadataType e) {
             throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
-        } catch (NotFound ex) {
+		} catch (UnsupportedQueryType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (NotFound ex) {
             throw recastClientSideExceptionToServiceFailure(ex);
         } catch (InvalidToken ex) {
             throw recastClientSideExceptionToServiceFailure(ex);
