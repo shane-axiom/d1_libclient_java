@@ -25,6 +25,7 @@ import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.exceptions.UnsupportedMetadataType;
+import org.dataone.service.exceptions.UnsupportedQueryType;
 import org.dataone.service.exceptions.UnsupportedType;
 import org.junit.Test;
 
@@ -35,7 +36,13 @@ public class EchoTestD1RestClientIT {
 	private static String mmEchoResource = "echomm";
 	
 	@Test
-	public void testDoGetRequest() throws ClientProtocolException, IOException, NotFound, InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout, UnsupportedMetadataType, HttpException {
+	public void testDoGetRequest() 
+	throws ClientProtocolException, IOException, NotFound, InvalidToken, ServiceFailure, 
+	NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources, 
+	InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest, 
+	IllegalStateException, AuthenticationTimeout, UnsupportedMetadataType, HttpException,
+	UnsupportedQueryType
+	{
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
@@ -50,7 +57,13 @@ public class EchoTestD1RestClientIT {
 	}
 
 	@Test
-	public void testdoDeleteRequest() throws ClientProtocolException, IOException, NotFound, InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout, UnsupportedMetadataType, HttpException {
+	public void testdoDeleteRequest() 
+	throws ClientProtocolException, IOException, NotFound, InvalidToken, ServiceFailure, 
+	NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources,
+	InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest,
+	IllegalStateException, AuthenticationTimeout, UnsupportedMetadataType, HttpException,
+	UnsupportedQueryType
+	{
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
@@ -65,7 +78,13 @@ public class EchoTestD1RestClientIT {
 	}
 	
 	@Test
-	public void testDoHeadRequest() throws ClientProtocolException, IOException, NotFound, InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout, UnsupportedMetadataType, HttpException {
+	public void testDoHeadRequest() 
+	throws ClientProtocolException, IOException, NotFound, InvalidToken, ServiceFailure, 
+	NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources, 
+	InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest, 
+	IllegalStateException, AuthenticationTimeout, UnsupportedMetadataType, HttpException, 
+	UnsupportedQueryType 
+	{
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
@@ -80,7 +99,13 @@ public class EchoTestD1RestClientIT {
 	}
 	
 	@Test
-	public void testdoPutRequestNullBody() throws ClientProtocolException, IOException, NotFound, InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout, UnsupportedMetadataType, HttpException {
+	public void testdoPutRequestNullBody() 
+	throws ClientProtocolException, IOException, NotFound, InvalidToken, ServiceFailure, 
+	NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources, 
+	InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest, 
+	IllegalStateException, AuthenticationTimeout, UnsupportedMetadataType, HttpException, 
+	UnsupportedQueryType 
+	{
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
@@ -95,7 +120,13 @@ public class EchoTestD1RestClientIT {
 	}
 	
 	@Test
-	public void testdoPostRequestNullBody() throws ClientProtocolException, IOException, NotFound, InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout, UnsupportedMetadataType, HttpException {
+	public void testdoPostRequestNullBody() 
+	throws ClientProtocolException, IOException, NotFound, InvalidToken, ServiceFailure, 
+	NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources, 
+	InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest, 
+	IllegalStateException, AuthenticationTimeout, UnsupportedMetadataType, HttpException, 
+	UnsupportedQueryType 
+	{
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
@@ -109,7 +140,13 @@ public class EchoTestD1RestClientIT {
 	}
 	
 //	@Test
-	public void testdoPutRequest() throws ClientProtocolException, IOException, NotFound, InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout, UnsupportedMetadataType, HttpException {
+	public void testdoPutRequest() 
+	throws ClientProtocolException, IOException, NotFound, InvalidToken, ServiceFailure, 
+	NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources, 
+	InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest, 
+	IllegalStateException, AuthenticationTimeout, UnsupportedMetadataType, HttpException, 
+	UnsupportedQueryType 
+	{
 		D1Url u = new D1Url(echoNode, mmEchoResource);
 		u.addNextPathElement("bizz");
 //		u.addNonEmptyParamPair("x", "y");
@@ -126,7 +163,13 @@ public class EchoTestD1RestClientIT {
 	}
 	
 	@Test
-	public void testdoPostRequest() throws ClientProtocolException, IOException, NotFound, InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest, IllegalStateException, AuthenticationTimeout, UnsupportedMetadataType, HttpException {
+	public void testdoPostRequest() 
+	throws ClientProtocolException, IOException, NotFound, InvalidToken, ServiceFailure, 
+	NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources, 
+	InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest, 
+	IllegalStateException, AuthenticationTimeout, UnsupportedMetadataType, HttpException, 
+	UnsupportedQueryType 
+	{
 		D1Url u = new D1Url(echoNode, mmEchoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
@@ -144,7 +187,9 @@ public class EchoTestD1RestClientIT {
 	}
 	
 	@Test
-	public void testExceptionFiltering() throws ClientProtocolException, IOException, IllegalStateException, HttpException {
+	public void testExceptionFiltering() 
+	throws ClientProtocolException, IOException, IllegalStateException, HttpException 
+	{
 		D1Url u = new D1Url(echoNode + "xx", "fakeResource");
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
