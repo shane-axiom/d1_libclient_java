@@ -26,7 +26,11 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import org.dataone.client.ObjectFormatCache;
+import org.dataone.service.exceptions.InsufficientResources;
+import org.dataone.service.exceptions.InvalidRequest;
 import org.dataone.service.exceptions.NotFound;
+import org.dataone.service.exceptions.NotImplemented;
+import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.types.ObjectFormatList;
 
 import org.junit.Test;
@@ -51,9 +55,30 @@ public class ObjectFormatCacheTest {
   @Test
   public void testListFormats() {
   	
-  	int formatsCount = 31;
-  	ObjectFormatList objectFormatList = ObjectFormatCache.listFormats();
-  	assertTrue(objectFormatList.getTotal() >= formatsCount);
+  	int formatsCount = 59;
+  	ObjectFormatList objectFormatList;
+
+    try {
+	    objectFormatList = ObjectFormatCache.getInstance().listFormats();
+	  	assertTrue(objectFormatList.getTotal() >= formatsCount);
+
+    } catch (InvalidRequest e) {
+	    // TODO Auto-generated catch block
+      fail("The request was invalid: " + e.getMessage());
+      
+    } catch (ServiceFailure e) {
+      fail("The service failed: " + e.getMessage());
+ 
+    } catch (NotFound e) {
+      fail("The list was not found: " + e.getMessage());
+
+    } catch (InsufficientResources e) {
+      fail("There were insufficient resources: " + e.getMessage());
+
+    } catch (NotImplemented e) {
+      fail("The service is not implemented: " + e.getMessage());
+
+    }
   	
   }
   
@@ -67,12 +92,10 @@ public class ObjectFormatCacheTest {
     
   	try {
 	    
-			String result = 
-				ObjectFormatCache.getFormat(knownFormat).getFmtid().getValue();
-	  	System.out.println("Expected result: " + knownFormat);
-	  	System.out.println("Found    result: " + result);
-	  	assertTrue(result.equals(knownFormat));
-  
+			  String result = 
+			  	ObjectFormatCache.getInstance().getFormat(knownFormat).getFmtid().getValue();
+		  	assertTrue(result.equals(knownFormat));
+
     } catch (NullPointerException npe) {
 	  
 	    fail("The returned format was null: " + npe.getMessage());
@@ -96,7 +119,7 @@ public class ObjectFormatCacheTest {
   	try {
   		
 	    String result = 
-	    	ObjectFormatCache.getFormat(badFormat).getFmtid().getValue();
+	    	ObjectFormatCache.getInstance().getFormat(badFormat).getFmtid().getValue();
       
   	} catch (Exception e) {
 	    

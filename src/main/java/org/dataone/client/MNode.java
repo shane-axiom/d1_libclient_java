@@ -512,7 +512,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         String content_lengthStr = m.get("content_length");//.get(0);
         String checksumStr = m.get("checksum");//.get(0);
         String checksum_algorithmStr = m.get("checksum_algorithm");//.get(0);
-        ObjectFormat format = ObjectFormatCache.getFormat(formatStr);
+        ObjectFormat format = ObjectFormatCache.getInstance().getFormat(formatStr);
         long content_length = new Long(content_lengthStr).longValue();
         Date last_modified = null;
         System.out.println("parsing date");

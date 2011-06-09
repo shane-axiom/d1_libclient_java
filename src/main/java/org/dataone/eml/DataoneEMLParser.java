@@ -105,22 +105,22 @@ public class DataoneEMLParser
             return null;
         }
         else if(namespace.equals(
-        		ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml-2.0.0").getFmtid().getValue()))
+        		ObjectFormatCache.getInstance().getFormat("eml://ecoinformatics.org/eml-2.0.0").getFmtid().getValue()))
         {
             return parseEML200Document(d);
         }
         else if(namespace.equals(
-        		ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml-2.0.1").getFmtid().getValue()))
+        		ObjectFormatCache.getInstance().getFormat("eml://ecoinformatics.org/eml-2.0.1").getFmtid().getValue()))
         {
             return parseEML201Document(d);
         }
         else if(namespace.equals(
-        		ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml-2.1.0").getFmtid().getValue()))
+        		ObjectFormatCache.getInstance().getFormat("eml://ecoinformatics.org/eml-2.1.0").getFmtid().getValue()))
         {
             return parseEML210Document(d);
         }
         else if(namespace.equals(
-        		ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml-2.1.1").getFmtid().getValue()))
+        		ObjectFormatCache.getInstance().getFormat("eml://ecoinformatics.org/eml-2.1.1").getFmtid().getValue()))
         {
             return parseEML211Document(d);
         }
@@ -153,7 +153,7 @@ public class DataoneEMLParser
     {
         System.out.println("Parsing an EML 2.0.0 document.");
         return parseEMLDocument(d, 
-          ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml-2.0.0"));
+          ObjectFormatCache.getInstance().getFormat("eml://ecoinformatics.org/eml-2.0.0"));
     }
     
     /**
@@ -167,7 +167,7 @@ public class DataoneEMLParser
     {
         System.out.println("Parsing an EML 2.0.1 document.");
         return parseEMLDocument(d, 
-        	ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml-2.0.1"));
+        	ObjectFormatCache.getInstance().getFormat("eml://ecoinformatics.org/eml-2.0.1"));
     }
     
     /**
@@ -181,7 +181,7 @@ public class DataoneEMLParser
     {
         System.out.println("Parsing an EML 2.1.0 document.");
         return parseEMLDocument(d, 
-        		ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml-2.1.0"));
+        		ObjectFormatCache.getInstance().getFormat("eml://ecoinformatics.org/eml-2.1.0"));
     }
     
     /**
@@ -195,7 +195,7 @@ public class DataoneEMLParser
     {
         System.out.println("Parsing an EML 2.1.1 document.");
         return parseEMLDocument(d, 
-        		ObjectFormatCache.getFormat("eml://ecoinformatics.org/eml-2.1.1"));
+        		ObjectFormatCache.getInstance().getFormat("eml://ecoinformatics.org/eml-2.1.1"));
     }
     
     private EMLDocument parseEMLDocument(Document d, ObjectFormat docType) 
@@ -237,7 +237,7 @@ public class DataoneEMLParser
                 if(nl1.getLength() > 0)
                 { //found a text format
                     System.out.println("Found a text format");
-                    mimeType = ObjectFormatCache.getFormat("text/plain").toString();
+                    mimeType = ObjectFormatCache.getInstance().getFormat("text/plain").toString();
                     NodeList nl4 = runXPath("dataFormat/textFormat/simpleDelimited", 
                                             physicalNode);
                     
@@ -245,14 +245,14 @@ public class DataoneEMLParser
                     if ( nl4.getLength() > 0 )
                     {
                       System.out.println("Found a csv format");
-                      mimeType = ObjectFormatCache.getFormat("text/csv").toString();
+                      mimeType = ObjectFormatCache.getInstance().getFormat("text/csv").toString();
                     }
                 }
                 else if(nl2.getLength() > 0)
                 {
                     //TODO: could do a bit more parsing and refine this type more
                     System.out.println("Found a binary raster format");
-                    mimeType = ObjectFormatCache.getFormat("application/octet-stream").toString();
+                    mimeType = ObjectFormatCache.getInstance().getFormat("application/octet-stream").toString();
                     
                 }
                 else if(nl3.getLength() > 0)
@@ -260,7 +260,7 @@ public class DataoneEMLParser
                     // it's possible that the mime type is in this field.  
                     // Check for it and set the object format
                     System.out.println("Found an externally defined format");
-                    mimeType = ObjectFormatCache.getFormat("application/octet-stream").toString();
+                    mimeType = ObjectFormatCache.getInstance().getFormat("application/octet-stream").toString();
                     NodeList nl5 = runXPath("dataFormat/externallyDefinedFormat/formatName", 
                                              physicalNode);
                     if ( nl5.getLength() > 0 )
@@ -269,7 +269,7 @@ public class DataoneEMLParser
                       String formatName = childNode1.getNodeValue();
                       
                       // set the object format if it exists
-                      ObjectFormat format = ObjectFormatCache.getFormat(formatName);
+                      ObjectFormat format = ObjectFormatCache.getInstance().getFormat(formatName);
                       if ( !(format == null) )
                       {
                         mimeType = format.toString();
