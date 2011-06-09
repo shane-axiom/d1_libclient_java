@@ -20,31 +20,22 @@
 
 package org.dataone.client;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpException;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
-import org.dataone.mimemultipart.MultipartRequestHandler;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.Constants;
 import org.dataone.service.D1Url;
 import org.dataone.service.EncodingUtilities;
 import org.dataone.service.exceptions.AuthenticationTimeout;
-import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.IdentifierNotUnique;
 import org.dataone.service.exceptions.InsufficientResources;
 import org.dataone.service.exceptions.InvalidCredentials;
@@ -58,15 +49,12 @@ import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.exceptions.UnsupportedMetadataType;
 import org.dataone.service.exceptions.UnsupportedQueryType;
 import org.dataone.service.exceptions.UnsupportedType;
-import org.dataone.service.mn.MemberNodeCrud;
-import org.dataone.service.mn.MemberNodeReplication;
 import org.dataone.service.mn.tier1.MNCore;
 import org.dataone.service.mn.tier1.MNRead;
 import org.dataone.service.mn.tier2.MNAuthorization;
 import org.dataone.service.mn.tier3.MNStorage;
 import org.dataone.service.mn.tier4.MNReplication;
 import org.dataone.service.types.AccessPolicy;
-import org.dataone.service.types.AuthToken;
 import org.dataone.service.types.Checksum;
 import org.dataone.service.types.ChecksumAlgorithm;
 import org.dataone.service.types.DescribeResponse;
@@ -123,7 +111,6 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     /**
      * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_core.ping
      */
-	@Override
 	public boolean ping() 
 	throws NotImplemented, ServiceFailure, NotAuthorized,
 		InvalidRequest, InsufficientResources, UnsupportedType 
@@ -174,7 +161,6 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 	/** 
      * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_core.getLogRecords
      */
-	@Override
 	public Log getLogRecords(Session cert, Date fromDate, Date toDate,
 			Event event, Integer start, Integer count) throws InvalidToken,
 			ServiceFailure, NotAuthorized, InvalidRequest, NotImplemented {
@@ -220,20 +206,12 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	} catch (HttpException e) {
     		throw recastClientSideExceptionToServiceFailure(e);
     	}  
-
-        try {
-            return (Log) deserializeServiceType(Log.class, is);
-        } catch (Exception e) {
-            throw new ServiceFailure("1090", "Could not deserialize the Log: "
-                    + e.getMessage());
-        }
-
+    	return (Log) deserializeServiceType(Log.class, is);
 	}
 
 	/**
      * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_core.getOperationStatistics
      */
-	@Override
 	public MonitorList getOperationStatistics(Session cert, Integer period,
 		Subject requestor, Event event, ObjectFormat format)
 	throws NotImplemented, ServiceFailure, NotAuthorized,
@@ -281,19 +259,12 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	} catch (HttpException e) {
     		throw recastClientSideExceptionToServiceFailure(e);
 		}  
-
-    	try {
-    		return (MonitorList) deserializeServiceType(MonitorList.class, is);
-    	} catch (Exception e) {
-    		throw new ServiceFailure("1090", "Could not deserialize the MonitorList: "
-    				+ e.getMessage());
-    	}
+    	return (MonitorList) deserializeServiceType(MonitorList.class, is);
 	}
 
 	 /**
      * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_core.getCapabilities
      */
-	@Override
 	public Node getCapabilities() 
 	throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest
 	{
@@ -335,13 +306,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	} catch (HttpException e) {
     		throw recastClientSideExceptionToServiceFailure(e);
 		}
-
-    	try {
-    		return (Node) deserializeServiceType(Node.class, is);
-    	} catch (Exception e) {
-    		throw new ServiceFailure("1090", "Could not deserialize the Node: "
-    				+ e.getMessage());
-    	}	
+    	return (Node) deserializeServiceType(Node.class, is);
 	}
 
 	
@@ -352,48 +317,12 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
      * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.listObjects
      *
      */
+	@Override
     public InputStream get(Session cert, Identifier pid)
     throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, 
     NotImplemented, InvalidRequest 
     {
-       	D1Url url = new D1Url(this.getNodeBaseServiceUrl(),Constants.RESOURCE_OBJECTS);
-    	url.addNextPathElement(pid.getValue());
-//       	if (cert != null)
-//    		url.addNonEmptyParamPair("sessionid",token.getToken());
-
-		D1RestClient client = new D1RestClient(true, verbose);
-		
-		InputStream is = null;
-		try {
-			is = client.doGetRequest(url.getUrl());
-		} catch (IdentifierNotUnique e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (UnsupportedType e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (UnsupportedQueryType e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (InsufficientResources e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (InvalidSystemMetadata e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (InvalidCredentials e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (UnsupportedMetadataType e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (InvalidRequest e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (AuthenticationTimeout e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (ClientProtocolException e) {
-			throw recastClientSideExceptionToServiceFailure(e);
-		} catch (IllegalStateException e) {
-			throw recastClientSideExceptionToServiceFailure(e);
-		} catch (IOException e) {
-			throw recastClientSideExceptionToServiceFailure(e);
-		} catch (HttpException e) {
-			throw recastClientSideExceptionToServiceFailure(e);
-		}
-		return is;
+       	return super.get(cert, pid);
     }
     
     
@@ -405,55 +334,13 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
 		InvalidRequest, NotImplemented 
 	{
-		
-		D1Url url = new D1Url(this.getNodeBaseServiceUrl(),Constants.RESOURCE_META);
-    	url.addNextPathElement(pid.getValue());
-//       	if (cert != null)
-//    		url.addNonEmptyParamPair("sessionid",cert.);
-
-		D1RestClient client = new D1RestClient(true, verbose);
-		
-		InputStream is = null;
-	
-		try {
-			is = client.doGetRequest(url.getUrl());		
-		} catch (IdentifierNotUnique e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (UnsupportedQueryType e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (UnsupportedType e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (InsufficientResources e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (InvalidSystemMetadata e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (InvalidCredentials e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (AuthenticationTimeout e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (UnsupportedMetadataType e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (ClientProtocolException e) {
-			throw recastClientSideExceptionToServiceFailure(e);
-		} catch (IllegalStateException e) {
-			throw recastClientSideExceptionToServiceFailure(e);
-		} catch (IOException e) {
-			throw recastClientSideExceptionToServiceFailure(e);
-		} catch (HttpException e) {
-			throw recastClientSideExceptionToServiceFailure(e);
-		}
-		try {
-            return deserializeSystemMetadata(is);
-        } catch (Exception e) {
-            throw new ServiceFailure("1090",
-                    "Could not deserialize the systemMetadata: " + e.getMessage());
-        }	
+		return super.getSystemMetadata(cert, pid);
 	}
+		
 
 	/**
      * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.describe
      */
-	@Override
 	public DescribeResponse describe(Session cert, Identifier pid)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
 		NotImplemented, InvalidRequest 
@@ -546,7 +433,6 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 	/**
      * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.getChecksum
      */
-	@Override
 	public Checksum getChecksum(Session cert, Identifier pid, String checksumAlgorithm) 
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, InvalidRequest, NotImplemented 
 	{
@@ -596,35 +482,35 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	} catch (HttpException e) {
     		throw recastClientSideExceptionToServiceFailure(e);
     	}  
-
-    	try {
-    		return (Checksum) deserializeServiceType(Checksum.class, is);
-    	} catch (JiBXException e) {
-    		throw new ServiceFailure("500",
-    				"Could not deserialize the returned Checksum: " + e.getMessage());
-    	}
+    	return (Checksum) deserializeServiceType(Checksum.class, is);
 	}
 
-	public ObjectList listObjects(Session cert, Date startTime,
-			Date endTime, ObjectFormat objectFormat, Boolean replicaStatus,
-			Integer start, Integer count) 
-	throws NotAuthorized, InvalidRequest, NotImplemented, ServiceFailure, InvalidToken 
-	{
-		if (replicaStatus == null) {
-			return listObjects(cert,startTime,endTime, objectFormat, true, start, count);
-		} else {
-			return listObjects(cert,startTime,endTime, objectFormat, replicaStatus, start, count);
-		}
-	}
+
+	   /**
+     *   listObjects() is the simple implementation of /<service>/object (no query parameters, or additional path segments)
+     *   use this when no parameters  being used
+     *   
+     * @param token
+     * @return
+     * @throws NotAuthorized
+     * @throws InvalidRequest
+     * @throws NotImplemented
+     * @throws ServiceFailure
+     * @throws InvalidToken
+     */
+    public ObjectList listObjects()
+    throws NotAuthorized, InvalidRequest, NotImplemented, ServiceFailure, InvalidToken {
+  
+    	return listObjects(null,null,null,null,null,null,null);
+        
+    }
 	
 	
 	/** 
      * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.listObjects
      */
-//	@Override
-	public ObjectList listObjects(Session cert, Date startTime,
-			Date endTime, ObjectFormat objectFormat, boolean replicaStatus,
-			Integer start, Integer count) 
+	public ObjectList listObjects(Session cert, Date startTime, Date endTime, 
+	ObjectFormat objectFormat, Boolean replicaStatus, Integer start, Integer count) 
 	throws NotAuthorized, InvalidRequest, NotImplemented, ServiceFailure, InvalidToken 
 	{
 		
@@ -678,22 +564,14 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (HttpException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
-		
-		}
-         
-        try {
-            return deserializeObjectList(is);
-        } catch (JiBXException e) {
-            throw new ServiceFailure("500",
-                    "Could not deserialize the ObjectList: " + e.getMessage());
-        }
+		}         
+		return (ObjectList) deserializeServiceType(ObjectList.class,is);      
 	}
 
 	
     /////////////////////    Tier 2 :  MNAuthorization API   //////////////////////
 
 	
-	@Override
 	public boolean isAuthorized(Session cert, Identifier pid, Permission action)
 	throws ServiceFailure, InvalidRequest, InvalidToken, NotFound, NotAuthorized, NotImplemented 
 	{
@@ -738,7 +616,6 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 	}
 
 	
-	@Override
 	public boolean setAccess(Session cert, Identifier pid, AccessPolicy accessPolicy) 
 	throws InvalidToken, ServiceFailure, NotFound, NotAuthorized, 
 	NotImplemented, InvalidRequest 
@@ -804,7 +681,6 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
      * create both a system metadata resource and science metadata resource with
      * the specified guid
      */
-	@Override
 	public Identifier create(Session cert, Identifier pid, InputStream object,
 			SystemMetadata sysmeta) 
 	throws InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, 
@@ -854,19 +730,13 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	} catch (HttpException e) {
     		throw recastClientSideExceptionToServiceFailure(e);
     	}    	
-    	try {
-            return (Identifier)deserializeServiceType(Identifier.class, is);
-        } catch (Exception e) {
-            throw new ServiceFailure("1090",
-                    "Could not deserialize the systemMetadata: " + e.getMessage());
-        }
+    	return (Identifier)deserializeServiceType(Identifier.class, is);
 	}
 
 	
 	/**
      * update a resource with the specified pid.
      */
-	@Override
 	public Identifier update(Session cert, Identifier pid, InputStream object,
 			Identifier newPid, SystemMetadata sysmeta) 
 	throws InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique,
@@ -911,20 +781,15 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	} catch (IOException e) {
     		throw recastClientSideExceptionToServiceFailure(e);
     	} catch (HttpException e) {
-    		throw recastClientSideExceptionToServiceFailure(e);    	}    	
-    	try {
-    		return (Identifier)deserializeServiceType(Identifier.class, is);
-    	} catch (Exception e) {
-    		throw new ServiceFailure("1090",
-    				"Could not deserialize the returned Identifier: " + e.getMessage());
-    	}
+    		throw recastClientSideExceptionToServiceFailure(e);    	
+    	}    	
+    	return (Identifier)deserializeServiceType(Identifier.class, is);
 	}
 
 	
 	/**
      * delete a resource with the specified guid. NOT IMPLEMENTED.
      */
-	@Override
 	public Identifier delete(Session cert, Identifier pid) 
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, 
 	NotImplemented,	InvalidRequest 
@@ -971,19 +836,14 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	} catch (HttpException e) {
     		throw recastClientSideExceptionToServiceFailure(e);
 		}    	
-    	try {
-            return (Identifier)deserializeServiceType(Identifier.class, is);
-        } catch (Exception e) {
-            throw new ServiceFailure("1090",
-                    "Could not deserialize the returned Identifier: " + e.getMessage());
-        }
+    	return (Identifier)deserializeServiceType(Identifier.class, is);
 	}
 
+	
 	
     /////////////////////    Tier 4 :  MN Replicate          //////////////////////
 
 	
-	@Override
 	public boolean replicate(Session cert, SystemMetadata sysmeta,
 	NodeReference sourceNode) 
 	throws NotImplemented, ServiceFailure, NotAuthorized, 
@@ -1039,62 +899,4 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	}
 		return true;
 	}
-
-	
-	
-	
-   //////////////   Obsolete Methods  ////////////////////////////////
-
-    /**
-     * login and get an AuthToken
-     * 
-     * @param username
-     * @param password
-     * @return
-     * @throws ServiceFailure
-     */
-    public AuthToken login(String username, String password)
-            throws ServiceFailure, NotImplemented {
-        // TODO: reassess the exceptions thrown here.  Look at the Authentication interface.
-        // TODO: this method assumes an access control model that is not finalized, refactor when it is
-
-    	String postData = "username=" + username + "&password=" + password;
-        String params = "qformat=xml&op=login";
-        String resource = Constants.RESOURCE_SESSION + "/";
-
-        ResponseData rd = sendRequest(null, resource, Constants.POST, params, null,
-                new ByteArrayInputStream(postData.getBytes()), null);
-        String sessionid = null;
-
-        int code = rd.getCode();
-        if (code != HttpURLConnection.HTTP_OK) { // deal with the error
-            // TODO: detail codes are wrong, and exception is the wrong one too I think
-            throw new ServiceFailure("1000", "Error logging in.");
-        } else {
-            try {
-                InputStream is = rd.getContentStream();
-                String response = IOUtils.toString(is);
-                
-                int successIndex = response.indexOf("<sessionId>");
-                if (successIndex != -1) {
-                    sessionid = response.substring(
-                            response.indexOf("<sessionId>")
-                                    + "<sessionId>".length(),
-                            response.indexOf("</sessionId>"));
-                } else {
-                    // TODO: wrong exception thrown, wrong detail code?
-                    throw new ServiceFailure("1000", "Error authenticating: "
-                            + response.substring(response.indexOf("<error>")
-                                    + "<error>".length(),
-                                    response.indexOf("</error>")));
-                }
-            } catch (Exception e) {
-                throw new ServiceFailure("1000",
-                        "Error getting response from metacat: "
-                                + e.getMessage());
-            }
-        }
-
-        return new AuthToken(sessionid);
-    }
 }
