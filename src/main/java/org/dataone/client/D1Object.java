@@ -39,6 +39,8 @@ import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.exceptions.UnsupportedType;
+import org.dataone.service.types.AccessPolicy;
+import org.dataone.service.types.AccessRule;
 import org.dataone.service.types.AuthToken;
 import org.dataone.service.types.Checksum;
 import org.dataone.service.types.ChecksumAlgorithm;
@@ -47,6 +49,8 @@ import org.dataone.service.types.NodeReference;
 import org.dataone.service.types.ObjectFormat;
 import org.dataone.service.types.ObjectLocation;
 import org.dataone.service.types.ObjectLocationList;
+import org.dataone.service.types.Permission;
+import org.dataone.service.types.Session;
 import org.dataone.service.types.Subject;
 import org.dataone.service.types.SystemMetadata;
 import org.dataone.service.types.util.ServiceTypeUtil;
@@ -174,7 +178,7 @@ public class D1Object {
      * @throws NotImplemented
      * @throws InvalidRequest 
      */
-    public void create(AuthToken token) throws InvalidToken, ServiceFailure, NotAuthorized, 
+    public void create(Session token) throws InvalidToken, ServiceFailure, NotAuthorized, 
         IdentifierNotUnique, UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented, InvalidRequest {
         
         // Check first that the identifier is not already in use
@@ -199,11 +203,25 @@ public class D1Object {
      * Change the object to publicly readable on the MN
      * @param token the credentials to use to make the change
      * @throws ServiceFailure
+     * @throws InvalidRequest 
+     * @throws NotImplemented 
+     * @throws NotAuthorized 
+     * @throws NotFound 
+     * @throws InvalidToken 
      */
-    public void setPublicAccess(AuthToken token) throws ServiceFailure {
+    public void setPublicAccess(Session token) 
+    throws ServiceFailure, InvalidToken, NotFound, NotAuthorized, NotImplemented, InvalidRequest 
+    {
         String mn_url = D1Client.getCN().lookupNodeBaseUrl(sysmeta.getAuthoritativeMemberNode().getValue());
         MNode mn = D1Client.getMN(mn_url);
-        mn.setAccess(token, sysmeta.getIdentifier(), "public", "read", "allow", "allowFirst");
+        AccessPolicy ap = new AccessPolicy();
+        AccessRule ar = new AccessRule();
+        Subject s = new Subject();
+        s.setValue("public");
+        ar.addSubject(s);
+        ar.addPermission(org.dataone.service.types.Permission.READ);
+        ap.addAllow(ar);
+        mn.setAccess(token, sysmeta.getIdentifier(), ap);
     }
     
     /**
@@ -214,7 +232,7 @@ public class D1Object {
         D1Object o = null;
     
         CNode cn = D1Client.getCN();
-        AuthToken token = new AuthToken();
+        Session token = new Session();
     
         ObjectLocationList oll;
         try {
@@ -299,14 +317,15 @@ public class D1Object {
             SystemMetadata sm = new SystemMetadata();
             sm.setIdentifier(id);
             ObjectFormat fmt;
+            ObjectFormatCache ofc = ObjectFormatCache.getInstance();
             try {
-	            fmt = ObjectFormatCache.getFormat(format);
+	            fmt = ofc.getFormat(format);
 	            sm.setObjectFormat(fmt);
 
             } catch (NotFound nf) {
 
             	try {
-	              fmt = ObjectFormatCache.getFormat("application/octet-stream");
+	              fmt = ofc.getFormat("application/octet-stream");
               
             	} catch (NotFound nfe) {
                 
