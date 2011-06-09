@@ -78,10 +78,14 @@ import org.dataone.service.types.ObjectFormatIdentifier;
 import org.dataone.service.types.ObjectFormatList;
 import org.dataone.service.types.ObjectList;
 import org.dataone.service.types.ObjectLocationList;
+import org.dataone.service.types.Person;
 import org.dataone.service.types.QueryType;
+import org.dataone.service.types.ReplicationPolicy;
+import org.dataone.service.types.ReplicationStatus;
 import org.dataone.service.types.Services;
 import org.dataone.service.types.Session;
 import org.dataone.service.types.Subject;
+import org.dataone.service.types.SubjectList;
 import org.dataone.service.types.SystemMetadata;
 import org.jibx.runtime.JiBXException;
 import org.xml.sax.SAXException;
@@ -199,17 +203,15 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
     }
 
     @Override
-    public InputStream get(Session session, Identifier guid)
-            throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
-            NotImplemented {
-        return super.get(session, guid);
+    public InputStream get(Session session, Identifier pid)
+            throws NotAuthorized, NotImplemented, NotFound, ServiceFailure, InvalidToken, InvalidRequest {
+        return super.get(session, pid);
     }
 
     @Override
-    public SystemMetadata getSystemMetadata(Session session, Identifier guid)
-            throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
-            InvalidRequest, NotImplemented {
-        return super.getSystemMetadata(session, guid);
+    public SystemMetadata getSystemMetadata(Session session, Identifier pid)
+        throws InvalidToken, NotImplemented, ServiceFailure, NotAuthorized, NotFound, InvalidRequest {
+        return super.getSystemMetadata(session, pid);
     }
 
     @Override
@@ -654,7 +656,7 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
     }
 
     @Override
-    public boolean setAccess(Session session, Identifier pid, AccessPolicy accessPolicy) throws InvalidToken, ServiceFailure, NotFound, NotAuthorized, NotImplemented, InvalidRequest {
+    public boolean setAccessPolicy(Session session, Identifier pid, AccessPolicy accessPolicy) throws InvalidToken, ServiceFailure, NotFound, NotAuthorized, NotImplemented, InvalidRequest {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -1085,5 +1087,58 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
+    public boolean removeGroupMembers(Session session, Subject groupName, SubjectList members) throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented, InvalidRequest{
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 
+    @Override
+    public boolean addGroupMembers(Session session, Subject groupName, SubjectList members) throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented, InvalidRequest{
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public boolean confirmMapIdentity(Session session, Subject subject) throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented, InvalidRequest{
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public boolean mapIdentity(Session session, Subject subject) throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented, InvalidRequest{
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public SubjectList listSubjects(Session session, String query, int start, int count) throws ServiceFailure, InvalidToken, NotAuthorized, NotImplemented {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+    
+    @Override
+    public SubjectList getSubjectInfo(Session session, Subject subject) throws ServiceFailure, InvalidRequest, NotAuthorized, NotImplemented {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+    
+    @Override
+    public boolean verifyAccount(Session session, Subject subject) throws ServiceFailure, NotAuthorized, NotImplemented, InvalidToken, InvalidRequest {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+    
+    @Override
+    public Subject updateAccount(Session session, Person person) throws ServiceFailure, InvalidCredentials, NotImplemented, InvalidRequest {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+    
+    @Override
+    public Subject registerAccount(Session session, Person person) throws ServiceFailure, IdentifierNotUnique, InvalidCredentials, NotImplemented, InvalidRequest {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+    
+    @Override
+    public boolean setReplicationPolicy(Session session, Identifier pid, ReplicationPolicy policy) throws ServiceFailure, NotAuthorized, NotImplemented, InvalidRequest {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+    
+    @Override
+    public boolean setReplicationStatus(Session session, Identifier pid, ReplicationStatus status) throws ServiceFailure, NotImplemented, InvalidToken, NotAuthorized, InvalidRequest, NotFound {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }
