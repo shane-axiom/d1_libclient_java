@@ -87,6 +87,7 @@ import org.dataone.service.types.Session;
 import org.dataone.service.types.Subject;
 import org.dataone.service.types.SubjectList;
 import org.dataone.service.types.SystemMetadata;
+import org.dataone.service.types.util.ServiceTypeUtil;
 import org.jibx.runtime.JiBXException;
 import org.xml.sax.SAXException;
 
@@ -193,13 +194,8 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
         } catch (HttpException e) {
             throw recastClientSideExceptionToServiceFailure(e);
         }
+        return (ObjectList) deserializeServiceType(ObjectList.class,is);
 
-        try {
-            return deserializeObjectList(is);
-        } catch (JiBXException e) {
-            throw new ServiceFailure("500",
-                    "Could not deserialize the ObjectList: " + e.getMessage());
-        }
     }
 
     @Override
@@ -261,15 +257,9 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
         } catch (HttpException e) {
             throw recastClientSideExceptionToServiceFailure(e);
         }
-
-        try {
-            return deserializeResolve(is);
-        } catch (Exception e) {
-            throw new ServiceFailure("1090",
-                    "Could not deserialize the systemMetadata: "
-                    + e.getMessage());
-        }
+        return (ObjectLocationList) deserializeServiceType(ObjectLocationList.class,is);
     }
+    
 
     /**
      * create both a system metadata resource and science metadata resource with
@@ -313,7 +303,7 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
         }
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
-            serializeServiceType(SystemMetadata.class, sysmeta, baos);            
+            ServiceTypeUtil.serializeServiceType(SystemMetadata.class, sysmeta, baos);            
             mpe.addFilePart("sysmeta", baos.toString());
         } catch (JiBXException e) {
             throw new ServiceFailure("1090",
@@ -352,13 +342,7 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
         } catch (HttpException e) {
             throw new ServiceFailure("1090", e.getClass().getSimpleName() + ": " + e.getMessage());
         }
-        try {
-            // 		System.out.println(IOUtils.toString(is));
-            return (Identifier) deserializeServiceType(Identifier.class, is);
-        } catch (Exception e) {
-            throw new ServiceFailure("1090",
-                    "Could not deserialize the Identifier: " + e.getMessage());
-        }
+        return (Identifier) deserializeServiceType(Identifier.class, is);
     }
 
     /**
@@ -400,10 +384,8 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
         			"IO Exception creating the filepart for object: "
         			+ e.getMessage());	
         }
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
-            serializeServiceType(SystemMetadata.class, sysmeta, baos);
-            mpe.addFilePart("sysmeta", baos.toString());
+            mpe.addFilePart("sysmeta", sysmeta, SystemMetadata.class); 
         } catch (JiBXException e) {
             throw new ServiceFailure("1090",
                     "Could not serialize the systemMetadata: "
@@ -442,13 +424,7 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
         } catch (HttpException e) {
             throw recastClientSideExceptionToServiceFailure(e);
         }
-        try {
-//    		System.out.println(IOUtils.toString(is));
-            return (Identifier) deserializeServiceType(Identifier.class, is);
-        } catch (Exception e) {
-            throw new ServiceFailure("1090",
-                    "Could not deserialize the returned Identifier: " + e.getMessage());
-        }
+        return (Identifier) deserializeServiceType(Identifier.class, is);
     }
 
     @Override
@@ -643,10 +619,10 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
      * deserialize an InputStream to an ObjectLocationList object
      * @param is
      * @return
-     * @throws JiBXException
+     * @throws ServiceFailure 
      */
     protected ObjectLocationList deserializeResolve(InputStream is)
-            throws JiBXException {
+            throws ServiceFailure {
         return (ObjectLocationList) deserializeServiceType(ObjectLocationList.class, is);
     }
 
@@ -1043,6 +1019,7 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
         } catch (NotAuthorized ex) {
             throw recastClientSideExceptionToServiceFailure(ex);
         } catch (InvalidRequest ex) {
+        	// TODO: fix swallowed exception.  throw, recast, or explain in comment :-) 
         } catch (ClientProtocolException e) {
             throw recastClientSideExceptionToServiceFailure(e);
         } catch (IllegalStateException e) {
