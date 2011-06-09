@@ -29,6 +29,7 @@ import java.security.cert.X509Extension;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Date;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpressionException;
@@ -42,10 +43,12 @@ import org.dataone.service.Constants;
 import org.dataone.service.D1Url;
 import org.dataone.service.EncodingUtilities;
 import org.dataone.service.NodeListParser;
-import org.dataone.service.cn.CoordinatingNodeAuthentication;
-import org.dataone.service.cn.CoordinatingNodeAuthorization;
-import org.dataone.service.cn.CoordinatingNodeCrud;
-import org.dataone.service.cn.CoordinatingNodeRegister;
+import org.dataone.service.cn.CNCore;
+import org.dataone.service.cn.CNRead;
+import org.dataone.service.cn.CNAuthorization;
+import org.dataone.service.cn.CNIdentity;
+import org.dataone.service.cn.CNRegister;
+import org.dataone.service.cn.CNReplication;
 import org.dataone.service.exceptions.AuthenticationTimeout;
 import org.dataone.service.exceptions.IdentifierNotUnique;
 import org.dataone.service.exceptions.InsufficientResources;
@@ -61,18 +64,23 @@ import org.dataone.service.exceptions.UnsupportedMetadataType;
 import org.dataone.service.exceptions.UnsupportedQueryType;
 import org.dataone.service.exceptions.UnsupportedType;
 import org.dataone.service.types.AccessPolicy;
-import org.dataone.service.types.AuthToken;
 import org.dataone.service.types.AuthType;
+import org.dataone.service.types.Checksum;
 import org.dataone.service.types.Event;
 import org.dataone.service.types.Identifier;
 import org.dataone.service.types.IdentifierFormat;
+import org.dataone.service.types.Log;
+import org.dataone.service.types.Node;
 import org.dataone.service.types.NodeList;
+import org.dataone.service.types.NodeReference;
 import org.dataone.service.types.ObjectFormat;
 import org.dataone.service.types.ObjectFormatIdentifier;
 import org.dataone.service.types.ObjectFormatList;
 import org.dataone.service.types.ObjectList;
 import org.dataone.service.types.ObjectLocationList;
+import org.dataone.service.types.QueryType;
 import org.dataone.service.types.Services;
+import org.dataone.service.types.Session;
 import org.dataone.service.types.Subject;
 import org.dataone.service.types.SystemMetadata;
 import org.jibx.runtime.JiBXException;
@@ -82,7 +90,7 @@ import org.xml.sax.SAXException;
  * CNode represents a DataONE Coordinating Node, and allows calling classes to
  * execute CN services.
  */
-public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingNodeAuthorization, CoordinatingNodeAuthentication, CoordinatingNodeRegister {
+public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplication {
 
     private Map<String, String> nodeMap;
 
@@ -112,13 +120,15 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
         }
     }
 
-    public ObjectList search(AuthToken token, String paramString)
+    public ObjectList search(Session session, QueryType queryType, String paramString)
             throws NotAuthorized, InvalidRequest,
             NotImplemented, ServiceFailure, InvalidToken {
 
-        if (token == null) {
-            token = new AuthToken("public");
+        /* FIXME
+        if (session == null) {
+            session = new Session("public");
         }
+        */
 
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
 
@@ -134,7 +144,8 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
             paramAdditions += "start=0&";
         }
         if (!paramString.contains("sessionid=")) {
-            paramAdditions += "sessionid=" + token.getToken() + "&";
+            // FIXME
+            //paramAdditions += "sessionid=" + session.getToken() + "&";
         }
         String paramsComplete = paramAdditions + paramString;
         // clean up paramsComplete string
@@ -145,7 +156,8 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
         url.addPreEncodedNonEmptyQueryParams(paramsComplete);
 
         D1RestClient client = new D1RestClient(true, verbose);
-        client.setHeader("token", token.getToken());
+        // FIXME
+        //client.setHeader("session", session.getToken());
 
         InputStream is = null;
         try {
@@ -187,34 +199,37 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
     }
 
     @Override
-    public InputStream get(AuthToken token, Identifier guid)
+    public InputStream get(Session session, Identifier guid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
             NotImplemented {
-        return super.get(token, guid);
+        return super.get(session, guid);
     }
 
     @Override
-    public SystemMetadata getSystemMetadata(AuthToken token, Identifier guid)
+    public SystemMetadata getSystemMetadata(Session session, Identifier guid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
             InvalidRequest, NotImplemented {
-        return super.getSystemMetadata(token, guid);
+        return super.getSystemMetadata(session, guid);
     }
 
     @Override
-    public ObjectLocationList resolve(AuthToken token, Identifier guid)
+    public ObjectLocationList resolve(Session session, Identifier guid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
             InvalidRequest, NotImplemented {
 
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_RESOLVE);
         url.addNextPathElement(guid.getValue());
 
-        if (token == null) {
-            token = new AuthToken("public");
+        /* FIXME
+        if (session == null) {
+            session = new Session("public");
         }
-        url.addNonEmptyParamPair("sessionid", token.getToken());
+        url.addNonEmptyParamPair("sessionid", session.getToken());
+        */
 
         D1RestClient client = new D1RestClient(true, verbose);
-        client.setHeader("token", token.getToken());
+        // FIXME
+        //client.setHeader("session", session.getToken());
 
         InputStream is = null;
         try {
@@ -259,7 +274,7 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
      * the specified guid
      */
     @Override
-    public Identifier create(AuthToken token, Identifier guid,
+    public Identifier create(Session session, Identifier guid,
             InputStream object, SystemMetadata sysmeta) throws InvalidToken,
             ServiceFailure, NotAuthorized, IdentifierNotUnique,
             UnsupportedType, InsufficientResources, InvalidSystemMetadata,
@@ -268,9 +283,11 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
 
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
         url.addNextPathElement(guid.getValue());
-        if (token != null) {
-            url.addNonEmptyParamPair("sessionid", token.getToken());
+        /* FIXME
+        if (session != null) {
+            url.addNonEmptyParamPair("sessionid", session.getToken());
         }
+        */
 
         SimpleMultipartEntity mpe = new SimpleMultipartEntity();
 
@@ -345,7 +362,7 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
     /**
      * update a resource with the specified guid.
      */
-    public Identifier update(AuthToken token, Identifier pid,
+    public Identifier update(Session session, Identifier pid,
             InputStream object, Identifier newPid, SystemMetadata sysmeta)
             throws InvalidToken, ServiceFailure, NotAuthorized,
             IdentifierNotUnique, UnsupportedType, InsufficientResources,
@@ -354,9 +371,11 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
 
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
         url.addNextPathElement(pid.getValue());
-        if (token != null) {
-            url.addNonEmptyParamPair("sessionid", token.getToken());
+        /* FIXME
+        if (session != null) {
+            url.addNonEmptyParamPair("sessionid", session.getToken());
         }
+        */
 
         SimpleMultipartEntity mpe = new SimpleMultipartEntity();
         mpe.addParamPart("newPid",
@@ -431,34 +450,40 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
     }
 
     @Override
-    public Identifier reserveIdentifier(AuthToken token, String scope,
+    public Identifier reserveIdentifier(Session session, Identifier pid, 
+        String scope, String format) throws InvalidToken, ServiceFailure, 
+        NotAuthorized, InvalidRequest, NotImplemented {
+            throw new NotImplemented("4191", "Client does not implement this method.");
+    }
+
+    /* TODO: Remove
+    @Override
+    public Identifier reserveIdentifier(Session session, String scope,
             IdentifierFormat format) throws InvalidToken, ServiceFailure,
             NotAuthorized, InvalidRequest, NotImplemented {
         throw new NotImplemented("4191", "Client does not implement this method.");
     }
+    */
 
+    /* TODO: Remove
     @Override
-    public Identifier reserveIdentifier(AuthToken token, String scope)
+    public Identifier reserveIdentifier(Session session, String scope)
             throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest,
             NotImplemented {
         throw new NotImplemented("4191", "Client does not implement this method.");
     }
+    */
 
+    /* TODO: Remove
     @Override
-    public Identifier reserveIdentifier(AuthToken token, IdentifierFormat format)
-            throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest,
-            NotImplemented {
-        throw new NotImplemented("4191", "Client does not implement this method.");
-    }
-
-    @Override
-    public Identifier reserveIdentifier(AuthToken token) throws InvalidToken,
+    public Identifier reserveIdentifier(Session session) throws InvalidToken,
             ServiceFailure, NotAuthorized, InvalidRequest, NotImplemented {
         throw new NotImplemented("4191", "Client does not implement this method.");
     }
+    */
 
     @Override
-    public boolean assertRelation(AuthToken token, Identifier subjectId,
+    public boolean assertRelation(Session session, Identifier subjectId,
             String relationship, Identifier objectId) throws InvalidToken,
             ServiceFailure, NotAuthorized, NotFound, InvalidRequest,
             NotImplemented {
@@ -466,15 +491,15 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
     }
 
     /**
-     * login and get an AuthToken
+     * login and get an Session
      *
      * @param username
      * @param password
      * @return
      * @throws ServiceFailure
-     */
+     *
     @Override
-    public AuthToken login(String username, String password)
+    public Session login(String username, String password)
             throws InvalidCredentials, AuthenticationTimeout, ServiceFailure, NotImplemented, InvalidRequest {
         // TODO: reassess the exceptions thrown here.  Look at the Authentication interface.
         // TODO: this method assumes an access control model that is not finalized, refactor when it is
@@ -525,21 +550,22 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
             }
         }
 
-        return new AuthToken(sessionid);
+        return new Session(sessionid);
     }
+    */
 
     /**
      * set the access perms for a document
      *
-     * @param token
+     * @param session
      * @param id
      * @param principal
      * @param permission
      * @param permissionType
      * @param permissionOrder
-     */
+     *
     @Override
-    public boolean setAccess(AuthToken token, Identifier id, String principal,
+    public boolean setAccess(Session session, Identifier id, String principal,
             String permission, String permissionType, String permissionOrder)
             throws InvalidToken, ServiceFailure, NotFound, NotAuthorized, NotImplemented, InvalidRequest {
         // TODO: this method assumes an access control model that is not finalized, refactor when it is
@@ -555,13 +581,15 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
         url.addNonEmptyParamPair("setsystemmetadata", "true");
 
 
-        if (token == null) {
-            token = new AuthToken("public");
-        }
-        url.addNonEmptyParamPair("sessionid", token.getToken());
+        //FIXME
+        //if (session == null) {
+        //    session = new Session("public");
+        //}
+        //url.addNonEmptyParamPair("sessionid", session.getToken());
 
         RestClient client = new RestClient();
-        client.setHeader("token", token.getToken());
+        // FIXME
+        //client.setHeader("session", session.getToken());
 
         HttpResponse hr = null;
         try {
@@ -586,7 +614,7 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
 //                + permissionType + "&permissionOrder=" + permissionOrder
 //                + "&op=setaccess&setsystemmetadata=true";
 //        String resource = Constants.RESOURCE_SESSION + "/";
-//        ResponseData rd = sendRequest(token, resource, Constants.POST, params, null, null, null);
+//        ResponseData rd = sendRequest(session, resource, Constants.POST, params, null, null, null);
 //        int code = rd.getCode();
 //        if (code != HttpURLConnection.HTTP_OK) {
 //            throw new ServiceFailure("1000", "Error setting acces on document");
@@ -595,16 +623,19 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
 //        // TODO: also set the system metadata to the same perms
 
     }
+    */
 
     @Override
-    public Identifier setOwner(AuthToken token, Identifier guid, Subject userId) throws InvalidToken, NotAuthorized, NotFound {
+    public Identifier setOwner(Session session, Identifier pid, Subject userId) throws InvalidToken, NotAuthorized, NotFound {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    /* TODO: Remove - unneeded
     @Override
     public Subject newAccount(String username, String password) throws IdentifierNotUnique, InvalidCredentials {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+    */
 
     /**
      * deserialize an InputStream to an ObjectLocationList object
@@ -618,49 +649,61 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
     }
 
     @Override
-    public boolean isAuthorized(AuthToken token, Identifier pid, Event operation) throws ServiceFailure, InvalidToken, NotFound, NotAuthorized, NotImplemented, InvalidRequest {
+    public boolean isAuthorized(Session session, Identifier pid, Event operation) throws ServiceFailure, InvalidToken, NotFound, NotAuthorized, NotImplemented, InvalidRequest {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public boolean setAccess(AuthToken token, Identifier pid, AccessPolicy accessPolicy) throws InvalidToken, ServiceFailure, NotFound, NotAuthorized, NotImplemented, InvalidRequest {
+    public boolean setAccess(Session session, Identifier pid, AccessPolicy accessPolicy) throws InvalidToken, ServiceFailure, NotFound, NotAuthorized, NotImplemented, InvalidRequest {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    /* TODO: Remove - unneeded
     @Override
-    public AuthToken login(String user, String password, AuthType type) throws InvalidCredentials, AuthenticationTimeout, NotImplemented, InvalidRequest, ServiceFailure {
+    public Session login(String user, String password, AuthType type) throws InvalidCredentials, AuthenticationTimeout, NotImplemented, InvalidRequest, ServiceFailure {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+    */
 
+    /* TODO: Remove - unneeded
     @Override
-    public AuthToken getAuthToken(X509Extension cert) throws InvalidCredentials, AuthenticationTimeout, ServiceFailure, NotImplemented, InvalidRequest {
+    public Session getSession(X509Extension cert) throws InvalidCredentials, AuthenticationTimeout, ServiceFailure, NotImplemented, InvalidRequest {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+    */
 
+    /* TODO: Remove - unneeded
     @Override
     public Subject newAccount(String username, String password, AuthType type) throws ServiceFailure, IdentifierNotUnique, InvalidCredentials, NotImplemented, InvalidRequest {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+    */
+
+    /* TODO: Remove - unneeded
+    @Override
+    public boolean verifyToken(Session session) throws ServiceFailure, NotAuthorized, NotImplemented, InvalidToken, InvalidRequest {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+    */
+
+    /* TODO: Remove - unneeded
+    @Override
+    public boolean mapIdentity(Session session1, Session session2) throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented, InvalidRequest {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+    */
 
     @Override
-    public boolean verifyToken(AuthToken token) throws ServiceFailure, NotAuthorized, NotImplemented, InvalidToken, InvalidRequest {
+    public boolean createGroup(Session session, Subject groupName) throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented, InvalidRequest, IdentifierNotUnique {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    /* TODO: Remove - unneeded
     @Override
-    public boolean mapIdentity(AuthToken token1, AuthToken token2) throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented, InvalidRequest {
+    public Identifier createGroup(Session session, Identifier groupName, List<Identifier> members) throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented, InvalidRequest {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-
-    @Override
-    public Identifier createGroup(AuthToken token, Identifier groupName) throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented, InvalidRequest, IdentifierNotUnique {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public Identifier createGroup(AuthToken token, Identifier groupName, List<Identifier> members) throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented, InvalidRequest {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
+    */
 
     /**
      * Find the base URL for a Node based on the Node's identifier as it was registered with the
@@ -957,17 +1000,20 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
     }
     
     @Override
-    public NodeList listNodes(AuthToken token) throws NotImplemented, ServiceFailure {
+    public NodeList listNodes() throws NotImplemented, ServiceFailure {
 
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_NODE);
 
-        if (token == null) {
-            token = new AuthToken("public");
+        /* FIXME
+        if (session == null) {
+            session = new Session("public");
         }
-        url.addNonEmptyParamPair("sessionid", token.getToken());
+        url.addNonEmptyParamPair("sessionid", session.getToken());
+        */
 
         D1RestClient client = new D1RestClient(true, verbose);
-        client.setHeader("token", token.getToken());
+        // FIXME 
+        //client.setHeader("session", session.getToken());
 
         InputStream is = null;
         try {
@@ -1012,16 +1058,32 @@ public class CNode extends D1Node implements CoordinatingNodeCrud, CoordinatingN
                     "Could not deserialize the node list: "
                     + e.getMessage());
         }
-
     }
 
     @Override
-    public boolean addNodeCapabilities(AuthToken token, Identifier pid, Services capabilities) throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest {
+    public boolean addNodeCapabilities(Session session, NodeReference nodeid, Node node) throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, NotFound {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public Identifier register(AuthToken token, Services capabilities) throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest {
+    public Identifier register(Session session, Node node) throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, IdentifierNotUnique {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+
+    @Override
+    public Log getLogRecords(Session session, Date fromDate, Date toDate, Event event) throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented, InvalidRequest {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+    
+    @Override
+    public boolean registerSystemMetadata(Session session, Identifier pid, SystemMetadata sysmeta) throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, InvalidSystemMetadata {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public Checksum getChecksum(Session session, Identifier pid) throws NotImplemented, ServiceFailure, NotFound, NotAuthorized, InvalidRequest, InvalidToken {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+
 }
