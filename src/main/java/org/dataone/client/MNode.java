@@ -616,7 +616,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 	}
 
 	
-	public boolean setAccess(Session cert, Identifier pid, AccessPolicy accessPolicy) 
+	public boolean setAccessPolicy(Session cert, Identifier pid, AccessPolicy accessPolicy) 
 	throws InvalidToken, ServiceFailure, NotFound, NotAuthorized, 
 	NotImplemented, InvalidRequest 
 	{

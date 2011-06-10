@@ -221,7 +221,7 @@ public class D1Object {
         ar.addSubject(s);
         ar.addPermission(org.dataone.service.types.Permission.READ);
         ap.addAllow(ar);
-        mn.setAccess(token, sysmeta.getIdentifier(), ap);
+        mn.setAccessPolicy(token, sysmeta.getIdentifier(), ap);
     }
     
     /**
