@@ -48,8 +48,11 @@ import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.exceptions.UnsupportedMetadataType;
 import org.dataone.service.exceptions.UnsupportedQueryType;
 import org.dataone.service.exceptions.UnsupportedType;
+import org.dataone.service.types.AccessPolicy;
+import org.dataone.service.types.AccessRule;
 import org.dataone.service.types.Identifier;
 import org.dataone.service.types.Session;
+import org.dataone.service.types.Subject;
 import org.dataone.service.types.SystemMetadata;
 import org.dataone.service.types.util.ServiceTypeUtil;
 import org.jibx.runtime.JiBXException;
@@ -133,6 +136,21 @@ public abstract class D1Node {
     	return this.verbose;
     }
 
+    
+    /**
+     * creates a public session object that can be used as a default
+     * session object if null is passed into a service api method. 
+     * @return 
+     */
+    protected Session createPublicSession() {
+
+    	Session session = new Session();
+    	Subject sub = new Subject();
+    	sub.setValue("public");
+    	session.setSubject(sub);
+    	return session;
+    }
+  
     
 	/**
      * Get the resource with the specified guid.  Used by both the CNode and 
