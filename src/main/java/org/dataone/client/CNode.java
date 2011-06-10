@@ -292,29 +292,17 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
 
         try {
         	if (object == null) {
+        		// object sent is an empty string
         		mpe.addFilePart("object", "");
         	} else {
         		mpe.addFilePart("object", object);
         	}
+        	mpe.addFilePart("sysmeta", sysmeta, SystemMetadata.class);
         } catch (IOException e) {
-        	throw new ServiceFailure("1090", 
-        			"IO Exception creating the filepart for object: "
-        			+ e.getMessage());	
-        }
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try {
-            ServiceTypeUtil.serializeServiceType(SystemMetadata.class, sysmeta, baos);            
-            mpe.addFilePart("sysmeta", baos.toString());
-        } catch (JiBXException e) {
-            throw new ServiceFailure("1090",
-                    "Could not serialize the systemMetadata: "
-                    + e.getMessage());
-        } catch (IOException e) {
-			throw new ServiceFailure("1090", 
-					"IO Exception creating the filepart for sysmeta: "
-					+ e.getMessage());
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (JiBXException e) {
+			throw recastClientSideExceptionToServiceFailure(e);	
 		}
-       
 
         D1RestClient client = new D1RestClient(true, verbose);
         InputStream is = null;
@@ -468,69 +456,7 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
         throw new NotImplemented("4221", "Client does not implement this method.");
     }
 
-    /**
-     * login and get an Session
-     *
-     * @param username
-     * @param password
-     * @return
-     * @throws ServiceFailure
-     *
-    @Override
-    public Session login(String username, String password)
-            throws InvalidCredentials, AuthenticationTimeout, ServiceFailure, NotImplemented, InvalidRequest {
-        // TODO: reassess the exceptions thrown here.  Look at the Authentication interface.
-        // TODO: this method assumes an access control model that is not finalized, refactor when it is
-        String postData = "username=" + username + "&password=" + password;
-        String params = "qformat=xml&op=login";
-        String resource = Constants.RESOURCE_SESSION + "/";
 
-        ResponseData rd = sendRequest(null, resource, Constants.POST, params, null,
-                new ByteArrayInputStream(postData.getBytes()), null);
-        String sessionid = null;
-
-        int code = rd.getCode();
-        if (code != HttpURLConnection.HTTP_OK) { // deal with the error
-            // TODO: detail codes are wrong, and exception is the wrong one too I think
-            throw new ServiceFailure("1000", "Error logging in.");
-        } else {
-            try {
-                // TODO: use IOUtils to get the string, as this code is error prone
-                InputStream is = rd.getContentStream();
-                byte[] b = new byte[1024];
-                int numread = is.read(b, 0, 1024);
-                StringBuffer sb = new StringBuffer();
-                while (numread != -1) {
-                    sb.append(new String(b, 0, numread));
-                    numread = is.read(b, 0, 1024);
-                }
-                String response = sb.toString();
-                //String response = IOUtils.toString(is);
-
-
-                int successIndex = response.indexOf("<sessionId>");
-                if (successIndex != -1) {
-                    sessionid = response.substring(
-                            response.indexOf("<sessionId>")
-                            + "<sessionId>".length(),
-                            response.indexOf("</sessionId>"));
-                } else {
-                    // TODO: wrong exception thrown, wrong detail code?
-                    throw new ServiceFailure("1000", "Error authenticating: "
-                            + response.substring(response.indexOf("<error>")
-                            + "<error>".length(),
-                            response.indexOf("</error>")));
-                }
-            } catch (Exception e) {
-                throw new ServiceFailure("1000",
-                        "Error getting response from metacat: "
-                        + e.getMessage());
-            }
-        }
-
-        return new Session(sessionid);
-    }
-    */
 
     /**
      * set the access perms for a document
@@ -584,22 +510,6 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
         }
 
         return true;
-
-
-
-//    	String params = "guid=" + EncodingUtilities.encodeUrlQuerySegment(id.getValue()) + "&principal=" + principal
-//                + "&permission=" + permission + "&permissionType="
-//                + permissionType + "&permissionOrder=" + permissionOrder
-//                + "&op=setaccess&setsystemmetadata=true";
-//        String resource = Constants.RESOURCE_SESSION + "/";
-//        ResponseData rd = sendRequest(session, resource, Constants.POST, params, null, null, null);
-//        int code = rd.getCode();
-//        if (code != HttpURLConnection.HTTP_OK) {
-//            throw new ServiceFailure("1000", "Error setting acces on document");
-//        }
-//        return true;
-//        // TODO: also set the system metadata to the same perms
-
     }
     */
 
