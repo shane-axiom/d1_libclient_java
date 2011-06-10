@@ -632,7 +632,7 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
     }
 
     @Override
-    public boolean setAccessPolicy(Session session, Identifier pid, AccessPolicy accessPolicy) throws InvalidToken, ServiceFailure, NotFound, NotAuthorized, NotImplemented, InvalidRequest {
+    public boolean setAccessPolicy(Session session, Identifier pid, AccessPolicy accessPolicy) throws ServiceFailure, NotAuthorized, NotImplemented, InvalidRequest {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -1039,12 +1039,12 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
         }
     }
 
-    @Override
+//    @Override
     public boolean addNodeCapabilities(Session session, NodeReference nodeid, Node node) throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, NotFound {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    @Override
+//    @Override
     public Identifier register(Session session, Node node) throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, IdentifierNotUnique {
         throw new UnsupportedOperationException("Not supported yet.");
     }
@@ -1054,7 +1054,7 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
         throw new UnsupportedOperationException("Not supported yet.");
     }
     
-    @Override
+//    @Override
     public boolean registerSystemMetadata(Session session, Identifier pid, SystemMetadata sysmeta) throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, InvalidSystemMetadata {
         throw new UnsupportedOperationException("Not supported yet.");
     }
@@ -1089,8 +1089,8 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
         throw new UnsupportedOperationException("Not supported yet.");
     }
     
-    @Override
-    public SubjectList getSubjectInfo(Session session, Subject subject) throws ServiceFailure, InvalidRequest, NotAuthorized, NotImplemented {
+//    @Override
+    public SubjectList getSubjectInfo(Session session, Subject subject) throws ServiceFailure {
         throw new UnsupportedOperationException("Not supported yet.");
     }
     
