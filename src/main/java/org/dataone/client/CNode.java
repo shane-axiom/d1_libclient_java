@@ -1005,18 +1005,179 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
     }
     
     @Override
-    public boolean verifyAccount(Session session, Subject subject) throws ServiceFailure, NotAuthorized, NotImplemented, InvalidToken, InvalidRequest {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public boolean verifyAccount(Session session, Subject subject) 
+    throws ServiceFailure, NotAuthorized, NotImplemented, InvalidToken, InvalidRequest 
+    {
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_POLICY);
+    	
+    	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
+    	try {
+    		mpe.addFilePart("subject", subject, Subject.class);
+    	} catch (IOException e1) {
+			throw recastClientSideExceptionToServiceFailure(e1);
+		} catch (JiBXException e1) {
+			throw recastClientSideExceptionToServiceFailure(e1);
+		}
+           /* FIXME
+           if (session == null) {
+               session = new Session("public");
+           }
+           url.addNonEmptyParamPair("sessionid", session.getToken());
+           */
+
+		D1RestClient client = new D1RestClient(true, verbose);
+           // FIXME
+           //client.setHeader("session", session.getToken());
+
+		InputStream is = null;
+		try {
+			is = client.doPostRequest(url.getUrl(),mpe);
+		} catch (InvalidCredentials e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (IdentifierNotUnique e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedQueryType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InsufficientResources e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (InvalidSystemMetadata e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (AuthenticationTimeout e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedMetadataType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (NotFound e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (ClientProtocolException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IllegalStateException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IOException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (HttpException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		}
+		return true;
     }
+    
     
     @Override
     public Subject updateAccount(Session session, Person person) throws ServiceFailure, InvalidCredentials, NotImplemented, InvalidRequest {
-        throw new UnsupportedOperationException("Not supported yet.");
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_POLICY);
+    	
+    	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
+    	try {
+    		mpe.addFilePart("person", person, Person.class);
+    	} catch (IOException e1) {
+			throw recastClientSideExceptionToServiceFailure(e1);
+		} catch (JiBXException e1) {
+			throw recastClientSideExceptionToServiceFailure(e1);
+		}
+           /* FIXME
+           if (session == null) {
+               session = new Session("public");
+           }
+           url.addNonEmptyParamPair("sessionid", session.getToken());
+           */
+
+		D1RestClient client = new D1RestClient(true, verbose);
+           // FIXME
+           //client.setHeader("session", session.getToken());
+
+		InputStream is = null;
+		try {
+			is = client.doPutRequest(url.getUrl(),mpe);
+		} catch (NotAuthorized e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (IdentifierNotUnique e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedQueryType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InsufficientResources e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (InvalidSystemMetadata e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (AuthenticationTimeout e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedMetadataType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (InvalidToken e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (NotFound e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (ClientProtocolException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IllegalStateException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IOException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (HttpException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		}
+		return (Subject) deserializeServiceType(Subject.class,is);
     }
     
+    
     @Override
-    public Subject registerAccount(Session session, Person person) throws ServiceFailure, IdentifierNotUnique, InvalidCredentials, NotImplemented, InvalidRequest {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public Subject registerAccount(Session session, Person person) 
+    throws ServiceFailure, IdentifierNotUnique, InvalidCredentials, NotImplemented, InvalidRequest 
+    {
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_POLICY);
+    	
+    	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
+    	try {
+    		mpe.addFilePart("person", person, Person.class);
+    	} catch (IOException e1) {
+			throw recastClientSideExceptionToServiceFailure(e1);
+		} catch (JiBXException e1) {
+			throw recastClientSideExceptionToServiceFailure(e1);
+		}
+           /* FIXME
+           if (session == null) {
+               session = new Session("public");
+           }
+           url.addNonEmptyParamPair("sessionid", session.getToken());
+           */
+
+		D1RestClient client = new D1RestClient(true, verbose);
+           // FIXME
+           //client.setHeader("session", session.getToken());
+
+		InputStream is = null;
+		try {
+			is = client.doPostRequest(url.getUrl(),mpe);
+		} catch (NotAuthorized e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedQueryType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InsufficientResources e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (InvalidSystemMetadata e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (AuthenticationTimeout e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedMetadataType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (InvalidToken e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (NotFound e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (ClientProtocolException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IllegalStateException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IOException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (HttpException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		}
+		return (Subject) deserializeServiceType(Subject.class,is);
     }
     
     @Override
