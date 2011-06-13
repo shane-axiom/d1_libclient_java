@@ -211,12 +211,12 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
     }
 
     @Override
-    public ObjectLocationList resolve(Session session, Identifier guid)
+    public ObjectLocationList resolve(Session session, Identifier pid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
             InvalidRequest, NotImplemented {
 
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_RESOLVE);
-        url.addNextPathElement(guid.getValue());
+        url.addNextPathElement(pid.getValue());
 
         /* FIXME
         if (session == null) {
@@ -263,10 +263,10 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
 
     /**
      * create both a system metadata resource and science metadata resource with
-     * the specified guid
+     * the specified pid
      */
     @Override
-    public Identifier create(Session session, Identifier guid,
+    public Identifier create(Session session, Identifier pid,
             InputStream object, SystemMetadata sysmeta) throws InvalidToken,
             ServiceFailure, NotAuthorized, IdentifierNotUnique,
             UnsupportedType, InsufficientResources, InvalidSystemMetadata,
@@ -274,7 +274,7 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
 
 
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
-        url.addNextPathElement(guid.getValue());
+        url.addNextPathElement(pid.getValue());
         /* FIXME
         if (session != null) {
             url.addNonEmptyParamPair("sessionid", session.getToken());
@@ -334,7 +334,7 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
     }
 
     /**
-     * update a resource with the specified guid.
+     * update a resource with the specified pid.
      */
     public Identifier update(Session session, Identifier pid,
             InputStream object, Identifier newPid, SystemMetadata sysmeta)
@@ -1020,12 +1020,121 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
     }
     
     @Override
-    public boolean setReplicationPolicy(Session session, Identifier pid, ReplicationPolicy policy) throws ServiceFailure, NotAuthorized, NotImplemented, InvalidRequest {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public boolean setReplicationPolicy(Session session, Identifier pid, ReplicationPolicy policy) 
+    throws ServiceFailure, NotAuthorized, NotImplemented, InvalidRequest 
+    {
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_POLICY);
+    	url.addNextPathElement(pid.getValue());
+    	
+    	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
+    	try {
+    		mpe.addFilePart("policy", policy, ReplicationPolicy.class);
+    	} catch (IOException e1) {
+			throw recastClientSideExceptionToServiceFailure(e1);
+		} catch (JiBXException e1) {
+			throw recastClientSideExceptionToServiceFailure(e1);
+		}
+           /* FIXME
+           if (session == null) {
+               session = new Session("public");
+           }
+           url.addNonEmptyParamPair("sessionid", session.getToken());
+           */
+
+		D1RestClient client = new D1RestClient(true, verbose);
+           // FIXME
+           //client.setHeader("session", session.getToken());
+
+		InputStream is = null;
+		try {
+			is = client.doPutRequest(url.getUrl(),mpe);
+		} catch (IdentifierNotUnique e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedQueryType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InsufficientResources e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (InvalidSystemMetadata e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (InvalidCredentials e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (AuthenticationTimeout e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedMetadataType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (InvalidToken e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (NotFound e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (ClientProtocolException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IllegalStateException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IOException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (HttpException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		}
+		return true;
     }
+  
     
     @Override
-    public boolean setReplicationStatus(Session session, Identifier pid, ReplicationStatus status) throws ServiceFailure, NotImplemented, InvalidToken, NotAuthorized, InvalidRequest, NotFound {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public boolean setReplicationStatus(Session session, Identifier pid, ReplicationStatus status) 
+    throws ServiceFailure, NotImplemented, InvalidToken, NotAuthorized, InvalidRequest, NotFound 
+    {
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_NOTIFY);
+    	url.addNextPathElement(pid.getValue());
+    	
+    	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
+    	try {
+    		mpe.addFilePart("status", status, ReplicationStatus.class);
+    	} catch (IOException e1) {
+			throw recastClientSideExceptionToServiceFailure(e1);
+		} catch (JiBXException e1) {
+			throw recastClientSideExceptionToServiceFailure(e1);
+		}
+           /* FIXME
+           if (session == null) {
+               session = new Session("public");
+           }
+           url.addNonEmptyParamPair("sessionid", session.getToken());
+           */
+
+		D1RestClient client = new D1RestClient(true, verbose);
+           // FIXME
+           //client.setHeader("session", session.getToken());
+
+		InputStream is = null;
+		try {
+			is = client.doPostRequest(url.getUrl(),mpe);
+		} catch (IdentifierNotUnique e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedQueryType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InsufficientResources e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (InvalidSystemMetadata e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (InvalidCredentials e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (AuthenticationTimeout e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedMetadataType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (ClientProtocolException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IllegalStateException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IOException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (HttpException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		}
+		return true;
     }
 }
