@@ -207,6 +207,14 @@ public class ObjectFormatCache extends ObjectFormatServiceImpl {
       
     	try {
 	      getCachedList();
+	      objectFormat = getObjectFormatMap().get(fmtidStr);
+	      
+	      if ( objectFormat == null ) {
+	      	throw new NotFound("4848", "The format specified by " + fmtidStr + 
+	        " does not exist at this node.");
+	
+	      }
+
       } catch (InvalidRequest e) {
       	throw new NotFound("4848", "The format specified by " + fmtidStr + 
         " does not exist at this node.");
@@ -223,6 +231,10 @@ public class ObjectFormatCache extends ObjectFormatServiceImpl {
         " does not exist at this node.");
       
       } catch (NotImplemented e) {
+      	throw new NotFound("4848", "The format specified by " + fmtidStr + 
+        " does not exist at this node.");
+      
+      } catch (NullPointerException e) {
       	throw new NotFound("4848", "The format specified by " + fmtidStr + 
         " does not exist at this node.");
       
