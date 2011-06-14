@@ -170,6 +170,18 @@ public class ObjectFormatCache extends ObjectFormatServiceImpl {
   }
   
   /**
+   * List the object formats registered with the object format service.
+   * 
+   * @return objectFormatList - the list of object formats
+   */
+  public ObjectFormatList listFormats() throws InvalidRequest, ServiceFailure, 
+    NotFound, InsufficientResources, NotImplemented {
+    
+		return objectFormatList;
+    
+  }
+  
+  /**
    * Get the object format based on the given identifier.
    * 
    * @param fmtid - the object format identifier
