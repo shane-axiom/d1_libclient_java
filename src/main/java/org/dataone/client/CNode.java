@@ -261,7 +261,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     public Identifier create(Session session, Identifier pid,
     InputStream object, SystemMetadata sysmeta) 
     throws InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique,
-    UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented
+    UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented,
+    InvalidRequest
     {
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
         url.addNextPathElement(pid.getValue());
@@ -302,8 +303,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         } catch (NotFound e) {
             throw new ServiceFailure("1090", e.getClass().getSimpleName() + ": " + e.getDetail_code() + ": " + e.getDescription());
         } catch (InvalidCredentials e) {
-            throw new ServiceFailure("1090", e.getClass().getSimpleName() + ": " + e.getDetail_code() + ": " + e.getDescription());
-        } catch (InvalidRequest e) {
             throw new ServiceFailure("1090", e.getClass().getSimpleName() + ": " + e.getDetail_code() + ": " + e.getDescription());
         } catch (AuthenticationTimeout e) {
             throw new ServiceFailure("1090", e.getClass().getSimpleName() + ": " + e.getDetail_code() + ": " + e.getDescription());
@@ -405,7 +404,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     @Override
     public Identifier reserveIdentifier(Session session, Identifier pid, 
         String scope, String format) throws InvalidToken, ServiceFailure, 
-        NotAuthorized, InvalidRequest, NotImplemented {
+        NotAuthorized, IdentifierNotUnique, InvalidRequest, NotImplemented {
             throw new NotImplemented("4191", "Client does not implement this method.");
     }
 
@@ -436,8 +435,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     */
 
     @Override
-    public boolean assertRelation(Session session, Identifier subjectId,
-            String relationship, Identifier objectId) throws InvalidToken,
+    public boolean assertRelation(Session session, Identifier pidOfSubject,
+            String relationship, Identifier pidOfObject) throws InvalidToken,
             ServiceFailure, NotAuthorized, NotFound, InvalidRequest,
             NotImplemented {
         throw new NotImplemented("4221", "Client does not implement this method.");
@@ -574,7 +573,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     }
 
     @Override
-    public boolean setAccessPolicy(Session session, Identifier pid, AccessPolicy accessPolicy) throws ServiceFailure, NotAuthorized, NotImplemented, InvalidRequest {
+    public boolean setAccessPolicy(Session session, Identifier pid, AccessPolicy accessPolicy)
+    throws InvalidToken, NotFound, NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest
+    {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -1026,7 +1027,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     
     @Override
     public boolean mapIdentity(Session session, Subject subject) 
-    throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented, InvalidRequest
+    throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
+    NotImplemented, InvalidRequest
     {
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING);
     	
@@ -1220,7 +1222,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     
     @Override
     public Subject updateAccount(Session session, Person person) 
-    throws ServiceFailure, InvalidCredentials, NotImplemented, InvalidRequest 
+    throws ServiceFailure, IdentifierNotUnique, InvalidCredentials, NotImplemented, InvalidRequest 
     {
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_POLICY);
     	
@@ -1246,8 +1248,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		try {
 			is = client.doPutRequest(url.getUrl(),mpe);
 		} catch (NotAuthorized e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
-		} catch (IdentifierNotUnique e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (UnsupportedType e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
