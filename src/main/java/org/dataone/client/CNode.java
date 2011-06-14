@@ -19,23 +19,17 @@
  */
 package org.dataone.client;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
 import java.net.URL;
-import java.security.cert.X509Extension;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpressionException;
 
 import org.apache.http.HttpException;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.dataone.cn.batch.utils.TypeMarshaller;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
@@ -43,13 +37,14 @@ import org.dataone.service.Constants;
 import org.dataone.service.D1Url;
 import org.dataone.service.EncodingUtilities;
 import org.dataone.service.NodeListParser;
-import org.dataone.service.cn.CNCore;
-import org.dataone.service.cn.CNRead;
 import org.dataone.service.cn.CNAuthorization;
+import org.dataone.service.cn.CNCore;
 import org.dataone.service.cn.CNIdentity;
+import org.dataone.service.cn.CNRead;
 import org.dataone.service.cn.CNRegister;
 import org.dataone.service.cn.CNReplication;
 import org.dataone.service.exceptions.AuthenticationTimeout;
+import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.IdentifierNotUnique;
 import org.dataone.service.exceptions.InsufficientResources;
 import org.dataone.service.exceptions.InvalidCredentials;
@@ -64,11 +59,9 @@ import org.dataone.service.exceptions.UnsupportedMetadataType;
 import org.dataone.service.exceptions.UnsupportedQueryType;
 import org.dataone.service.exceptions.UnsupportedType;
 import org.dataone.service.types.AccessPolicy;
-import org.dataone.service.types.AuthType;
 import org.dataone.service.types.Checksum;
 import org.dataone.service.types.Event;
 import org.dataone.service.types.Identifier;
-import org.dataone.service.types.IdentifierFormat;
 import org.dataone.service.types.Log;
 import org.dataone.service.types.Node;
 import org.dataone.service.types.NodeList;
@@ -82,12 +75,10 @@ import org.dataone.service.types.Person;
 import org.dataone.service.types.QueryType;
 import org.dataone.service.types.ReplicationPolicy;
 import org.dataone.service.types.ReplicationStatus;
-import org.dataone.service.types.Services;
 import org.dataone.service.types.Session;
 import org.dataone.service.types.Subject;
 import org.dataone.service.types.SubjectList;
 import org.dataone.service.types.SystemMetadata;
-import org.dataone.service.types.util.ServiceTypeUtil;
 import org.jibx.runtime.JiBXException;
 import org.xml.sax.SAXException;
 
@@ -95,7 +86,9 @@ import org.xml.sax.SAXException;
  * CNode represents a DataONE Coordinating Node, and allows calling classes to
  * execute CN services.
  */
-public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplication {
+public class CNode extends D1Node 
+implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplication 
+{
 
     private Map<String, String> nodeMap;
 
@@ -124,34 +117,34 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
             e.printStackTrace();
         }
     }
-
-    public ObjectList search(Session session, QueryType queryType, String paramString)
-            throws NotAuthorized, InvalidRequest,
-            NotImplemented, ServiceFailure, InvalidToken {
+    
+    public ObjectList search(Session session, QueryType queryType, String query)
+    throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest,
+    NotImplemented
+	{
 
         if (session == null) {
             session = new Session();
             session.setSubject(new Subject());
             session.getSubject().setValue("public");
         }
-
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
 
         // set default params, if need be
         String paramAdditions = "";
-        if (!paramString.contains("qt=solr")) {
+        if (!query.contains("qt=solr")) {
             paramAdditions = "qt=solr&";
         }
-        if (!paramString.contains("pageSize=\\d+")) {
+        if (!query.contains("pageSize=\\d+")) {
             paramAdditions += "pageSize=200&";
         }
-        if (!paramString.contains("start=\\d+")) {
+        if (!query.contains("start=\\d+")) {
             paramAdditions += "start=0&";
         }
-        if (!paramString.contains("sessionid=")) {
+        if (!query.contains("sessionid=")) {
             paramAdditions += "sessionid=" + session.getSubject().getValue() + "&";
         }
-        String paramsComplete = paramAdditions + paramString;
+        String paramsComplete = paramAdditions + query;
         // clean up paramsComplete string
         if (paramsComplete.endsWith("&")) {
             paramsComplete = paramsComplete.substring(0, paramsComplete.length() - 1);
@@ -208,10 +201,12 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
         return super.getSystemMetadata(session, pid);
     }
 
+    
     @Override
     public ObjectLocationList resolve(Session session, Identifier pid)
-            throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
-            InvalidRequest, NotImplemented {
+    throws InvalidRequest, InvalidToken, ServiceFailure, NotAuthorized,
+	NotFound, NotImplemented 
+    {
 
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_RESOLVE);
         url.addNextPathElement(pid.getValue());
@@ -264,17 +259,17 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
      */
     @Override
     public Identifier create(Session session, Identifier pid,
-            InputStream object, SystemMetadata sysmeta) throws InvalidToken,
-            ServiceFailure, NotAuthorized, IdentifierNotUnique,
-            UnsupportedType, InsufficientResources, InvalidSystemMetadata,
-            NotImplemented {
-
-
+    InputStream object, SystemMetadata sysmeta) 
+    throws InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique,
+    UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented
+    {
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
         url.addNextPathElement(pid.getValue());
+
         if (session != null) {
             url.addNonEmptyParamPair("sessionid", session.getSubject().getValue());
         }
+
 
         SimpleMultipartEntity mpe = new SimpleMultipartEntity();
 
@@ -331,82 +326,83 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
     /**
      * update a resource with the specified pid.
      */
-    public Identifier update(Session session, Identifier pid,
-            InputStream object, Identifier newPid, SystemMetadata sysmeta)
-            throws InvalidToken, ServiceFailure, NotAuthorized,
-            IdentifierNotUnique, UnsupportedType, InsufficientResources,
-            NotFound, InvalidSystemMetadata, NotImplemented {
-
-
-        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
-        url.addNextPathElement(pid.getValue());
-        if (session != null) {
-            url.addNonEmptyParamPair("sessionid", session.getSubject().getValue());
-        }
-
-        SimpleMultipartEntity mpe = new SimpleMultipartEntity();
-        mpe.addParamPart("newPid",
-                EncodingUtilities.encodeUrlQuerySegment(newPid.getValue()));
-        // Coordinating Nodes must maintain systemmetadata of all object on dataone
-        // however Coordinating nodes do not house Science Data only Science Metadata
-        // Thus, the inputstream for an object may be null
-        // so deal with it here ...
-        // and this is how CNs are different from MNs
-        // because if object is null on an MN, we should throw an exception
-
-        try { 
-        	if (object == null) {
-        		mpe.addFilePart("object", "");
-        	} else {
-        		mpe.addFilePart("object", object);
-        	}
-        } catch (IOException e) {
-        	throw new ServiceFailure("1090", 
-        			"IO Exception creating the filepart for object: "
-        			+ e.getMessage());	
-        }
-        try {
-            mpe.addFilePart("sysmeta", sysmeta, SystemMetadata.class); 
-        } catch (JiBXException e) {
-            throw new ServiceFailure("1090",
-                    "Could not serialize the systemMetadata: "
-                    + e.getMessage());
-        } catch (IOException e) {
-        	throw new ServiceFailure("1090", 
-        			"IO Exception creating the filepart for systemMetadata: "
-        			+ e.getMessage());	
-        }
-
-
-        D1RestClient client = new D1RestClient();
-        InputStream is = null;
-
-        try {
-            is = client.doPutRequest(url.getUrl(), mpe);
-        } catch (NotFound e) {
-            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
-        } catch (InvalidCredentials e) {
-            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
-        } catch (InvalidRequest e) {
-            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
-        } catch (AuthenticationTimeout e) {
-            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
-        } catch (UnsupportedMetadataType e) {
-            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
-		} catch (UnsupportedQueryType e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (ClientProtocolException e) {
-//    		throw new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
-            throw recastClientSideExceptionToServiceFailure(e);
-        } catch (IllegalStateException e) {
-            throw recastClientSideExceptionToServiceFailure(e);
-        } catch (IOException e) {
-            throw recastClientSideExceptionToServiceFailure(e);
-        } catch (HttpException e) {
-            throw recastClientSideExceptionToServiceFailure(e);
-        }
-        return (Identifier) deserializeServiceType(Identifier.class, is);
-    }
+//    public Identifier update(Session session, Identifier pid,
+//            InputStream object, Identifier newPid, SystemMetadata sysmeta)
+//            throws InvalidToken, ServiceFailure, NotAuthorized,
+//            IdentifierNotUnique, UnsupportedType, InsufficientResources,
+//            NotFound, InvalidSystemMetadata, NotImplemented {
+//
+//
+//        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
+//        url.addNextPathElement(pid.getValue());
+//        /* FIXME
+//        if (session != null) {
+//            url.addNonEmptyParamPair("sessionid", session.getToken());
+//        }
+//        */
+//
+//        SimpleMultipartEntity mpe = new SimpleMultipartEntity();
+//        mpe.addParamPart("newPid",
+//                EncodingUtilities.encodeUrlQuerySegment(newPid.getValue()));
+//        // Coordinating Nodes must maintain systemmetadata of all object on dataone
+//        // however Coordinating nodes do not house Science Data only Science Metadata
+//        // Thus, the inputstream for an object may be null
+//        // so deal with it here ...
+//        // and this is how CNs are different from MNs
+//        // because if object is null on an MN, we should throw an exception
+//
+//        try { 
+//        	if (object == null) {
+//        		mpe.addFilePart("object", "");
+//        	} else {
+//        		mpe.addFilePart("object", object);
+//        	}
+//        } catch (IOException e) {
+//        	throw new ServiceFailure("1090", 
+//        			"IO Exception creating the filepart for object: "
+//        			+ e.getMessage());	
+//        }
+//        try {
+//            mpe.addFilePart("sysmeta", sysmeta, SystemMetadata.class); 
+//        } catch (JiBXException e) {
+//            throw new ServiceFailure("1090",
+//                    "Could not serialize the systemMetadata: "
+//                    + e.getMessage());
+//        } catch (IOException e) {
+//        	throw new ServiceFailure("1090", 
+//        			"IO Exception creating the filepart for systemMetadata: "
+//        			+ e.getMessage());	
+//        }
+//
+//
+//        D1RestClient client = new D1RestClient();
+//        InputStream is = null;
+//
+//        try {
+//            is = client.doPutRequest(url.getUrl(), mpe);
+//        } catch (NotFound e) {
+//            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+//        } catch (InvalidCredentials e) {
+//            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+//        } catch (InvalidRequest e) {
+//            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+//        } catch (AuthenticationTimeout e) {
+//            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+//        } catch (UnsupportedMetadataType e) {
+//            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+//		} catch (UnsupportedQueryType e) {
+//			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+//		} catch (ClientProtocolException e) {
+//            throw recastClientSideExceptionToServiceFailure(e);
+//        } catch (IllegalStateException e) {
+//            throw recastClientSideExceptionToServiceFailure(e);
+//        } catch (IOException e) {
+//            throw recastClientSideExceptionToServiceFailure(e);
+//        } catch (HttpException e) {
+//            throw recastClientSideExceptionToServiceFailure(e);
+//        }
+//        return (Identifier) deserializeServiceType(Identifier.class, is);
+//    }
 
     @Override
     public Identifier reserveIdentifier(Session session, Identifier pid, 
@@ -506,9 +502,55 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
     }
     */
 
-    @Override
-    public Identifier setOwner(Session session, Identifier pid, Subject userId) throws InvalidToken, NotAuthorized, NotFound {
-        throw new UnsupportedOperationException("Not supported yet.");
+
+    public Identifier setOwner(Session session, Identifier pid, Subject userId) 
+    throws InvalidToken, ServiceFailure, NotFound, NotAuthorized, NotImplemented, InvalidRequest
+    {
+   	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING);
+    	
+    	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
+    	try {
+    		mpe.addFilePart("pid", pid, Identifier.class);
+    		mpe.addFilePart("userId", userId, Subject.class);
+    	} catch (IOException e1) {
+			throw recastClientSideExceptionToServiceFailure(e1);
+		} catch (JiBXException e1) {
+			throw recastClientSideExceptionToServiceFailure(e1);
+		}
+
+		D1RestClient client = new D1RestClient(true, verbose);
+           // FIXME
+           //client.setHeader("session", session.getToken());
+
+		InputStream is = null;
+		try {
+			is = client.doPutRequest(url.getUrl(),mpe);
+		} catch (InvalidCredentials e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (IdentifierNotUnique e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedQueryType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InsufficientResources e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (InvalidSystemMetadata e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (AuthenticationTimeout e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedMetadataType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (ClientProtocolException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IllegalStateException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IOException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (HttpException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		}
+        return (Identifier) deserializeServiceType(Identifier.class,is);
     }
 
     /* TODO: Remove - unneeded
@@ -984,26 +1026,151 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    
     @Override
-    public boolean mapIdentity(Session session, Subject subject) throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented, InvalidRequest{
-        throw new UnsupportedOperationException("Not supported yet.");
+    public boolean mapIdentity(Session session, Subject subject) 
+    throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented, InvalidRequest
+    {
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING);
+    	
+    	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
+    	try {
+    		mpe.addFilePart("subject", subject, Subject.class);
+    	} catch (IOException e1) {
+			throw recastClientSideExceptionToServiceFailure(e1);
+		} catch (JiBXException e1) {
+			throw recastClientSideExceptionToServiceFailure(e1);
+		}
+
+		D1RestClient client = new D1RestClient(true, verbose);
+           // FIXME
+           //client.setHeader("session", session.getToken());
+
+		InputStream is = null;
+		try {
+			is = client.doPostRequest(url.getUrl(),mpe);
+		} catch (InvalidCredentials e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (IdentifierNotUnique e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedQueryType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InsufficientResources e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (InvalidSystemMetadata e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (AuthenticationTimeout e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedMetadataType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (NotFound e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (ClientProtocolException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IllegalStateException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IOException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (HttpException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		}
+		return true;
     }
 
+    
     @Override
-    public SubjectList listSubjects(Session session, String query, Integer start, Integer count) throws ServiceFailure, InvalidToken, NotAuthorized, NotImplemented {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public SubjectList listSubjects(Session session, String query, Integer start, Integer count) 
+    throws ServiceFailure, InvalidToken, NotAuthorized, NotImplemented 
+    {
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNTS);
+    	url.addNonEmptyParamPair("query", query);
+    	url.addNonEmptyParamPair("start", start);
+    	url.addNonEmptyParamPair("count", count);
+    	
+		D1RestClient client = new D1RestClient(true, verbose);
+           // FIXME
+           //client.setHeader("session", session.getToken());
+
+		InputStream is = null;
+		try {
+			is = client.doGetRequest(url.getUrl());
+		} catch (InvalidRequest e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (InvalidCredentials e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (IdentifierNotUnique e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedQueryType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InsufficientResources e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (InvalidSystemMetadata e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (AuthenticationTimeout e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedMetadataType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (NotFound e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (ClientProtocolException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IllegalStateException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IOException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (HttpException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		}
+		return (SubjectList) deserializeServiceType(SubjectList.class,is);
     }
+
     
 //    @Override
-    public SubjectList getSubjectInfo(Session session, Subject subject) throws ServiceFailure {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public SubjectList getSubjectInfo(Session session, Subject subject) 
+    throws ServiceFailure, InvalidRequest, NotAuthorized, NotImplemented
+    {
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNTS);
+    	url.addNextPathElement(subject.getValue());
+
+		D1RestClient client = new D1RestClient(true, verbose);
+           // FIXME
+           //client.setHeader("session", session.getToken());
+
+		InputStream is = null;
+		try {
+			is = client.doGetRequest(url.getUrl());
+		} catch (ServiceFailure e) {
+			throw e;
+		} catch (InvalidRequest e) {
+			throw e;
+		} catch (NotAuthorized e) {
+			throw e;
+		} catch (NotImplemented e) {
+			throw e;
+		} catch (BaseException e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (ClientProtocolException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IllegalStateException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IOException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (HttpException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		}
+		return (SubjectList) deserializeServiceType(SubjectList.class,is);
     }
+ 
     
     @Override
     public boolean verifyAccount(Session session, Subject subject) 
     throws ServiceFailure, NotAuthorized, NotImplemented, InvalidToken, InvalidRequest 
     {
-    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_POLICY);
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNTS);
     	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
@@ -1058,7 +1225,9 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
     
     
     @Override
-    public Subject updateAccount(Session session, Person person) throws ServiceFailure, InvalidCredentials, NotImplemented, InvalidRequest {
+    public Subject updateAccount(Session session, Person person) 
+    throws ServiceFailure, InvalidCredentials, NotImplemented, InvalidRequest 
+    {
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_POLICY);
     	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
