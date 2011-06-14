@@ -129,11 +129,11 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
             throws NotAuthorized, InvalidRequest,
             NotImplemented, ServiceFailure, InvalidToken {
 
-        /* FIXME
         if (session == null) {
-            session = new Session("public");
+            session = new Session();
+            session.setSubject(new Subject());
+            session.getSubject().setValue("public");
         }
-        */
 
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
 
@@ -149,8 +149,7 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
             paramAdditions += "start=0&";
         }
         if (!paramString.contains("sessionid=")) {
-            // FIXME
-            //paramAdditions += "sessionid=" + session.getToken() + "&";
+            paramAdditions += "sessionid=" + session.getSubject().getValue() + "&";
         }
         String paramsComplete = paramAdditions + paramString;
         // clean up paramsComplete string
@@ -161,8 +160,7 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
         url.addPreEncodedNonEmptyQueryParams(paramsComplete);
 
         D1RestClient client = new D1RestClient(true, verbose);
-        // FIXME
-        //client.setHeader("session", session.getToken());
+        client.setHeader("session", session.getSubject().getValue());
 
         InputStream is = null;
         try {
@@ -218,16 +216,15 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_RESOLVE);
         url.addNextPathElement(pid.getValue());
 
-        /* FIXME
         if (session == null) {
-            session = new Session("public");
+            session = new Session();
+            session.setSubject(new Subject());
+            session.getSubject().setValue("public");
         }
-        url.addNonEmptyParamPair("sessionid", session.getToken());
-        */
+        url.addNonEmptyParamPair("sessionid", session.getSubject().getValue());
 
         D1RestClient client = new D1RestClient(true, verbose);
-        // FIXME
-        //client.setHeader("session", session.getToken());
+        client.setHeader("session", session.getSubject().getValue());
 
         InputStream is = null;
         try {
@@ -275,11 +272,9 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
 
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
         url.addNextPathElement(pid.getValue());
-        /* FIXME
         if (session != null) {
-            url.addNonEmptyParamPair("sessionid", session.getToken());
+            url.addNonEmptyParamPair("sessionid", session.getSubject().getValue());
         }
-        */
 
         SimpleMultipartEntity mpe = new SimpleMultipartEntity();
 
@@ -345,11 +340,9 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
 
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
         url.addNextPathElement(pid.getValue());
-        /* FIXME
         if (session != null) {
-            url.addNonEmptyParamPair("sessionid", session.getToken());
+            url.addNonEmptyParamPair("sessionid", session.getSubject().getValue());
         }
-        */
 
         SimpleMultipartEntity mpe = new SimpleMultipartEntity();
         mpe.addParamPart("newPid",
@@ -485,15 +478,15 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
         url.addNonEmptyParamPair("setsystemmetadata", "true");
 
 
-        //FIXME
-        //if (session == null) {
-        //    session = new Session("public");
-        //}
-        //url.addNonEmptyParamPair("sessionid", session.getToken());
+        if (session == null) {
+            session = new Session();
+            session.setSubject(new Subject());
+            session.getSubject().setValue("public");
+        }
+        url.addNonEmptyParamPair("sessionid", session.getSubject().getValue());
 
         RestClient client = new RestClient();
-        // FIXME
-        //client.setHeader("session", session.getToken());
+        client.setHeader("session", session.getSubject().getValue());
 
         HttpResponse hr = null;
         try {
@@ -894,14 +887,16 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
 
         /* FIXME
         if (session == null) {
-            session = new Session("public");
+            session = new Session();
+            session.setSubject(new Subject());
+            session.getSubject().setValue("public");
         }
-        url.addNonEmptyParamPair("sessionid", session.getToken());
+        url.addNonEmptyParamPair("sessionid", session.getSubject().getValue());
         */
 
         D1RestClient client = new D1RestClient(true, verbose);
-        // FIXME 
-        //client.setHeader("session", session.getToken());
+        // FIXME
+        //client.setHeader("session", session.getSubject().getValue());
 
         InputStream is = null;
         try {
@@ -995,7 +990,7 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
     }
 
     @Override
-    public SubjectList listSubjects(Session session, String query, int start, int count) throws ServiceFailure, InvalidToken, NotAuthorized, NotImplemented {
+    public SubjectList listSubjects(Session session, String query, Integer start, Integer count) throws ServiceFailure, InvalidToken, NotAuthorized, NotImplemented {
         throw new UnsupportedOperationException("Not supported yet.");
     }
     
@@ -1018,16 +1013,15 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
 		} catch (JiBXException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
-           /* FIXME
-           if (session == null) {
-               session = new Session("public");
-           }
-           url.addNonEmptyParamPair("sessionid", session.getToken());
-           */
+        if (session == null) {
+            session = new Session();
+            session.setSubject(new Subject());
+            session.getSubject().setValue("public");
+        }
+        url.addNonEmptyParamPair("sessionid", session.getSubject().getValue());
 
-		D1RestClient client = new D1RestClient(true, verbose);
-           // FIXME
-           //client.setHeader("session", session.getToken());
+        D1RestClient client = new D1RestClient(true, verbose);
+        client.setHeader("session", session.getSubject().getValue());
 
 		InputStream is = null;
 		try {
@@ -1075,16 +1069,15 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
 		} catch (JiBXException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
-           /* FIXME
-           if (session == null) {
-               session = new Session("public");
-           }
-           url.addNonEmptyParamPair("sessionid", session.getToken());
-           */
+        if (session == null) {
+            session = new Session();
+            session.setSubject(new Subject());
+            session.getSubject().setValue("public");
+        }
+        url.addNonEmptyParamPair("sessionid", session.getSubject().getValue());
 
 		D1RestClient client = new D1RestClient(true, verbose);
-           // FIXME
-           //client.setHeader("session", session.getToken());
+        client.setHeader("session", session.getSubject().getValue());
 
 		InputStream is = null;
 		try {
@@ -1136,16 +1129,15 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
 		} catch (JiBXException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
-           /* FIXME
-           if (session == null) {
-               session = new Session("public");
-           }
-           url.addNonEmptyParamPair("sessionid", session.getToken());
-           */
+        if (session == null) {
+            session = new Session();
+            session.setSubject(new Subject());
+            session.getSubject().setValue("public");
+        }
+        url.addNonEmptyParamPair("sessionid", session.getSubject().getValue());
 
 		D1RestClient client = new D1RestClient(true, verbose);
-           // FIXME
-           //client.setHeader("session", session.getToken());
+        client.setHeader("session", session.getSubject().getValue());
 
 		InputStream is = null;
 		try {
@@ -1195,16 +1187,15 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
 		} catch (JiBXException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
-           /* FIXME
-           if (session == null) {
-               session = new Session("public");
-           }
-           url.addNonEmptyParamPair("sessionid", session.getToken());
-           */
+        if (session == null) {
+            session = new Session();
+            session.setSubject(new Subject());
+            session.getSubject().setValue("public");
+        }
+        url.addNonEmptyParamPair("sessionid", session.getSubject().getValue());
 
 		D1RestClient client = new D1RestClient(true, verbose);
-           // FIXME
-           //client.setHeader("session", session.getToken());
+        client.setHeader("session", session.getSubject().getValue());
 
 		InputStream is = null;
 		try {
@@ -1257,16 +1248,15 @@ public class CNode extends D1Node implements CNCore, CNRead, CNAuthorization, CN
 		} catch (JiBXException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
-           /* FIXME
-           if (session == null) {
-               session = new Session("public");
-           }
-           url.addNonEmptyParamPair("sessionid", session.getToken());
-           */
+        if (session == null) {
+            session = new Session();
+            session.setSubject(new Subject());
+            session.getSubject().setValue("public");
+        }
+        url.addNonEmptyParamPair("sessionid", session.getSubject().getValue());
 
 		D1RestClient client = new D1RestClient(true, verbose);
-           // FIXME
-           //client.setHeader("session", session.getToken());
+        client.setHeader("session", session.getSubject().getValue());
 
 		InputStream is = null;
 		try {
