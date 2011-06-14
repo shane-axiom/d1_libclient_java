@@ -335,11 +335,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 //
 //        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
 //        url.addNextPathElement(pid.getValue());
-//        /* FIXME
 //        if (session != null) {
-//            url.addNonEmptyParamPair("sessionid", session.getToken());
+//            url.addNonEmptyParamPair("sessionid", session.getSubject().getValue());
 //        }
-//        */
 //
 //        SimpleMultipartEntity mpe = new SimpleMultipartEntity();
 //        mpe.addParamPart("newPid",
@@ -519,8 +517,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		}
 
 		D1RestClient client = new D1RestClient(true, verbose);
-           // FIXME
-           //client.setHeader("session", session.getToken());
+        client.setHeader("session", session.getSubject().getValue());
 
 		InputStream is = null;
 		try {
@@ -1043,8 +1040,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		}
 
 		D1RestClient client = new D1RestClient(true, verbose);
-           // FIXME
-           //client.setHeader("session", session.getToken());
+        client.setHeader("session", session.getSubject().getValue());
 
 		InputStream is = null;
 		try {
@@ -1090,8 +1086,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	url.addNonEmptyParamPair("count", count);
     	
 		D1RestClient client = new D1RestClient(true, verbose);
-           // FIXME
-           //client.setHeader("session", session.getToken());
+        client.setHeader("session", session.getSubject().getValue());
 
 		InputStream is = null;
 		try {
@@ -1137,8 +1132,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	url.addNextPathElement(subject.getValue());
 
 		D1RestClient client = new D1RestClient(true, verbose);
-           // FIXME
-           //client.setHeader("session", session.getToken());
+        client.setHeader("session", session.getSubject().getValue());
 
 		InputStream is = null;
 		try {
