@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 import java.security.cert.X509Certificate;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class CertificateManagerTest {
@@ -26,6 +27,7 @@ public class CertificateManagerTest {
         assertTrue(true);
     }
     
+    @Ignore
     @Test
     public void testCertificateManager() {
         
@@ -48,6 +50,7 @@ public class CertificateManagerTest {
         assertTrue(valid);
     }
     
+    @Ignore
     @Test
     public void testIncorrectCA() {
         
@@ -71,6 +74,7 @@ public class CertificateManagerTest {
         assertFalse(valid);
     }
     
+    @Ignore
     @Test
     public void testPK12Loading() {
         
