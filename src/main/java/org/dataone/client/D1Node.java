@@ -265,7 +265,7 @@ public abstract class D1Node {
      * @param e
      * @return
      */
-    protected ServiceFailure recastClientSideExceptionToServiceFailure(Exception e) {
+    protected static ServiceFailure recastClientSideExceptionToServiceFailure(Exception e) {
     	ServiceFailure sfe = new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
 		sfe.setStackTrace(e.getStackTrace());
     	return sfe;
@@ -434,6 +434,7 @@ public abstract class D1Node {
 	 * @param is
 	 *            the stream to deserialize from
 	 * @throws ServiceFailure 
+
 
 	 */
 	@SuppressWarnings("rawtypes")

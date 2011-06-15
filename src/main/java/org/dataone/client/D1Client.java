@@ -22,6 +22,10 @@
 
 package org.dataone.client;
 
+import org.dataone.service.exceptions.NotImplemented;
+import org.dataone.service.exceptions.ServiceFailure;
+import org.dataone.service.types.NodeReference;
+
 /**
  * The D1Client class represents a client-side implementation of the DataONE
  * Service API. The class exposes the DataONE APIs as client methods, dispatches
@@ -48,6 +52,8 @@ public class D1Client {
     
 	/**
 	 * Get the client instance of the Coordinating Node object for calling Coordinating Node services.
+	 * By default returns the production context CN.  Instantiate a D1Client with different CN url to
+	 * use different contexts.  
 	 * 
      * @return the cn
      */
@@ -64,6 +70,28 @@ public class D1Client {
      * @return the mn at a particular URL
      */
     public static MNode getMN(String mnBaseUrl) {
+        MNode mn = new MNode( mnBaseUrl);
+        return mn;
+    }
+    
+    
+    /**
+     * Construct and return a Member Node using the nodeReference
+     * for the member node.  D1Client's cn instance will look up the
+     * member node's baseURL from the passed in nodeReference
+     * 
+     * @param nodeRef
+     * @return
+     * @throws ServiceFailure
+     */
+    public static MNode getMN(NodeReference nodeRef) throws ServiceFailure {
+    	CNode cn = getCN();
+    	String mnBaseUrl = null;
+		try {
+			mnBaseUrl = cn.lookupNodeBaseUrl(nodeRef.getValue());
+		} catch (NotImplemented e) {
+			D1Node.recastClientSideExceptionToServiceFailure(e);
+		}
         MNode mn = new MNode(mnBaseUrl);
         return mn;
     }

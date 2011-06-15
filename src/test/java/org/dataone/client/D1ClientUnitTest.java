@@ -29,6 +29,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.dataone.service.exceptions.InvalidRequest;
+import org.dataone.service.exceptions.NotImplemented;
+import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.types.Identifier;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -63,7 +65,7 @@ public class D1ClientUnitTest  {
 
     @Ignore("once we have a mock HttpClient client to test against, add this back in. Currently depends on external resource (cn-dev)")
     @Test
-    public void testNodeMap() {
+    public void testNodeMap() throws ServiceFailure, NotImplemented {
         printHeader("testNodeMap");
         D1Client d1 = new D1Client(TEST_CN_URL);
         CNode cn = D1Client.getCN();

@@ -90,7 +90,8 @@ public class CNode extends D1Node
 implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplication 
 {
 
-    private Map<String, String> nodeMap;
+    private Map<String, String> nodeId2URLMap;
+//    private Map<String, String> nodeId2NameMap;
 
     /**
      * Construct a Coordinating Node, passing in the base url for node services. The CN
@@ -101,21 +102,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
      */
     public CNode(String nodeBaseServiceUrl) {
         super(nodeBaseServiceUrl);
-        try {
-            initializeNodeMap();
-        } catch (XPathExpressionException e) {
-            nodeMap = new HashMap<String, String>();
-            e.printStackTrace();
-        } catch (IOException e) {
-            nodeMap = new HashMap<String, String>();
-            e.printStackTrace();
-        } catch (SAXException e) {
-            nodeMap = new HashMap<String, String>();
-            e.printStackTrace();
-        } catch (ParserConfigurationException e) {
-            nodeMap = new HashMap<String, String>();
-            e.printStackTrace();
-        }
     }
     
     public ObjectList search(Session session, QueryType queryType, String query)
@@ -322,84 +308,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         return (Identifier) deserializeServiceType(Identifier.class, is);
     }
 
-    /**
-     * update a resource with the specified pid.
-     */
-//    public Identifier update(Session session, Identifier pid,
-//            InputStream object, Identifier newPid, SystemMetadata sysmeta)
-//            throws InvalidToken, ServiceFailure, NotAuthorized,
-//            IdentifierNotUnique, UnsupportedType, InsufficientResources,
-//            NotFound, InvalidSystemMetadata, NotImplemented {
-//
-//
-//        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
-//        url.addNextPathElement(pid.getValue());
-//        if (session != null) {
-//            url.addNonEmptyParamPair("sessionid", session.getSubject().getValue());
-//        }
-//
-//        SimpleMultipartEntity mpe = new SimpleMultipartEntity();
-//        mpe.addParamPart("newPid",
-//                EncodingUtilities.encodeUrlQuerySegment(newPid.getValue()));
-//        // Coordinating Nodes must maintain systemmetadata of all object on dataone
-//        // however Coordinating nodes do not house Science Data only Science Metadata
-//        // Thus, the inputstream for an object may be null
-//        // so deal with it here ...
-//        // and this is how CNs are different from MNs
-//        // because if object is null on an MN, we should throw an exception
-//
-//        try { 
-//        	if (object == null) {
-//        		mpe.addFilePart("object", "");
-//        	} else {
-//        		mpe.addFilePart("object", object);
-//        	}
-//        } catch (IOException e) {
-//        	throw new ServiceFailure("1090", 
-//        			"IO Exception creating the filepart for object: "
-//        			+ e.getMessage());	
-//        }
-//        try {
-//            mpe.addFilePart("sysmeta", sysmeta, SystemMetadata.class); 
-//        } catch (JiBXException e) {
-//            throw new ServiceFailure("1090",
-//                    "Could not serialize the systemMetadata: "
-//                    + e.getMessage());
-//        } catch (IOException e) {
-//        	throw new ServiceFailure("1090", 
-//        			"IO Exception creating the filepart for systemMetadata: "
-//        			+ e.getMessage());	
-//        }
-//
-//
-//        D1RestClient client = new D1RestClient();
-//        InputStream is = null;
-//
-//        try {
-//            is = client.doPutRequest(url.getUrl(), mpe);
-//        } catch (NotFound e) {
-//            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
-//        } catch (InvalidCredentials e) {
-//            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
-//        } catch (InvalidRequest e) {
-//            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
-//        } catch (AuthenticationTimeout e) {
-//            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
-//        } catch (UnsupportedMetadataType e) {
-//            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
-//		} catch (UnsupportedQueryType e) {
-//			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-//		} catch (ClientProtocolException e) {
-//            throw recastClientSideExceptionToServiceFailure(e);
-//        } catch (IllegalStateException e) {
-//            throw recastClientSideExceptionToServiceFailure(e);
-//        } catch (IOException e) {
-//            throw recastClientSideExceptionToServiceFailure(e);
-//        } catch (HttpException e) {
-//            throw recastClientSideExceptionToServiceFailure(e);
-//        }
-//        return (Identifier) deserializeServiceType(Identifier.class, is);
-//    }
+
 
     @Override
     public Identifier reserveIdentifier(Session session, Identifier pid, 
@@ -408,6 +317,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
             throw new NotImplemented("4191", "Client does not implement this method.");
     }
 
+
     @Override
     public boolean assertRelation(Session session, Identifier pidOfSubject,
             String relationship, Identifier pidOfObject) throws InvalidToken,
@@ -415,63 +325,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
             NotImplemented {
         throw new NotImplemented("4221", "Client does not implement this method.");
     }
-
-
-
-    /**
-     * set the access perms for a document
-     *
-     * @param session
-     * @param id
-     * @param principal
-     * @param permission
-     * @param permissionType
-     * @param permissionOrder
-     *
-    @Override
-    public boolean setAccess(Session session, Identifier id, String principal,
-            String permission, String permissionType, String permissionOrder)
-            throws InvalidToken, ServiceFailure, NotFound, NotAuthorized, NotImplemented, InvalidRequest {
-        // TODO: this method assumes an access control model that is not finalized, refactor when it is
-
-        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_SESSION);
-
-        url.addNonEmptyParamPair("guid", id.getValue());
-        url.addNonEmptyParamPair("principal", principal);
-        url.addNonEmptyParamPair("permission", permission);
-        url.addNonEmptyParamPair("permissionType", permissionType);
-        url.addNonEmptyParamPair("permissionOrder", permissionOrder);
-        url.addNonEmptyParamPair("op", "setaccess");
-        url.addNonEmptyParamPair("setsystemmetadata", "true");
-
-
-        if (session == null) {
-            session = new Session();
-            session.setSubject(new Subject());
-            session.getSubject().setValue("public");
-        }
-        url.addNonEmptyParamPair("sessionid", session.getSubject().getValue());
-
-        RestClient client = new RestClient();
-        client.setHeader("session", session.getSubject().getValue());
-
-        HttpResponse hr = null;
-        try {
-            hr = client.doPostRequest(url.getUrl(), null);
-            int statusCode = hr.getStatusLine().getStatusCode();
-
-            if (statusCode != HttpURLConnection.HTTP_OK) {
-                throw new ServiceFailure("1000", "Error setting access on document");
-            }
-        } catch (ClientProtocolException e) {
-            throw recastClientSideExceptionToServiceFailure(e);
-        } catch (IOException e) {
-            throw recastClientSideExceptionToServiceFailure(e);
-        }
-
-        return true;
-    }
-    */
 
 
     public Identifier setOwner(Session session, Identifier pid, Subject userId) 
@@ -523,16 +376,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         return (Identifier) deserializeServiceType(Identifier.class,is);
     }
 
-    /**
-     * deserialize an InputStream to an ObjectLocationList object
-     * @param is
-     * @return
-     * @throws ServiceFailure 
-     */
-    protected ObjectLocationList deserializeResolve(InputStream is)
-            throws ServiceFailure {
-        return (ObjectLocationList) deserializeServiceType(ObjectLocationList.class, is);
-    }
 
     @Override
     public boolean isAuthorized(Session session, Identifier pid, Event operation) throws ServiceFailure, InvalidToken, NotFound, NotAuthorized, NotImplemented, InvalidRequest {
@@ -553,53 +396,92 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
     /**
      * Find the base URL for a Node based on the Node's identifier as it was registered with the
-     * Coordinating Node.
+     * Coordinating Node. 
      * @param nodeId the identifier of the node to look up
      * @return the base URL of the node's service endpoints
+     * @throws ServiceFailure 
+     * @throws NotImplemented 
      */
-    public String lookupNodeBaseUrl(String nodeId) {
-        String nodeBaseUrl = nodeMap.get(nodeId);
-        return nodeBaseUrl;
+    public String lookupNodeBaseUrl(String nodeId) throws ServiceFailure, NotImplemented {
+    	
+    	// prevents null pointer exception from being thrown at the map get(nodeId) call
+    	if (nodeId == null) {
+    		nodeId = "";
+    	}
+    	String url = null;
+    	if (nodeId2URLMap == null) {
+    		initializeNodeMap();           
+    		url = nodeId2URLMap.get(nodeId);
+    	} else {
+    		url = nodeId2URLMap.get(nodeId);
+    		if (url == null) {
+    			// refresh the nodeMap, maybe that will help.
+    			initializeNodeMap();
+    			url = nodeId2URLMap.get(nodeId);
+    		}
+    	}
+        return url;
     }
+    
+    
+//    /**
+//     * Find the human readable name for a Node based on the Node's identifier as it was registered with the
+//     * Coordinating Node.
+//     * @param nodeId the identifier of the node to look up
+//     * @return the human readable name for the node
+//     * @throws ServiceFailure 
+//     */
+//    public String lookupNodeName(String nodeId) throws ServiceFailure {
+//    	if (nodeId2URLMap == null) {
+//    		initializeNodeMap();            
+//    	}
+//    	String name = nodeId2NameMap.get(nodeId);
+//        return name;
+//    }
 
     /**
      * Find the node identifier for a Node based on the base URL that is used to access its services
-     * by looing up the registration for the node at the Coordinating Node.
+     * by looking up the registration for the node at the Coordinating Node.
      * @param nodeBaseUrl the base url for Node service access
      * @return the identifier of the Node
      */
     public String lookupNodeId(String nodeBaseUrl) {
         String nodeId = "";
-        for (String key : nodeMap.keySet()) {
-            if (nodeBaseUrl.equals(nodeMap.get(key))) {
+        for (String key : nodeId2URLMap.keySet()) {
+            if (nodeBaseUrl.equals(nodeId2URLMap.get(key))) {
                 // We have a match, so record it and break
                 nodeId = key;
                 break;
             }
         }
-
         return nodeId;
     }
 
     /**
-     * Initialize the map of nodes (paids of NodeId/NodeUrl) by getting the map from the CN
-     * and parsing the XML, storing the node information in the nodeMap map. These values
-     * are used later to look up a node's URL based on its ID, or its ID based on its URL.
+     * Initialize the map of nodes (paids of NodeId/NodeUrl) by doing a listNodes() call
+     * and mapping baseURLs to the Identifiers.  These values are used later to
+     * look up a node's URL based on its ID, or its ID based on its URL.
+     * @throws ServiceFailure 
+     * @throws NotImplemented 
      * @throws IOException
      * @throws ParserConfigurationException
      * @throws SAXException
      * @throws XPathExpressionException
      */
-    private void initializeNodeMap() throws IOException, XPathExpressionException, SAXException, ParserConfigurationException {
-        StringBuffer cnUrl = new StringBuffer(this.getNodeBaseServiceUrl());
-        if (!cnUrl.toString().endsWith("/")) {
-            cnUrl.append("/");
-        }
-        cnUrl.append("node");
-        URL url;
-        url = new URL(cnUrl.toString());
-        InputStream is = url.openStream();
-        nodeMap = NodeListParser.parseNodeListFile(is);
+    private void initializeNodeMap() throws ServiceFailure, NotImplemented
+    {
+    	try {
+			InputStream inputStream = fetchNodeList();   		
+    		nodeId2URLMap = NodeListParser.parseNodeListFile(inputStream,null,false);
+		} catch (XPathExpressionException e) {
+			recastClientSideExceptionToServiceFailure(e);
+		} catch (SAXException e) {
+			recastClientSideExceptionToServiceFailure(e);
+		} catch (IOException e) {
+			recastClientSideExceptionToServiceFailure(e);
+		} catch (ParserConfigurationException e) {
+			recastClientSideExceptionToServiceFailure(e);
+		}
     }
     
     /**
@@ -847,6 +729,14 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     
     @Override
     public NodeList listNodes() throws NotImplemented, ServiceFailure {
+    	// the actual call is delegated to fetchNodeList, because the call is also used
+    	// in the context of initializeNodeMap(), which needs the input stream
+    	InputStream is = fetchNodeList();
+    	return (NodeList) deserializeServiceType(NodeList.class, is);
+    }
+    
+    
+    private InputStream fetchNodeList() throws NotImplemented, ServiceFailure {
 
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_NODE);
 
@@ -888,14 +778,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         } catch (HttpException e) {
             throw recastClientSideExceptionToServiceFailure(e);
         }
-
-        try {
-            return TypeMarshaller.unmarshalTypeFromStream(NodeList.class, is);
-        } catch (Exception e) {
-            throw new ServiceFailure("4801",
-                    "Could not deserialize the node list: "
-                    + e.getMessage());
-        }
+        return is;       
     }
 
 //    @Override
