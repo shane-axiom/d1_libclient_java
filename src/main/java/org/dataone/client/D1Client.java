@@ -90,7 +90,7 @@ public class D1Client {
 		try {
 			mnBaseUrl = cn.lookupNodeBaseUrl(nodeRef.getValue());
 		} catch (NotImplemented e) {
-			D1Node.recastClientSideExceptionToServiceFailure(e);
+			throw D1Node.recastClientSideExceptionToServiceFailure(e);
 		}
         MNode mn = new MNode(mnBaseUrl);
         return mn;
