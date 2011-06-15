@@ -24,14 +24,17 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-
 import java.util.Arrays;
 import java.util.List;
 
+import org.dataone.client.auth.CertificateManager;
 import org.dataone.service.exceptions.InvalidRequest;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.types.Identifier;
+import org.dataone.service.types.Session;
+import org.dataone.service.types.Subject;
+import org.dataone.service.types.SubjectList;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -77,6 +80,23 @@ public class D1ClientUnitTest  {
         assertTrue(registeredUrl != null);
         System.out.println("Found nodeUrl = " + registeredUrl);
         assertEquals(TEST_CN_URL, registeredUrl);
+    }
+    
+    @Test
+    public void testListSubjects() {
+        printHeader("testListSubjects");
+        D1Client d1 = new D1Client("https://nceas-macbook07.msi.ucsb.edu:8443/cn/");
+        CNode cn = D1Client.getCN();
+        SubjectList subjects = null;
+        Session session = new Session();
+        session.setSubject(new Subject());
+		try {
+			subjects = cn.listSubjects(session, null, 0, 0);
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail(e.getMessage());
+		} 
+        assertTrue(subjects != null);
     }
 
     @Test
