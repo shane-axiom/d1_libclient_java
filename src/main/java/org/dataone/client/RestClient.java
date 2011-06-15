@@ -166,6 +166,15 @@ public class RestClient {
 		return doRequestNoBody(url,Constants.DELETE);
 	}
 	
+	/**
+	 * send a body-containing Delete request to the resource and get the response
+     * @throws IOException 
+     * @throws ClientProtocolException 
+	 */
+
+	public HttpResponse doDeleteRequest(String url, MultipartEntity mpe) throws ClientProtocolException, IOException {
+		return doRequestMMBody(url,Constants.DELETE, mpe);
+	}
 	
     /**
 	 * send a POST request to the resource and get the response
