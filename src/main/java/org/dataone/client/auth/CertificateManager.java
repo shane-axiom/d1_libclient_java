@@ -277,37 +277,34 @@ public class CertificateManager {
             }
         }
         
-        // context-based?
-        boolean useContext = true;
-        if (useContext) {
-            SSLContext ctx = SSLContext.getInstance("TLS");
-            
-            // use a very liberal trust manager for trusting the server
-            X509TrustManager tm = new X509TrustManager() {
-	            public void checkClientTrusted(X509Certificate[] xcs, String string) throws CertificateException {
-	            	System.out.println("checkClientTrusted - " + string);
-	            }
-	            public void checkServerTrusted(X509Certificate[] xcs, String string) throws CertificateException {
-	            	System.out.println("checkServerTrusted - " + string);
-	            }
-	            public X509Certificate[] getAcceptedIssuers() {
-	            	System.out.println("getAcceptedIssuers");
-	            	return null;
-	            }
-            };
-            
-            // specify the client key manager
-            KeyManager[] keyManagers = null;
-            KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-            keyManagerFactory.init(keyStore, keyStorePassword.toCharArray());
-            keyManagers = keyManagerFactory.getKeyManagers();
-            
-            // initialize the context
-            ctx.init(keyManagers, new TrustManager[]{tm}, new SecureRandom());
-            socketFactory = new SSLSocketFactory(ctx);
-        } else {
-            socketFactory = new SSLSocketFactory(keyStore, keyStorePassword, keyStore);
-        }
+        // create SSL context
+        SSLContext ctx = SSLContext.getInstance("TLS");
+        
+        // use a very liberal trust manager for trusting the server
+        // TODO: check server trust policy
+        X509TrustManager tm = new X509TrustManager() {
+            public void checkClientTrusted(X509Certificate[] xcs, String string) throws CertificateException {
+            	System.out.println("checkClientTrusted - " + string);
+            }
+            public void checkServerTrusted(X509Certificate[] xcs, String string) throws CertificateException {
+            	System.out.println("checkServerTrusted - " + string);
+            }
+            public X509Certificate[] getAcceptedIssuers() {
+            	System.out.println("getAcceptedIssuers");
+            	return null;
+            }
+        };
+        
+        // specify the client key manager
+        KeyManager[] keyManagers = null;
+        KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        keyManagerFactory.init(keyStore, keyStorePassword.toCharArray());
+        keyManagers = keyManagerFactory.getKeyManagers();
+        
+        // initialize the context
+        ctx.init(keyManagers, new TrustManager[]{tm}, new SecureRandom());
+        socketFactory = new SSLSocketFactory(ctx);
+        
         socketFactory.setHostnameVerifier(SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
         
         return socketFactory;
