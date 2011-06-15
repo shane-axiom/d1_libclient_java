@@ -408,32 +408,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
             throw new NotImplemented("4191", "Client does not implement this method.");
     }
 
-    /* TODO: Remove
-    @Override
-    public Identifier reserveIdentifier(Session session, String scope,
-            IdentifierFormat format) throws InvalidToken, ServiceFailure,
-            NotAuthorized, InvalidRequest, NotImplemented {
-        throw new NotImplemented("4191", "Client does not implement this method.");
-    }
-    */
-
-    /* TODO: Remove
-    @Override
-    public Identifier reserveIdentifier(Session session, String scope)
-            throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest,
-            NotImplemented {
-        throw new NotImplemented("4191", "Client does not implement this method.");
-    }
-    */
-
-    /* TODO: Remove
-    @Override
-    public Identifier reserveIdentifier(Session session) throws InvalidToken,
-            ServiceFailure, NotAuthorized, InvalidRequest, NotImplemented {
-        throw new NotImplemented("4191", "Client does not implement this method.");
-    }
-    */
-
     @Override
     public boolean assertRelation(Session session, Identifier pidOfSubject,
             String relationship, Identifier pidOfObject) throws InvalidToken,
@@ -549,13 +523,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         return (Identifier) deserializeServiceType(Identifier.class,is);
     }
 
-    /* TODO: Remove - unneeded
-    @Override
-    public Subject newAccount(String username, String password) throws IdentifierNotUnique, InvalidCredentials {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-    */
-
     /**
      * deserialize an InputStream to an ObjectLocationList object
      * @param is
@@ -579,52 +546,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    /* TODO: Remove - unneeded
-    @Override
-    public Session login(String user, String password, AuthType type) throws InvalidCredentials, AuthenticationTimeout, NotImplemented, InvalidRequest, ServiceFailure {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-    */
-
-    /* TODO: Remove - unneeded
-    @Override
-    public Session getSession(X509Extension cert) throws InvalidCredentials, AuthenticationTimeout, ServiceFailure, NotImplemented, InvalidRequest {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-    */
-
-    /* TODO: Remove - unneeded
-    @Override
-    public Subject newAccount(String username, String password, AuthType type) throws ServiceFailure, IdentifierNotUnique, InvalidCredentials, NotImplemented, InvalidRequest {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-    */
-
-    /* TODO: Remove - unneeded
-    @Override
-    public boolean verifyToken(Session session) throws ServiceFailure, NotAuthorized, NotImplemented, InvalidToken, InvalidRequest {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-    */
-
-    /* TODO: Remove - unneeded
-    @Override
-    public boolean mapIdentity(Session session1, Session session2) throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented, InvalidRequest {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-    */
-
     @Override
     public boolean createGroup(Session session, Subject groupName) throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented, InvalidRequest, IdentifierNotUnique {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-
-    /* TODO: Remove - unneeded
-    @Override
-    public Identifier createGroup(Session session, Identifier groupName, List<Identifier> members) throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented, InvalidRequest {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-    */
 
     /**
      * Find the base URL for a Node based on the Node's identifier as it was registered with the
@@ -925,18 +850,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_NODE);
 
-        /* FIXME
-        if (session == null) {
-            session = new Session();
-            session.setSubject(new Subject());
-            session.getSubject().setValue("public");
-        }
-        url.addNonEmptyParamPair("sessionid", session.getSubject().getValue());
-        */
-
         D1RestClient client = new D1RestClient(true, verbose);
-        // FIXME
-        //client.setHeader("session", session.getSubject().getValue());
 
         InputStream is = null;
         try {
