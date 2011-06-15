@@ -82,6 +82,7 @@ public class D1ClientUnitTest  {
         assertEquals(TEST_CN_URL, registeredUrl);
     }
     
+    @Ignore
     @Test
     public void testListSubjects() {
         printHeader("testListSubjects");
