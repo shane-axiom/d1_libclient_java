@@ -24,9 +24,7 @@ package org.dataone.client;
 
 
 import java.io.IOException;
-import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -41,9 +39,11 @@ import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
-
+import org.dataone.client.auth.CertificateManager;
 import org.dataone.service.Constants;
 import org.dataone.service.EncodingUtilities;
 
@@ -66,6 +66,18 @@ public class RestClient {
 	 */
 	public RestClient() {
 	    httpClient = new DefaultHttpClient();
+	    setupSSL();
+	}
+	
+	
+	public void setupSSL() {
+		try {	
+            SSLSocketFactory socketFactory = CertificateManager.getInstance().getSSLSocketFactory();
+            Scheme sch = new Scheme("https", socketFactory, 443);
+            httpClient.getConnectionManager().getSchemeRegistry().register(sch);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
     // ==========================  New Handlers ===========================//

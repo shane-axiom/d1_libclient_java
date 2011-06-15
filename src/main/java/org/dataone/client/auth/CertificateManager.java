@@ -11,6 +11,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.Principal;
+import java.security.SecureRandom;
 import java.security.SignatureException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
@@ -22,7 +23,16 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Enumeration;
 
-import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.dataone.service.types.Session;
+import org.dataone.service.types.Subject;
 
 /**
  * Import and manage certificates to be used for authentication against DataONE
@@ -31,8 +41,15 @@ import javax.net.ssl.TrustManagerFactory;
  * @author Matt Jones
  */
 public class CertificateManager {
-    private static final String truststore = "/Users/jones/Desktop/cilogon/cilogon-trusted-certs";
-    private static final String user_p12_pass = "certpwgoeshere";
+	
+	// these should be set by the caller
+	private String keyStoreName = "/tmp/x509up_u503.p12";
+	private String keyStorePassword = "changeitchangeit";
+	
+    // this is packaged with the library
+    private static final String caTrustStore = "cilogon-trusted-certs";
+    private static final String caTrustStorePass = "cilogon";
+
     private static CertificateManager cm = null;
     private CertificateFactory cf = null;
     
@@ -51,7 +68,6 @@ public class CertificateManager {
      */
     private CertificateManager() {
         try {
-            System.setProperty("javax.net.ssl.trustStore", truststore);
             cf = CertificateFactory.getInstance("X.509");
         } catch (CertificateException e) {
             // TODO Auto-generated catch block
@@ -70,18 +86,34 @@ public class CertificateManager {
         return cm;
     }
     
-    /**
+    public String getKeyStoreName() {
+		return keyStoreName;
+	}
+
+	public void setKeyStoreName(String keyStoreName) {
+		this.keyStoreName = keyStoreName;
+	}
+
+	public String getKeyStorePassword() {
+		return keyStorePassword;
+	}
+
+	public void setKeyStorePassword(String keyStorePassword) {
+		this.keyStorePassword = keyStorePassword;
+	}
+
+	/**
      * Find the CA certificate to be used to validate user certificates.
      * @return X509Certificate for the root CA
      */
     public X509Certificate getCACert(String caAlias) {
         X509Certificate caCert = null;
-        TrustManagerFactory tmf;
         KeyStore trustStore = null;
         try {
-            trustStore = KeyStore.getInstance("JKS");
-            trustStore.load(new FileInputStream(System.getProperty("javax.net.ssl.trustStore")), null);
-            caCert = (X509Certificate)trustStore.getCertificate(caAlias);
+            trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            InputStream caStream = this.getClass().getResourceAsStream(caTrustStore);
+            trustStore.load(caStream, caTrustStorePass.toCharArray());
+            caCert = (X509Certificate) trustStore.getCertificate(caAlias);
         } catch (KeyStoreException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -125,12 +157,12 @@ public class CertificateManager {
         return cert;
     }
     
-    public void loadPK12Certificate(String pk12_cert_store) {
+    public X509Certificate loadPK12Certificate() {
+    	X509Certificate x509cert = null;
         KeyStore ks;
         try {
             ks = KeyStore.getInstance("PKCS12");
-            //ks.load(new FileInputStream(pk12_cert_store),"yourPassword".toCharArray());
-            ks.load(new FileInputStream(pk12_cert_store), user_p12_pass.toCharArray());
+            ks.load(new FileInputStream(keyStoreName), keyStorePassword.toCharArray());
             Enumeration<String> aliases = ks.aliases();
            
             while (aliases.hasMoreElements()) {
@@ -141,11 +173,12 @@ public class CertificateManager {
                     System.out.println("Certificate Type: " + cert.getType());
                 } else if (ks.isKeyEntry(alias)) {
                     System.out.println("This is a key!");
-                    Key key = ks.getKey(alias, user_p12_pass.toCharArray());
+                    Key key = ks.getKey(alias, keyStorePassword.toCharArray());
                     System.out.println(key.getFormat());
                     Certificate cert[] = ks.getCertificateChain(alias);
-                    X509Certificate x509cert = (X509Certificate) cert[0];
+                    x509cert = (X509Certificate) cert[0];
                     System.out.println("Certificate subject: " + x509cert.getSubjectDN().toString());
+                    break;
                 }
             }
         } catch (KeyStoreException e) {
@@ -168,6 +201,7 @@ public class CertificateManager {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+        return x509cert;
     }
     
     /**
@@ -176,7 +210,6 @@ public class CertificateManager {
      * @param caCert the X509Certificate of the trusted CertificateAuthority (CA)
      */
     public boolean verify(X509Certificate cert, X509Certificate caCert) {
-        InputStream inStream;
         boolean isValid = false;
         try {
             cert.checkValidity();
@@ -198,6 +231,88 @@ public class CertificateManager {
         }
         return isValid;
     }
+    
+    public Session getSession(HttpServletRequest request) {
+    	Session session = new Session();
+    	Object certificate = request.getAttribute("javax.servlet.request.X509Certificate");
+    	System.out.println("javax.servlet.request.X509Certificate " + " = " + certificate);
+    	Object sslSession = request.getAttribute("javax.servlet.request.ssl_session");
+    	System.out.println("javax.servlet.request.ssl_session " + " = " + sslSession);
+    	if (certificate instanceof X509Certificate[]) {
+    		X509Certificate[] x509Certificates = (X509Certificate[]) certificate;
+    		for (X509Certificate x509Cert:x509Certificates) {
+	    		displayCertificate(x509Cert);
+	    		Principal subjectDN = x509Cert.getSubjectDN();
+	    		Subject subject = new Subject();
+	    		subject.setValue(subjectDN.toString());
+	    		session.setSubject(subject);
+	    		//TODO get the SubjectList info
+	    		break;
+    		}
+    	}
+    	return session;
+    }
+    
+    public SSLSocketFactory getSSLSocketFactory() throws Exception{
+    	// our return object
+    	SSLSocketFactory socketFactory = null;
+    	
+    	// get the keystore that will provide the material
+    	KeyStore keyStore = null;
+        FileInputStream instream = null;
+        try {
+        	keyStore  = KeyStore.getInstance("PKCS12");
+            instream = new FileInputStream(keyStoreName);
+            keyStore.load(instream, keyStorePassword.toCharArray());
+        } 
+        catch (Exception e) {
+        	e.printStackTrace();
+        }
+        finally {
+            try { 
+            	instream.close();
+            } 
+            catch (Exception ignore) {
+            	ignore.printStackTrace();
+            }
+        }
+        
+        // context-based?
+        boolean useContext = true;
+        if (useContext) {
+            SSLContext ctx = SSLContext.getInstance("TLS");
+            
+            // use a very liberal trust manager for trusting the server
+            X509TrustManager tm = new X509TrustManager() {
+	            public void checkClientTrusted(X509Certificate[] xcs, String string) throws CertificateException {
+	            	System.out.println("checkClientTrusted - " + string);
+	            }
+	            public void checkServerTrusted(X509Certificate[] xcs, String string) throws CertificateException {
+	            	System.out.println("checkServerTrusted - " + string);
+	            }
+	            public X509Certificate[] getAcceptedIssuers() {
+	            	System.out.println("getAcceptedIssuers");
+	            	return null;
+	            }
+            };
+            
+            // specify the client key manager
+            KeyManager[] keyManagers = null;
+            KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+            keyManagerFactory.init(keyStore, keyStorePassword.toCharArray());
+            keyManagers = keyManagerFactory.getKeyManagers();
+            
+            // initialize the context
+            ctx.init(keyManagers, new TrustManager[]{tm}, new SecureRandom());
+            socketFactory = new SSLSocketFactory(ctx);
+        } else {
+            socketFactory = new SSLSocketFactory(keyStore, keyStorePassword, keyStore);
+        }
+        socketFactory.setHostnameVerifier(SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+        
+        return socketFactory;
+    }
+    
     
     /**
      * Show details of an X509 certificate, printing the information to STDOUT.

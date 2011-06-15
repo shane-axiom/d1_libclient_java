@@ -11,9 +11,9 @@ import org.junit.Test;
 
 public class CertificateManagerTest {
 
-    private static final String user_cert_name = "/Users/jones/Desktop/cilogon/x509up_u501";
-    //private static final String user_cert_name = "/Users/jones/Desktop/cilogon/usercert.pem";
-    private static final String user_pk12_name = "/Users/jones/Desktop/cilogon/usercred.p12";
+    private static final String user_cert_name = "/tmp/x509up_u503";
+    private static final String user_pk12_name = "/tmp/x509up_u503.p12";
+    private static final String user_pk12_pass = "changeitchangeit";
     private static final String CA_VALID = "cilogon-basic";
     private static final String CA_INVALID = "cilogon-silver";
 
@@ -26,7 +26,7 @@ public class CertificateManagerTest {
         assertTrue(true);
     }
     
-    //@Test
+    @Test
     public void testCertificateManager() {
         
         // Load the manager itself
@@ -48,7 +48,7 @@ public class CertificateManagerTest {
         assertTrue(valid);
     }
     
-    //@Test
+    @Test
     public void testIncorrectCA() {
         
         // Load the manager itself
@@ -71,7 +71,7 @@ public class CertificateManagerTest {
         assertFalse(valid);
     }
     
-    //@Test
+    @Test
     public void testPK12Loading() {
         
         // Load the manager itself
@@ -79,7 +79,19 @@ public class CertificateManagerTest {
         assertNotNull(cm);
 
         // Load the subject's certificate
-        cm.loadPK12Certificate(user_pk12_name);
-        assertTrue(true);
+        cm.setKeyStoreName(user_pk12_name);
+        cm.setKeyStorePassword(user_pk12_pass);
+        X509Certificate cert = cm.loadPK12Certificate();
+        assertNotNull(cert);
+        cm.displayCertificate(cert);
+        
+        // Get a certificate for the Root CA
+        X509Certificate caCert = cm.getCACert(CA_VALID);
+        assertNotNull(caCert);
+        cm.displayCertificate(caCert);
+        
+        // verify
+        boolean valid = cm.verify(cert, caCert);
+        assertTrue(valid);
     }
 }
