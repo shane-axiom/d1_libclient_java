@@ -36,6 +36,7 @@ import org.dataone.service.Constants;
 import org.dataone.service.D1Url;
 import org.dataone.service.EncodingUtilities;
 import org.dataone.service.exceptions.AuthenticationTimeout;
+import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.IdentifierNotUnique;
 import org.dataone.service.exceptions.InsufficientResources;
 import org.dataone.service.exceptions.InvalidCredentials;
@@ -81,30 +82,31 @@ public class MNode extends D1Node
 implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication 
 {
 
+//	/**
+//	 * Construct new a client-side MNode object, using the  passing in the base url for node services.
+//	 * @param cn - used for looking up the 
+//	 * @param nodeBaseServiceUrl
+//	 * @throws ServiceFailure 
+//	 */
+//    public MNode(CNode cn, String nodeBaseServiceUrl) {
+//        super(nodeBaseServiceUrl);
+//        
+//        if (cn != null) {
+//        	String regNodeId = cn.lookupNodeId(nodeBaseServiceUrl);
+//        	this.setNodeId(regNodeId);
+//        }
+//       
+//    } 
+    
     /**
-     * Construct a Member Node, passing in the base url for node services.
+     * Construct a new client-side MNode (Member Node) object, 
+     * passing in the base url of the member node for calling its services.
      * @param nodeBaseServiceUrl base url for constructing service endpoints.
      */
     public MNode(String nodeBaseServiceUrl) {
-        super(nodeBaseServiceUrl);
-        // Look up the node from the CN Node list
-        CNode cn = D1Client.getCN();
-        String regNodeId = cn.lookupNodeId(nodeBaseServiceUrl);
-        this.setNodeId(regNodeId);
+        super(nodeBaseServiceUrl); 
     }
-    
-    /**
-     * Construct a Member Node, passing in the identifier for the node, from which the
-     * node's base url is looked up at the coordinating node.
-     * @param nodeRef the reference to the Node's identifier
-     */
-    public MNode(NodeReference nodeRef) {
-        this.setNodeId(nodeRef.getValue());
-        // Look up the node from the CN Node list
-        CNode cn = D1Client.getCN();
-        String baseUrl = cn.lookupNodeBaseUrl(nodeRef.getValue());
-        setNodeBaseServiceUrl(baseUrl);
-    }
+   
     
     ////////////////   Tier 1 :  MNCore API   //////////////////////
     
