@@ -122,6 +122,17 @@ public class D1RestClient {
 		return filterErrors(rc.doDeleteRequest(url));
 	}
 	
+	public InputStream doDeleteRequest(String url, MultipartEntity mpe) 
+	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
+	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
+	NotAuthorized, NotFound, NotImplemented, ServiceFailure, 
+	UnsupportedMetadataType, UnsupportedQueryType, UnsupportedType,
+	IllegalStateException, ClientProtocolException, IOException, HttpException 
+	{
+		rc.setHeader("Accept", "text/xml");
+		return filterErrors(rc.doDeleteRequest(url, mpe));
+	}
+	
 	public Header[] doHeadRequest(String url) 
 	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
 	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
