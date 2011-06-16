@@ -493,8 +493,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
      * @throws InvalidRequest 
      */
     public ObjectFormatList listFormats() 
-      throws ServiceFailure, NotFound, InsufficientResources, NotImplemented, 
-      InvalidRequest {
+    throws ServiceFailure, NotFound, InsufficientResources, NotImplemented, 
+    InvalidRequest 
+    {
       
     	// build the REST URL to call
     	ObjectFormatList objectFormatList = null;
@@ -509,105 +510,43 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
       
     	} catch (NotFound e) {
       	throw new NotFound("4843", "The object formats collection " + 
-      		"could not be found at this node - " + 
-        	e.getClass() + ": " + e.getMessage());
-        
-      } catch (InvalidToken e) {
-      	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
-        	e.getClass() + ": " + e.getMessage());
-        
-      } catch (ServiceFailure e) {
-      	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
-        	e.getClass() + ": " + e.getMessage());
-        
-      } catch (NotAuthorized e) {
-      	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
-        	e.getClass() + ": " + e.getMessage());
-        
-      } catch (IdentifierNotUnique e) {
-      	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
-        	e.getClass() + ": " + e.getMessage());
-        
-      } catch (UnsupportedType e) {
-      	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
-        	e.getClass() + ": " + e.getMessage());
-        
-      } catch (UnsupportedQueryType e) {
-        	throw new ServiceFailure("4846", "Unexpected exception from the service - " +
-            	e.getClass() + ": " + e.getMessage());
+      			"could not be found at this node - " + 
+      			e.getClass() + ": " + e.getMessage());
 
-      } catch (InsufficientResources e) {
-      	throw new InsufficientResources("4844", "The object formats collection " + 
-        	"could not be found at this node - " + 
-          e.getClass() + ": " + e.getMessage());
-          
-      } catch (InvalidSystemMetadata e) {
-      	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
-        		e.getClass() + ": " + e.getMessage());
-        
-      } catch (NotImplemented e) {
-      	throw new NotImplemented("4840", "the service is not implemented - " + 
-        	e.getClass() + ": " + e.getMessage());
-        
-      } catch (InvalidCredentials e) {
-      	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
-        	e.getClass() + ": " + e.getMessage());
-        
-      } catch (InvalidRequest e) {
-      	throw new InvalidRequest("4842", "The request was invalid - " + 
-        	e.getClass() + ": " + e.getMessage());
-                
-      } catch (IllegalStateException e) {
-      	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
-        	e.getClass() + ": " + e.getMessage());
-                
-      } catch (AuthenticationTimeout e) {
-      	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
-        	e.getClass() + ": " + e.getMessage());
-        
-      } catch (ClientProtocolException e) {
-      	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
-        		e.getClass() + ": " + e.getMessage());
-        
-      } catch (UnsupportedMetadataType e) {
-      	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
-        	e.getClass() + ": " + e.getMessage());
-        
-      } catch (IOException e) {
-      	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
-        	e.getClass() + ": " + e.getMessage());
-        
-      } catch (HttpException e) {
-      	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
-        	e.getClass() + ": " + e.getMessage());
-        
-      }
-    	
-      // deserialize the object format list
-      try {
-	      
-      	objectFormatList = 
-      		TypeMarshaller.unmarshalTypeFromStream(ObjectFormatList.class, is);
-      
-      } catch (IOException e) {
-      	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
-      		e.getClass() + ": " + e.getMessage());
-      
-      } catch (InstantiationException e) {
-       	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
-      		e.getClass() + ": " + e.getMessage());
-      
-      } catch (IllegalAccessException e) {
-       	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
-      		e.getClass() + ": " + e.getMessage());
-           
-      } catch (JiBXException e) {
-       	throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
-      		e.getClass() + ": " + e.getMessage());
-     
-      }
-    	
-      return objectFormatList;
+    	} catch (InvalidToken e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage()); 
+    	} catch (NotAuthorized e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+    	} catch (IdentifierNotUnique e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+    	} catch (UnsupportedType e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+    	} catch (UnsupportedQueryType e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+    	} catch (InsufficientResources e) {
+    		throw new InsufficientResources("4844", "The object formats collection " + 
+    				"could not be found at this node - " + 
+    				e.getClass() + ": " + e.getMessage());         
+    	} catch (InvalidSystemMetadata e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+    	} catch (InvalidCredentials e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+    	} catch (IllegalStateException e) {
+    		throw new ServiceFailure("4841", "Unexpected exception from the service - " + 
+    				e.getClass() + ": " + e.getMessage());
+
+    	} catch (AuthenticationTimeout e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());    	
+    	} catch (UnsupportedMetadataType e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());        	
+    	} catch (ClientProtocolException e) {
+    		throw recastClientSideExceptionToServiceFailure(e);    	
+    	} catch (IOException e) {
+    		throw recastClientSideExceptionToServiceFailure(e);
+    	} catch (HttpException e) {
+    		throw recastClientSideExceptionToServiceFailure(e);
+    	}	
+    	return (ObjectFormatList) deserializeServiceType(ObjectFormatList.class, is); 
     }
     
     /**
@@ -630,98 +569,48 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	ObjectFormat objectFormat = null;
     	
     	// build the REST URL to call
-    	D1Url d1Url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_FORMATS);
-    	D1RestClient restClient = new D1RestClient(true, verbose);
+    	D1Url d1Url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_FORMATS);   	
     	d1Url.addNextPathElement(fmtid.getValue());
     	
+    	D1RestClient restClient = new D1RestClient(true, verbose);
     	InputStream is = null;
       
     	try {
-    		// do the request
 	      is = restClient.doGetRequest(d1Url.getUrl());
       
     	} catch (InvalidToken e) {
+    	// TODO: should the client be recasting server error types at this level?
       	throw new NotFound("4848", "The format specified by " +
       			fmtid.getValue() +
         		"does not exist at this node - " + 
           	e.getClass() + ": " + e.getMessage());
 
-      } catch (NotAuthorized e) {
-      	throw new ServiceFailure("4846", "Unexpected exception from the service - " +
-          	e.getClass() + ": " + e.getMessage());
-
-      } catch (IdentifierNotUnique e) {
-      	throw new ServiceFailure("4846", "Unexpected exception from the service - " +
-          	e.getClass() + ": " + e.getMessage());
-
-      } catch (UnsupportedType e) {
-      	throw new ServiceFailure("4846", "Unexpected exception from the service - " +
-          	e.getClass() + ": " + e.getMessage());
-
-      } catch (UnsupportedQueryType e) {
-        	throw new ServiceFailure("4846", "Unexpected exception from the service - " +
-            	e.getClass() + ": " + e.getMessage());
-
-      } catch (InvalidSystemMetadata e) {
-      	throw new ServiceFailure("4846", "Unexpected exception from the service - " +
-          	e.getClass() + ": " + e.getMessage());
-
-      } catch (InvalidCredentials e) {
-      	throw new ServiceFailure("4846", "Unexpected exception from the service - " +
-          	e.getClass() + ": " + e.getMessage());
-
-      } catch (IllegalStateException e) {
-      	throw new ServiceFailure("4846", "Unexpected exception from the service - " +
-          	e.getClass() + ": " + e.getMessage());
-
-      } catch (AuthenticationTimeout e) {
-      	throw new ServiceFailure("4846", "Unexpected exception from the service - " +
-          	e.getClass() + ": " + e.getMessage());
-
-      } catch (ClientProtocolException e) {
-      	throw new ServiceFailure("4846", "Unexpected exception from the service - " +
-          	e.getClass() + ": " + e.getMessage());
-
-      } catch (UnsupportedMetadataType e) {
-      	throw new ServiceFailure("4846", "Unexpected exception from the service - " +
-          	e.getClass() + ": " + e.getMessage());
-
-      } catch (IOException e) {
-      	throw new ServiceFailure("4846", "Unexpected exception from the service - " +
-          	e.getClass() + ": " + e.getMessage());
-
-      } catch (HttpException e) {
-      	throw new ServiceFailure("4846", "Unexpected exception from the service - " +
-          	e.getClass() + ": " + e.getMessage());
-
-      }
-      
-      // deserialize the object format
-    	try {
-	      
-    		objectFormat = 
-	      	TypeMarshaller.unmarshalTypeFromStream(ObjectFormat.class, is);
-      
-    	} catch (IOException e) {
-      	throw new ServiceFailure("4846", "Unexpected exception from the service - " + 
-      		e.getClass() + ": " + e.getMessage());
-      
-      } catch (InstantiationException e) {
-       	throw new ServiceFailure("4846", "Unexpected exception from the service - " + 
-      		e.getClass() + ": " + e.getMessage());
-      
-      } catch (IllegalAccessException e) {
-       	throw new ServiceFailure("4846", "Unexpected exception from the service - " + 
-      		e.getClass() + ": " + e.getMessage());
-           
-      } catch (JiBXException e) {
-       	throw new ServiceFailure("4846", "Unexpected exception from the service - " + 
-      		e.getClass() + ": " + e.getMessage());
-     
-      }
-
-    	return objectFormat;
-    	
+    	} catch (NotAuthorized e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+    	} catch (IdentifierNotUnique e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+    	} catch (UnsupportedType e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+    	} catch (UnsupportedQueryType e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+    	} catch (InvalidSystemMetadata e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+    	} catch (InvalidCredentials e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+    	} catch (AuthenticationTimeout e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+    	} catch (UnsupportedMetadataType e) {
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+    	} catch (ClientProtocolException e) {
+            throw recastClientSideExceptionToServiceFailure(e);
+        } catch (IllegalStateException e) {
+            throw recastClientSideExceptionToServiceFailure(e);
+        } catch (IOException e) {
+            throw recastClientSideExceptionToServiceFailure(e);
+        } catch (HttpException e) {
+            throw recastClientSideExceptionToServiceFailure(e);
+        } 
+    	return (ObjectFormat) deserializeServiceType(ObjectFormat.class, is); 	
     }
     
     @Override
@@ -758,14 +647,14 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
             throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (UnsupportedQueryType e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (NotFound ex) {
-            throw recastClientSideExceptionToServiceFailure(ex);
-        } catch (InvalidToken ex) {
-            throw recastClientSideExceptionToServiceFailure(ex);
-        } catch (NotAuthorized ex) {
-            throw recastClientSideExceptionToServiceFailure(ex);
-        } catch (InvalidRequest ex) {
-        	// TODO: fix swallowed exception.  throw, recast, or explain in comment :-) 
+		} catch (NotFound e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+        } catch (InvalidToken e) {
+        	throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+        } catch (NotAuthorized e) {
+        	throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+        } catch (InvalidRequest e) {
+        	throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
         } catch (ClientProtocolException e) {
             throw recastClientSideExceptionToServiceFailure(e);
         } catch (IllegalStateException e) {
@@ -778,24 +667,209 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         return is;       
     }
 
+    
 //    @Override
-    public boolean addNodeCapabilities(Session session, NodeReference nodeid, Node node) throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, NotFound {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public boolean addNodeCapabilities(Session session, NodeReference nodeid, Node node) 
+    throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, NotFound 
+    {
+        
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_GROUPS);
+    	url.addNextPathElement(nodeid.getValue());
+    	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
+    	try {
+    		mpe.addFilePart("node", node, Node.class);
+    	} catch (IOException e1) {
+			throw recastClientSideExceptionToServiceFailure(e1);
+		} catch (JiBXException e1) {
+			throw recastClientSideExceptionToServiceFailure(e1);
+		}
+
+		D1RestClient client = new D1RestClient(true, verbose);
+        client.setHeader("session", session.getSubject().getValue());
+
+		InputStream is = null;
+		try {
+			is = client.doPutRequest(url.getUrl(),mpe);
+		} catch (InvalidCredentials e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (InvalidToken e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (IdentifierNotUnique e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedQueryType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InsufficientResources e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (InvalidSystemMetadata e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (AuthenticationTimeout e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedMetadataType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (ClientProtocolException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IllegalStateException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IOException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (HttpException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		}
+		return true;
     }
 
 //    @Override
-    public Identifier register(Session session, Node node) throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, IdentifierNotUnique {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public Identifier register(Session session, Node node) 
+    throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, IdentifierNotUnique 
+    {
+   	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_NODE);
+    	
+    	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
+    	try {
+    		mpe.addFilePart("node", node, Node.class);
+    	} catch (IOException e1) {
+			throw recastClientSideExceptionToServiceFailure(e1);
+		} catch (JiBXException e1) {
+			throw recastClientSideExceptionToServiceFailure(e1);
+		}
+
+		D1RestClient client = new D1RestClient(true, verbose);
+        client.setHeader("session", session.getSubject().getValue());
+
+		InputStream is = null;
+		try {
+			is = client.doPostRequest(url.getUrl(),mpe);
+		} catch (InvalidToken e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (NotFound e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (InvalidCredentials e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedQueryType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InsufficientResources e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (InvalidSystemMetadata e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (AuthenticationTimeout e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedMetadataType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (ClientProtocolException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IllegalStateException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IOException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (HttpException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		}
+		return (Identifier) deserializeServiceType(Identifier.class,is);
     }
 
     @Override
-    public Log getLogRecords(Session session, Date fromDate, Date toDate, Event event) throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented, InvalidRequest {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public Log getLogRecords(Session session, Date fromDate, Date toDate, Event event) 
+    throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented, InvalidRequest 
+    {
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_LOG);
+        if (fromDate == null) {
+        	// TODO: figure out which error should be thrown
+        	throw new InvalidRequest("","The 'fromDate' parameter cannot be null");
+        }
+    	url.addDateParamPair("fromDate", fromDate);
+    	url.addDateParamPair("toDate", toDate);
+    	url.addNonEmptyParamPair("event", event.toString());
+
+    	// send the request
+    	D1RestClient client = new D1RestClient(true, verbose);
+    	InputStream is = null;
+    	
+    	try {
+			is = client.doGetRequest(url.getUrl());
+		} catch (NotFound e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (IdentifierNotUnique e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (UnsupportedType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (UnsupportedQueryType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InsufficientResources e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InvalidSystemMetadata e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InvalidCredentials e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (AuthenticationTimeout e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (UnsupportedMetadataType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (ClientProtocolException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+    	} catch (IllegalStateException e) {
+    		throw recastClientSideExceptionToServiceFailure(e);
+    	} catch (IOException e) {
+    		throw recastClientSideExceptionToServiceFailure(e);
+    	} catch (HttpException e) {
+    		throw recastClientSideExceptionToServiceFailure(e);
+    	}  
+    	return (Log) deserializeServiceType(Log.class, is);
     }
     
 //    @Override
-    public boolean registerSystemMetadata(Session session, Identifier pid, SystemMetadata sysmeta) throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, InvalidSystemMetadata {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public boolean registerSystemMetadata(Session session, Identifier pid, SystemMetadata sysmeta) 
+    throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, InvalidSystemMetadata 
+    {
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_META);
+    	url.addNextPathElement(pid.getValue());
+    	
+    	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
+    	try {
+    		mpe.addFilePart("sysmeta", sysmeta, SystemMetadata.class);
+    	} catch (IOException e1) {
+			throw recastClientSideExceptionToServiceFailure(e1);
+		} catch (JiBXException e1) {
+			throw recastClientSideExceptionToServiceFailure(e1);
+		}
+
+		D1RestClient client = new D1RestClient(true, verbose);
+        client.setHeader("session", session.getSubject().getValue());
+
+		InputStream is = null;
+		try {
+			is = client.doPostRequest(url.getUrl(),mpe);
+		} catch (InvalidCredentials e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (IdentifierNotUnique e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedQueryType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InsufficientResources e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (AuthenticationTimeout e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedMetadataType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (InvalidToken e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (NotFound e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (ClientProtocolException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IllegalStateException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IOException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (HttpException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		}
+		return true;
     }
 
     
