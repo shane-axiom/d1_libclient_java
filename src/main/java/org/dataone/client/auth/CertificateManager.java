@@ -30,6 +30,8 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.dataone.service.types.Session;
 import org.dataone.service.types.Subject;
@@ -41,6 +43,8 @@ import org.dataone.service.types.Subject;
  * @author Matt Jones
  */
 public class CertificateManager {
+	
+	private static Log log = LogFactory.getLog(CertificateManager.class);
 	
 	// these should be set by the caller
 	private String keyStoreName = "/tmp/x509up_u503.p12";
@@ -70,8 +74,7 @@ public class CertificateManager {
         try {
             cf = CertificateFactory.getInstance("X.509");
         } catch (CertificateException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
         }
     }
     
@@ -115,20 +118,15 @@ public class CertificateManager {
             trustStore.load(caStream, caTrustStorePass.toCharArray());
             caCert = (X509Certificate) trustStore.getCertificate(caAlias);
         } catch (KeyStoreException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
         } catch (NoSuchAlgorithmException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        	log.error(e.getMessage(), e);
         } catch (CertificateException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        	log.error(e.getMessage(), e);
         } catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        	log.error(e.getMessage(), e);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        	log.error(e.getMessage(), e);
         }
         return caCert;
     }
@@ -145,14 +143,11 @@ public class CertificateManager {
             cert = (X509Certificate) cf.generateCertificate(inStream);
             inStream.close();
         } catch (CertificateException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        	log.error(e.getMessage(), e);
         } catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        	log.error(e.getMessage(), e);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        	log.error(e.getMessage(), e);
         }
         return cert;
     }
@@ -167,39 +162,32 @@ public class CertificateManager {
            
             while (aliases.hasMoreElements()) {
                 String alias = aliases.nextElement();
-                System.out.println("Alias: " + alias);
+                log.debug("Alias: " + alias);
                 if (ks.isCertificateEntry(alias)) {
                     Certificate cert = ks.getCertificate(alias);
-                    System.out.println("Certificate Type: " + cert.getType());
+                    log.debug("Certificate Type: " + cert.getType());
                 } else if (ks.isKeyEntry(alias)) {
-                    System.out.println("This is a key!");
+                    log.debug("This is a key!");
                     Key key = ks.getKey(alias, keyStorePassword.toCharArray());
-                    System.out.println(key.getFormat());
+                    log.debug(key.getFormat());
                     Certificate cert[] = ks.getCertificateChain(alias);
                     x509cert = (X509Certificate) cert[0];
-                    System.out.println("Certificate subject: " + x509cert.getSubjectDN().toString());
+                    log.debug("Certificate subject: " + x509cert.getSubjectDN().toString());
                     break;
                 }
             }
         } catch (KeyStoreException e) {
-            // TODO Auto-generated catch block
-            System.out.println("KSE: " + e.getMessage());
-            e.printStackTrace();
+        	log.error(e.getMessage(), e);
         } catch (NoSuchAlgorithmException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        	log.error(e.getMessage(), e);
         } catch (CertificateException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        	log.error(e.getMessage(), e);
         } catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        	log.error(e.getMessage(), e);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        	log.error(e.getMessage(), e);
         } catch (UnrecoverableKeyException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        	log.error(e.getMessage(), e);
         }
         return x509cert;
     }
@@ -216,18 +204,18 @@ public class CertificateManager {
             cert.verify(caCert.getPublicKey());
             isValid = true;
         } catch (CertificateException e) {
-            e.printStackTrace();
+        	log.error(e.getMessage(), e);
         } catch (InvalidKeyException e) {
-            System.out.println("Certificate verification failed, invalid key.");
-            e.printStackTrace();
+        	log.error("Certificate verification failed, invalid key.");
+            log.error(e.getMessage(), e);
         } catch (NoSuchAlgorithmException e) {
-            System.out.println("Certificate verification failed, no such algorithm.");
-            e.printStackTrace();
+        	log.error("Certificate verification failed, no such algorithm.");
+            log.error(e.getMessage(), e);
         } catch (NoSuchProviderException e) {
-            System.out.println("Certificate verification failed, no such provider.");
-            e.printStackTrace();
+        	log.error("Certificate verification failed, no such provider.");
+            log.error(e.getMessage(), e);
         } catch (SignatureException e) {
-            System.out.println("Certificate verification failed, signatures do not match.");
+        	log.error("Certificate verification failed, signatures do not match.");
         }
         return isValid;
     }
@@ -235,9 +223,9 @@ public class CertificateManager {
     public Session getSession(HttpServletRequest request) {
     	Session session = new Session();
     	Object certificate = request.getAttribute("javax.servlet.request.X509Certificate");
-    	System.out.println("javax.servlet.request.X509Certificate " + " = " + certificate);
+    	log.debug("javax.servlet.request.X509Certificate " + " = " + certificate);
     	Object sslSession = request.getAttribute("javax.servlet.request.ssl_session");
-    	System.out.println("javax.servlet.request.ssl_session " + " = " + sslSession);
+    	log.debug("javax.servlet.request.ssl_session " + " = " + sslSession);
     	if (certificate instanceof X509Certificate[]) {
     		X509Certificate[] x509Certificates = (X509Certificate[]) certificate;
     		for (X509Certificate x509Cert:x509Certificates) {
@@ -266,14 +254,14 @@ public class CertificateManager {
             keyStore.load(instream, keyStorePassword.toCharArray());
         } 
         catch (Exception e) {
-        	e.printStackTrace();
+        	log.error(e.getMessage(), e);
         }
         finally {
             try { 
             	instream.close();
             } 
             catch (Exception ignore) {
-            	ignore.printStackTrace();
+            	log.warn(ignore.getMessage(), ignore);
             }
         }
         
@@ -284,13 +272,13 @@ public class CertificateManager {
         // TODO: check server trust policy
         X509TrustManager tm = new X509TrustManager() {
             public void checkClientTrusted(X509Certificate[] xcs, String string) throws CertificateException {
-            	System.out.println("checkClientTrusted - " + string);
+            	log.debug("checkClientTrusted - " + string);
             }
             public void checkServerTrusted(X509Certificate[] xcs, String string) throws CertificateException {
-            	System.out.println("checkServerTrusted - " + string);
+            	log.debug("checkServerTrusted - " + string);
             }
             public X509Certificate[] getAcceptedIssuers() {
-            	System.out.println("getAcceptedIssuers");
+            	log.debug("getAcceptedIssuers");
             	return null;
             }
         };
@@ -319,16 +307,16 @@ public class CertificateManager {
         if (cert == null) {
             return;
         }
-        System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        log.debug("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         Principal issuerDN = cert.getIssuerDN();
-        System.out.println(" Issuer: " + issuerDN.toString());
+        log.debug(" Issuer: " + issuerDN.toString());
         Date notBefore = cert.getNotBefore();
         DateFormat fmt = SimpleDateFormat.getDateTimeInstance();
-        System.out.println("   From: " + fmt.format(notBefore));
+        log.debug("   From: " + fmt.format(notBefore));
         Date notAfter = cert.getNotAfter();
-        System.out.println("     To: " + fmt.format(notAfter));
+        log.debug("     To: " + fmt.format(notAfter));
         Principal subjectDN = cert.getSubjectDN();
-        System.out.println("Subject: " + subjectDN.toString());
-        System.out.println();
+        log.debug("Subject: " + subjectDN.toString());
+        log.debug("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
     }
 }
