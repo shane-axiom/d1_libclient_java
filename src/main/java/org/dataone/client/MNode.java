@@ -169,11 +169,11 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 		 // assemble the url
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_LOG);
         
-//    	if (token != null)
-//    		url.addNonEmptyParamPair("sessionid", token.getToken());
     	url.addDateParamPair("fromDate", fromDate);
     	url.addDateParamPair("toDate", toDate);
     	url.addNonEmptyParamPair("event", event.toString());
+    	url.addNonEmptyParamPair("start", start);
+    	url.addNonEmptyParamPair("count", count);
 
     	// send the request
     	D1RestClient client = new D1RestClient(true, verbose);
