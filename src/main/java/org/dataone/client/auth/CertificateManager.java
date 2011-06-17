@@ -49,7 +49,8 @@ public class CertificateManager {
 	// these should be set by the caller
 	private String keyStoreName = "/tmp/x509up_u503.p12";
 	private String keyStorePassword = "changeitchangeit";
-	
+	private String keyStoreType = "PKCS12"; //"PKCS12";
+
     // this is packaged with the library
     private static final String caTrustStore = "cilogon-trusted-certs";
     private static final String caTrustStorePass = "cilogon";
@@ -249,7 +250,7 @@ public class CertificateManager {
     	KeyStore keyStore = null;
         FileInputStream instream = null;
         try {
-        	keyStore  = KeyStore.getInstance("PKCS12");
+        	keyStore  = KeyStore.getInstance(keyStoreType);
             instream = new FileInputStream(keyStoreName);
             keyStore.load(instream, keyStorePassword.toCharArray());
         } 
