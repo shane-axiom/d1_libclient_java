@@ -49,8 +49,8 @@ public class SettingsTest  {
     public void testCNSettings()
     {
         printHeader("testCNSettings");
-        System.out.println("CN_URL ==> " + Settings.get("D1Client.CN_URL"));
-        assertTrue(Settings.get("D1Client.CN_URL").length() > 0);
+        System.out.println("CN_URL ==> " + Settings.getConfiguration().getString("D1Client.CN_URL"));
+        assertTrue(Settings.getConfiguration().getString("D1Client.CN_URL").length() > 0);
     }
     
     private void printHeader(String methodName)

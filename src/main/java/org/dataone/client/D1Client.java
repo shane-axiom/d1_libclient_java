@@ -34,7 +34,7 @@ import org.dataone.service.types.NodeReference;
  */
 public class D1Client {
 
-    private static String CN_URI = Settings.get("D1Client.CN_URL");
+    private static String CN_URI = Settings.getConfiguration().getString("D1Client.CN_URL");
 
     private static CNode cn = null;
 
