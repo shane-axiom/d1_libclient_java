@@ -6,17 +6,20 @@ import static org.junit.Assert.assertTrue;
 
 import java.security.cert.X509Certificate;
 
+import org.dataone.client.Settings;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
 public class CertificateManagerTest {
 
-    private static final String user_cert_name = "/tmp/x509up_u503";
-    private static final String user_pk12_name = "/tmp/x509up_u503.p12";
-    private static final String user_pk12_pass = "changeitchangeit";
+    private static final String user_cert_name = Settings.getConfiguration().getString("certificate.name", "/tmp/x509up_u503");
+    private static final String user_pk12_name = Settings.getConfiguration().getString("certificate.keystore", "/tmp/x509up_u503.p12");
+    private static final String user_pk12_pass = Settings.getConfiguration().getString("certificate.keystore.password", "changeitchangeit");
+    
     private static final String CA_VALID = "cilogon-basic";
     private static final String CA_INVALID = "cilogon-silver";
+    
 
     @Before
     public void setUp() throws Exception {

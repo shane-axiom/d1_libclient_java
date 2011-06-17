@@ -33,8 +33,12 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.dataone.client.CNode;
+import org.dataone.client.D1Client;
+import org.dataone.client.Settings;
 import org.dataone.service.types.Session;
 import org.dataone.service.types.Subject;
+import org.dataone.service.types.SubjectList;
 
 /**
  * Import and manage certificates to be used for authentication against DataONE
@@ -47,9 +51,9 @@ public class CertificateManager {
 	private static Log log = LogFactory.getLog(CertificateManager.class);
 	
 	// these should be set by the caller
-	private String keyStoreName = "/tmp/x509up_u503.p12";
-	private String keyStorePassword = "changeitchangeit";
-	private String keyStoreType = "PKCS12"; //"PKCS12";
+	private String keyStoreName = null;
+	private String keyStorePassword = null;
+	private String keyStoreType = null;
 
     // this is packaged with the library
     private static final String caTrustStore = "cilogon-trusted-certs";
@@ -72,7 +76,15 @@ public class CertificateManager {
      * CertificateManager is a singleton, so use getInstance() to get it.
      */
     private CertificateManager() {
-        try {
+    	try {
+	    	keyStoreName = Settings.getConfiguration().getString("certificate.keystore", "/tmp/x509up_u503.p12");
+	    	keyStorePassword = Settings.getConfiguration().getString("certificate.keystore.password", "changeitchangeit");
+	    	keyStoreType = Settings.getConfiguration().getString("certificate.keystore.type", "PKCS12");
+    	} catch (Exception e) {
+            log.error(e.getMessage(), e);
+		}
+    	
+        try {	
             cf = CertificateFactory.getInstance("X.509");
         } catch (CertificateException e) {
             log.error(e.getMessage(), e);
@@ -223,6 +235,7 @@ public class CertificateManager {
     
     public Session getSession(HttpServletRequest request) {
     	Session session = new Session();
+		Subject subject = new Subject();
     	Object certificate = request.getAttribute("javax.servlet.request.X509Certificate");
     	log.debug("javax.servlet.request.X509Certificate " + " = " + certificate);
     	Object sslSession = request.getAttribute("javax.servlet.request.ssl_session");
@@ -232,12 +245,20 @@ public class CertificateManager {
     		for (X509Certificate x509Cert:x509Certificates) {
 	    		displayCertificate(x509Cert);
 	    		Principal subjectDN = x509Cert.getSubjectDN();
-	    		Subject subject = new Subject();
 	    		subject.setValue(subjectDN.toString());
 	    		session.setSubject(subject);
-	    		//TODO get the SubjectList info
+	    		//TODO get the SubjectList info from certificate
 	    		break;
     		}
+    		// for now, look up the subject information from the CNIdentity service
+    		CNode cn = D1Client.getCN();
+    		try {
+				SubjectList subjectList = cn.getSubjectInfo(session, subject);
+				session.setSubjectList(subjectList);
+			} catch (Exception e) {
+				// TODO: should we throw an exception/fail if this part fails?
+				log.error("Could not retrieve complete Subject info for: " + subject, e);
+			}
     	}
     	return session;
     }
