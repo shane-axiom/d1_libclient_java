@@ -53,7 +53,7 @@ public class CertificateManager {
 	private static Log log = LogFactory.getLog(CertificateManager.class);
 	
 	// these should be set by the caller
-	private String keyStoreName = null;
+	private String certificateLocation = null;
 	
 	// other variables
 	private String keyStorePassword = null;
@@ -80,7 +80,7 @@ public class CertificateManager {
      */
     private CertificateManager() {
     	try {
-	    	keyStoreName = Settings.getConfiguration().getString("certificate.keystore", "/tmp/x509up_u503");
+	    	certificateLocation = Settings.getConfiguration().getString("certificate.location", "/tmp/x509up_u503");
 	    	keyStorePassword = Settings.getConfiguration().getString("certificate.keystore.password", "changeit");
 	    	keyStoreType = Settings.getConfiguration().getString("certificate.keystore.type", KeyStore.getDefaultType());
     	} catch (Exception e) {
@@ -100,12 +100,12 @@ public class CertificateManager {
         return cm;
     }
     
-    public String getKeyStoreName() {
-		return keyStoreName;
+    public String getCertificateLocation() {
+		return certificateLocation;
 	}
 
-	public void setKeyStoreName(String keyStoreName) {
-		this.keyStoreName = keyStoreName;
+	public void setCertificateLocation(String certificate) {
+		this.certificateLocation = certificate;
 	}
 
 
@@ -269,7 +269,7 @@ public class CertificateManager {
             // get the private key and certificate from the PEM
             // TODO: find a way to do this with default Java provider (not Bouncy Castle)?
         	Security.addProvider(new BouncyCastleProvider());
-            PEMReader pemReader = new PEMReader(new FileReader(keyStoreName));
+            PEMReader pemReader = new PEMReader(new FileReader(certificateLocation));
             Object pemObject = null;
             X509Certificate certificate = null;
             PrivateKey privateKey = null;

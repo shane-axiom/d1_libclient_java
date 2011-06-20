@@ -13,7 +13,7 @@ import org.junit.Test;
 
 public class CertificateManagerTest {
 
-    private static final String user_cert_location = Settings.getConfiguration().getString("certificate.keystore", "/tmp/x509up_u503");
+    private static final String user_cert_location = Settings.getConfiguration().getString("certificate.location", "/tmp/x509up_u503");
     
     private static final String CA_VALID = "cilogon-basic";
     private static final String CA_INVALID = "cilogon-silver";
@@ -22,7 +22,7 @@ public class CertificateManagerTest {
     @Before
     public void setUp() throws Exception {
     	// set the location of the PEM cert
-    	CertificateManager.getInstance().setKeyStoreName(user_cert_location);
+    	CertificateManager.getInstance().setCertificateLocation(user_cert_location);
     }
 
     @Test
