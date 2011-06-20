@@ -13,9 +13,7 @@ import org.junit.Test;
 
 public class CertificateManagerTest {
 
-    private static final String user_cert_name = Settings.getConfiguration().getString("certificate.name", "/tmp/x509up_u503");
-    private static final String user_pk12_name = Settings.getConfiguration().getString("certificate.keystore", "/tmp/x509up_u503.p12");
-    private static final String user_pk12_pass = Settings.getConfiguration().getString("certificate.keystore.password", "changeitchangeit");
+    private static final String user_cert_location = Settings.getConfiguration().getString("certificate.keystore", "/tmp/x509up_u503");
     
     private static final String CA_VALID = "cilogon-basic";
     private static final String CA_INVALID = "cilogon-silver";
@@ -23,6 +21,8 @@ public class CertificateManagerTest {
 
     @Before
     public void setUp() throws Exception {
+    	// set the location of the PEM cert
+    	CertificateManager.getInstance().setKeyStoreName(user_cert_location);
     }
 
     @Test
@@ -30,7 +30,7 @@ public class CertificateManagerTest {
         assertTrue(true);
     }
     
-    @Ignore
+   //@Ignore
     @Test
     public void testCertificateManager() {
         
@@ -44,7 +44,7 @@ public class CertificateManagerTest {
         cm.displayCertificate(caCert);
 
         // Load the subject's certificate
-        X509Certificate cert = cm.loadCertificate(user_cert_name);
+        X509Certificate cert = cm.loadCertificate();
         assertNotNull(cert);
         cm.displayCertificate(cert);
         
@@ -53,7 +53,7 @@ public class CertificateManagerTest {
         assertTrue(valid);
     }
     
-    @Ignore
+    //@Ignore
     @Test
     public void testIncorrectCA() {
         
@@ -67,7 +67,7 @@ public class CertificateManagerTest {
         cm.displayCertificate(caCert);
 
         // Load the subject's certificate
-        X509Certificate cert = cm.loadCertificate(user_cert_name);
+        X509Certificate cert = cm.loadCertificate();
         assertNotNull(cert);
         cm.displayCertificate(cert);
         
@@ -77,28 +77,4 @@ public class CertificateManagerTest {
         assertFalse(valid);
     }
     
-    @Ignore
-    @Test
-    public void testPK12Loading() {
-        
-        // Load the manager itself
-        CertificateManager cm = CertificateManager.getInstance();
-        assertNotNull(cm);
-
-        // Load the subject's certificate
-        cm.setKeyStoreName(user_pk12_name);
-        cm.setKeyStorePassword(user_pk12_pass);
-        X509Certificate cert = cm.loadPK12Certificate();
-        assertNotNull(cert);
-        cm.displayCertificate(cert);
-        
-        // Get a certificate for the Root CA
-        X509Certificate caCert = cm.getCACert(CA_VALID);
-        assertNotNull(caCert);
-        cm.displayCertificate(caCert);
-        
-        // verify
-        boolean valid = cm.verify(cert, caCert);
-        assertTrue(valid);
-    }
 }
