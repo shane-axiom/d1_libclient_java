@@ -143,7 +143,7 @@ public class CertificateManager {
         X509Certificate cert = null;
         try {
         	// load up the PEM
-        	KeyStore keyStore = getKeyStorePEM();
+        	KeyStore keyStore = getKeyStore();
         	// get it from the store
             cert = (X509Certificate) keyStore.getCertificate("cilogon");
         } catch (Exception e) {
@@ -219,7 +219,7 @@ public class CertificateManager {
     	SSLSocketFactory socketFactory = null;
     	
     	// get the keystore that will provide the material
-    	KeyStore keyStore = getKeyStorePEM();
+    	KeyStore keyStore = getKeyStore();
        
         // create SSL context
         SSLContext ctx = SSLContext.getInstance("TLS");
@@ -259,7 +259,7 @@ public class CertificateManager {
      * NOTE: this implementation uses Bouncy Castle security provider
      * @return the keystore that will provide the material
      */
-    private KeyStore getKeyStorePEM() {
+    private KeyStore getKeyStore() {
     	
     	KeyStore keyStore = null;
         try {
@@ -298,35 +298,6 @@ public class CertificateManager {
         return keyStore;
     	
     }
-    
-    /**
-     * @deprecated use PEM-based method for retrieving keystore
-     * @return the keystore that will provide the material
-     */
-    private KeyStore getKeyStore() {
-    	
-    	KeyStore keyStore = null;
-        FileInputStream instream = null;
-        try {
-        	keyStore  = KeyStore.getInstance(keyStoreType);
-            instream = new FileInputStream(keyStoreName);
-            keyStore.load(instream, keyStorePassword.toCharArray());
-        } 
-        catch (Exception e) {
-        	log.error(e.getMessage(), e);
-        }
-        finally {
-            try { 
-            	instream.close();
-            } 
-            catch (Exception ignore) {
-            	log.warn(ignore.getMessage(), ignore);
-            }
-        }
-        return keyStore;
-    	
-    }
-
     
     /**
      * Show details of an X509 certificate, printing the information to STDOUT.
