@@ -2,16 +2,20 @@ package org.dataone.client.auth;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.Key;
+import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.Principal;
+import java.security.PrivateKey;
 import java.security.SecureRandom;
+import java.security.Security;
 import java.security.SignatureException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
@@ -33,6 +37,8 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.PEMReader;
 import org.dataone.client.CNode;
 import org.dataone.client.D1Client;
 import org.dataone.client.Settings;
@@ -77,7 +83,7 @@ public class CertificateManager {
      */
     private CertificateManager() {
     	try {
-	    	keyStoreName = Settings.getConfiguration().getString("certificate.keystore", "/tmp/x509up_u503.p12");
+	    	keyStoreName = Settings.getConfiguration().getString("certificate.keystore", "/tmp/x509up_u503");
 	    	keyStorePassword = Settings.getConfiguration().getString("certificate.keystore.password", "changeitchangeit");
 	    	keyStoreType = Settings.getConfiguration().getString("certificate.keystore.type", "PKCS12");
     	} catch (Exception e) {
@@ -268,25 +274,8 @@ public class CertificateManager {
     	SSLSocketFactory socketFactory = null;
     	
     	// get the keystore that will provide the material
-    	KeyStore keyStore = null;
-        FileInputStream instream = null;
-        try {
-        	keyStore  = KeyStore.getInstance(keyStoreType);
-            instream = new FileInputStream(keyStoreName);
-            keyStore.load(instream, keyStorePassword.toCharArray());
-        } 
-        catch (Exception e) {
-        	log.error(e.getMessage(), e);
-        }
-        finally {
-            try { 
-            	instream.close();
-            } 
-            catch (Exception ignore) {
-            	log.warn(ignore.getMessage(), ignore);
-            }
-        }
-        
+    	KeyStore keyStore = getKeyStorePEM();
+       
         // create SSL context
         SSLContext ctx = SSLContext.getInstance("TLS");
         
@@ -320,6 +309,72 @@ public class CertificateManager {
         return socketFactory;
     }
     
+    private KeyStore getKeyStorePEM() {
+    	
+    	// get the keystore that will provide the material
+    	KeyStore keyStore = null;
+        try {
+        	keyStore  = KeyStore.getInstance(keyStoreType);
+            keyStore.load(null, keyStorePassword.toCharArray());
+
+            // get the private key and certificate from the PEM
+            // TODO: find a way to do this with default Java provider (not Bouncy Castle)?
+        	Security.addProvider(new BouncyCastleProvider());
+            PEMReader pemReader = new PEMReader(new FileReader(keyStoreName));
+            Object pemObject = null;
+            X509Certificate certificate = null;
+            PrivateKey privateKey = null;
+            KeyPair keyPair = null;
+            while ((pemObject = pemReader.readObject()) != null) {
+				if (pemObject instanceof PrivateKey) {
+					privateKey = (PrivateKey) pemObject;
+				}
+				else if (pemObject instanceof KeyPair) {
+					keyPair = (KeyPair) pemObject;
+					privateKey = keyPair.getPrivate();
+				} else if (pemObject instanceof X509Certificate) {
+					certificate = (X509Certificate) pemObject;
+				}
+			}
+
+            Certificate[] chain = new Certificate[] {certificate};
+            
+            // set the entry
+			keyStore.setKeyEntry("cilogon", privateKey, keyStorePassword.toCharArray(), chain);
+        } 
+        catch (Exception e) {
+        	log.error(e.getMessage(), e);
+        }
+        
+        return keyStore;
+    	
+    }
+    
+    private KeyStore getKeyStore() {
+    	
+    	// get the keystore that will provide the material
+    	KeyStore keyStore = null;
+        FileInputStream instream = null;
+        try {
+        	keyStore  = KeyStore.getInstance(keyStoreType);
+            instream = new FileInputStream(keyStoreName);
+            keyStore.load(instream, keyStorePassword.toCharArray());
+        } 
+        catch (Exception e) {
+        	log.error(e.getMessage(), e);
+        }
+        finally {
+            try { 
+            	instream.close();
+            } 
+            catch (Exception ignore) {
+            	log.warn(ignore.getMessage(), ignore);
+            }
+        }
+        return keyStore;
+    	
+    }
+
     
     /**
      * Show details of an X509 certificate, printing the information to STDOUT.
