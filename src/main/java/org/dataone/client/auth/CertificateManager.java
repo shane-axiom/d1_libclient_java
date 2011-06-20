@@ -6,7 +6,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidKeyException;
-import java.security.Key;
 import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -17,15 +16,12 @@ import java.security.PrivateKey;
 import java.security.SecureRandom;
 import java.security.Security;
 import java.security.SignatureException;
-import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Enumeration;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
@@ -50,7 +46,7 @@ import org.dataone.service.types.SubjectList;
  * Import and manage certificates to be used for authentication against DataONE
  * service providers.  This class is a singleton, as in any given application there 
  * need only be one collection of certificates.  
- * @author Matt Jones
+ * @author Matt Jones, Ben Leinfelder
  */
 public class CertificateManager {
 	
@@ -58,6 +54,8 @@ public class CertificateManager {
 	
 	// these should be set by the caller
 	private String keyStoreName = null;
+	
+	// other variables
 	private String keyStorePassword = null;
 	private String keyStoreType = null;
 
@@ -66,7 +64,6 @@ public class CertificateManager {
     private static final String caTrustStorePass = "cilogon";
 
     private static CertificateManager cm = null;
-    private CertificateFactory cf = null;
     
     /*
      * Some useful links to background info:
@@ -84,17 +81,12 @@ public class CertificateManager {
     private CertificateManager() {
     	try {
 	    	keyStoreName = Settings.getConfiguration().getString("certificate.keystore", "/tmp/x509up_u503");
-	    	keyStorePassword = Settings.getConfiguration().getString("certificate.keystore.password", "changeitchangeit");
-	    	keyStoreType = Settings.getConfiguration().getString("certificate.keystore.type", "PKCS12");
+	    	keyStorePassword = Settings.getConfiguration().getString("certificate.keystore.password", "changeit");
+	    	keyStoreType = Settings.getConfiguration().getString("certificate.keystore.type", KeyStore.getDefaultType());
     	} catch (Exception e) {
             log.error(e.getMessage(), e);
 		}
-    	
-        try {	
-            cf = CertificateFactory.getInstance("X.509");
-        } catch (CertificateException e) {
-            log.error(e.getMessage(), e);
-        }
+    
     }
     
     /**
@@ -116,13 +108,6 @@ public class CertificateManager {
 		this.keyStoreName = keyStoreName;
 	}
 
-	public String getKeyStorePassword() {
-		return keyStorePassword;
-	}
-
-	public void setKeyStorePassword(String keyStorePassword) {
-		this.keyStorePassword = keyStorePassword;
-	}
 
 	/**
      * Find the CA certificate to be used to validate user certificates.
@@ -151,64 +136,20 @@ public class CertificateManager {
     }
     
     /**
-     * Load a certificate from a file.
-     * @param user_cert_name the name of the file containing the certificate.
+     * Load configured certificate from the keystore
      */
-    public X509Certificate loadCertificate(String user_cert_name) {
-        InputStream inStream;
+    public X509Certificate loadCertificate() {
+
         X509Certificate cert = null;
         try {
-            inStream = new FileInputStream(user_cert_name);
-            cert = (X509Certificate) cf.generateCertificate(inStream);
-            inStream.close();
-        } catch (CertificateException e) {
-        	log.error(e.getMessage(), e);
-        } catch (FileNotFoundException e) {
-        	log.error(e.getMessage(), e);
-        } catch (IOException e) {
+        	// load up the PEM
+        	KeyStore keyStore = getKeyStorePEM();
+        	// get it from the store
+            cert = (X509Certificate) keyStore.getCertificate("cilogon");
+        } catch (Exception e) {
         	log.error(e.getMessage(), e);
         }
         return cert;
-    }
-    
-    public X509Certificate loadPK12Certificate() {
-    	X509Certificate x509cert = null;
-        KeyStore ks;
-        try {
-            ks = KeyStore.getInstance("PKCS12");
-            ks.load(new FileInputStream(keyStoreName), keyStorePassword.toCharArray());
-            Enumeration<String> aliases = ks.aliases();
-           
-            while (aliases.hasMoreElements()) {
-                String alias = aliases.nextElement();
-                log.debug("Alias: " + alias);
-                if (ks.isCertificateEntry(alias)) {
-                    Certificate cert = ks.getCertificate(alias);
-                    log.debug("Certificate Type: " + cert.getType());
-                } else if (ks.isKeyEntry(alias)) {
-                    log.debug("This is a key!");
-                    Key key = ks.getKey(alias, keyStorePassword.toCharArray());
-                    log.debug(key.getFormat());
-                    Certificate cert[] = ks.getCertificateChain(alias);
-                    x509cert = (X509Certificate) cert[0];
-                    log.debug("Certificate subject: " + x509cert.getSubjectDN().toString());
-                    break;
-                }
-            }
-        } catch (KeyStoreException e) {
-        	log.error(e.getMessage(), e);
-        } catch (NoSuchAlgorithmException e) {
-        	log.error(e.getMessage(), e);
-        } catch (CertificateException e) {
-        	log.error(e.getMessage(), e);
-        } catch (FileNotFoundException e) {
-        	log.error(e.getMessage(), e);
-        } catch (IOException e) {
-        	log.error(e.getMessage(), e);
-        } catch (UnrecoverableKeyException e) {
-        	log.error(e.getMessage(), e);
-        }
-        return x509cert;
     }
     
     /**
@@ -256,15 +197,19 @@ public class CertificateManager {
 	    		//TODO get the SubjectList info from certificate
 	    		break;
     		}
-    		// for now, look up the subject information from the CNIdentity service
-    		CNode cn = D1Client.getCN();
-    		try {
-				SubjectList subjectList = cn.getSubjectInfo(session, subject);
-				session.setSubjectList(subjectList);
-			} catch (Exception e) {
-				// TODO: should we throw an exception/fail if this part fails?
-				log.error("Could not retrieve complete Subject info for: " + subject, e);
-			}
+    		
+    		// look up the subject information from the CNIdentity service
+    		boolean lookupSubject = false;
+    		if (lookupSubject) {
+	    		CNode cn = D1Client.getCN();
+	    		try {
+					SubjectList subjectList = cn.getSubjectInfo(session, subject);
+					session.setSubjectList(subjectList);
+				} catch (Exception e) {
+					// TODO: should we throw an exception/fail if this part fails?
+					log.error("Could not retrieve complete Subject info for: " + subject, e);
+				}
+    		}
     	}
     	return session;
     }
@@ -309,9 +254,13 @@ public class CertificateManager {
         return socketFactory;
     }
     
+    /**
+     * Load PEM file contents into in-memory keystore
+     * NOTE: this implementation uses Bouncy Castle security provider
+     * @return the keystore that will provide the material
+     */
     private KeyStore getKeyStorePEM() {
     	
-    	// get the keystore that will provide the material
     	KeyStore keyStore = null;
         try {
         	keyStore  = KeyStore.getInstance(keyStoreType);
@@ -350,9 +299,12 @@ public class CertificateManager {
     	
     }
     
+    /**
+     * @deprecated use PEM-based method for retrieving keystore
+     * @return the keystore that will provide the material
+     */
     private KeyStore getKeyStore() {
     	
-    	// get the keystore that will provide the material
     	KeyStore keyStore = null;
         FileInputStream instream = null;
         try {
