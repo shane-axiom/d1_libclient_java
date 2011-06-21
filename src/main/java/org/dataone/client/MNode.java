@@ -47,6 +47,7 @@ import org.dataone.service.exceptions.NotAuthorized;
 import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
+import org.dataone.service.exceptions.SynchronizationFailed;
 import org.dataone.service.exceptions.UnsupportedMetadataType;
 import org.dataone.service.exceptions.UnsupportedQueryType;
 import org.dataone.service.exceptions.UnsupportedType;
@@ -571,6 +572,14 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 	}
 
 	
+	@Override
+	public void synchronizationFailed(Session cert, SynchronizationFailed message)
+	throws NotImplemented, ServiceFailure, NotAuthorized, InvalidRequest {
+		// TODO Auto-generated method stub
+	}
+	
+	
+	
     /////////////////////    Tier 2 :  MNAuthorization API   //////////////////////
 
 	
@@ -901,4 +910,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	}
 		return true;
 	}
+
+
+
 }
