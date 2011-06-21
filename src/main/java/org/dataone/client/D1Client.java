@@ -22,6 +22,7 @@
 
 package org.dataone.client;
 
+import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.types.NodeReference;
