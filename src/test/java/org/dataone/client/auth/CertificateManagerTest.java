@@ -6,7 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.security.cert.X509Certificate;
 
-import org.dataone.client.Settings;
+import org.dataone.configuration.Settings;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;

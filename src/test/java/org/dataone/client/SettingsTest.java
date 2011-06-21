@@ -22,6 +22,7 @@ package org.dataone.client;
 
 import static org.junit.Assert.assertTrue;
 
+import org.dataone.configuration.Settings;
 import org.junit.Before;
 import org.junit.Test;
 

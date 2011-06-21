@@ -37,7 +37,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMReader;
 import org.dataone.client.CNode;
 import org.dataone.client.D1Client;
-import org.dataone.client.Settings;
+import org.dataone.configuration.Settings;
 import org.dataone.service.types.Session;
 import org.dataone.service.types.Subject;
 import org.dataone.service.types.SubjectList;
