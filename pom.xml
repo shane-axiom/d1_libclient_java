@@ -93,7 +93,14 @@
     	<groupId>org.dataone</groupId>
     	<artifactId>d1_common_java</artifactId>
     	<version>0.6.2-SNAPSHOT</version>
-      <type>jar</type>
+		<type>jar</type>
+    </dependency>
+    <dependency>
+    	<groupId>org.dataone</groupId>
+    	<artifactId>d1_common_java</artifactId>
+    	<version>0.6.2-SNAPSHOT</version>
+		<type>test-jar</type>
+		<scope>test</scope>
     </dependency>
   </dependencies>
   <build>
