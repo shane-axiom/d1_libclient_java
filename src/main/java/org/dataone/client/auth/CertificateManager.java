@@ -1,10 +1,11 @@
 package org.dataone.client.auth;
 
-import java.io.FileInputStream;
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyStore;
@@ -52,7 +53,7 @@ public class CertificateManager {
 	
 	private static Log log = LogFactory.getLog(CertificateManager.class);
 	
-	// these should be set by the caller
+	// this can be set by caller if the default discovery mechanism is not applicable
 	private String certificateLocation = null;
 	
 	// other variables
@@ -80,8 +81,7 @@ public class CertificateManager {
      */
     private CertificateManager() {
     	try {
-	    	certificateLocation = Settings.getConfiguration().getString("certificate.location", "/tmp/x509up_u503");
-	    	keyStorePassword = Settings.getConfiguration().getString("certificate.keystore.password", "changeit");
+	    	keyStorePassword = Settings.getConfiguration().getString("certificate.keystore.password");
 	    	keyStoreType = Settings.getConfiguration().getString("certificate.keystore.type", KeyStore.getDefaultType());
     	} catch (Exception e) {
             log.error(e.getMessage(), e);
@@ -261,6 +261,11 @@ public class CertificateManager {
      */
     private KeyStore getKeyStore() {
     	
+    	// if the location has been set, use it
+    	String certLoc = certificateLocation;
+    	if (certLoc == null) {
+    		certLoc = locateCertificate();
+    	}
     	KeyStore keyStore = null;
         try {
         	keyStore  = KeyStore.getInstance(keyStoreType);
@@ -269,7 +274,7 @@ public class CertificateManager {
             // get the private key and certificate from the PEM
             // TODO: find a way to do this with default Java provider (not Bouncy Castle)?
         	Security.addProvider(new BouncyCastleProvider());
-            PEMReader pemReader = new PEMReader(new FileReader(certificateLocation));
+            PEMReader pemReader = new PEMReader(new FileReader(certLoc));
             Object pemObject = null;
             X509Certificate certificate = null;
             PrivateKey privateKey = null;
@@ -297,6 +302,50 @@ public class CertificateManager {
         
         return keyStore;
     	
+    }
+    
+    /**
+     * Locate the default certificate location
+     * http://www.cilogon.org/cert-howto#TOC-Finding-CILogon-Certificates
+     * @return
+     */
+    private String locateCertificate() {
+    	StringBuffer location = new StringBuffer();
+    	
+    	// the tmp dir
+    	String tmp = System.getProperty("tmpdir");
+    	if (tmp == null) {
+    		tmp = "/tmp";
+    	}
+
+    	// UID
+    	String uid = null;
+    	try {
+    		// get the user id from *nix systems
+    		Process process = Runtime.getRuntime().exec("id -u");
+    		int ret = process.waitFor();
+    		if (ret == 0) {
+    			InputStream stream = process.getInputStream();
+    			BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+    			String result = reader.readLine();
+    			// verify it is a number
+    			int testUid = Integer.parseInt(result);
+    			uid = String.valueOf(testUid);
+    		}
+    	} catch (Exception e) {
+			log.warn("No UID found, using user.name");
+		}
+    	if (uid == null) {
+    		uid = System.getProperty("user.name");
+    	}
+		location.append(tmp);
+		location.append("/");
+		location.append("x509up_u");
+		location.append(uid);
+
+		log.debug("Calculated certificate location: " + location.toString());
+		
+    	return location.toString();
     }
     
     /**
