@@ -68,6 +68,7 @@ import org.dataone.service.types.ObjectFormatIdentifier;
 import org.dataone.service.types.ObjectFormatList;
 import org.dataone.service.types.ObjectList;
 import org.dataone.service.types.ObjectLocationList;
+import org.dataone.service.types.Permission;
 import org.dataone.service.types.Person;
 import org.dataone.service.types.QueryType;
 import org.dataone.service.types.ReplicationPolicy;
@@ -375,7 +376,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
     @Override
-    public boolean isAuthorized(Session session, Identifier pid, Event operation) throws ServiceFailure, InvalidToken, NotFound, NotAuthorized, NotImplemented, InvalidRequest {
+    public boolean isAuthorized(Session session, Identifier pid, Permission permission) throws ServiceFailure, InvalidToken, NotFound, NotAuthorized, NotImplemented, InvalidRequest {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
