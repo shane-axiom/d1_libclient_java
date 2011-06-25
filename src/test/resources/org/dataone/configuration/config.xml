@@ -2,7 +2,10 @@
 <!-- Apache Commons Configuration -->
 <configuration>
 	
-	<!-- override the default properties -->
+	<!-- override the d1 client properties if needed for tests -->
+	<properties fileName="d1client.properties"/>
+	
+	<!-- override the default properties to test the Settings class -->
 	<properties fileName="override.properties"/>
 	
 </configuration>

@@ -38,18 +38,6 @@ public class D1Client {
     private static String CN_URI = Settings.getConfiguration().getString("D1Client.CN_URL");
 
     private static CNode cn = null;
-
-    /**
-     * Construct a client instance, setting the URI to be used for the coordinating node
-     * for this client.  This overrides the default, and typically need not be used
-     * except for testing.  Typical usage is to call the static getCN() method to
-     * find use the standard CN location.
-     * @param cnUri the alternate CN to use for this client
-     */
-    public D1Client(String cnUri) {
-        CN_URI = cnUri;
-        cn = new CNode(CN_URI);
-    }
     
 	/**
 	 * Get the client instance of the Coordinating Node object for calling Coordinating Node services.
