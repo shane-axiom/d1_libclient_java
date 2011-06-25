@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.dataone.client.auth.CertificateManager;
+import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.InvalidRequest;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
@@ -46,7 +47,7 @@ import org.junit.rules.ErrorCollector;
  * @author Matthew Jones
  */
 public class D1ClientUnitTest  {
-    private static final String TEST_CN_URL = "http://cn-dev.dataone.org/cn/";
+    private static final String TEST_CN_URL = Settings.getConfiguration().getString("D1Client.CN_URL");
 
     @Rule 
     public ErrorCollector errorCollector = new ErrorCollector();
@@ -70,7 +71,6 @@ public class D1ClientUnitTest  {
     @Test
     public void testNodeMap() throws ServiceFailure, NotImplemented {
         printHeader("testNodeMap");
-        D1Client d1 = new D1Client(TEST_CN_URL);
         CNode cn = D1Client.getCN();
         String nodeId = cn.lookupNodeId(TEST_CN_URL);
         assertTrue(nodeId != null);
@@ -86,7 +86,6 @@ public class D1ClientUnitTest  {
     @Test
     public void testListSubjects() {
         printHeader("testListSubjects");
-        D1Client d1 = new D1Client("https://nceas-macbook07.msi.ucsb.edu:8443/cn/");
         CNode cn = D1Client.getCN();
         SubjectList subjects = null;
         Session session = new Session();
