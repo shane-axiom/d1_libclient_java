@@ -773,8 +773,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     }
 
     @Override
-    public Log getLogRecords(Session session, Date fromDate, Date toDate, Event event) 
-    throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented, InvalidRequest 
+    public Log getLogRecords(Session session, Date fromDate, Date toDate, Event event, 
+    		Integer start, Integer count) throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented, InvalidRequest 
     {
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_LOG);
         if (fromDate == null) {
