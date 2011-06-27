@@ -1388,7 +1388,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     
     @Override
     public boolean setReplicationPolicy(Session session, Identifier pid, ReplicationPolicy policy) 
-    throws ServiceFailure, NotAuthorized, NotImplemented, InvalidRequest 
+    throws ServiceFailure, NotAuthorized, NotFound, NotImplemented, InvalidRequest 
     {
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_POLICY);
     	url.addNextPathElement(pid.getValue());
