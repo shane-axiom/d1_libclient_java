@@ -669,8 +669,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     }
 
     
-//    @Override
-    public boolean addNodeCapabilities(Session session, NodeReference nodeid, Node node) 
+    @Override
+    public boolean updateNodeCapabilities(Session session, NodeReference nodeid, Node node) 
     throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, NotFound 
     {
         
