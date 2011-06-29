@@ -292,7 +292,7 @@ public abstract class D1Node {
 	 * @throws InvalidCredentials
 	 * @throws InvalidRequest
 	 */
-    protected void deserializeAndThrowException(int httpCode, InputStream errorStream)
+    protected static void deserializeAndThrowException(int httpCode, InputStream errorStream)
 			throws NotFound, InvalidToken, ServiceFailure, NotAuthorized,
 			NotFound, IdentifierNotUnique, UnsupportedType,
 			InsufficientResources, InvalidSystemMetadata, NotImplemented,
@@ -356,7 +356,7 @@ public abstract class D1Node {
     /*
      * helper method for deserializeAndThrowException.  Used for problems parsing errorStream as XML
      */
-    private String deserializeNonXMLErrorStream(BufferedInputStream errorStream, Exception e) 
+    private static String deserializeNonXMLErrorStream(BufferedInputStream errorStream, Exception e) 
     {
     	String errorString = null;
     	try {
@@ -374,7 +374,7 @@ public abstract class D1Node {
 	 * Take a xml element and the tag name, return the text content of the child
 	 * element.
 	 */
-	protected String getTextValue(Element e, String tag) {
+	protected static String getTextValue(Element e, String tag) {
 		String text = null;
 		NodeList nl = e.getElementsByTagName(tag);
 		if (nl != null && nl.getLength() > 0) {
@@ -395,7 +395,7 @@ public abstract class D1Node {
 	 * @param attName
 	 * @return
 	 */
-	protected int getIntAttribute(Element e, String attName)
+	protected static int getIntAttribute(Element e, String attName)
 	throws NumberFormatException {
             if (e.hasAttribute(attName)) {
 		String attText = e.getAttribute(attName);
