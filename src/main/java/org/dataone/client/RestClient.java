@@ -41,9 +41,9 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.ssl.SSLSocketFactory;
-import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.dataone.client.auth.CertificateManager;
+import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.Constants;
 import org.dataone.service.EncodingUtilities;
 
@@ -53,7 +53,7 @@ import org.dataone.service.EncodingUtilities;
  * A generic client class that contains base functionality for making REST calls
  * to remote REST servers.  
  * It is built to encapsulate the communication conventions dataONE is following
- * but does not know about dataone objects 
+ * but does not know about dataone objects (see D1RestClient for that)
  * */
 public class RestClient {
 
@@ -184,7 +184,7 @@ public class RestClient {
      * @throws ClientProtocolException 
 	 */
 
-	public HttpResponse doDeleteRequest(String url, MultipartEntity mpe) throws ClientProtocolException, IOException {
+	public HttpResponse doDeleteRequest(String url, SimpleMultipartEntity mpe) throws ClientProtocolException, IOException {
 		return doRequestMMBody(url,Constants.DELETE, mpe);
 	}
 	
@@ -193,7 +193,7 @@ public class RestClient {
      * @throws IOException 
      * @throws ClientProtocolException  
 	 */
-	public HttpResponse doPostRequest(String url, MultipartEntity mpe) throws ClientProtocolException, IOException   {
+	public HttpResponse doPostRequest(String url, SimpleMultipartEntity mpe) throws ClientProtocolException, IOException   {
 		return doRequestMMBody(url,Constants.POST,mpe);
 	}
 
@@ -202,7 +202,7 @@ public class RestClient {
      * @throws IOException 
      * @throws ClientProtocolException 
 	 */
-	public HttpResponse doPutRequest(String url, MultipartEntity mpe) throws ClientProtocolException, IOException  {
+	public HttpResponse doPutRequest(String url, SimpleMultipartEntity mpe) throws ClientProtocolException, IOException  {
 		return doRequestMMBody(url,Constants.PUT,mpe);
 	}
 	
@@ -232,7 +232,7 @@ public class RestClient {
 	/*
 	 * assembles the request for POSTs and PUTs (uses a different base class for these entity-enclosing methods)
 	 */
-	private HttpResponse doRequestMMBody(String url,String httpMethod, MultipartEntity mpe) throws ClientProtocolException, IOException {
+	private HttpResponse doRequestMMBody(String url,String httpMethod, SimpleMultipartEntity mpe) throws ClientProtocolException, IOException {
 		if (verbose) {
 			System.out.println("restURL: " + url);
 			System.out.println("method: " + httpMethod);
@@ -253,7 +253,9 @@ public class RestClient {
 			if (verbose)
 				System.out.println("entity: null");
 		}
-		return doRequest(req);		
+		HttpResponse response = doRequest(req);		
+		mpe.cleanupTempFiles();
+		return response;
 	}
 
 	/*

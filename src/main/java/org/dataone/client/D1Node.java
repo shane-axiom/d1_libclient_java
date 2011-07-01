@@ -25,6 +25,7 @@ package org.dataone.client;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -48,8 +49,6 @@ import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.exceptions.UnsupportedMetadataType;
 import org.dataone.service.exceptions.UnsupportedQueryType;
 import org.dataone.service.exceptions.UnsupportedType;
-import org.dataone.service.types.AccessPolicy;
-import org.dataone.service.types.AccessRule;
 import org.dataone.service.types.Identifier;
 import org.dataone.service.types.Session;
 import org.dataone.service.types.Subject;
@@ -142,7 +141,7 @@ public abstract class D1Node {
      * session object if null is passed into a service api method. 
      * @return 
      */
-    protected Session createPublicSession() {
+    protected static Session createPublicSession() {
 
     	Session session = new Session();
     	Subject sub = new Subject();
@@ -150,6 +149,7 @@ public abstract class D1Node {
     	session.setSubject(sub);
     	return session;
     }
+    
   
     
 	/**
