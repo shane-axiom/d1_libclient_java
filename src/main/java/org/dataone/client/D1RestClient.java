@@ -29,12 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.TimeZone;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -45,8 +40,7 @@ import org.apache.http.Header;
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.entity.mime.MultipartEntity;
-
+import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.exceptions.AuthenticationTimeout;
 import org.dataone.service.exceptions.IdentifierNotUnique;
 import org.dataone.service.exceptions.InsufficientResources;
@@ -64,18 +58,14 @@ import org.dataone.service.exceptions.UnsupportedType;
 import org.dataone.service.types.Identifier;
 import org.dataone.service.types.ObjectList;
 import org.dataone.service.types.SystemMetadata;
-
-
 import org.jibx.runtime.BindingDirectory;
 import org.jibx.runtime.IBindingFactory;
 import org.jibx.runtime.IMarshallingContext;
 import org.jibx.runtime.IUnmarshallingContext;
 import org.jibx.runtime.JiBXException;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-
 import org.xml.sax.SAXException;
 
 /**
@@ -122,7 +112,7 @@ public class D1RestClient {
 		return filterErrors(rc.doDeleteRequest(url));
 	}
 	
-	public InputStream doDeleteRequest(String url, MultipartEntity mpe) 
+	public InputStream doDeleteRequest(String url, SimpleMultipartEntity mpe) 
 	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
 	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
 	NotAuthorized, NotFound, NotImplemented, ServiceFailure, 
@@ -144,7 +134,7 @@ public class D1RestClient {
 		return filterErrorsHeader(rc.doHeadRequest(url));
 	}
 	
-	public InputStream doPutRequest(String url, MultipartEntity entity) 
+	public InputStream doPutRequest(String url, SimpleMultipartEntity entity) 
 	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
 	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
 	NotAuthorized, NotFound, NotImplemented, ServiceFailure, 
@@ -155,7 +145,7 @@ public class D1RestClient {
 		return filterErrors(rc.doPutRequest(url, entity));
 	}
 	
-	public InputStream doPostRequest(String url, MultipartEntity entity) 
+	public InputStream doPostRequest(String url, SimpleMultipartEntity entity) 
 	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
 	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
 	NotAuthorized, NotFound, NotImplemented, ServiceFailure, 
