@@ -83,22 +83,6 @@ import org.jibx.runtime.JiBXException;
 public class MNode extends D1Node 
 implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication 
 {
-
-//	/**
-//	 * Construct new a client-side MNode object, using the  passing in the base url for node services.
-//	 * @param cn - used for looking up the 
-//	 * @param nodeBaseServiceUrl
-//	 * @throws ServiceFailure 
-//	 */
-//    public MNode(CNode cn, String nodeBaseServiceUrl) {
-//        super(nodeBaseServiceUrl);
-//        
-//        if (cn != null) {
-//        	String regNodeId = cn.lookupNodeId(nodeBaseServiceUrl);
-//        	this.setNodeId(regNodeId);
-//        }
-//       
-//    } 
     
     /**
      * Construct a new client-side MNode (Member Node) object, 
@@ -116,8 +100,9 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
      * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_core.ping
      */
 	public boolean ping() 
-	throws NotImplemented, ServiceFailure, NotAuthorized,
-		InvalidRequest, InsufficientResources, UnsupportedType 
+	throws 
+		InvalidRequest, NotAuthorized, NotImplemented, ServiceFailure, 
+		InsufficientResources, UnsupportedType 
 	{
 		 // assemble the url
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_MONITOR_PING);
@@ -128,35 +113,23 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	
     	try {
 			is = client.doGetRequest(url.getUrl());
-    	} catch (NotFound e) {
-    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-    	} catch (UnsupportedQueryType e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-    	} catch (IdentifierNotUnique e) {
-    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-    	} catch (InvalidToken e) {
-    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-    	} catch (InvalidSystemMetadata e) {
-    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-    	} catch (InvalidCredentials e) {
-    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-    	} catch (AuthenticationTimeout e) {
-    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-    	} catch (UnsupportedMetadataType e) {
-    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-    	} catch (UnsupportedType e) {
-    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (InsufficientResources e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		}   catch (ClientProtocolException e) {
-    		throw recastClientSideExceptionToServiceFailure(e);
-    	} catch (IllegalStateException e) {
-    		throw recastClientSideExceptionToServiceFailure(e);
-    	} catch (IOException e) {
-    		throw recastClientSideExceptionToServiceFailure(e);
-    	} catch (HttpException e) {
-    		throw recastClientSideExceptionToServiceFailure(e);
-		}
+    	} 
+    	catch (AuthenticationTimeout e)   { throw recastDataONEExceptionToServiceFailure(e); }
+    	catch (NotFound e)                { throw recastDataONEExceptionToServiceFailure(e); }
+    	catch (IdentifierNotUnique e)     { throw recastDataONEExceptionToServiceFailure(e); }
+    	catch (InsufficientResources e)   { throw recastDataONEExceptionToServiceFailure(e); }
+    	catch (InvalidCredentials e)      { throw recastDataONEExceptionToServiceFailure(e); }
+    	catch (InvalidSystemMetadata e)   { throw recastDataONEExceptionToServiceFailure(e); }
+    	catch (InvalidToken e)            { throw recastDataONEExceptionToServiceFailure(e); }
+    	catch (UnsupportedMetadataType e) { throw recastDataONEExceptionToServiceFailure(e); }
+    	catch (UnsupportedQueryType e)    { throw recastDataONEExceptionToServiceFailure(e); }
+    	catch (UnsupportedType e)         { throw recastDataONEExceptionToServiceFailure(e); }
+
+		catch (ClientProtocolException e) {	throw recastClientSideExceptionToServiceFailure(e); }
+    	catch (IllegalStateException e)   {	throw recastClientSideExceptionToServiceFailure(e); }
+    	catch (IOException e) 		      {	throw recastClientSideExceptionToServiceFailure(e); }
+    	catch (HttpException e) 		  {	throw recastClientSideExceptionToServiceFailure(e); }
+
     	// if exception not thrown, and we got this far,
     	// then success (input stream should be empty)
     	return true;
@@ -358,10 +331,6 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	if(pid == null || pid.getValue().trim().equals(""))
     		throw new InvalidRequest("1362", "GUID cannot be null.");
     	url.addNextPathElement(pid.getValue());
-    	
-//    	if (token == null)
-//    		token = new AuthToken("public");
-//    	url.addNonEmptyParamPair("sessionid", token.getToken());
     	
      	D1RestClient client = new D1RestClient(true, verbose);
 //    	client.setHeader("token", token.getToken());
