@@ -215,20 +215,18 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 	/**
      * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_core.getOperationStatistics
      */
-	public MonitorList getOperationStatistics(Session cert, Integer period,
-		Subject requestor, Event event, ObjectFormat format)
+	public MonitorList getOperationStatistics(Session cert, String startTime,
+		String endTime, Subject requestor, Event event, ObjectFormat format)
 	throws NotImplemented, ServiceFailure, NotAuthorized,
 		InvalidRequest, InsufficientResources, UnsupportedType 
 	{
 		
 		 // assemble the url
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_MONITOR_EVENT);
-//        url.addNextPathElement("event");
         
-//    	if (token != null)
-//    		url.addNonEmptyParamPair("sessionid", token.getToken());
-        url.addNonEmptyParamPair("period", period);
-    	url.addNonEmptyParamPair("requrestor", requestor.getValue());
+        url.addNonEmptyParamPair("startTime", startTime);
+        url.addNonEmptyParamPair("endTime", endTime);
+    	url.addNonEmptyParamPair("requestor", requestor.getValue());
     	url.addNonEmptyParamPair("event", event.toString());
 
     	// send the request
