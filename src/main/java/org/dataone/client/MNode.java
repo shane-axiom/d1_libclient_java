@@ -174,7 +174,8 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         
     	url.addDateParamPair("fromDate", fromDate);
     	url.addDateParamPair("toDate", toDate);
-    	url.addNonEmptyParamPair("event", event.toString());
+    	if (event != null)
+    		url.addNonEmptyParamPair("event", event.toString());
     	url.addNonEmptyParamPair("start", start);
     	url.addNonEmptyParamPair("count", count);
 
@@ -229,9 +230,12 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         
         url.addDateParamPair("startTime", startTime);
         url.addDateParamPair("endTime", endTime);
-    	url.addNonEmptyParamPair("requestor", requestor.getValue());
-    	url.addNonEmptyParamPair("event", event.toString());
-    	url.addNonEmptyParamPair("formatId", formatId.getValue());
+        if (requestor != null)
+        	url.addNonEmptyParamPair("requestor", requestor.getValue());
+        if (event != null)
+        	url.addNonEmptyParamPair("event", event.toString());
+        if (formatId != null)
+        	url.addNonEmptyParamPair("formatId", formatId.getValue());
 
     	// send the request
     	D1RestClient client = new D1RestClient(true, verbose);
