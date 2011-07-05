@@ -25,6 +25,7 @@ package org.dataone.client;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Iterator;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -36,6 +37,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.dataone.service.Constants;
 import org.dataone.service.D1Url;
 import org.dataone.service.exceptions.AuthenticationTimeout;
+import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.IdentifierNotUnique;
 import org.dataone.service.exceptions.InsufficientResources;
 import org.dataone.service.exceptions.InvalidCredentials;
@@ -271,6 +273,25 @@ public abstract class D1Node {
     	return sfe;
     }
 
+    
+    /**
+     * A helper function for recasting DataONE exceptions to ServiceFailures while
+     * preserving the detail code and TraceDetails.
+
+     * @param be - BaseException subclass to be recast
+     * @return ServiceFailure
+     */
+    protected static ServiceFailure recastDataONEExceptionToServiceFailure(BaseException be) {	
+    	ServiceFailure sfe = new ServiceFailure(be.getDetail_code(), 
+    			"Recasted unexpected exception from the service - " + be.getClass() + ": "+ be.getMessage());
+    	
+    	Iterator<String> it = be.getTraceKeySet().iterator();
+    	while (it.hasNext()) {
+    		String key = it.next();
+    		sfe.addTraceDetail(key, be.getTraceDetail(key));
+    	}
+    	return sfe;
+    }
 
 	/**
 	 *  converts the serialized errorStream to the appropriate Java Exception
