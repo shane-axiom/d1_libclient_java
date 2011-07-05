@@ -67,6 +67,7 @@ import org.dataone.service.types.MonitorList;
 import org.dataone.service.types.Node;
 import org.dataone.service.types.NodeReference;
 import org.dataone.service.types.ObjectFormat;
+import org.dataone.service.types.ObjectFormatIdentifier;
 import org.dataone.service.types.ObjectList;
 import org.dataone.service.types.Permission;
 import org.dataone.service.types.Session;
@@ -165,8 +166,9 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
      * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_core.getLogRecords
      */
 	public Log getLogRecords(Session cert, Date fromDate, Date toDate,
-			Event event, Integer start, Integer count) throws InvalidToken,
-			ServiceFailure, NotAuthorized, InvalidRequest, NotImplemented {
+			Event event, Integer start, Integer count) 
+	throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
+	{
 		 // assemble the url
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_LOG);
         
@@ -215,19 +217,21 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 	/**
      * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_core.getOperationStatistics
      */
-	public MonitorList getOperationStatistics(Session cert, String startTime,
-		String endTime, Subject requestor, Event event, ObjectFormat format)
-	throws NotImplemented, ServiceFailure, NotAuthorized,
-		InvalidRequest, InsufficientResources, UnsupportedType 
+	public MonitorList getOperationStatistics(Session cert, Date startTime,
+		Date endTime, Subject requestor, Event event, ObjectFormatIdentifier formatId)
+	throws 
+		InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure,
+		InsufficientResources, UnsupportedType 
 	{
 		
 		 // assemble the url
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_MONITOR_EVENT);
         
-        url.addNonEmptyParamPair("startTime", startTime);
-        url.addNonEmptyParamPair("endTime", endTime);
+        url.addDateParamPair("startTime", startTime);
+        url.addDateParamPair("endTime", endTime);
     	url.addNonEmptyParamPair("requestor", requestor.getValue());
     	url.addNonEmptyParamPair("event", event.toString());
+    	url.addNonEmptyParamPair("formatId", formatId.getValue());
 
     	// send the request
     	D1RestClient client = new D1RestClient(true, verbose);
@@ -238,8 +242,6 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	} catch (NotFound e) {
     		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
     	} catch (IdentifierNotUnique e) {
-    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-    	} catch (InvalidToken e) {
     		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
     	} catch (InvalidSystemMetadata e) {
     		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
