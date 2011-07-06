@@ -296,6 +296,11 @@ public class CertificateManager {
             // set the entry
 			keyStore.setKeyEntry("cilogon", privateKey, keyStorePassword.toCharArray(), chain);
         } 
+        catch (FileNotFoundException e) {
+        	// means the supposed certificate is not present
+        	// give a meaningful message and leave out the stack-trace
+        	log.warn("No certificate installed in expected location. Msg:  FileNotFoundException: " + e.getMessage());
+        }
         catch (Exception e) {
         	log.error(e.getMessage(), e);
         }
