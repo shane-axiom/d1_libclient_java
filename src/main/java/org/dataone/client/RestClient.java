@@ -253,8 +253,9 @@ public class RestClient {
 			if (verbose)
 				System.out.println("entity: null");
 		}
-		HttpResponse response = doRequest(req);		
-		mpe.cleanupTempFiles();
+		HttpResponse response = doRequest(req);
+		if (mpe != null)
+			mpe.cleanupTempFiles();
 		return response;
 	}
 
