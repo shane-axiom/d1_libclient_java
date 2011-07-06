@@ -30,6 +30,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpDelete;
@@ -57,10 +59,12 @@ import org.dataone.service.EncodingUtilities;
  * */
 public class RestClient {
 
+	protected static Log log = LogFactory.getLog(RestClient.class);
+	
     /** The URL string for the node REST API */
     private DefaultHttpClient httpClient;
     private HashMap<String, String> headers = new HashMap<String, String>();
-    private boolean verbose = false;
+    
 	/**
 	 * Constructor to create a new instance.
 	 */
@@ -76,7 +80,7 @@ public class RestClient {
             Scheme sch = new Scheme("https", socketFactory, 443);
             httpClient.getConnectionManager().getSchemeRegistry().register(sch);
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error(e.getStackTrace());
 		}
 	}
 
@@ -138,14 +142,6 @@ public class RestClient {
 	
 	public HashMap<String, String> getAddedHeaders() {
 		return headers;
-	}
-    
-	public boolean isVerbose() {
-		return this.verbose;
-	}
-	
-	public void setVerbose(boolean verbose) {
-		this.verbose = verbose;
 	}
 	
 	
@@ -211,10 +207,9 @@ public class RestClient {
 	 * assembles the request for GETs, HEADs and DELETEs - assumes no message body
 	 */
 	private HttpResponse doRequestNoBody(String url,String httpMethod) throws ClientProtocolException, IOException  {
-		if (verbose) {
-			System.out.println("restURL: " + url);
-			System.out.println("method: " + httpMethod);
-		}
+		log.info("restURL: " + url);
+		log.info("method: " + httpMethod);
+
 		HttpUriRequest req = null;
 		if (httpMethod == Constants.GET) 
 			req = new HttpGet(url);        	
@@ -233,10 +228,9 @@ public class RestClient {
 	 * assembles the request for POSTs and PUTs (uses a different base class for these entity-enclosing methods)
 	 */
 	private HttpResponse doRequestMMBody(String url,String httpMethod, SimpleMultipartEntity mpe) throws ClientProtocolException, IOException {
-		if (verbose) {
-			System.out.println("restURL: " + url);
-			System.out.println("method: " + httpMethod);
-		}
+		log.info("restURL: " + url);
+		log.info("method: " + httpMethod);
+		
 		HttpEntityEnclosingRequestBase req = null;
 		if (httpMethod == Constants.PUT)
 			req = new HttpPut(url);
@@ -247,11 +241,9 @@ public class RestClient {
 	
 		if (mpe != null) {
 			req.setEntity(mpe);
-			if (verbose)
-				System.out.println("entity: present");
+			log.info("entity: present");
 		} else {
-			if (verbose)
-				System.out.println("entity: null");
+			log.info("entity: null");
 		}
 		HttpResponse response = doRequest(req);
 		if (mpe != null)
