@@ -36,6 +36,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.http.Header;
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
@@ -73,9 +75,12 @@ import org.xml.sax.SAXException;
  * (subclassing the RestClient was impractical due to differences in method signatures)
  */
 public class D1RestClient {
+	
+	protected static Log log = LogFactory.getLog(D1RestClient.class);
+	
     protected RestClient rc;
     private boolean exceptionHandling = true;
-    private boolean verbose = false;
+
 	/**
 	 * Constructor to create a new instance.
 	 */
@@ -87,7 +92,6 @@ public class D1RestClient {
 	public D1RestClient(boolean handlesExceptions, boolean isVerbose) {
 		this.rc = new RestClient();
 		setExceptionHandling(handlesExceptions);
-		setVerbose(isVerbose);
 	}
  
 	public InputStream doGetRequest(String url) 
@@ -166,9 +170,8 @@ public class D1RestClient {
 
 		if (this.getExceptionHandling()) {
 			int code = res.getStatusLine().getStatusCode();
-			if (verbose)
-				System.out.println("response httpCode: " + code);
-			//		System.out.println(IOUtils.toString(res.getEntity().getContent()));
+			log.info("response httpCode: " + code);
+//			log.debug(IOUtils.toString(res.getEntity().getContent()));
 			if (code != HttpURLConnection.HTTP_OK) {
 				// error, so throw exception
 				deserializeAndThrowException(res);
@@ -186,8 +189,7 @@ public class D1RestClient {
 	{
 		if (this.getExceptionHandling()) {
 			int code = res.getStatusLine().getStatusCode();
-			if (verbose)
-				System.out.println("response httpCode: " + code);
+			log.info("response httpCode: " + code);
 			if (code != HttpURLConnection.HTTP_OK) {
 				// error, so throw exception
 				deserializeAndThrowException(res);
@@ -212,15 +214,6 @@ public class D1RestClient {
 		return rc.getAddedHeaders();
 	}
 	
-	
-	public boolean isVerbose() {
-		return this.verbose;
-	}
-	
-	public void setVerbose(boolean verbose) {
-		this.verbose = verbose;
-		rc.setVerbose(verbose);
-	}
 	
 	
 // ========================  original handlers ==============================//
@@ -595,8 +588,7 @@ public class D1RestClient {
 		try {
 			InputStream is = resp.getEntity().getContent();
 			Header type = resp.getEntity().getContentType();
-			if (verbose)
-				System.out.println("Response content-type: "+ type.getValue());
+			log.info("Response content-type: "+ type.getValue());
 			if (is != null)
 				id = (Identifier)deserializeServiceType(Identifier.class, is);
 			else
