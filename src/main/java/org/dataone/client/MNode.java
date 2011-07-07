@@ -543,7 +543,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 	
 	@Override
 	public void synchronizationFailed(Session cert, SynchronizationFailed message)
-	throws NotImplemented, ServiceFailure, NotAuthorized, InvalidRequest {
+	throws InvalidToken, NotImplemented, ServiceFailure, NotAuthorized, InvalidRequest {
 		// TODO Auto-generated method stub
 	}
 	
