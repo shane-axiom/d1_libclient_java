@@ -423,8 +423,6 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_CHECKSUM);
     	url.addNextPathElement(pid.getValue());
         
-//    	if (token != null)
-//    		url.addNonEmptyParamPair("sessionid", token.getToken());
     	url.addNonEmptyParamPair("checksumAlgorithm", checksumAlgorithm);
 
     	// send the request
@@ -486,7 +484,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
      * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.listObjects
      */
 	public ObjectList listObjects(Session cert, Date startTime, Date endTime, 
-	ObjectFormat objectFormat, Boolean replicaStatus, Integer start, Integer count) 
+	ObjectFormatIdentifier objectFormatId, Boolean replicaStatus, Integer start, Integer count) 
 	throws NotAuthorized, InvalidRequest, NotImplemented, ServiceFailure, InvalidToken 
 	{
 		
@@ -497,8 +495,8 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 		
 		url.addDateParamPair("startTime", startTime);
 		url.addDateParamPair("endTime", endTime);
-		if (objectFormat != null) 
-			url.addNonEmptyParamPair("objectFormat", objectFormat.toString());
+		if (objectFormatId != null) 
+			url.addNonEmptyParamPair("objectFormat", objectFormatId.getValue());
 		if (replicaStatus) {
 			url.addNonEmptyParamPair("replicaStatus", 1);
 		} else {
@@ -506,8 +504,6 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 		}
 		url.addNonEmptyParamPair("start",start);
 		url.addNonEmptyParamPair("count",count);
-//    	if (token != null)
-//    		url.addNonEmptyParamPair("sessionid",token.getToken());
 
 		D1RestClient client = new D1RestClient(true, verbose);
 
