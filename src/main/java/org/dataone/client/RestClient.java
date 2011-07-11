@@ -23,6 +23,7 @@
 package org.dataone.client;
 
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -75,13 +76,20 @@ public class RestClient {
 	
 	
 	public void setupSSL() {
-		try {	
-            SSLSocketFactory socketFactory = CertificateManager.getInstance().getSSLSocketFactory();
-            Scheme sch = new Scheme("https", socketFactory, 443);
-            httpClient.getConnectionManager().getSchemeRegistry().register(sch);
-		} catch (Exception e) {
-			log.error(e.getStackTrace());
-		}
+		
+			try {
+				SSLSocketFactory socketFactory = CertificateManager.getInstance().getSSLSocketFactory();
+				Scheme sch = new Scheme("https", socketFactory, 443);
+	            httpClient.getConnectionManager().getSchemeRegistry().register(sch);
+			} catch (FileNotFoundException e) {
+				// these are somewhat expected for anonymous d1 client use
+				log.warn("Could not set up SSL connection for client - likely because the certificate could not be located: " + e.getMessage());
+			} catch (Exception e) {
+				// this is likely more severe
+				log.error("Failed to set up SSL connection for client: " + e.getMessage(), e);
+			}
+            
+		
 	}
 
     // ==========================  New Handlers ===========================//

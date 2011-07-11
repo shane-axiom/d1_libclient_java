@@ -1,12 +1,14 @@
 package org.dataone.client.auth;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.InvalidKeyException;
+import java.security.KeyManagementException;
 import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -17,6 +19,7 @@ import java.security.PrivateKey;
 import java.security.SecureRandom;
 import java.security.Security;
 import java.security.SignatureException;
+import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -214,7 +217,7 @@ public class CertificateManager {
     	return session;
     }
     
-    public SSLSocketFactory getSSLSocketFactory() throws Exception{
+    public SSLSocketFactory getSSLSocketFactory() throws NoSuchAlgorithmException, UnrecoverableKeyException, KeyStoreException, KeyManagementException, CertificateException, IOException {
     	// our return object
     	SSLSocketFactory socketFactory = null;
     	
@@ -258,8 +261,12 @@ public class CertificateManager {
      * Load PEM file contents into in-memory keystore
      * NOTE: this implementation uses Bouncy Castle security provider
      * @return the keystore that will provide the material
+     * @throws KeyStoreException 
+     * @throws CertificateException 
+     * @throws NoSuchAlgorithmException 
+     * @throws IOException 
      */
-    private KeyStore getKeyStore() {
+    private KeyStore getKeyStore() throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
     	
     	// if the location has been set, use it
     	String certLoc = certificateLocation;
@@ -267,43 +274,34 @@ public class CertificateManager {
     		certLoc = locateCertificate();
     	}
     	KeyStore keyStore = null;
-        try {
-        	keyStore  = KeyStore.getInstance(keyStoreType);
-            keyStore.load(null, keyStorePassword.toCharArray());
+    	
+    	keyStore  = KeyStore.getInstance(keyStoreType);
+        keyStore.load(null, keyStorePassword.toCharArray());
 
-            // get the private key and certificate from the PEM
-            // TODO: find a way to do this with default Java provider (not Bouncy Castle)?
-        	Security.addProvider(new BouncyCastleProvider());
-            PEMReader pemReader = new PEMReader(new FileReader(certLoc));
-            Object pemObject = null;
-            X509Certificate certificate = null;
-            PrivateKey privateKey = null;
-            KeyPair keyPair = null;
-            while ((pemObject = pemReader.readObject()) != null) {
-				if (pemObject instanceof PrivateKey) {
-					privateKey = (PrivateKey) pemObject;
-				}
-				else if (pemObject instanceof KeyPair) {
-					keyPair = (KeyPair) pemObject;
-					privateKey = keyPair.getPrivate();
-				} else if (pemObject instanceof X509Certificate) {
-					certificate = (X509Certificate) pemObject;
-				}
+        // get the private key and certificate from the PEM
+        // TODO: find a way to do this with default Java provider (not Bouncy Castle)?
+    	Security.addProvider(new BouncyCastleProvider());
+        PEMReader pemReader = new PEMReader(new FileReader(certLoc));
+        Object pemObject = null;
+        X509Certificate certificate = null;
+        PrivateKey privateKey = null;
+        KeyPair keyPair = null;
+        while ((pemObject = pemReader.readObject()) != null) {
+			if (pemObject instanceof PrivateKey) {
+				privateKey = (PrivateKey) pemObject;
 			}
+			else if (pemObject instanceof KeyPair) {
+				keyPair = (KeyPair) pemObject;
+				privateKey = keyPair.getPrivate();
+			} else if (pemObject instanceof X509Certificate) {
+				certificate = (X509Certificate) pemObject;
+			}
+		}
 
-            Certificate[] chain = new Certificate[] {certificate};
-            
-            // set the entry
-			keyStore.setKeyEntry("cilogon", privateKey, keyStorePassword.toCharArray(), chain);
-        } 
-        catch (FileNotFoundException e) {
-        	// means the supposed certificate is not present
-        	// give a meaningful message and leave out the stack-trace
-        	log.warn("No certificate installed in expected location. Msg:  FileNotFoundException: " + e.getMessage());
-        }
-        catch (Exception e) {
-        	log.error(e.getMessage(), e);
-        }
+        Certificate[] chain = new Certificate[] {certificate};
+        
+        // set the entry
+		keyStore.setKeyEntry("cilogon", privateKey, keyStorePassword.toCharArray(), chain);
         
         return keyStore;
     	
@@ -313,8 +311,9 @@ public class CertificateManager {
      * Locate the default certificate location
      * http://www.cilogon.org/cert-howto#TOC-Finding-CILogon-Certificates
      * @return
+     * @throws FileNotFoundException 
      */
-    private String locateCertificate() {
+    private String locateCertificate() throws FileNotFoundException {
     	StringBuffer location = new StringBuffer();
     	
     	// the tmp dir
@@ -349,6 +348,10 @@ public class CertificateManager {
 		location.append(uid);
 
 		log.debug("Calculated certificate location: " + location.toString());
+		File fileLocation = new File(location.toString());
+		if (!fileLocation.exists()) {
+			throw new FileNotFoundException("No certificate installed in expected location: " + location.toString());
+		}
 		
     	return location.toString();
     }
