@@ -321,7 +321,43 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
             String relationship, Identifier pidOfObject) throws InvalidToken,
             ServiceFailure, NotAuthorized, NotFound, InvalidRequest,
             NotImplemented {
-        throw new NotImplemented("4221", "Client does not implement this method.");
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_RELATIONSHIP);
+    	url.addNextPathElement(pidOfSubject.getValue());
+    	url.addNonEmptyParamPair("relationship", relationship);
+    	url.addNonEmptyParamPair("pidOfObject", pidOfObject.getValue());
+
+    	// send the request
+    	D1RestClient client = new D1RestClient(true, verbose);
+    	InputStream is = null;
+    	
+    	try {
+			is = client.doGetRequest(url.getUrl());
+		} catch (IdentifierNotUnique e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (UnsupportedType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (UnsupportedQueryType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InsufficientResources e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InvalidSystemMetadata e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InvalidCredentials e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (AuthenticationTimeout e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (UnsupportedMetadataType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (ClientProtocolException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+    	} catch (IllegalStateException e) {
+    		throw recastClientSideExceptionToServiceFailure(e);
+    	} catch (IOException e) {
+    		throw recastClientSideExceptionToServiceFailure(e);
+    	} catch (HttpException e) {
+    		throw recastClientSideExceptionToServiceFailure(e);
+    	}  
+    	return true;
     }
 
 
