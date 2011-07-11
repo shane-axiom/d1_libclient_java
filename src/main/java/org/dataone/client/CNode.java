@@ -413,7 +413,42 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
     @Override
     public boolean isAuthorized(Session session, Identifier pid, Permission permission) throws ServiceFailure, InvalidToken, NotFound, NotAuthorized, NotImplemented, InvalidRequest {
-        throw new UnsupportedOperationException("Not supported yet.");
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_AUTHORIZATION);
+    	url.addNextPathElement(pid.getValue());
+    	url.addNonEmptyParamPair("permission", permission.toString());
+
+    	// send the request
+    	D1RestClient client = new D1RestClient(true, verbose);
+    	InputStream is = null;
+    	
+    	try {
+			is = client.doGetRequest(url.getUrl());
+		} catch (IdentifierNotUnique e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (UnsupportedType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (UnsupportedQueryType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InsufficientResources e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InvalidSystemMetadata e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InvalidCredentials e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (AuthenticationTimeout e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (UnsupportedMetadataType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (ClientProtocolException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+    	} catch (IllegalStateException e) {
+    		throw recastClientSideExceptionToServiceFailure(e);
+    	} catch (IOException e) {
+    		throw recastClientSideExceptionToServiceFailure(e);
+    	} catch (HttpException e) {
+    		throw recastClientSideExceptionToServiceFailure(e);
+    	}  
+    	return true;
     }
 
     @Override
