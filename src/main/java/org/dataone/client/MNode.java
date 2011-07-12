@@ -497,10 +497,12 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 		url.addDateParamPair("endTime", endTime);
 		if (objectFormatId != null) 
 			url.addNonEmptyParamPair("objectFormat", objectFormatId.getValue());
-		if (replicaStatus) {
-			url.addNonEmptyParamPair("replicaStatus", 1);
-		} else {
-			url.addNonEmptyParamPair("replicaStatus", 0);
+		if (replicaStatus != null) {
+			if (replicaStatus) {
+				url.addNonEmptyParamPair("replicaStatus", 1);
+			} else {
+				url.addNonEmptyParamPair("replicaStatus", 0);
+			}
 		}
 		url.addNonEmptyParamPair("start",start);
 		url.addNonEmptyParamPair("count",count);
