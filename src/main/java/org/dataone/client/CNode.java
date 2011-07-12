@@ -878,7 +878,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		return true;
     }
 
-//    @Override
+    @Override
     public NodeReference register(Session session, Node node)
     throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, IdentifierNotUnique 
     {
