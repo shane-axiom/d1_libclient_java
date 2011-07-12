@@ -879,7 +879,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     }
 
 //    @Override
-    public Identifier register(Session session, Node node) 
+    public NodeReference register(Session session, Node node)
     throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, IdentifierNotUnique 
     {
    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_NODE);
@@ -926,7 +926,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (HttpException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		}
-		return (Identifier) deserializeServiceType(Identifier.class,is);
+		return (NodeReference) deserializeServiceType(NodeReference.class,is);
     }
 
     @Override
