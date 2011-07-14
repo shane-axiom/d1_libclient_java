@@ -312,7 +312,14 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     public Identifier reserveIdentifier(Session session, Identifier pid, 
         String scope, String format) throws InvalidToken, ServiceFailure, 
         NotAuthorized, IdentifierNotUnique, InvalidRequest, NotImplemented {
-            throw new NotImplemented("4191", "Client does not implement this method.");
+            throw new NotImplemented("4191", "Client does not implement reserveIdentifier method.");
+    }
+    
+    @Override
+    public boolean hasReservation(Session session, Identifier pid) 
+    	throws InvalidToken, ServiceFailure, NotFound,
+        NotAuthorized, IdentifierNotUnique, InvalidRequest, NotImplemented {
+            throw new NotImplemented("4191", "Client does not implement hasReservation method.");
     }
 
 
