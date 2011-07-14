@@ -109,7 +109,7 @@ public abstract class D1Node {
      * @param nodeBaseServiceUrl String representing the service URL
      */
     public void setNodeBaseServiceUrl(String nodeBaseServiceUrl) {
-        if (!nodeBaseServiceUrl.endsWith("/")) {
+        if (nodeBaseServiceUrl != null && !nodeBaseServiceUrl.endsWith("/")) {
             nodeBaseServiceUrl = nodeBaseServiceUrl + "/";
         }
         this.nodeBaseServiceUrl = nodeBaseServiceUrl;

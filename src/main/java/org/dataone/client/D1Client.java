@@ -35,8 +35,6 @@ import org.dataone.service.types.NodeReference;
  */
 public class D1Client {
 
-    private static String CN_URI = Settings.getConfiguration().getString("D1Client.CN_URL");
-
     private static CNode cn = null;
     
 	/**
@@ -45,10 +43,29 @@ public class D1Client {
 	 * use different contexts.  
 	 * 
      * @return the cn
+	 * @throws ServiceFailure 
      */
-    public static CNode getCN() {
+    public static CNode getCN() throws ServiceFailure {
         if (cn == null) {
-            cn = new CNode(CN_URI);
+        	// get the CN URL
+            String cnUrl = Settings.getConfiguration().getString("D1Client.CN_URL");
+
+        	// determine which implementation to instantiate
+        	String cnClassName = Settings.getConfiguration().getString("D1Client.cnClassName");
+        	
+        	if (cnClassName != null) {
+        		// construct it using reflection
+            	try {
+					cn = (CNode) Class.forName(cnClassName).newInstance();
+				} catch (Exception e) {
+					throw D1Node.recastClientSideExceptionToServiceFailure(e);
+
+				}
+            	cn.setNodeBaseServiceUrl(cnUrl);
+        	} else {
+        		// default
+                cn = new CNode(cnUrl);
+        	}
         }
         return cn;
     }
@@ -74,7 +91,12 @@ public class D1Client {
      * @throws ServiceFailure
      */
     public static MNode getMN(NodeReference nodeRef) throws ServiceFailure {
-    	CNode cn = getCN();
+    	CNode cn;
+		try {
+			cn = getCN();
+		} catch (Exception e) {
+			throw D1Node.recastClientSideExceptionToServiceFailure(e);
+		}
     	String mnBaseUrl = null;
 		try {
 			mnBaseUrl = cn.lookupNodeBaseUrl(nodeRef.getValue());

@@ -204,8 +204,8 @@ public class CertificateManager {
     		// look up the subject information from the CNIdentity service
     		boolean lookupSubject = false;
     		if (lookupSubject) {
-	    		CNode cn = D1Client.getCN();
 	    		try {
+		    		CNode cn = D1Client.getCN();
 					SubjectList subjectList = cn.getSubjectInfo(session, subject);
 					session.setSubjectList(subjectList);
 				} catch (Exception e) {

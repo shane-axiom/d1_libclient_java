@@ -229,13 +229,14 @@ public class D1Object {
      * @param id identifier to be downloaded
      */
     private void download(Identifier id) {
-        D1Object o = null;
-    
-        CNode cn = D1Client.getCN();
-        Session token = new Session();
-    
-        ObjectLocationList oll;
         try {
+
+	    	D1Object o = null;
+	    
+	        CNode cn = D1Client.getCN();
+	        Session token = new Session();
+	    
+	        ObjectLocationList oll;
             // Get the system metadata for the object
             SystemMetadata m = cn.getSystemMetadata(token, id);
             if (m != null) {

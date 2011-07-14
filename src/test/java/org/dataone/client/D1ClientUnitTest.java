@@ -86,17 +86,17 @@ public class D1ClientUnitTest  {
     @Test
     public void testListSubjects() {
         printHeader("testListSubjects");
-        CNode cn = D1Client.getCN();
-        SubjectList subjects = null;
-        Session session = new Session();
-        session.setSubject(new Subject());
 		try {
+	        CNode cn = D1Client.getCN();
+	        SubjectList subjects = null;
+	        Session session = new Session();
+	        session.setSubject(new Subject());
 			subjects = cn.listSubjects(session, null, 0, 0);
+	        assertTrue(subjects != null);
 		} catch (Exception e) {
 			e.printStackTrace();
 			fail(e.getMessage());
 		} 
-        assertTrue(subjects != null);
     }
 
     @Test
