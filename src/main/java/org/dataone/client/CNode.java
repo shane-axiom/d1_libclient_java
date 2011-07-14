@@ -502,7 +502,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     }
 
     @Override
-    public boolean createGroup(Session session, Subject groupName) throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented, InvalidRequest, IdentifierNotUnique {
+    public Subject createGroup(Session session, Subject groupName) throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented, InvalidRequest, IdentifierNotUnique {
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_GROUPS);
     	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
@@ -546,7 +546,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e);
 		}
 		
-		return true;
+		return (Subject) deserializeServiceType(Subject.class, is);
     }
 
     /**
