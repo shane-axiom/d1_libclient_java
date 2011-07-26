@@ -8,6 +8,11 @@ import org.junit.Test;
 
 public class CNodeTest {
 
+	@Test
+	public void testFoo() {
+		
+	}
+	
 	//@Test
 	public void testLookupNodeBehavior_Null() throws ServiceFailure, NotImplemented 
 	{
