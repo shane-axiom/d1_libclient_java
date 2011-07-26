@@ -29,7 +29,6 @@ import javax.xml.xpath.XPathExpressionException;
 
 import org.apache.http.HttpException;
 import org.apache.http.client.ClientProtocolException;
-import org.dataone.cn.batch.utils.TypeMarshaller;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.Constants;
 import org.dataone.service.D1Url;
@@ -634,14 +633,15 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     {
     	try {
 			InputStream inputStream = fetchNodeList();   		
-    		nodeId2URLMap = NodeListParser.parseNodeListFile(inputStream,null,false);
-		} catch (XPathExpressionException e) {
-			recastClientSideExceptionToServiceFailure(e);
-		} catch (SAXException e) {
-			recastClientSideExceptionToServiceFailure(e);
+//    		nodeId2URLMap = NodeListParser.parseNodeListFile(inputStream,null,false);
+    		nodeId2URLMap = NodeListParser.parseNodeListFile(inputStream);
 		} catch (IOException e) {
 			recastClientSideExceptionToServiceFailure(e);
-		} catch (ParserConfigurationException e) {
+		} catch (InstantiationException e) {
+			recastClientSideExceptionToServiceFailure(e);
+		} catch (IllegalAccessException e) {
+			recastClientSideExceptionToServiceFailure(e);
+		} catch (JiBXException e) {
 			recastClientSideExceptionToServiceFailure(e);
 		}
     }

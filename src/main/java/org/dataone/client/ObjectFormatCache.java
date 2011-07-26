@@ -154,7 +154,7 @@ public class ObjectFormatCache extends ObjectFormatServiceImpl {
     }
   	
     // index the object format list based on the format identifier
-    int listSize = objectFormatList.sizeObjectFormats();
+    int listSize = objectFormatList.sizeObjectFormatList();
     
     for (int i = 0; i < listSize; i++ ) {
       
