@@ -55,7 +55,7 @@ import org.dataone.service.types.Identifier;
 import org.dataone.service.types.Session;
 import org.dataone.service.types.Subject;
 import org.dataone.service.types.SystemMetadata;
-import org.dataone.service.types.util.ServiceTypeUtil;
+import org.dataone.service.types.util.TypeMarshaller;
 import org.jibx.runtime.JiBXException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -252,7 +252,7 @@ public abstract class D1Node {
 			throw recastClientSideExceptionToServiceFailure(e);
 		}
 		try {
-            return (SystemMetadata) deserializeServiceType(SystemMetadata.class,is);
+            return deserializeServiceType(SystemMetadata.class,is);
         } catch (Exception e) {
             throw new ServiceFailure("1090",
                     "Could not deserialize the systemMetadata: " + e.getMessage());
@@ -447,7 +447,8 @@ public abstract class D1Node {
 
 	/**
 	 * deserialize an object of type from the inputstream
-	 * recasts exceptions to ServiceFailure
+	 * This is a wrapper method of the standard common Unmarshalling method
+	 * that recasts exceptions to ServiceFailure
 	 * 
 	 * @param type
 	 *            the class of the object to serialize (i.e.
@@ -459,14 +460,23 @@ public abstract class D1Node {
 
 	 */
 	@SuppressWarnings("rawtypes")
-	protected Object deserializeServiceType(Class type, InputStream is)
+	protected <T> T deserializeServiceType(Class<T> domainClass, InputStream is)
 	throws ServiceFailure
 	{
 		try {
-			return ServiceTypeUtil.deserializeServiceType(type, is);
+			return TypeMarshaller.unmarshalTypeFromStream(domainClass, is);
 		} catch (JiBXException e) {
             throw new ServiceFailure("0",
-                    "Could not deserialize the " + type.getCanonicalName() + ": " + e.getMessage());
-        }
+                    "Could not deserialize the " + domainClass.getCanonicalName() + ": " + e.getMessage());
+        } catch (IOException e) {
+        	throw new ServiceFailure("0",
+                    "Could not deserialize the " + domainClass.getCanonicalName() + ": " + e.getMessage());
+		} catch (InstantiationException e) {
+			throw new ServiceFailure("0",
+                    "Could not deserialize the " + domainClass.getCanonicalName() + ": " + e.getMessage());
+		} catch (IllegalAccessException e) {
+			throw new ServiceFailure("0",
+                    "Could not deserialize the " + domainClass.getCanonicalName() + ": " + e.getMessage());
+		}
 	}
 }
