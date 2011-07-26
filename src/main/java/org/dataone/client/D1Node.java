@@ -34,8 +34,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpException;
 import org.apache.http.client.ClientProtocolException;
-import org.dataone.service.Constants;
-import org.dataone.service.D1Url;
 import org.dataone.service.exceptions.AuthenticationTimeout;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.IdentifierNotUnique;
@@ -51,11 +49,13 @@ import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.exceptions.UnsupportedMetadataType;
 import org.dataone.service.exceptions.UnsupportedQueryType;
 import org.dataone.service.exceptions.UnsupportedType;
-import org.dataone.service.types.Identifier;
-import org.dataone.service.types.Session;
-import org.dataone.service.types.Subject;
-import org.dataone.service.types.SystemMetadata;
-import org.dataone.service.types.util.TypeMarshaller;
+import org.dataone.service.types.v1.Identifier;
+import org.dataone.service.types.v1.Session;
+import org.dataone.service.types.v1.Subject;
+import org.dataone.service.types.v1.SystemMetadata;
+import org.dataone.service.util.Constants;
+import org.dataone.service.util.D1Url;
+import org.dataone.service.util.TypeMarshaller;
 import org.jibx.runtime.JiBXException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -210,7 +210,7 @@ public abstract class D1Node {
      * by both the CNode and MNode implementations.
      * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.getSystemMetadata
      */
-	public SystemMetadata getSystemMetadata(Session cert, Identifier pid)
+	public SystemMetadata getSystemMetadata(Session session, Identifier pid)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
 		InvalidRequest, NotImplemented 
 	{

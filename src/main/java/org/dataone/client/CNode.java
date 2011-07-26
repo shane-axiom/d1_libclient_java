@@ -30,15 +30,14 @@ import javax.xml.xpath.XPathExpressionException;
 import org.apache.http.HttpException;
 import org.apache.http.client.ClientProtocolException;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
-import org.dataone.service.Constants;
-import org.dataone.service.D1Url;
-import org.dataone.service.NodeListParser;
-import org.dataone.service.cn.CNAuthorization;
-import org.dataone.service.cn.CNCore;
-import org.dataone.service.cn.CNIdentity;
-import org.dataone.service.cn.CNRead;
-import org.dataone.service.cn.CNRegister;
-import org.dataone.service.cn.CNReplication;
+import org.dataone.service.util.Constants;
+import org.dataone.service.util.D1Url;
+import org.dataone.service.cn.v1.CNAuthorization;
+import org.dataone.service.cn.v1.CNCore;
+import org.dataone.service.cn.v1.CNIdentity;
+import org.dataone.service.cn.v1.CNRead;
+import org.dataone.service.cn.v1.CNRegister;
+import org.dataone.service.cn.v1.CNReplication;
 import org.dataone.service.exceptions.AuthenticationTimeout;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.IdentifierNotUnique;
@@ -54,28 +53,29 @@ import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.exceptions.UnsupportedMetadataType;
 import org.dataone.service.exceptions.UnsupportedQueryType;
 import org.dataone.service.exceptions.UnsupportedType;
-import org.dataone.service.types.AccessPolicy;
-import org.dataone.service.types.Checksum;
-import org.dataone.service.types.Event;
-import org.dataone.service.types.Identifier;
-import org.dataone.service.types.Log;
-import org.dataone.service.types.Node;
-import org.dataone.service.types.NodeList;
-import org.dataone.service.types.NodeReference;
-import org.dataone.service.types.ObjectFormat;
-import org.dataone.service.types.ObjectFormatIdentifier;
-import org.dataone.service.types.ObjectFormatList;
-import org.dataone.service.types.ObjectList;
-import org.dataone.service.types.ObjectLocationList;
-import org.dataone.service.types.Permission;
-import org.dataone.service.types.Person;
-import org.dataone.service.types.QueryType;
-import org.dataone.service.types.ReplicationPolicy;
-import org.dataone.service.types.ReplicationStatus;
-import org.dataone.service.types.Session;
-import org.dataone.service.types.Subject;
-import org.dataone.service.types.SubjectList;
-import org.dataone.service.types.SystemMetadata;
+import org.dataone.service.types.v1.AccessPolicy;
+import org.dataone.service.types.v1.Checksum;
+import org.dataone.service.types.v1.Event;
+import org.dataone.service.types.v1.Identifier;
+import org.dataone.service.types.v1.Log;
+import org.dataone.service.types.v1.Node;
+import org.dataone.service.types.v1.NodeList;
+import org.dataone.service.types.v1.NodeReference;
+import org.dataone.service.types.v1.ObjectFormat;
+import org.dataone.service.types.v1.ObjectFormatIdentifier;
+import org.dataone.service.types.v1.ObjectFormatList;
+import org.dataone.service.types.v1.ObjectList;
+import org.dataone.service.types.v1.ObjectLocationList;
+import org.dataone.service.types.v1.Permission;
+import org.dataone.service.types.v1.Person;
+import org.dataone.service.types.v1.QueryType;
+import org.dataone.service.types.v1.ReplicationPolicy;
+import org.dataone.service.types.v1.ReplicationStatus;
+import org.dataone.service.types.v1.Session;
+import org.dataone.service.types.v1.Subject;
+import org.dataone.service.types.v1.SubjectList;
+import org.dataone.service.types.v1.SystemMetadata;
+import org.dataone.service.types.v1.util.NodelistUtil;
 import org.jibx.runtime.JiBXException;
 import org.xml.sax.SAXException;
 
@@ -168,7 +168,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         } catch (HttpException e) {
             throw recastClientSideExceptionToServiceFailure(e);
         }
-        return (ObjectList) deserializeServiceType(ObjectList.class,is);
+        return deserializeServiceType(ObjectList.class,is);
 
     }
 
@@ -232,7 +232,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         } catch (HttpException e) {
             throw recastClientSideExceptionToServiceFailure(e);
         }
-        return (ObjectLocationList) deserializeServiceType(ObjectLocationList.class,is);
+        return deserializeServiceType(ObjectLocationList.class,is);
     }
     
 
@@ -302,7 +302,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         } catch (HttpException e) {
             throw new ServiceFailure("1090", e.getClass().getSimpleName() + ": " + e.getMessage());
         }
-        return (Identifier) deserializeServiceType(Identifier.class, is);
+        return  deserializeServiceType(Identifier.class, is);
     }
 
 
@@ -366,7 +366,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	return true;
     }
 
-
+    
+    @Override
     public Identifier setOwner(Session session, Identifier pid, Subject userId) 
     throws InvalidToken, ServiceFailure, NotFound, NotAuthorized, NotImplemented, InvalidRequest
     {
@@ -413,7 +414,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (HttpException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		}
-        return (Identifier) deserializeServiceType(Identifier.class,is);
+        return  deserializeServiceType(Identifier.class,is);
     }
 
 
@@ -507,6 +508,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         return true;
     }
 
+    
     @Override
     public Subject createGroup(Session session, Subject groupName) throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented, InvalidRequest, IdentifierNotUnique {
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_GROUPS);
@@ -552,7 +554,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e);
 		}
 		
-		return (Subject) deserializeServiceType(Subject.class, is);
+		return deserializeServiceType(Subject.class, is);
     }
 
     /**
@@ -634,7 +636,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	try {
 			InputStream inputStream = fetchNodeList();   		
 //    		nodeId2URLMap = NodeListParser.parseNodeListFile(inputStream,null,false);
-    		nodeId2URLMap = NodeListParser.parseNodeListFile(inputStream);
+    		nodeId2URLMap = NodelistUtil.mapNodeList(inputStream);
 		} catch (IOException e) {
 			recastClientSideExceptionToServiceFailure(e);
 		} catch (InstantiationException e) {
@@ -657,6 +659,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
      * @throws NotImplemented 
      * @throws InvalidRequest 
      */
+    @Override
     public ObjectFormatList listFormats() 
     throws ServiceFailure, NotFound, InsufficientResources, NotImplemented, 
     InvalidRequest 
@@ -711,8 +714,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	} catch (HttpException e) {
     		throw recastClientSideExceptionToServiceFailure(e);
     	}	
-    	return (ObjectFormatList) deserializeServiceType(ObjectFormatList.class, is); 
+    	return deserializeServiceType(ObjectFormatList.class, is); 
     }
+
     
     /**
      * Get the object format from the object format list based on the given
@@ -727,6 +731,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
      * @throws NotImplemented 
      * @throws InvalidRequest 
      */
+    @Override
     public ObjectFormat getFormat(ObjectFormatIdentifier fmtid)
       throws ServiceFailure, NotFound, InsufficientResources, NotImplemented, 
       InvalidRequest {
@@ -775,15 +780,16 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         } catch (HttpException e) {
             throw recastClientSideExceptionToServiceFailure(e);
         } 
-    	return (ObjectFormat) deserializeServiceType(ObjectFormat.class, is); 	
+    	return deserializeServiceType(ObjectFormat.class, is); 	
     }
+    
     
     @Override
     public NodeList listNodes() throws NotImplemented, ServiceFailure {
     	// the actual call is delegated to fetchNodeList, because the call is also used
     	// in the context of initializeNodeMap(), which needs the input stream
     	InputStream is = fetchNodeList();
-    	return (NodeList) deserializeServiceType(NodeList.class, is);
+    	return deserializeServiceType(NodeList.class, is);
     }
     
     
@@ -832,7 +838,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         return is;       
     }
 
-    
+
     @Override
     public boolean updateNodeCapabilities(Session session, NodeReference nodeid, Node node) 
     throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, NotFound 
@@ -885,6 +891,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		return true;
     }
 
+
     @Override
     public NodeReference register(Session session, Node node)
     throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, IdentifierNotUnique 
@@ -933,8 +940,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (HttpException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		}
-		return (NodeReference) deserializeServiceType(NodeReference.class,is);
+		return deserializeServiceType(NodeReference.class,is);
     }
+
 
     @Override
     public Log getLogRecords(Session session, Date fromDate, Date toDate, Event event, 
@@ -982,10 +990,11 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	} catch (HttpException e) {
     		throw recastClientSideExceptionToServiceFailure(e);
     	}  
-    	return (Log) deserializeServiceType(Log.class, is);
+    	return deserializeServiceType(Log.class, is);
     }
+   
     
-//    @Override
+    @Override
     public boolean registerSystemMetadata(Session session, Identifier pid, SystemMetadata sysmeta) 
     throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, InvalidSystemMetadata 
     {
@@ -1037,7 +1046,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		return true;
     }
 
-    
+
     @Override
     public Checksum getChecksum(Session session, Identifier pid) 
     throws NotImplemented, ServiceFailure, NotFound, NotAuthorized, InvalidRequest, InvalidToken 
@@ -1084,10 +1093,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	} catch (HttpException e) {
     		throw recastClientSideExceptionToServiceFailure(e);
     	}  
-    	return (Checksum) deserializeServiceType(Checksum.class, is);
+    	return deserializeServiceType(Checksum.class, is);
     }
 
-    
+
     @Override
     public boolean removeGroupMembers(Session session, Subject groupName, SubjectList members) 
     throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented, InvalidRequest
@@ -1138,7 +1147,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		return true;
     }
 
-    
+
     @Override
     public boolean addGroupMembers(Session session, Subject groupName, SubjectList members) 
     throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented, InvalidRequest
@@ -1239,7 +1248,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		return true;
     }
 
-    
+
     @Override
     public boolean mapIdentity(Session session, Subject subject) 
     throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
@@ -1292,7 +1301,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		return true;
     }
 
-    
+ 
     @Override
     public SubjectList listSubjects(Session session, String query, Integer start, Integer count) 
     throws ServiceFailure, InvalidToken, NotAuthorized, NotImplemented 
@@ -1337,11 +1346,11 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (HttpException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		}
-		return (SubjectList) deserializeServiceType(SubjectList.class,is);
+		return deserializeServiceType(SubjectList.class,is);
     }
 
-    
-//    @Override
+
+    @Override
     public SubjectList getSubjectInfo(Session session, Subject subject) 
     throws ServiceFailure, InvalidRequest, NotAuthorized, NotImplemented
     {
@@ -1373,10 +1382,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (HttpException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		}
-		return (SubjectList) deserializeServiceType(SubjectList.class,is);
+		return deserializeServiceType(SubjectList.class,is);
     }
  
-    
+
     @Override
     public boolean verifyAccount(Session session, Subject subject) 
     throws ServiceFailure, NotAuthorized, NotImplemented, InvalidToken, InvalidRequest 
@@ -1434,7 +1443,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		return true;
     }
     
-    
+
     @Override
     public Subject updateAccount(Session session, Person person) 
     throws ServiceFailure, IdentifierNotUnique, InvalidCredentials, NotImplemented, InvalidRequest 
@@ -1489,7 +1498,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (HttpException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		}
-		return (Subject) deserializeServiceType(Subject.class,is);
+		return deserializeServiceType(Subject.class,is);
     }
     
     
@@ -1547,9 +1556,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (HttpException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		}
-		return (Subject) deserializeServiceType(Subject.class,is);
+		return deserializeServiceType(Subject.class,is);
     }
     
+
     @Override
     public boolean setReplicationPolicy(Session session, Identifier pid, ReplicationPolicy policy) 
     throws ServiceFailure, NotAuthorized, NotFound, NotImplemented, InvalidRequest, InvalidToken 

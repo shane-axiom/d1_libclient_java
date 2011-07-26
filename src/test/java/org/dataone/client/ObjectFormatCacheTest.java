@@ -31,7 +31,7 @@ import org.dataone.service.exceptions.InvalidRequest;
 import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
-import org.dataone.service.types.ObjectFormatList;
+import org.dataone.service.types.v1.ObjectFormatList;
 
 import org.junit.Test;
 

@@ -25,7 +25,7 @@ package org.dataone.client;
 import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
-import org.dataone.service.types.NodeReference;
+import org.dataone.service.types.v1.NodeReference;
 
 /**
  * The D1Client class represents a client-side implementation of the DataONE

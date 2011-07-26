@@ -47,8 +47,8 @@ import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.dataone.client.auth.CertificateManager;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
-import org.dataone.service.Constants;
-import org.dataone.service.EncodingUtilities;
+import org.dataone.service.util.Constants;
+import org.dataone.service.util.EncodingUtilities;
 
 
 
