@@ -62,8 +62,11 @@ import org.dataone.service.types.v1.util.ChecksumUtil;
 public class D1Object {
 
     private SystemMetadata sysmeta;
+    // the following 4 will probably be replaced by ResourceMap;
     private List<Identifier> describesList;
     private List<Identifier> describedByList;
+    private List<Identifier> obsoletesList;
+    private List<Identifier> obsoletedByList;
     
     // TODO: this should also be able to be a reference to data, rather than a value, with late binding to allow efficient implementations
     private byte[] data;
@@ -162,7 +165,7 @@ public class D1Object {
      * @return the list of objects that obsolete this
      */
     public List<Identifier> getObsoletedByList() {
-        return sysmeta.getObsoletedByList();
+        return this.obsoletedByList;
     }
     /**
      * Create the object on the associated member node that is present in the system metadata
