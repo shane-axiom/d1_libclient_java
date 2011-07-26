@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
-import org.dataone.service.types.Identifier;
+import org.dataone.service.types.v1.Identifier;
 
 /**
  * A collection of @see D1Object that are interrelated as a package.  The 

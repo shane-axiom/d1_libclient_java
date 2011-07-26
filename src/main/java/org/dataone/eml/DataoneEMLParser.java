@@ -24,8 +24,6 @@ package org.dataone.eml;
 import java.io.IOException;
 import java.io.InputStream;
 
-import java.util.Vector;
-
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
@@ -35,10 +33,8 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import org.dataone.client.ObjectFormatCache;
-import org.dataone.eml.EMLDocument.DistributionMetadata;
 import org.dataone.service.exceptions.NotFound;
-import org.dataone.service.types.ObjectFormat;
-import org.dataone.service.types.SystemMetadata;
+import org.dataone.service.types.v1.ObjectFormat;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;

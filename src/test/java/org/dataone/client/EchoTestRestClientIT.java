@@ -10,7 +10,7 @@ import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
-import org.dataone.service.D1Url;
+import org.dataone.service.util.D1Url;
 import org.junit.Test;
 
 

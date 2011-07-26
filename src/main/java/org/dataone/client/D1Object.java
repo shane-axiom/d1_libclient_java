@@ -39,21 +39,20 @@ import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.exceptions.UnsupportedType;
-import org.dataone.service.types.AccessPolicy;
-import org.dataone.service.types.AccessRule;
-import org.dataone.service.types.AuthToken;
-import org.dataone.service.types.Checksum;
-import org.dataone.service.types.ChecksumAlgorithm;
-import org.dataone.service.types.Identifier;
-import org.dataone.service.types.NodeReference;
-import org.dataone.service.types.ObjectFormat;
-import org.dataone.service.types.ObjectLocation;
-import org.dataone.service.types.ObjectLocationList;
-import org.dataone.service.types.Permission;
-import org.dataone.service.types.Session;
-import org.dataone.service.types.Subject;
-import org.dataone.service.types.SystemMetadata;
-import org.dataone.service.types.util.ServiceTypeUtil;
+import org.dataone.service.types.v1.AccessPolicy;
+import org.dataone.service.types.v1.AccessRule;
+import org.dataone.service.types.v1.Checksum;
+import org.dataone.service.types.v1.ChecksumAlgorithm;
+import org.dataone.service.types.v1.Identifier;
+import org.dataone.service.types.v1.NodeReference;
+import org.dataone.service.types.v1.ObjectFormat;
+import org.dataone.service.types.v1.ObjectLocation;
+import org.dataone.service.types.v1.ObjectLocationList;
+import org.dataone.service.types.v1.Permission;
+import org.dataone.service.types.v1.Session;
+import org.dataone.service.types.v1.Subject;
+import org.dataone.service.types.v1.SystemMetadata;
+import org.dataone.service.types.v1.util.ChecksumUtil;
 
 /**
  * A representation of an object that can be stored in the DataONE system. Instances
@@ -63,6 +62,9 @@ import org.dataone.service.types.util.ServiceTypeUtil;
 public class D1Object {
 
     private SystemMetadata sysmeta;
+    private List<Identifier> describesList;
+    private List<Identifier> describedByList;
+    
     // TODO: this should also be able to be a reference to data, rather than a value, with late binding to allow efficient implementations
     private byte[] data;
     
@@ -146,14 +148,14 @@ public class D1Object {
      * @return the list of objects this describes
      */
     public List<Identifier> getDescribeList() {
-        return sysmeta.getDescribeList();
+        return this.describesList;
     }
     
     /**
      * @return the list of objects that describe this
      */
     public List<Identifier> getDescribeByList() {
-        return sysmeta.getDescribedByList();
+        return this.describedByList;
     }
 
     /**
@@ -219,7 +221,7 @@ public class D1Object {
         Subject s = new Subject();
         s.setValue("public");
         ar.addSubject(s);
-        ar.addPermission(org.dataone.service.types.Permission.READ);
+        ar.addPermission(Permission.READ);
         ap.addAllow(ar);
         mn.setAccessPolicy(token, sysmeta.getIdentifier(), ap);
     }
@@ -310,72 +312,70 @@ public class D1Object {
      * @throws NotFound 
      */
     private SystemMetadata generateSystemMetadata(Identifier id, byte[] data, 
-    	String format, String submitter, String nodeId, String[] describes, 
-    	String[] describedBy) throws NoSuchAlgorithmException, IOException, NotFound {
-        
-//            validateRequest(id, data, format, submitter, nodeId, describes, describedBy);
-            
-            SystemMetadata sm = new SystemMetadata();
-            sm.setIdentifier(id);
-            ObjectFormat fmt;
-            ObjectFormatCache ofc = ObjectFormatCache.getInstance();
-            try {
-	            fmt = ofc.getFormat(format);
-	            sm.setObjectFormat(fmt);
+    		String format, String submitter, String nodeId, String[] describes, 
+    		String[] describedBy) throws NoSuchAlgorithmException, IOException, NotFound {
 
-            } catch (NotFound nf) {
+    	//            validateRequest(id, data, format, submitter, nodeId, describes, describedBy);
 
-            	try {
-	              fmt = ofc.getFormat("application/octet-stream");
-              
-            	} catch (NotFound nfe) {
-                
-            		throw nfe;
-                
-            	}
+    	SystemMetadata sm = new SystemMetadata();
+    	sm.setIdentifier(id);
+    	ObjectFormat fmt;
+    	ObjectFormatCache ofc = ObjectFormatCache.getInstance();
+    	try {
+    		fmt = ofc.getFormat(format);
+    		sm.setObjectFormat(fmt);
+    	}
+    	catch (NotFound nf) {
+    		try {
+    			fmt = ofc.getFormat("application/octet-stream");
+    		} catch (NotFound nfe) {
+    			throw nfe;
+    		}
+    	}
 
-            }
-            
-            //create the checksum
-            InputStream is = new ByteArrayInputStream(data);
-            ChecksumAlgorithm ca = ChecksumAlgorithm.convert("MD5");
-            Checksum checksum;
-            checksum = ServiceTypeUtil.checksum(is, ca);
-            sm.setChecksum(checksum);
-    
-            //set the size
-            sm.setSize(data.length);
-    
-            //submitter
-            Subject p = new Subject();
-            p.setValue(submitter);
-            sm.setSubmitter(p);
-            sm.setRightsHolder(p);
-            Date dateCreated = new Date();
-            sm.setDateUploaded(dateCreated);
-            Date dateUpdated = new Date();
-            sm.setDateSysMetadataModified(dateUpdated);
-    
-            // Node information
-            NodeReference nr = new NodeReference();
-            nr.setValue(nodeId);
-            sm.setOriginMemberNode(nr);
-            sm.setAuthoritativeMemberNode(nr);
-            
-            // Describes and describedBy
-            for (String describesId : describes) {
-                Identifier dId = new Identifier();
-                dId.setValue(describesId);
-                sm.addDescribe(dId);
-            }
-            for (String describedById : describedBy) {
-                Identifier dId = new Identifier();
-                dId.setValue(describedById);
-                sm.addDescribedBy(dId);
-            }
-            
-            return sm;
-        }
+    	//create the checksum
+    	InputStream is = new ByteArrayInputStream(data);
+    	ChecksumAlgorithm ca = ChecksumAlgorithm.convert("MD5");
+    	Checksum checksum;
+    	checksum = ChecksumUtil.checksum(is, ca);
+    	sm.setChecksum(checksum);
+
+    	//set the size
+    	sm.setSize(data.length);
+
+    	//submitter
+    	Subject p = new Subject();
+    	p.setValue(submitter);
+    	sm.setSubmitter(p);
+    	sm.setRightsHolder(p);
+    	Date dateCreated = new Date();
+    	sm.setDateUploaded(dateCreated);
+    	Date dateUpdated = new Date();
+    	sm.setDateSysMetadataModified(dateUpdated);
+
+    	// Node information
+    	NodeReference nr = new NodeReference();
+    	nr.setValue(nodeId);
+    	sm.setOriginMemberNode(nr);
+    	sm.setAuthoritativeMemberNode(nr);
+
+//TODO reimplement when the OAI-ORE ResourceMap becomes available    	
+/*
+    	// Describes and describedBy
+    	for (String describesId : describes) {
+    		Identifier dId = new Identifier();
+    		dId.setValue(describesId);
+    		sm.addDescribe(dId);
+    	}
+    	for (String describedById : describedBy) {
+    		Identifier dId = new Identifier();
+    		dId.setValue(describedById);
+    		sm.addDescribedBy(dId);
+    	}
+*/
+
+    	return sm;
+    }
 
     protected void validateRequest(Identifier id, byte[] data, String format, String submitter, 
             String nodeId, String[] describes, String[] describedBy) throws InvalidRequest {

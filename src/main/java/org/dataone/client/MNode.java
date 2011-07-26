@@ -32,9 +32,9 @@ import org.apache.http.Header;
 import org.apache.http.HttpException;
 import org.apache.http.client.ClientProtocolException;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
-import org.dataone.service.Constants;
-import org.dataone.service.D1Url;
-import org.dataone.service.EncodingUtilities;
+import org.dataone.service.util.Constants;
+import org.dataone.service.util.D1Url;
+import org.dataone.service.util.EncodingUtilities;
 import org.dataone.service.exceptions.AuthenticationTimeout;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.IdentifierNotUnique;
@@ -51,28 +51,28 @@ import org.dataone.service.exceptions.SynchronizationFailed;
 import org.dataone.service.exceptions.UnsupportedMetadataType;
 import org.dataone.service.exceptions.UnsupportedQueryType;
 import org.dataone.service.exceptions.UnsupportedType;
-import org.dataone.service.mn.tier1.MNCore;
-import org.dataone.service.mn.tier1.MNRead;
-import org.dataone.service.mn.tier2.MNAuthorization;
-import org.dataone.service.mn.tier3.MNStorage;
-import org.dataone.service.mn.tier4.MNReplication;
-import org.dataone.service.types.AccessPolicy;
-import org.dataone.service.types.Checksum;
-import org.dataone.service.types.ChecksumAlgorithm;
-import org.dataone.service.types.DescribeResponse;
-import org.dataone.service.types.Event;
-import org.dataone.service.types.Identifier;
-import org.dataone.service.types.Log;
-import org.dataone.service.types.MonitorList;
-import org.dataone.service.types.Node;
-import org.dataone.service.types.NodeReference;
-import org.dataone.service.types.ObjectFormat;
-import org.dataone.service.types.ObjectFormatIdentifier;
-import org.dataone.service.types.ObjectList;
-import org.dataone.service.types.Permission;
-import org.dataone.service.types.Session;
-import org.dataone.service.types.Subject;
-import org.dataone.service.types.SystemMetadata;
+import org.dataone.service.mn.tier1.v1.MNCore;
+import org.dataone.service.mn.tier1.v1.MNRead;
+import org.dataone.service.mn.tier2.v1.MNAuthorization;
+import org.dataone.service.mn.tier3.v1.MNStorage;
+import org.dataone.service.mn.tier4.v1.MNReplication;
+import org.dataone.service.types.v1.AccessPolicy;
+import org.dataone.service.types.v1.Checksum;
+import org.dataone.service.types.v1.ChecksumAlgorithm;
+import org.dataone.service.types.v1.DescribeResponse;
+import org.dataone.service.types.v1.Event;
+import org.dataone.service.types.v1.Identifier;
+import org.dataone.service.types.v1.Log;
+import org.dataone.service.types.v1.MonitorList;
+import org.dataone.service.types.v1.Node;
+import org.dataone.service.types.v1.NodeReference;
+import org.dataone.service.types.v1.ObjectFormat;
+import org.dataone.service.types.v1.ObjectFormatIdentifier;
+import org.dataone.service.types.v1.ObjectList;
+import org.dataone.service.types.v1.Permission;
+import org.dataone.service.types.v1.Session;
+import org.dataone.service.types.v1.Subject;
+import org.dataone.service.types.v1.SystemMetadata;
 import org.jibx.runtime.JiBXException;
 
 /**
@@ -185,7 +185,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	} catch (HttpException e) {
     		throw recastClientSideExceptionToServiceFailure(e);
     	}  
-    	return (Log) deserializeServiceType(Log.class, is);
+    	return deserializeServiceType(Log.class, is);
 	}
 
 	/**
@@ -239,7 +239,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	} catch (HttpException e) {
     		throw recastClientSideExceptionToServiceFailure(e);
 		}  
-    	return (MonitorList) deserializeServiceType(MonitorList.class, is);
+    	return deserializeServiceType(MonitorList.class, is);
 	}
 
 	 /**
@@ -286,7 +286,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	} catch (HttpException e) {
     		throw recastClientSideExceptionToServiceFailure(e);
 		}
-    	return (Node) deserializeServiceType(Node.class, is);
+    	return deserializeServiceType(Node.class, is);
 	}
 
 	
@@ -456,7 +456,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	} catch (HttpException e) {
     		throw recastClientSideExceptionToServiceFailure(e);
     	}  
-    	return (Checksum) deserializeServiceType(Checksum.class, is);
+    	return deserializeServiceType(Checksum.class, is);
 	}
 
 
@@ -539,7 +539,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 		} catch (HttpException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		}         
-		return (ObjectList) deserializeServiceType(ObjectList.class,is);      
+		return deserializeServiceType(ObjectList.class,is);      
 	}
 
 	
@@ -754,7 +754,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	} catch (HttpException e) {
     		throw recastClientSideExceptionToServiceFailure(e);
     	}    	
-    	return (Identifier)deserializeServiceType(Identifier.class, is);
+    	return deserializeServiceType(Identifier.class, is);
 	}
 
 	
@@ -807,7 +807,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	} catch (HttpException e) {
     		throw recastClientSideExceptionToServiceFailure(e);    	
     	}    	
-    	return (Identifier)deserializeServiceType(Identifier.class, is);
+    	return deserializeServiceType(Identifier.class, is);
 	}
 
 	
@@ -860,7 +860,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	} catch (HttpException e) {
     		throw recastClientSideExceptionToServiceFailure(e);
 		}    	
-    	return (Identifier)deserializeServiceType(Identifier.class, is);
+    	return deserializeServiceType(Identifier.class, is);
 	}
 
 	

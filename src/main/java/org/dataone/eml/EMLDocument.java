@@ -23,7 +23,7 @@ package org.dataone.eml;
 
 import java.util.Vector;
 
-import org.dataone.service.types.ObjectFormat;
+import org.dataone.service.types.v1.ObjectFormat;
 
 /**
  * @author berkley
