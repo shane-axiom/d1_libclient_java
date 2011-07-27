@@ -271,7 +271,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         	} else {
         		mpe.addFilePart("object", object);
         	}
-        	mpe.addFilePart("sysmeta", sysmeta, SystemMetadata.class);
+        	mpe.addFilePart("sysmeta", sysmeta);
         } catch (IOException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (JiBXException e) {
@@ -375,8 +375,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
-    		mpe.addFilePart("pid", pid, Identifier.class);
-    		mpe.addFilePart("userId", userId, Subject.class);
+    		mpe.addFilePart("pid", pid);
+    		mpe.addFilePart("userId", userId);
     	} catch (IOException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
 		} catch (JiBXException e1) {
@@ -422,7 +422,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     public boolean isAuthorized(Session session, Identifier pid, Permission permission) throws ServiceFailure, InvalidToken, NotFound, NotAuthorized, NotImplemented, InvalidRequest {
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_AUTHORIZATION);
     	url.addNextPathElement(pid.getValue());
-    	url.addNonEmptyParamPair("permission", permission.toString());
+    	url.addNonEmptyParamPair("permission", permission.xmlValue());
 
     	// send the request
     	D1RestClient client = new D1RestClient(true, verbose);
@@ -466,8 +466,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
-    		mpe.addFilePart("pid", pid, Identifier.class);
-    		mpe.addFilePart("accessPolicy", accessPolicy, AccessPolicy.class);
+    		mpe.addFilePart("pid", pid);
+    		mpe.addFilePart("accessPolicy", accessPolicy);
     	} catch (IOException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
 		} catch (JiBXException e1) {
@@ -515,7 +515,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
-    		mpe.addFilePart("groupName", groupName, Subject.class);
+    		mpe.addFilePart("groupName", groupName);
     	} catch (IOException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
 		} catch (JiBXException e1) {
@@ -848,7 +848,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	url.addNextPathElement(nodeid.getValue());
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
-    		mpe.addFilePart("node", node, Node.class);
+    		mpe.addFilePart("node", node);
     	} catch (IOException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
 		} catch (JiBXException e1) {
@@ -900,7 +900,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
-    		mpe.addFilePart("node", node, Node.class);
+    		mpe.addFilePart("node", node);
     	} catch (IOException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
 		} catch (JiBXException e1) {
@@ -950,12 +950,11 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     {
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_LOG);
         if (fromDate == null) {
-        	// TODO: figure out which error should be thrown
         	throw new InvalidRequest("","The 'fromDate' parameter cannot be null");
         }
     	url.addDateParamPair("fromDate", fromDate);
     	url.addDateParamPair("toDate", toDate);
-    	url.addNonEmptyParamPair("event", event.toString());
+    	url.addNonEmptyParamPair("event", event.xmlValue());
 
     	// send the request
     	D1RestClient client = new D1RestClient(true, verbose);
@@ -1003,7 +1002,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
-    		mpe.addFilePart("sysmeta", sysmeta, SystemMetadata.class);
+    		mpe.addFilePart("sysmeta", sysmeta);
     	} catch (IOException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
 		} catch (JiBXException e1) {
@@ -1105,8 +1104,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
-    		mpe.addFilePart("groupName", groupName, Subject.class);
-    		mpe.addFilePart("members", members, SubjectList.class);
+    		mpe.addFilePart("groupName", groupName);
+    		mpe.addFilePart("members", members);
     	} catch (IOException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
 		} catch (JiBXException e1) {
@@ -1156,8 +1155,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
-    		mpe.addFilePart("groupName", groupName, Subject.class);
-    		mpe.addFilePart("members", members, SubjectList.class);
+    		mpe.addFilePart("groupName", groupName);
+    		mpe.addFilePart("members", members);
     	} catch (IOException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
 		} catch (JiBXException e1) {
@@ -1207,7 +1206,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
-    		mpe.addFilePart("subject", subject, Subject.class);
+    		mpe.addFilePart("subject", subject);
     	} catch (IOException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
 		} catch (JiBXException e1) {
@@ -1258,7 +1257,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
-    		mpe.addFilePart("subject", subject, Subject.class);
+    		mpe.addFilePart("subject", subject);
     	} catch (IOException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
 		} catch (JiBXException e1) {
@@ -1394,7 +1393,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
-    		mpe.addFilePart("subject", subject, Subject.class);
+    		mpe.addFilePart("subject", subject);
     	} catch (IOException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
 		} catch (JiBXException e1) {
@@ -1452,7 +1451,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
-    		mpe.addFilePart("person", person, Person.class);
+    		mpe.addFilePart("person", person);
     	} catch (IOException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
 		} catch (JiBXException e1) {
@@ -1510,7 +1509,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
-    		mpe.addFilePart("person", person, Person.class);
+    		mpe.addFilePart("person", person);
     	} catch (IOException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
 		} catch (JiBXException e1) {
@@ -1569,7 +1568,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
-    		mpe.addFilePart("policy", policy, ReplicationPolicy.class);
+    		mpe.addFilePart("policy", policy);
     	} catch (IOException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
 		} catch (JiBXException e1) {
@@ -1630,7 +1629,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
-    		mpe.addFilePart("status", status, ReplicationStatus.class);
+    		mpe.addFilePart("status", status);
     	} catch (IOException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
 		} catch (JiBXException e1) {
