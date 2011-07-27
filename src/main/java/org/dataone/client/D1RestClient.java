@@ -381,7 +381,7 @@ public class D1RestClient {
     		String detailCode = null;
     		String description = null;
     		String name = null;
-    		Identifier pid = null;
+    		String pid = null;
     		String traceInfo = null;
     		
     		int errorCode = -1;
@@ -413,8 +413,7 @@ public class D1RestClient {
     				name = "Unknown";
     			}
     			if (root.hasAttribute("pid")) {
-    				pid = new Identifier();
-    				pid.setValue(root.getAttribute("pid"));
+    				pid = root.getAttribute("pid");
     			}
     			traceInfo = getTextValue(root, "traceInformation");
     			description = getTextValue(root, "description");
@@ -610,7 +609,7 @@ public class D1RestClient {
 		private String name;
 		private String detailCode;
 		private String description;
-		private Identifier pid;
+		private String pid;
 		private String traceInfo;
 		
 		protected ErrorElements() {
@@ -645,10 +644,10 @@ public class D1RestClient {
 			this.description = d;
 		}
 
-		protected Identifier getPid() {
+		protected String getPid() {
 			return this.pid;
 		}		
-		protected void setPid(Identifier p) {
+		protected void setPid(String p) {
 			this.pid = p;
 		}
 		
