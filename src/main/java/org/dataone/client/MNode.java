@@ -32,11 +32,7 @@ import org.apache.http.Header;
 import org.apache.http.HttpException;
 import org.apache.http.client.ClientProtocolException;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
-import org.dataone.service.util.Constants;
-import org.dataone.service.util.D1Url;
-import org.dataone.service.util.EncodingUtilities;
 import org.dataone.service.exceptions.AuthenticationTimeout;
-import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.IdentifierNotUnique;
 import org.dataone.service.exceptions.InsufficientResources;
 import org.dataone.service.exceptions.InvalidCredentials;
@@ -73,6 +69,9 @@ import org.dataone.service.types.v1.Permission;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1.Subject;
 import org.dataone.service.types.v1.SystemMetadata;
+import org.dataone.service.util.Constants;
+import org.dataone.service.util.D1Url;
+import org.dataone.service.util.EncodingUtilities;
 import org.jibx.runtime.JiBXException;
 
 /**
@@ -148,7 +147,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	url.addDateParamPair("fromDate", fromDate);
     	url.addDateParamPair("toDate", toDate);
     	if (event != null)
-    		url.addNonEmptyParamPair("event", event.toString());
+    		url.addNonEmptyParamPair("event", event.xmlValue());
     	url.addNonEmptyParamPair("start", start);
     	url.addNonEmptyParamPair("count", count);
 
@@ -206,7 +205,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         if (requestor != null)
         	url.addNonEmptyParamPair("requestor", requestor.getValue());
         if (event != null)
-        	url.addNonEmptyParamPair("event", event.toString());
+        	url.addNonEmptyParamPair("event", event.xmlValue());
         if (formatId != null)
         	url.addNonEmptyParamPair("formatId", formatId.getValue());
 
@@ -550,7 +549,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
 		SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
-			mpe.addFilePart("message", message, SynchronizationFailed.class);
+			mpe.addFilePart("message", message);
 		} catch (IOException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
 		} catch (JiBXException e1) {
@@ -605,7 +604,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         // assemble the url
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_AUTHORIZATION);
     	url.addNextPathElement(pid.getValue());
-    	url.addNonEmptyParamPair("action", action.toString());
+    	url.addNonEmptyParamPair("action", action.xmlValue());
     	
     	D1RestClient client = new D1RestClient(true, verbose);
     	InputStream is = null;
@@ -654,7 +653,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	// put the accessPolicy in the message body
         SimpleMultipartEntity smpe = new SimpleMultipartEntity();
         try {
-			smpe.addFilePart("accessPolicy", accessPolicy, AccessPolicy.class);
+			smpe.addFilePart("accessPolicy", accessPolicy);
 		} catch (IOException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
 		} catch (JiBXException e1) {
@@ -719,7 +718,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
 			mpe.addFilePart("object",object);
-			mpe.addFilePart("sysmeta", sysmeta, SystemMetadata.class);
+			mpe.addFilePart("sysmeta", sysmeta);
 		} catch (IOException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (JiBXException e) {
@@ -778,7 +777,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
                 EncodingUtilities.encodeUrlQuerySegment(newPid.getValue()));
     	try {
 			mpe.addFilePart("object",object);
-			mpe.addFilePart("sysmeta", sysmeta, SystemMetadata.class);
+			mpe.addFilePart("sysmeta", sysmeta);
 		} catch (IOException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (JiBXException e) {
@@ -885,7 +884,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	SimpleMultipartEntity smpe = new SimpleMultipartEntity();
     	smpe.addParamPart("sourceNode", sourceNode.getValue());
     	try {
-			smpe.addFilePart("sysmeta", sysmeta, SystemMetadata.class);
+			smpe.addFilePart("sysmeta", sysmeta);
 		} catch (IOException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (JiBXException e) {
