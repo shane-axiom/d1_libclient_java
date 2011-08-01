@@ -308,9 +308,16 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
     @Override
-    public Identifier reserveIdentifier(Session session, Identifier pid, 
-        String scope, String format) throws InvalidToken, ServiceFailure, 
-        NotAuthorized, IdentifierNotUnique, InvalidRequest, NotImplemented {
+    public boolean reserveIdentifier(Session session, Identifier pid)
+	throws InvalidToken, ServiceFailure,
+        NotAuthorized, IdentifierNotUnique, NotImplemented, InvalidRequest {
+            throw new NotImplemented("4191", "Client does not implement reserveIdentifier method.");
+    }
+    
+    @Override
+    public Identifier generateIdentifier(Session session, String scheme, String fragment)
+		throws InvalidToken, ServiceFailure,
+        NotAuthorized, NotImplemented, InvalidRequest {
             throw new NotImplemented("4191", "Client does not implement reserveIdentifier method.");
     }
     
