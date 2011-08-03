@@ -1440,8 +1440,21 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		}
 		return deserializeServiceType(SubjectList.class,is);
     }
+    
+    @Override
+    public boolean isGroup(Session session, Subject subject) 
+    throws ServiceFailure, InvalidRequest, NotAuthorized, NotImplemented, NotFound
+    {
+    	throw new NotImplemented("0000", "isGroup is not implemented for clients");
+    }
  
-
+    @Override
+    public boolean isPublic(Session session, Subject subject) 
+    throws ServiceFailure, InvalidRequest, NotAuthorized, NotImplemented, NotFound
+    {
+    	throw new NotImplemented("0000", "isPublic is not implemented for clients");
+    }
+    
     @Override
     public boolean verifyAccount(Session session, Subject subject) 
     throws ServiceFailure, NotAuthorized, NotImplemented, InvalidToken, InvalidRequest 
