@@ -23,6 +23,7 @@ package org.dataone.client;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Date;
@@ -344,7 +345,7 @@ public class D1Object {
     	sm.setChecksum(checksum);
 
     	//set the size
-    	sm.setSize(data.length);
+    	sm.setSize(new BigInteger(String.valueOf(data.length)));
 
     	//submitter
     	Subject p = new Subject();
