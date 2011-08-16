@@ -22,6 +22,7 @@ package org.dataone.client;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -69,6 +70,7 @@ import org.dataone.service.types.v1.Permission;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1.Subject;
 import org.dataone.service.types.v1.SystemMetadata;
+import org.dataone.service.util.BigIntegerMarshaller;
 import org.dataone.service.util.Constants;
 import org.dataone.service.util.D1Url;
 import org.dataone.service.util.EncodingUtilities;
@@ -328,7 +330,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
     	
     	if(pid == null || pid.getValue().trim().equals(""))
-    		throw new InvalidRequest("1362", "GUID cannot be null.");
+    		throw new InvalidRequest("1362", "PID cannot be null.");
     	url.addNextPathElement(pid.getValue());
     	
      	D1RestClient client = new D1RestClient(true, verbose);
@@ -375,7 +377,14 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         String checksumStr = m.get("checksum");//.get(0);
         String checksum_algorithmStr = m.get("checksum_algorithm");//.get(0);
         ObjectFormat format = ObjectFormatCache.getInstance().getFormat(formatStr);
-        long content_length = new Long(content_lengthStr).longValue();
+        
+        BigInteger content_length;
+		try {
+			content_length = BigIntegerMarshaller.deserializeBigInteger(content_lengthStr);
+		} catch (JiBXException e) {
+			throw new ServiceFailure("0", "Could not convert the returned content_length string (" + 
+					content_lengthStr + ") to a BigInteger: " + e.getMessage());
+		}
         Date last_modified = null;
         System.out.println("parsing date");
         try
@@ -391,7 +400,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         }
         catch(java.text.ParseException pe)
         {
-            throw new InvalidRequest("1362", "Could not parse the date string " + 
+            throw new ServiceFailure("0", "Could not parse the returned date string " + 
                     last_modifiedStr + ". It should be in the format 'yyyy-MM-dd'T'hh:mm:ss.SZ': " +
                     pe.getMessage());
         }
