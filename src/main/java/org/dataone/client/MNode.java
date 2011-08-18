@@ -109,7 +109,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_MONITOR_PING);
 
     	// send the request
-    	D1RestClient client = new D1RestClient(true, verbose);
+    	D1RestClient client = new D1RestClient();
     	InputStream is = null;
     	
     	try {
@@ -125,7 +125,8 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	catch (UnsupportedMetadataType e) { throw recastDataONEExceptionToServiceFailure(e); }
     	catch (UnsupportedQueryType e)    { throw recastDataONEExceptionToServiceFailure(e); }
     	catch (UnsupportedType e)         { throw recastDataONEExceptionToServiceFailure(e); }
-
+    	catch (SynchronizationFailed e)   { throw recastDataONEExceptionToServiceFailure(e); }
+    	
 		catch (ClientProtocolException e) {	throw recastClientSideExceptionToServiceFailure(e); }
     	catch (IllegalStateException e)   {	throw recastClientSideExceptionToServiceFailure(e); }
     	catch (IOException e) 		      {	throw recastClientSideExceptionToServiceFailure(e); }
@@ -154,7 +155,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	url.addNonEmptyParamPair("count", count);
 
     	// send the request
-    	D1RestClient client = new D1RestClient(true, verbose);
+    	D1RestClient client = new D1RestClient();
     	InputStream is = null;
     	
     	try {
@@ -177,6 +178,8 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (UnsupportedMetadataType e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
     	} catch (IllegalStateException e) {
@@ -212,7 +215,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         	url.addNonEmptyParamPair("formatId", formatId.getValue());
 
     	// send the request
-    	D1RestClient client = new D1RestClient(true, verbose);
+    	D1RestClient client = new D1RestClient();
     	InputStream is = null;
     	
     	try {
@@ -231,6 +234,8 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
     	} catch (UnsupportedMetadataType e) {
     		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+    	} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
     	} catch (ClientProtocolException e) {
     		throw recastClientSideExceptionToServiceFailure(e);
     	} catch (IllegalStateException e) {
@@ -253,7 +258,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_NODE);
 
     	// send the request
-    	D1RestClient client = new D1RestClient(true, verbose);
+    	D1RestClient client = new D1RestClient();
     	InputStream is = null;
     	
     	try {
@@ -278,6 +283,8 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (InsufficientResources e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		}   catch (ClientProtocolException e) {
     		throw recastClientSideExceptionToServiceFailure(e);
     	} catch (IllegalStateException e) {
@@ -333,7 +340,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     		throw new InvalidRequest("1362", "PID cannot be null.");
     	url.addNextPathElement(pid.getValue());
     	
-     	D1RestClient client = new D1RestClient(true, verbose);
+     	D1RestClient client = new D1RestClient();
 //    	client.setHeader("token", token.getToken());
     	
     	Header[] h = null;
@@ -359,6 +366,8 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (UnsupportedMetadataType e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (IllegalStateException e) {
@@ -434,7 +443,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	url.addNonEmptyParamPair("checksumAlgorithm", checksumAlgorithm);
 
     	// send the request
-    	D1RestClient client = new D1RestClient(true, verbose);
+    	D1RestClient client = new D1RestClient();
     	InputStream is = null;
     	
     	try {
@@ -455,6 +464,8 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (UnsupportedMetadataType e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
     	} catch (IllegalStateException e) {
@@ -515,7 +526,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 		url.addNonEmptyParamPair("start",start);
 		url.addNonEmptyParamPair("count",count);
 
-		D1RestClient client = new D1RestClient(true, verbose);
+		D1RestClient client = new D1RestClient();
 
 		InputStream is = null;
 		try {
@@ -538,6 +549,8 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (AuthenticationTimeout e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (IllegalStateException e) {
@@ -565,7 +578,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
     	
-		D1RestClient client = new D1RestClient(true, verbose);
+		D1RestClient client = new D1RestClient();
 
 		InputStream is = null;
 		try {
@@ -588,6 +601,8 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (AuthenticationTimeout e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (IllegalStateException e) {
@@ -615,7 +630,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	url.addNextPathElement(pid.getValue());
     	url.addNonEmptyParamPair("action", action.xmlValue());
     	
-    	D1RestClient client = new D1RestClient(true, verbose);
+    	D1RestClient client = new D1RestClient();
     	InputStream is = null;
     	try {
 			is = client.doGetRequest(url.getUrl());
@@ -635,6 +650,8 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (UnsupportedMetadataType e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
     	} catch (IllegalStateException e) {
@@ -673,7 +690,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 //    	url.addNonEmptyParamPair("action", accessPolicy.);
 
     	// send the request
-    	D1RestClient client = new D1RestClient(true, verbose);
+    	D1RestClient client = new D1RestClient();
     	InputStream is = null;
     	
     	try {
@@ -694,6 +711,8 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (UnsupportedMetadataType e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
     	} catch (IllegalStateException e) {
@@ -735,7 +754,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 		}
 
     	
-    	D1RestClient client = new D1RestClient(true, verbose);
+    	D1RestClient client = new D1RestClient();
 //    	client.setHeader("token", token.getToken());
     	InputStream is = null;
 
@@ -753,6 +772,8 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
     	} catch (UnsupportedQueryType e) {
     		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+    	} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
     	} catch (ClientProtocolException e) {
     		throw recastClientSideExceptionToServiceFailure(e);
     	} catch (IllegalStateException e) {
@@ -793,7 +814,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 			throw recastClientSideExceptionToServiceFailure(e);	
 		}
     	  	
-    	D1RestClient client = new D1RestClient(true, verbose);
+    	D1RestClient client = new D1RestClient();
     	InputStream is = null;
     	
     	try {
@@ -806,6 +827,8 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
     	} catch (UnsupportedMetadataType e) {
     		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+    	} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
     	} catch (ClientProtocolException e) {
     		throw recastClientSideExceptionToServiceFailure(e);
     	} catch (IllegalStateException e) {
@@ -837,7 +860,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 //    		token = new AuthToken("public");
 //    	url.addNonEmptyParamPair("sessionid", token.getToken());
     	
-     	D1RestClient client = new D1RestClient(true, verbose);
+     	D1RestClient client = new D1RestClient();
 //    	client.setHeader("token", token.getToken());
     	
     	InputStream is = null;
@@ -859,6 +882,8 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
     	} catch (InvalidSystemMetadata e) {
     		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+    	} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
     	} catch (ClientProtocolException e) {
     		throw recastClientSideExceptionToServiceFailure(e);
     	} catch (IllegalStateException e) {
@@ -900,7 +925,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 			throw recastClientSideExceptionToServiceFailure(e);
 		}
     	
-    	D1RestClient client = new D1RestClient(true, verbose);
+    	D1RestClient client = new D1RestClient();
     	InputStream is = null;
     	try {
 			is = client.doPostRequest(url.getUrl(),smpe);
@@ -920,6 +945,8 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (UnsupportedMetadataType e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
     	} catch (IllegalStateException e) {

@@ -46,6 +46,7 @@ import org.dataone.service.exceptions.NotAuthorized;
 import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
+import org.dataone.service.exceptions.SynchronizationFailed;
 import org.dataone.service.exceptions.UnsupportedMetadataType;
 import org.dataone.service.exceptions.UnsupportedQueryType;
 import org.dataone.service.exceptions.UnsupportedType;
@@ -170,7 +171,7 @@ public abstract class D1Node {
 //       	if (cert != null)
 //    		url.addNonEmptyParamPair("sessionid",token.getToken());
 
-		D1RestClient client = new D1RestClient(true, verbose);
+		D1RestClient client = new D1RestClient();
 		
 		InputStream is = null;
 		try {
@@ -193,6 +194,8 @@ public abstract class D1Node {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (AuthenticationTimeout e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (IllegalStateException e) {
@@ -220,7 +223,7 @@ public abstract class D1Node {
 //       	if (cert != null)
 //    		url.addNonEmptyParamPair("sessionid",cert.);
 
-		D1RestClient client = new D1RestClient(true, verbose);
+		D1RestClient client = new D1RestClient();
 		
 		InputStream is = null;
 	
@@ -242,6 +245,8 @@ public abstract class D1Node {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (UnsupportedMetadataType e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (IllegalStateException e) {

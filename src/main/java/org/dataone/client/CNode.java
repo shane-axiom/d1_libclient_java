@@ -50,6 +50,7 @@ import org.dataone.service.exceptions.NotAuthorized;
 import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
+import org.dataone.service.exceptions.SynchronizationFailed;
 import org.dataone.service.exceptions.UnsupportedMetadataType;
 import org.dataone.service.exceptions.UnsupportedQueryType;
 import org.dataone.service.exceptions.UnsupportedType;
@@ -135,7 +136,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
         url.addPreEncodedNonEmptyQueryParams(paramsComplete);
 
-        D1RestClient client = new D1RestClient(true, verbose);
+        D1RestClient client = new D1RestClient();
         client.setHeader("session", session.getSubject().getValue());
 
         InputStream is = null;
@@ -159,6 +160,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
             throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
         } catch (UnsupportedMetadataType e) {
             throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
         } catch (ClientProtocolException e) {
             throw recastClientSideExceptionToServiceFailure(e);
         } catch (IllegalStateException e) {
@@ -201,7 +204,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         }
         url.addNonEmptyParamPair("sessionid", session.getSubject().getValue());
 
-        D1RestClient client = new D1RestClient(true, verbose);
+        D1RestClient client = new D1RestClient();
         client.setHeader("session", session.getSubject().getValue());
 
         InputStream is = null;
@@ -222,7 +225,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         } catch (AuthenticationTimeout e) {
             throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
         } catch (UnsupportedMetadataType e) {
-            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+            throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());    
+		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
         } catch (ClientProtocolException e) {
             throw recastClientSideExceptionToServiceFailure(e);
         } catch (IllegalStateException e) {
@@ -278,7 +283,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e);	
 		}
 
-        D1RestClient client = new D1RestClient(true, verbose);
+        D1RestClient client = new D1RestClient();
         InputStream is = null;
 
         try {
@@ -293,6 +298,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
             throw new ServiceFailure("1090", e.getClass().getSimpleName() + ": " + e.getDetail_code() + ": " + e.getDescription());
 		} catch (UnsupportedQueryType e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
             throw new ServiceFailure("1090", e.getClass().getSimpleName() + ": " + e.getMessage());
         } catch (IllegalStateException e) {
@@ -340,7 +347,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	url.addNonEmptyParamPair("pidOfObject", pidOfObject.getValue());
 
     	// send the request
-    	D1RestClient client = new D1RestClient(true, verbose);
+    	D1RestClient client = new D1RestClient();
     	InputStream is = null;
     	
     	try {
@@ -361,6 +368,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (UnsupportedMetadataType e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
     	} catch (IllegalStateException e) {
@@ -390,7 +399,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient(true, verbose);
+		D1RestClient client = new D1RestClient();
         client.setHeader("session", session.getSubject().getValue());
 
 		InputStream is = null;
@@ -412,6 +421,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (UnsupportedMetadataType e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (IllegalStateException e) {
@@ -432,7 +443,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	url.addNonEmptyParamPair("permission", permission.xmlValue());
 
     	// send the request
-    	D1RestClient client = new D1RestClient(true, verbose);
+    	D1RestClient client = new D1RestClient();
     	InputStream is = null;
     	
     	try {
@@ -453,6 +464,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (UnsupportedMetadataType e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
     	} catch (IllegalStateException e) {
@@ -481,7 +494,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient(true, verbose);
+		D1RestClient client = new D1RestClient();
         client.setHeader("session", session.getSubject().getValue());
 
 		InputStream is = null;
@@ -502,6 +515,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (AuthenticationTimeout e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (UnsupportedMetadataType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (SynchronizationFailed e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
@@ -529,7 +544,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient(true, verbose);
+		D1RestClient client = new D1RestClient();
         client.setHeader("session", session.getSubject().getValue());
 
 		InputStream is = null;
@@ -675,7 +690,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	// build the REST URL to call
     	ObjectFormatList objectFormatList = null;
     	D1Url d1Url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_FORMATS);
-    	D1RestClient restClient = new D1RestClient(true, verbose);
+    	D1RestClient restClient = new D1RestClient();
     	
     	InputStream is = null;
     	  
@@ -713,7 +728,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	} catch (AuthenticationTimeout e) {
     		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());    	
     	} catch (UnsupportedMetadataType e) {
-    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());        	
+    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
     	} catch (ClientProtocolException e) {
     		throw recastClientSideExceptionToServiceFailure(e);    	
     	} catch (IOException e) {
@@ -749,7 +766,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	D1Url d1Url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_FORMATS);   	
     	d1Url.addNextPathElement(fmtid.getValue());
     	
-    	D1RestClient restClient = new D1RestClient(true, verbose);
+    	D1RestClient restClient = new D1RestClient();
     	InputStream is = null;
       
     	try {
@@ -778,6 +795,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
     	} catch (UnsupportedMetadataType e) {
     		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
     	} catch (ClientProtocolException e) {
             throw recastClientSideExceptionToServiceFailure(e);
         } catch (IllegalStateException e) {
@@ -804,7 +823,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_NODE);
 
-        D1RestClient client = new D1RestClient(true, verbose);
+        D1RestClient client = new D1RestClient();
 
         InputStream is = null;
         try {
@@ -833,6 +852,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         	throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
         } catch (InvalidRequest e) {
         	throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
         } catch (ClientProtocolException e) {
             throw recastClientSideExceptionToServiceFailure(e);
         } catch (IllegalStateException e) {
@@ -862,7 +883,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient(true, verbose);
+		D1RestClient client = new D1RestClient();
         client.setHeader("session", session.getSubject().getValue());
 
 		InputStream is = null;
@@ -885,6 +906,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (AuthenticationTimeout e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (UnsupportedMetadataType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (SynchronizationFailed e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
@@ -914,7 +937,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient(true, verbose);
+		D1RestClient client = new D1RestClient();
         client.setHeader("session", session.getSubject().getValue());
 
 		InputStream is = null;
@@ -937,6 +960,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (AuthenticationTimeout e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (UnsupportedMetadataType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (SynchronizationFailed e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
@@ -964,7 +989,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	url.addNonEmptyParamPair("event", event.xmlValue());
 
     	// send the request
-    	D1RestClient client = new D1RestClient(true, verbose);
+    	D1RestClient client = new D1RestClient();
     	InputStream is = null;
     	
     	try {
@@ -987,6 +1012,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (UnsupportedMetadataType e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
     	} catch (IllegalStateException e) {
@@ -1016,7 +1043,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient(true, verbose);
+		D1RestClient client = new D1RestClient();
         client.setHeader("session", session.getSubject().getValue());
 
 		InputStream is = null;
@@ -1039,6 +1066,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (InvalidToken e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (NotFound e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (SynchronizationFailed e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
@@ -1068,7 +1097,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient(true, verbose);
+		D1RestClient client = new D1RestClient();
         client.setHeader("session", session.getSubject().getValue());
 
 		InputStream is = null;
@@ -1089,6 +1118,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (UnsupportedMetadataType e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (InvalidToken e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (SynchronizationFailed e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
@@ -1119,7 +1150,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	url.addNextPathElement(pid.getValue());
 
     	// send the request
-    	D1RestClient client = new D1RestClient(true, verbose);
+    	D1RestClient client = new D1RestClient();
     	InputStream is = null;
     	
     	try {
@@ -1140,6 +1171,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (UnsupportedMetadataType e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
     	} catch (IllegalStateException e) {
@@ -1169,7 +1202,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient(true, verbose);
+		D1RestClient client = new D1RestClient();
         client.setHeader("session", session.getSubject().getValue());
 
 		InputStream is = null;
@@ -1190,6 +1223,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (AuthenticationTimeout e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (UnsupportedMetadataType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (SynchronizationFailed e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
@@ -1220,7 +1255,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient(true, verbose);
+		D1RestClient client = new D1RestClient();
         client.setHeader("session", session.getSubject().getValue());
 
 		InputStream is = null;
@@ -1241,6 +1276,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (AuthenticationTimeout e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (UnsupportedMetadataType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (SynchronizationFailed e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
@@ -1270,7 +1307,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient(true, verbose);
+		D1RestClient client = new D1RestClient();
         client.setHeader("session", session.getSubject().getValue());
 
 		InputStream is = null;
@@ -1291,6 +1328,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (AuthenticationTimeout e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (UnsupportedMetadataType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (SynchronizationFailed e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
@@ -1321,7 +1360,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient(true, verbose);
+		D1RestClient client = new D1RestClient();
         client.setHeader("session", session.getSubject().getValue());
 
 		InputStream is = null;
@@ -1345,6 +1384,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (NotFound e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (IllegalStateException e) {
@@ -1367,7 +1408,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	url.addNonEmptyParamPair("start", start);
     	url.addNonEmptyParamPair("count", count);
     	
-		D1RestClient client = new D1RestClient(true, verbose);
+		D1RestClient client = new D1RestClient();
         client.setHeader("session", session.getSubject().getValue());
 
 		InputStream is = null;
@@ -1393,6 +1434,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (NotFound e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (IllegalStateException e) {
@@ -1413,7 +1456,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNTS);
     	url.addNextPathElement(subject.getValue());
 
-		D1RestClient client = new D1RestClient(true, verbose);
+		D1RestClient client = new D1RestClient();
         client.setHeader("session", session.getSubject().getValue());
 
 		InputStream is = null;
@@ -1476,7 +1519,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         }
         url.addNonEmptyParamPair("sessionid", session.getSubject().getValue());
 
-        D1RestClient client = new D1RestClient(true, verbose);
+        D1RestClient client = new D1RestClient();
         client.setHeader("session", session.getSubject().getValue());
 
 		InputStream is = null;
@@ -1499,6 +1542,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (UnsupportedMetadataType e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (NotFound e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (SynchronizationFailed e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
@@ -1534,7 +1579,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         }
         url.addNonEmptyParamPair("sessionid", session.getSubject().getValue());
 
-		D1RestClient client = new D1RestClient(true, verbose);
+		D1RestClient client = new D1RestClient();
         client.setHeader("session", session.getSubject().getValue());
 
 		InputStream is = null;
@@ -1557,6 +1602,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (InvalidToken e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (NotFound e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (SynchronizationFailed e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
@@ -1592,7 +1639,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         }
         url.addNonEmptyParamPair("sessionid", session.getSubject().getValue());
 
-		D1RestClient client = new D1RestClient(true, verbose);
+		D1RestClient client = new D1RestClient();
         client.setHeader("session", session.getSubject().getValue());
 
 		InputStream is = null;
@@ -1615,6 +1662,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (InvalidToken e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (NotFound e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (SynchronizationFailed e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
@@ -1651,7 +1700,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         }
         url.addNonEmptyParamPair("sessionid", session.getSubject().getValue());
 
-		D1RestClient client = new D1RestClient(true, verbose);
+		D1RestClient client = new D1RestClient();
         client.setHeader("session", session.getSubject().getValue());
 
 		InputStream is = null;
@@ -1676,6 +1725,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (InvalidToken e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (NotFound e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (SynchronizationFailed e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
@@ -1712,7 +1763,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         }
         url.addNonEmptyParamPair("sessionid", session.getSubject().getValue());
 
-		D1RestClient client = new D1RestClient(true, verbose);
+		D1RestClient client = new D1RestClient();
         client.setHeader("session", session.getSubject().getValue());
 
 		InputStream is = null;
@@ -1734,6 +1785,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (UnsupportedMetadataType e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (IllegalStateException e) {
@@ -1742,6 +1795,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (HttpException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (BaseException e) {
+
 		}
 		return true;
     }
