@@ -24,6 +24,7 @@ import org.dataone.service.exceptions.NotAuthorized;
 import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
+import org.dataone.service.exceptions.SynchronizationFailed;
 import org.dataone.service.exceptions.UnsupportedMetadataType;
 import org.dataone.service.exceptions.UnsupportedQueryType;
 import org.dataone.service.exceptions.UnsupportedType;
@@ -41,7 +42,7 @@ public class EchoTestD1RestClientIT {
 	NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources, 
 	InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest, 
 	IllegalStateException, AuthenticationTimeout, UnsupportedMetadataType, HttpException,
-	UnsupportedQueryType
+	UnsupportedQueryType, SynchronizationFailed
 	{
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
@@ -62,7 +63,7 @@ public class EchoTestD1RestClientIT {
 	NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources,
 	InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest,
 	IllegalStateException, AuthenticationTimeout, UnsupportedMetadataType, HttpException,
-	UnsupportedQueryType
+	UnsupportedQueryType, SynchronizationFailed
 	{
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
@@ -83,7 +84,7 @@ public class EchoTestD1RestClientIT {
 	NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources, 
 	InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest, 
 	IllegalStateException, AuthenticationTimeout, UnsupportedMetadataType, HttpException, 
-	UnsupportedQueryType 
+	UnsupportedQueryType, SynchronizationFailed 
 	{
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
@@ -104,7 +105,7 @@ public class EchoTestD1RestClientIT {
 	NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources, 
 	InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest, 
 	IllegalStateException, AuthenticationTimeout, UnsupportedMetadataType, HttpException, 
-	UnsupportedQueryType 
+	UnsupportedQueryType, SynchronizationFailed 
 	{
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
@@ -125,7 +126,7 @@ public class EchoTestD1RestClientIT {
 	NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources, 
 	InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest, 
 	IllegalStateException, AuthenticationTimeout, UnsupportedMetadataType, HttpException, 
-	UnsupportedQueryType 
+	UnsupportedQueryType, SynchronizationFailed 
 	{
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
@@ -145,7 +146,7 @@ public class EchoTestD1RestClientIT {
 	NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources, 
 	InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest, 
 	IllegalStateException, AuthenticationTimeout, UnsupportedMetadataType, HttpException, 
-	UnsupportedQueryType 
+	UnsupportedQueryType, SynchronizationFailed 
 	{
 		D1Url u = new D1Url(echoNode, mmEchoResource);
 		u.addNextPathElement("bizz");
@@ -168,7 +169,7 @@ public class EchoTestD1RestClientIT {
 	NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources, 
 	InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest, 
 	IllegalStateException, AuthenticationTimeout, UnsupportedMetadataType, HttpException, 
-	UnsupportedQueryType 
+	UnsupportedQueryType, SynchronizationFailed 
 	{
 		D1Url u = new D1Url(echoNode, mmEchoResource);
 		u.addNextPathElement("bizz");
@@ -204,10 +205,14 @@ public class EchoTestD1RestClientIT {
 			String contentString = IOUtils.toString(is);
 			System.out.println(contentString);
 			fail("should not have reached here");
-		} catch (BaseException e) {
+		} catch (NotFound e) {
 			System.out.println("Exception thrown = " + e.getClass());
 			System.out.println("Description = " + e.getDescription());
 			assertTrue("exception thrown",  e instanceof NotFound);
+		} catch (BaseException e) {
+			System.out.println("Exception thrown = " + e.getClass());
+			System.out.println("Description = " + e.getDescription());
+			assertTrue("exception thrown",  e instanceof ServiceFailure);
 		} catch (HttpException e) {
 			System.out.println("Exception thrown = " + e.getClass());
 			System.out.println("Message = " + e.getMessage());
