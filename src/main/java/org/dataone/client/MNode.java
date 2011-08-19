@@ -95,6 +95,12 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     }
    
     
+//    public String getNodeBaseServiceUrl() {
+//    	D1Url url = new D1Url(super.getNodeBaseServiceUrl());
+//    	url.addNextPathElement(MNCore.SERVICE_VERSION);
+//    	return url.getUrl();
+//    }
+    
     ////////////////   Tier 1 :  MNCore API   //////////////////////
     
     /**

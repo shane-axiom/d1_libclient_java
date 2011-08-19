@@ -54,6 +54,7 @@ import org.dataone.service.exceptions.SynchronizationFailed;
 import org.dataone.service.exceptions.UnsupportedMetadataType;
 import org.dataone.service.exceptions.UnsupportedQueryType;
 import org.dataone.service.exceptions.UnsupportedType;
+import org.dataone.service.mn.tier1.v1.MNCore;
 import org.dataone.service.types.v1.AccessPolicy;
 import org.dataone.service.types.v1.Checksum;
 import org.dataone.service.types.v1.Event;
@@ -101,6 +102,14 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     public CNode(String nodeBaseServiceUrl) {
         super(nodeBaseServiceUrl);
     }
+    
+    public String getNodeBaseServiceUrl() {
+    	D1Url url = new D1Url(super.getNodeBaseServiceUrl());
+    	url.addNextPathElement(CNCore.SERVICE_VERSION);
+    	return url.getUrl();
+    }
+    
+    
     
     public ObjectList search(Session session, QueryType queryType, String query)
     throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest,
