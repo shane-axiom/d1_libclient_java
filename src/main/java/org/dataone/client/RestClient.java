@@ -74,6 +74,20 @@ public class RestClient {
 	    setupSSL();
 	}
 	
+	/**
+	 * Use this constructor to bypass SSL setup.
+	 * useful for testing
+	 * @param setupSSL
+	 */
+	public RestClient(boolean setupSSL) {
+		httpClient = new DefaultHttpClient();
+		if (setupSSL) {
+			setupSSL();
+		} else {
+			log.info("bypassing SSL setup as per constructor setting");
+		}
+	}
+	
 	
 	public void setupSSL() {
 		
