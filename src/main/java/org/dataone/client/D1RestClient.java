@@ -58,20 +58,24 @@ public class D1RestClient {
 	protected static Log log = LogFactory.getLog(D1RestClient.class);
 	
     protected RestClient rc;
-//    private boolean exceptionHandling = true;
 
 	/**
 	 * Constructor to create a new instance.
 	 */
 	public D1RestClient() {
 		this.rc = new RestClient();
-//		this.exceptionHandling = true;
+	}
+	
+	/**
+	 * Use this constructor to bypass SSL setup.
+	 * useful for testing
+	 * @param setupSSL
+	 */
+	public D1RestClient(boolean setupSSL) {
+		this.rc = new RestClient(setupSSL);
 	}
 
-/*	public D1RestClient(boolean handlesExceptions) {
-		this.rc = new RestClient();
-		setExceptionHandling(handlesExceptions);
-	}*/
+
  
 	public InputStream doGetRequest(String url) 
 	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
