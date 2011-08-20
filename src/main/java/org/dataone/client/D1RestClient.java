@@ -65,16 +65,6 @@ public class D1RestClient {
 	public D1RestClient() {
 		this.rc = new RestClient();
 	}
-	
-	/**
-	 * Use this constructor to bypass SSL setup.
-	 * useful for testing
-	 * @param setupSSL
-	 */
-	public D1RestClient(boolean setupSSL) {
-		this.rc = new RestClient(setupSSL);
-	}
-
 
  
 	public InputStream doGetRequest(String url) 

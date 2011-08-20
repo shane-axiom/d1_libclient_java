@@ -219,10 +219,19 @@ public class CertificateManager {
     
     public SSLSocketFactory getSSLSocketFactory() throws NoSuchAlgorithmException, UnrecoverableKeyException, KeyStoreException, KeyManagementException, CertificateException, IOException {
     	// our return object
+    	log.debug("Enter getSSLSocketFactory");
     	SSLSocketFactory socketFactory = null;
+    	KeyStore keyStore = null;
     	
     	// get the keystore that will provide the material
-    	KeyStore keyStore = getKeyStore();
+    	// Catch the exception here so that the TLS connection scheme
+    	// will still be setup if the client certificate is not found.
+    	try {
+    		keyStore = getKeyStore();
+		} catch (FileNotFoundException e) {
+			// these are somewhat expected for anonymous d1 client use
+			log.warn("Could not set up client side authentication - likely because the certificate could not be located: " + e.getMessage());
+		}
        
         // create SSL context
         SSLContext ctx = SSLContext.getInstance("TLS");

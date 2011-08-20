@@ -26,10 +26,6 @@ package org.dataone.client;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.Vector;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -48,7 +44,6 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.dataone.client.auth.CertificateManager;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.util.Constants;
-import org.dataone.service.util.EncodingUtilities;
 
 
 
@@ -74,89 +69,29 @@ public class RestClient {
 	    setupSSL();
 	}
 	
-	/**
-	 * Use this constructor to bypass SSL setup.
-	 * useful for testing
-	 * @param setupSSL
-	 */
-	public RestClient(boolean setupSSL) {
-		httpClient = new DefaultHttpClient();
-		if (setupSSL) {
-			setupSSL();
-		} else {
-			log.info("bypassing SSL setup as per constructor setting");
-		}
-	}
-	
-	
 	public void setupSSL() {
 		
-			try {
-				SSLSocketFactory socketFactory = CertificateManager.getInstance().getSSLSocketFactory();
-				Scheme sch = new Scheme("https", socketFactory, 443);
-	            httpClient.getConnectionManager().getSchemeRegistry().register(sch);
-			} catch (FileNotFoundException e) {
-				// these are somewhat expected for anonymous d1 client use
-				log.warn("Could not set up SSL connection for client - likely because the certificate could not be located: " + e.getMessage());
-			} catch (Exception e) {
-				// this is likely more severe
-				log.error("Failed to set up SSL connection for client: " + e.getMessage(), e);
-			}
-            
-		
+		SSLSocketFactory socketFactory = null;
+		try {
+			socketFactory = CertificateManager.getInstance().getSSLSocketFactory();
+		} catch (FileNotFoundException e) {
+			// these are somewhat expected for anonymous d1 client use
+			log.warn("Could not set up SSL connection for client - likely because the certificate could not be located: " + e.getMessage());
+		} catch (Exception e) {
+			// this is likely more severe
+			log.warn("Funky SSL going on: " + e.getMessage());
+		}
+		try {
+			//443 is the default port, this value is overridden if explicitly set in the URL
+			Scheme sch = new Scheme("https", socketFactory, 443);
+			httpClient.getConnectionManager().getSchemeRegistry().register(sch);
+		} catch (Exception e) {
+			// this is likely more severe
+			log.error("Failed to set up SSL connection for client: " + e.getMessage(), e);
+		}
 	}
 
-    // ==========================  New Handlers ===========================//
 
-    /**
-     * assembles url components into a properly encoded complete url
-     */
-	// TODO: remove this?  now that d1_common_java.D1Url class is created
-	public static String assembleAndEncodeUrl(String baseURL, String resource, 
-			String[] pathElements, Map<String,Object> queryParams) {
-		
-		if (baseURL == null)
-			throw new IllegalArgumentException("baseURL parameter cannot be null");
-		
-		String url = baseURL; 
-		if (!url.endsWith("/"))
-			url += "/";
-		url += resource;
-		
-		for(int i=0;i<pathElements.length;i++) 
-			url += "/" + EncodingUtilities.encodeUrlPathSegment(pathElements[i]);
-
-		
-		Set<String> paramKeys = queryParams.keySet();
-		Iterator<String> it = paramKeys.iterator();
-		Vector<String> params = new Vector<String>();
-		StringBuffer item = new StringBuffer(512);
-		while (it.hasNext()) {
-			String k = it.next();
-			if (k == "") continue;
-			
-			item.append(EncodingUtilities.encodeUrlQuerySegment(k));
-			queryParams.get(k);
-			String val = (String) queryParams.get(k);
-			if (val != null)
-				if (val != "") {
-					item.append("=");
-					item.append(EncodingUtilities.encodeUrlQuerySegment(val));
-				}
-			if (it.hasNext())
-				item.append("&");
-			
-			params.add(item.toString());
-		}
-		// validated parameters
-		Iterator<String> it2 = params.listIterator();
-		if (it2.hasNext())
-			url += "?";
-		while (it2.hasNext()) {
-			url += it2.next();
-		}
-		return url;
-	}
 	
 	public void setHeader(String name, String value) {
 		headers.put(name, value);
