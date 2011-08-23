@@ -22,16 +22,10 @@
 
 package org.dataone.client;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpException;
 import org.apache.http.client.ClientProtocolException;
 import org.dataone.service.exceptions.AuthenticationTimeout;
@@ -58,10 +52,6 @@ import org.dataone.service.util.Constants;
 import org.dataone.service.util.D1Url;
 import org.dataone.service.util.TypeMarshaller;
 import org.jibx.runtime.JiBXException;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 /**
  * An abstract node class that contains base functionality shared between 
@@ -73,7 +63,6 @@ public abstract class D1Node {
     /** The URL string for the node REST API */
     private String nodeBaseServiceUrl;
     private String nodeId;
-    protected boolean verbose = false;
     
 	/**
 	 * Constructor to create a new instance.
@@ -130,14 +119,6 @@ public abstract class D1Node {
         this.nodeId = nodeId;
     }
 
-    public void setVerbose(boolean isVerbose){
-    	this.verbose = isVerbose;
-    }
-    
-    public boolean isVerbose() {
-    	return this.verbose;
-    }
-
     
     /**
      * creates a public session object that can be used as a default
@@ -151,8 +132,7 @@ public abstract class D1Node {
     	sub.setValue("public");
     	session.setSubject(sub);
     	return session;
-    }
-    
+    }   
   
     
 	/**
@@ -168,8 +148,6 @@ public abstract class D1Node {
     {
        	D1Url url = new D1Url(this.getNodeBaseServiceUrl(),Constants.RESOURCE_OBJECTS);
     	url.addNextPathElement(pid.getValue());
-//       	if (cert != null)
-//    		url.addNonEmptyParamPair("sessionid",token.getToken());
 
 		D1RestClient client = new D1RestClient();
 		
@@ -208,6 +186,7 @@ public abstract class D1Node {
 		return is;
     }
  
+    
 	/**
      * Get the system metadata from a resource with the specified guid. Used
      * by both the CNode and MNode implementations.
@@ -220,8 +199,6 @@ public abstract class D1Node {
 		
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(),Constants.RESOURCE_META);
     	url.addNextPathElement(pid.getValue());
-//       	if (cert != null)
-//    		url.addNonEmptyParamPair("sessionid",cert.);
 
 		D1RestClient client = new D1RestClient();
 		
@@ -256,16 +233,10 @@ public abstract class D1Node {
 		} catch (HttpException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		}
-		try {
-            return deserializeServiceType(SystemMetadata.class,is);
-        } catch (Exception e) {
-            throw new ServiceFailure("1090",
-                    "Could not deserialize the systemMetadata: " + e.getMessage());
-        }	
+		return deserializeServiceType(SystemMetadata.class,is);
 	}
    
 	
-
     /**
      * A helper function to preserve the stackTrace when catching one error and throwing a new one.
      * Also has some descriptive text which makes it clientSide specific
@@ -298,158 +269,7 @@ public abstract class D1Node {
     	return sfe;
     }
 
-	/**
-	 *  converts the serialized errorStream to the appropriate Java Exception
-	 *  errorStream is not guaranteed to hold xml.  Code is passed in to preserve
-	 *  http code in the case of non-dataone errors.
-	 *  
-	 * @param errorStream
-	 * @param httpCode
-	 * @throws NotFound
-	 * @throws InvalidToken
-	 * @throws ServiceFailure
-	 * @throws NotAuthorized
-	 * @throws NotFound
-	 * @throws IdentifierNotUnique
-	 * @throws UnsupportedType
-	 * @throws InsufficientResources
-	 * @throws InvalidSystemMetadata
-	 * @throws NotImplemented
-	 * @throws InvalidCredentials
-	 * @throws InvalidRequest
-	 */
-    protected static void deserializeAndThrowException(int httpCode, InputStream errorStream)
-			throws NotFound, InvalidToken, ServiceFailure, NotAuthorized,
-			NotFound, IdentifierNotUnique, UnsupportedType,
-			InsufficientResources, InvalidSystemMetadata, NotImplemented,
-			InvalidCredentials, InvalidRequest {
-
-        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-		Document doc;
-
-		BufferedInputStream bErrorStream = new BufferedInputStream(errorStream);
-		bErrorStream.mark(100000);  // good for resetting up to 100000 bytes	
-		
-		String detailCode = null;
-		String description = null;
-		try {
-			DocumentBuilder db = dbf.newDocumentBuilder();
-			doc = db.parse(bErrorStream);
-			Element root = doc.getDocumentElement();
-			root.normalize();
-			try {
-				httpCode = getIntAttribute(root, "errorCode");
-			} catch (NumberFormatException nfe){
-				System.out.println("  errorCode unexpectedly not able to parse to int");
-			}
-                        if (root.hasAttribute("detailCode")) {
-                            detailCode = root.getAttribute("detailCode");
-                        } else {
-                            detailCode = "-1";
-                        }
-			description = getTextValue(root, "description");
-			
-		} catch (SAXException e) {
-			description = deserializeNonXMLErrorStream(bErrorStream,e);
-		} catch (IOException e) {
-			description = deserializeNonXMLErrorStream(bErrorStream,e);
-		} catch (ParserConfigurationException e) {
-			description = deserializeNonXMLErrorStream(bErrorStream,e);
-		}
-		
-		switch (httpCode) {
-		case 400:
-		    // TODO: change this to a startsWith since error codes can have text after the number.
-			if (detailCode.equals("1180")) {
-				throw new InvalidSystemMetadata("1180", description);
-			} else {
-				throw new InvalidRequest(detailCode, description);
-			}
-		case 401:
-			throw new InvalidCredentials(detailCode, description);
-		case 404:
-			throw new NotFound(detailCode, description);
-		case 409:
-			throw new IdentifierNotUnique(detailCode, description);
-		case 500:
-			throw new ServiceFailure(detailCode, description);
-			// TODO: Handle other exception codes properly
-		default:
-			throw new ServiceFailure(detailCode, description);
-		}
-	}
-
-    /*
-     * helper method for deserializeAndThrowException.  Used for problems parsing errorStream as XML
-     */
-    private static String deserializeNonXMLErrorStream(BufferedInputStream errorStream, Exception e) 
-    {
-    	String errorString = null;
-    	try {
-    		errorStream.reset();
-    		errorString = IOUtils.toString(errorStream);
-    	} catch (IOException e1) {
-    		errorString = "errorStream could not be reset/reread";
-    	}
-    	return errorString;
-    }
     
-    
-    
-	/**
-	 * Take a xml element and the tag name, return the text content of the child
-	 * element.
-	 */
-	protected static String getTextValue(Element e, String tag) {
-		String text = null;
-		NodeList nl = e.getElementsByTagName(tag);
-		if (nl != null && nl.getLength() > 0) {
-			Element el = (Element) nl.item(0);
-                        if ((el.getFirstChild().getNodeType() == Element.TEXT_NODE) ||
-                                el.getFirstChild().getNodeType() == Element.CDATA_SECTION_NODE) {
-                            text = el.getFirstChild().getNodeValue();
-                        } else {
-                            text = "";
-                        }
-		}
-		return text;
-	}
-
-	/**
-	 * return an xml attribute as an int
-	 * @param e
-	 * @param attName
-	 * @return
-	 */
-	protected static int getIntAttribute(Element e, String attName)
-	throws NumberFormatException {
-            if (e.hasAttribute(attName)) {
-		String attText = e.getAttribute(attName);
-		int x = Integer.parseInt(attText);
-		return x;
-            } else {
-                return -1;
-            }
-	}
-
-//	/**
-//	 * serialize an object of type to out
-//	 * 
-//	 * @param type
-//	 *            the class of the object to serialize (i.e.
-//	 *            SystemMetadata.class)
-//	 * @param object
-//	 *            the object to serialize
-//	 * @param out
-//	 *            the stream to serialize it to
-//	 * @throws JiBXException
-//	 */
-//	@SuppressWarnings("rawtypes")
-//	protected void serializeServiceType(Class type, Object object,
-//			OutputStream out) throws JiBXException {
-//		ServiceTypeUtil.serializeServiceType(type, object, out);
-//	}
-
 	/**
 	 * deserialize an object of type from the inputstream
 	 * This is a wrapper method of the standard common Unmarshalling method
@@ -461,8 +281,6 @@ public abstract class D1Node {
 	 * @param is
 	 *            the stream to deserialize from
 	 * @throws ServiceFailure 
-
-
 	 */
 	@SuppressWarnings("rawtypes")
 	protected <T> T deserializeServiceType(Class<T> domainClass, InputStream is)
