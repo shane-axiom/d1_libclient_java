@@ -47,6 +47,7 @@ import org.dataone.service.types.v1.ChecksumAlgorithm;
 import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.types.v1.NodeReference;
 import org.dataone.service.types.v1.ObjectFormat;
+import org.dataone.service.types.v1.ObjectFormatIdentifier;
 import org.dataone.service.types.v1.ObjectLocation;
 import org.dataone.service.types.v1.ObjectLocationList;
 import org.dataone.service.types.v1.Permission;
@@ -114,8 +115,8 @@ public class D1Object {
     /**
      * @return the type
      */
-    public ObjectFormat getType() {
-        return sysmeta.getObjectFormat();
+    public ObjectFormatIdentifier getFmtId() {
+        return sysmeta.getFmtid();
     }
 
     /**
@@ -327,7 +328,7 @@ public class D1Object {
     	ObjectFormatCache ofc = ObjectFormatCache.getInstance();
     	try {
     		fmt = ofc.getFormat(format);
-    		sm.setObjectFormat(fmt);
+    		sm.setFmtid(fmt.getFmtid());
     	}
     	catch (NotFound nf) {
     		try {
