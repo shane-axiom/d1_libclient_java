@@ -965,6 +965,11 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 		return true;
 	}
 
+    public InputStream getReplica(Session cert, Identifier pid)
+        throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, 
+        ServiceFailure, NotFound { 
+       	return super.get(cert, pid);
+    }
 
 
 }
