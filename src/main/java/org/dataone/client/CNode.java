@@ -1809,4 +1809,16 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		}
 		return true;
     }
+
+    /**
+     * TODO: finish implementation
+     */
+    public boolean isReplicationAuthorized(Session originatingNodeSession, 
+        Subject targetNodeSubject, Identifier pid, Permission executePermission)
+        throws NotImplemented, NotAuthorized, InvalidToken, ServiceFailure, 
+        NotFound, InvalidRequest{
+
+        return true;
+
+    }
 }
