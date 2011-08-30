@@ -577,12 +577,10 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
 		SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
-			mpe.addFilePart("message", message);
+			mpe.addFilePart("message", message.serialize(SynchronizationFailed.FMT_XML));
 		} catch (IOException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
-		} catch (JiBXException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
-		}
+		} 
     	
 		D1RestClient client = new D1RestClient();
 
