@@ -347,7 +347,6 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	url.addNextPathElement(pid.getValue());
     	
      	D1RestClient client = new D1RestClient();
-//    	client.setHeader("token", token.getToken());
     	
     	Header[] h = null;
     	Map<String, String> m = new HashMap<String,String>();
@@ -386,13 +385,11 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	
   
     	DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-        String formatStr = m.get("format");//.get(0);
-        String last_modifiedStr = m.get("last_modified");//.get(0);
-        String content_lengthStr = m.get("content_length");//.get(0);
-        String checksumStr = m.get("checksum");//.get(0);
-        String checksum_algorithmStr = m.get("checksum_algorithm");//.get(0);
-        ObjectFormat format = ObjectFormatCache.getInstance().getFormat(formatStr);
-        
+        String objectFormatIdStr = m.get("DataONE-fmtid");//.get(0);
+        String last_modifiedStr = m.get("Last-Modified");//.get(0);
+        String content_lengthStr = m.get("Content-Length");//.get(0);
+        String checksumStr = m.get("DataONE-Checksum");//.get(0);
+   
         BigInteger content_length;
 		try {
 			content_length = BigIntegerMarshaller.deserializeBigInteger(content_lengthStr);
@@ -419,13 +416,23 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
                     last_modifiedStr + ". It should be in the format 'yyyy-MM-dd'T'hh:mm:ss.SZ': " +
                     pe.getMessage());
         }
+
+        // build a checksum object
         Checksum checksum = new Checksum();
-        checksum.setAlgorithm(ChecksumAlgorithm.convert(checksum_algorithmStr));
-        checksum.setValue(checksumStr);
+        String[] cs = checksumStr.split(",");
+        checksum.setAlgorithm(ChecksumAlgorithm.convert(cs[0]));
+        checksum.setValue(cs[1]);
+
+        // build an objectformat identifier object
+        // doesn't check validity of the formatID value
         
-        DescribeResponse dr = new DescribeResponse(format, content_length, last_modified, checksum);
-        return dr;
-		
+        // to do the check, uncomment following line, and work it in to the code
+        //        ObjectFormat format = ObjectFormatCache.getInstance().getFormat(objectFormatIdStr);
+        
+        ObjectFormatIdentifier ofID = new ObjectFormatIdentifier();
+        ofID.setValue(objectFormatIdStr);
+
+        return new DescribeResponse(ofID, content_length, last_modified, checksum);
 	}
 
 	
