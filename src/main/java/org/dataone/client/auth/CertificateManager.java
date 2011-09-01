@@ -184,13 +184,14 @@ public class CertificateManager {
     }
     
     public Session getSession(HttpServletRequest request) {
-    	Session session = new Session();
-		Subject subject = new Subject();
+    	Session session = null;
     	Object certificate = request.getAttribute("javax.servlet.request.X509Certificate");
     	log.debug("javax.servlet.request.X509Certificate " + " = " + certificate);
     	Object sslSession = request.getAttribute("javax.servlet.request.ssl_session");
     	log.debug("javax.servlet.request.ssl_session " + " = " + sslSession);
     	if (certificate instanceof X509Certificate[]) {
+    		session = new Session();
+    		Subject subject = new Subject();
     		X509Certificate[] x509Certificates = (X509Certificate[]) certificate;
     		for (X509Certificate x509Cert:x509Certificates) {
 	    		displayCertificate(x509Cert);
