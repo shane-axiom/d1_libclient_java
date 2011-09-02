@@ -52,12 +52,15 @@ import org.dataone.service.util.Constants;
  * to remote REST servers.  
  * It is built to encapsulate the communication conventions dataONE is following
  * but does not know about dataone objects (see D1RestClient for that)
+ * 
+ * (Each RestClient instance has an HttpClient that is reused for the various
+ * calls to the memberNode)
  * */
 public class RestClient {
 
 	protected static Log log = LogFactory.getLog(RestClient.class);
 	
-    /** The URL string for the node REST API */
+	
     private DefaultHttpClient httpClient;
     private HashMap<String, String> headers = new HashMap<String, String>();
     
