@@ -54,7 +54,6 @@ import org.dataone.service.exceptions.SynchronizationFailed;
 import org.dataone.service.exceptions.UnsupportedMetadataType;
 import org.dataone.service.exceptions.UnsupportedQueryType;
 import org.dataone.service.exceptions.UnsupportedType;
-import org.dataone.service.mn.tier1.v1.MNCore;
 import org.dataone.service.types.v1.AccessPolicy;
 import org.dataone.service.types.v1.Checksum;
 import org.dataone.service.types.v1.Event;
@@ -696,8 +695,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     InvalidRequest 
     {
       
-    	// build the REST URL to call
-    	ObjectFormatList objectFormatList = null;
     	D1Url d1Url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_FORMATS);
     	D1RestClient restClient = new D1RestClient();
     	
@@ -769,8 +766,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
       throws ServiceFailure, NotFound, InsufficientResources, NotImplemented, 
       InvalidRequest {
 			
-    	ObjectFormat objectFormat = null;
-    	
     	// build the REST URL to call
     	D1Url d1Url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_FORMATS);   	
     	d1Url.addNextPathElement(fmtid.getValue());
