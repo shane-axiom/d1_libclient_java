@@ -43,7 +43,6 @@ import org.dataone.service.exceptions.UnsupportedType;
 import org.dataone.service.types.v1.AccessPolicy;
 import org.dataone.service.types.v1.AccessRule;
 import org.dataone.service.types.v1.Checksum;
-import org.dataone.service.types.v1.ChecksumAlgorithm;
 import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.types.v1.NodeReference;
 import org.dataone.service.types.v1.ObjectFormat;
@@ -340,9 +339,9 @@ public class D1Object {
 
     	//create the checksum
     	InputStream is = new ByteArrayInputStream(data);
-    	ChecksumAlgorithm ca = ChecksumAlgorithm.convert("MD5");
+
     	Checksum checksum;
-    	checksum = ChecksumUtil.checksum(is, ca);
+    	checksum = ChecksumUtil.checksum(is, "MD5");
     	sm.setChecksum(checksum);
 
     	//set the size

@@ -55,7 +55,6 @@ import org.dataone.service.mn.tier3.v1.MNStorage;
 import org.dataone.service.mn.tier4.v1.MNReplication;
 import org.dataone.service.types.v1.AccessPolicy;
 import org.dataone.service.types.v1.Checksum;
-import org.dataone.service.types.v1.ChecksumAlgorithm;
 import org.dataone.service.types.v1.DescribeResponse;
 import org.dataone.service.types.v1.Event;
 import org.dataone.service.types.v1.Identifier;
@@ -420,7 +419,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         // build a checksum object
         Checksum checksum = new Checksum();
         String[] cs = checksumStr.split(",");
-        checksum.setAlgorithm(ChecksumAlgorithm.convert(cs[0]));
+        checksum.setAlgorithm(cs[0]);
         checksum.setValue(cs[1]);
 
         // build an objectformat identifier object
