@@ -69,7 +69,6 @@ import org.dataone.service.types.v1.ObjectList;
 import org.dataone.service.types.v1.ObjectLocationList;
 import org.dataone.service.types.v1.Permission;
 import org.dataone.service.types.v1.Person;
-import org.dataone.service.types.v1.QueryType;
 import org.dataone.service.types.v1.ReplicationPolicy;
 import org.dataone.service.types.v1.ReplicationStatus;
 import org.dataone.service.types.v1.Session;
@@ -110,7 +109,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     
     
     
-    public ObjectList search(Session session, QueryType queryType, String query)
+    public ObjectList search(Session session, String queryType, String query)
     throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest,
     NotImplemented
 	{
@@ -124,8 +123,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
         // set default params, if need be
         String paramAdditions = "";
-        if (!query.contains("qt=solr")) {
-            paramAdditions = "qt=solr&";
+        if ((queryType != null) && !queryType.isEmpty()) {
+          paramAdditions = "qt=" + queryType +"&";
         }
         if (!query.contains("pageSize=\\d+")) {
             paramAdditions += "pageSize=200&";
