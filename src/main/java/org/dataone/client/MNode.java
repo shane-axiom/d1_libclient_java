@@ -1,5 +1,5 @@
 /**
- * This work was created by participants in the DataONE project, and is
+  * This work was created by participants in the DataONE project, and is
  * jointly copyrighted by participating institutions in DataONE. For
  * more information on DataONE, see our web site at http://dataone.org.
  *
@@ -145,7 +145,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 	/** 
      * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_core.getLogRecords
      */
-	public Log getLogRecords(Session cert, Date fromDate, Date toDate,
+	public Log getLogRecords(Session session, Date fromDate, Date toDate,
 			Event event, Integer start, Integer count) 
 	throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
 	{
@@ -200,7 +200,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 	/**
      * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_core.getOperationStatistics
      */
-	public MonitorList getOperationStatistics(Session cert, Date startTime,
+	public MonitorList getOperationStatistics(Session session, Date startTime,
 		Date endTime, Subject requestor, Event event, ObjectFormatIdentifier formatId)
 	throws 
 		InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure,
@@ -311,11 +311,11 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
      *
      */
 	@Override
-    public InputStream get(Session cert, Identifier pid)
+    public InputStream get(Session session, Identifier pid)
     throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, 
     NotImplemented, InvalidRequest 
     {
-       	return super.get(cert, pid);
+       	return super.get(session, pid);
     }
     
     
@@ -323,18 +323,18 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
      * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.getSystemMetadata
      */
 	@Override
-	public SystemMetadata getSystemMetadata(Session cert, Identifier pid)
+	public SystemMetadata getSystemMetadata(Session session, Identifier pid)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
 		InvalidRequest, NotImplemented 
 	{
-		return super.getSystemMetadata(cert, pid);
+		return super.getSystemMetadata(session, pid);
 	}
 		
 
 	/**
      * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.describe
      */
-	public DescribeResponse describe(Session cert, Identifier pid)
+	public DescribeResponse describe(Session session, Identifier pid)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
 		NotImplemented, InvalidRequest 
 	{
@@ -438,13 +438,9 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 	/**
      * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.getChecksum
      */
-	public Checksum getChecksum(Session cert, Identifier pid, String checksumAlgorithm) 
+	public Checksum getChecksum(Session session, Identifier pid, String checksumAlgorithm) 
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, InvalidRequest, NotImplemented 
 	{
-		// validate input
-//    	if(token == null)
-//            token = new AuthToken("public");
-
         if(pid == null || pid.getValue().trim().equals(""))
             throw new InvalidRequest("1402", "GUID cannot be null nor empty");
 
@@ -495,7 +491,6 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
      *   listObjects() is the simple implementation of /<service>/object (no query parameters, or additional path segments)
      *   use this when no parameters  being used
      *   
-     * @param token
      * @return
      * @throws NotAuthorized
      * @throws InvalidRequest
@@ -514,7 +509,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 	/** 
      * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.listObjects
      */
-	public ObjectList listObjects(Session cert, Date startTime, Date endTime, 
+	public ObjectList listObjects(Session session, Date startTime, Date endTime, 
 	ObjectFormatIdentifier objectFormatId, Boolean replicaStatus, Integer start, Integer count) 
 	throws NotAuthorized, InvalidRequest, NotImplemented, ServiceFailure, InvalidToken 
 	{
@@ -577,7 +572,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
 	
 	@Override
-	public void synchronizationFailed(Session cert, SynchronizationFailed message)
+	public void synchronizationFailed(Session session, SynchronizationFailed message)
 	throws InvalidToken, NotImplemented, ServiceFailure, NotAuthorized, InvalidRequest {
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ERROR);
 
@@ -629,7 +624,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     /////////////////////    Tier 2 :  MNAuthorization API   //////////////////////
 
 	
-	public boolean isAuthorized(Session cert, Identifier pid, Permission action)
+	public boolean isAuthorized(Session session, Identifier pid, Permission action)
 	throws ServiceFailure, InvalidRequest, InvalidToken, NotFound, NotAuthorized, NotImplemented 
 	{
 		if(pid == null || pid.getValue().trim().equals(""))
@@ -675,7 +670,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 	}
 
 	
-	public boolean setAccessPolicy(Session cert, Identifier pid, AccessPolicy accessPolicy) 
+	public boolean setAccessPolicy(Session session, Identifier pid, AccessPolicy accessPolicy) 
 	throws InvalidToken, ServiceFailure, NotFound, NotAuthorized, 
 	NotImplemented, InvalidRequest 
 	{
@@ -695,9 +690,6 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 		} catch (JiBXException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
-//    	if (token != null)
-//    		url.addNonEmptyParamPair("sessionid", token.getToken());
-//    	url.addNonEmptyParamPair("action", accessPolicy.);
 
     	// send the request
     	D1RestClient client = new D1RestClient();
@@ -742,7 +734,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
      * create both a system metadata resource and science metadata resource with
      * the specified guid
      */
-	public Identifier create(Session cert, Identifier pid, InputStream object,
+	public Identifier create(Session session, Identifier pid, InputStream object,
 			SystemMetadata sysmeta) 
 	throws InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, 
 	UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented,
@@ -750,8 +742,6 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 	{
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
     	url.addNextPathElement(pid.getValue());
-//    	if (token != null)
-//    		url.addNonEmptyParamPair("sessionid", token.getToken());
 
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
@@ -765,7 +755,6 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
     	
     	D1RestClient client = new D1RestClient();
-//    	client.setHeader("token", token.getToken());
     	InputStream is = null;
 
     	try {
@@ -800,7 +789,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 	/**
      * update a resource with the specified pid.
      */
-	public Identifier update(Session cert, Identifier pid, InputStream object,
+	public Identifier update(Session session, Identifier pid, InputStream object,
 			Identifier newPid, SystemMetadata sysmeta) 
 	throws InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique,
 	UnsupportedType, InsufficientResources, NotFound, InvalidSystemMetadata, 
@@ -809,8 +798,6 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 		
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
     	url.addNextPathElement(pid.getValue());
-//    	if (token != null)
-//    		url.addNonEmptyParamPair("sessionid", token.getToken());
 
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	mpe.addParamPart("newPid", 
@@ -855,7 +842,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 	/**
      * delete a resource with the specified guid. NOT IMPLEMENTED.
      */
-	public Identifier delete(Session cert, Identifier pid) 
+	public Identifier delete(Session session, Identifier pid) 
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, 
 	NotImplemented,	InvalidRequest 
 	{
@@ -866,12 +853,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     		throw new InvalidRequest("1322", "GUID cannot be null.");
     	url.addNextPathElement(pid.getValue());
     	
-//    	if (token == null)
-//    		token = new AuthToken("public");
-//    	url.addNonEmptyParamPair("sessionid", token.getToken());
-    	
      	D1RestClient client = new D1RestClient();
-//    	client.setHeader("token", token.getToken());
     	
     	InputStream is = null;
     	try {
@@ -911,7 +893,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     /////////////////////    Tier 4 :  MN Replicate          //////////////////////
 
 	
-	public boolean replicate(Session cert, SystemMetadata sysmeta,
+	public boolean replicate(Session session, SystemMetadata sysmeta,
 	NodeReference sourceNode) 
 	throws NotImplemented, ServiceFailure, NotAuthorized, 
 	InvalidRequest, InsufficientResources, UnsupportedType
@@ -969,10 +951,10 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 		return true;
 	}
 
-    public InputStream getReplica(Session cert, Identifier pid)
+    public InputStream getReplica(Session session, Identifier pid)
         throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, 
         ServiceFailure, NotFound { 
-       	return super.get(cert, pid);
+       	return super.get(session, pid);
     }
 
 
