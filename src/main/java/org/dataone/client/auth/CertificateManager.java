@@ -107,6 +107,12 @@ public class CertificateManager {
 		return certificateLocation;
 	}
 
+    /**
+     * Use this method to set the certificate to point CertificateManager to
+     * a certificate at the designated file-path.  (Call before getKeyStore()
+     * or getSSLSocketFactory()
+     * @param certificate
+     */
 	public void setCertificateLocation(String certificate) {
 		this.certificateLocation = certificate;
 	}
@@ -160,7 +166,7 @@ public class CertificateManager {
      * @param cert the X509Certificate to be verified
      * @param caCert the X509Certificate of the trusted CertificateAuthority (CA)
      */
-    public boolean verify(X509Certificate cert, X509Certificate caCert) {
+    public static boolean verify(X509Certificate cert, X509Certificate caCert) {
         boolean isValid = false;
         try {
             cert.checkValidity();
@@ -182,8 +188,31 @@ public class CertificateManager {
         }
         return isValid;
     }
+ 
+    /**
+     * extracts the principal from the certificate passed in with the request 
+     * and creates the dataone Session object.  The SubjectList is not filled out.
+     *  
+     * @param request
+     * @return
+     */
+    public Session getSession(HttpServletRequest request) 
+    {
+    	return getSession(request,false);
+    }
     
-    public Session getSession(HttpServletRequest request) {
+    /**
+     * extracts the principal from the certificate passed in with the request
+     * and creates the dataone Session object.
+     * If lookupSubject parameter is true, an http call to the subject authority
+     * is made (the CNIdentity service) to populate the SubjectList session property
+     *  
+     * @param request
+     * @param lookupSubject - set to true to fill out the subject list from the
+     *                            CNIdentity service
+     * @return
+     */
+    public Session getSession(HttpServletRequest request, boolean lookupSubject) {
     	Session session = null;
     	Object certificate = request.getAttribute("javax.servlet.request.X509Certificate");
     	log.debug("javax.servlet.request.X509Certificate " + " = " + certificate);
@@ -203,7 +232,6 @@ public class CertificateManager {
     		}
     		
     		// look up the subject information from the CNIdentity service
-    		boolean lookupSubject = false;
     		if (lookupSubject) {
 	    		try {
 		    		CNode cn = D1Client.getCN();
@@ -218,7 +246,10 @@ public class CertificateManager {
     	return session;
     }
     
-    public SSLSocketFactory getSSLSocketFactory() throws NoSuchAlgorithmException, UnrecoverableKeyException, KeyStoreException, KeyManagementException, CertificateException, IOException {
+    public SSLSocketFactory getSSLSocketFactory() 
+    throws NoSuchAlgorithmException, UnrecoverableKeyException, KeyStoreException,
+    KeyManagementException, CertificateException, IOException 
+    {
     	// our return object
     	log.debug("Enter getSSLSocketFactory");
     	SSLSocketFactory socketFactory = null;
