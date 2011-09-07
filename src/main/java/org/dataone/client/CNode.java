@@ -1016,7 +1016,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
    
     
     @Override
-    public boolean registerSystemMetadata(Session session, Identifier pid, SystemMetadata sysmeta) 
+    public Identifier registerSystemMetadata(Session session, Identifier pid, SystemMetadata sysmeta)
     throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, InvalidSystemMetadata 
     {
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_META);
@@ -1065,7 +1065,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (HttpException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		}
-		return true;
+		return  deserializeServiceType(Identifier.class, is);
     }
     
     @Override
