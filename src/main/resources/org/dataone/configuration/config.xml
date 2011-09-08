@@ -3,4 +3,5 @@
 <configuration>
 	<properties fileName="auth.properties"/>
 	<properties fileName="d1client.properties"/>
+	<properties fileName="d1hazelcast.properties"/>	
 </configuration>
