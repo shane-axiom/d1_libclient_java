@@ -1634,7 +1634,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     
 
     @Override
-    public boolean setReplicationPolicy(NodeReference nodeRef, Identifier pid, ReplicationPolicy policy) 
+    public boolean setReplicationPolicy(Session session, Identifier pid, ReplicationPolicy policy) 
     throws ServiceFailure, NotAuthorized, NotFound, NotImplemented, InvalidRequest, InvalidToken 
     {
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_POLICY);
@@ -1690,7 +1690,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
   
     
     @Override
-    public boolean setReplicationStatus(Session session, Identifier pid, ReplicationStatus status) 
+    public boolean setReplicationStatus(Session session, Identifier pid, NodeReference nodeRef, ReplicationStatus status) 
     throws ServiceFailure, NotImplemented, InvalidToken, NotAuthorized, InvalidRequest, NotFound 
     {
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_NOTIFY);
