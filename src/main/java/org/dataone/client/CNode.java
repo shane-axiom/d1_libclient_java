@@ -1745,7 +1745,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     /**
      * TODO: finish implementation
      */
-    public boolean isReplicationAuthorized(Session originatingNodeSession, 
+    public boolean isNodeAuthorized(Session originatingNodeSession, 
         Subject targetNodeSubject, Identifier pid, Permission executePermission)
         throws NotImplemented, NotAuthorized, InvalidToken, ServiceFailure, 
         NotFound, InvalidRequest{
