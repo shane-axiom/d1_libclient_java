@@ -41,6 +41,9 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.CoreConnectionPNames;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.dataone.client.auth.CertificateManager;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.util.Constants;
@@ -69,6 +72,21 @@ public class RestClient {
 	 */
 	public RestClient() {
 	    httpClient = new DefaultHttpClient();
+
+            // make the default timeout 1 seconds so that we don't hang on
+            // a stale connection
+            Integer timeout = new Integer(30000);
+            
+            //determines the timeout in milliseconds until a connection is established.
+ //           httpClient.getParams().setParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, timeout);
+            HttpParams params = httpClient.getParams();
+            HttpConnectionParams.setSoTimeout(params, timeout);
+            HttpConnectionParams.setConnectionTimeout(params, timeout);
+            //defines the socket timeout (SO_TIMEOUT) in milliseconds, which is the timeout
+            // for waiting for data or, put differently, a maximum period inactivity between
+            // two consecutive data packets).
+//            httpClient.getParams().setParameter(CoreConnectionPNames.SO_TIMEOUT, timeout);
+            httpClient.setParams(params);
 	    setupSSL();
 	}
 	
@@ -86,7 +104,7 @@ public class RestClient {
 		}
 		try {
 			//443 is the default port, this value is overridden if explicitly set in the URL
-			Scheme sch = new Scheme("https", socketFactory, 443);
+			Scheme sch = new Scheme("https", 443, socketFactory );
 			httpClient.getConnectionManager().getSchemeRegistry().register(sch);
 		} catch (Exception e) {
 			// this is likely more severe
