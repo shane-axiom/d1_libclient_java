@@ -291,9 +291,7 @@ public class CertificateManager {
         
         // initialize the context
         ctx.init(keyManagers, new TrustManager[]{tm}, new SecureRandom());
-        socketFactory = new SSLSocketFactory(ctx);
-        
-        socketFactory.setHostnameVerifier(SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+        socketFactory = new SSLSocketFactory(ctx, SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
         
         return socketFactory;
     }
