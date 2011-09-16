@@ -66,7 +66,20 @@ public class D1RestClient {
 		this.rc = new RestClient();
 	}
 
+	/**
+	 * Sets the CONNECTION_TIMEOUT and SO_TIMEOUT values for the underlying httpClient.
+	 * (max delay in initial response, max delay between tcp packets, respectively).  
+	 * Uses the same value for both.
+	 * 
+	 * (The default value set in the constructor is 30 seconds)
+	 * 
+	 * @param milliseconds
+	 */
+	public void setTimeouts(int milliseconds) {
+		this.rc.setTimeouts(milliseconds);
+	}
  
+	
 	public InputStream doGetRequest(String url) 
 	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
 	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 

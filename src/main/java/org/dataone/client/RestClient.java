@@ -72,22 +72,34 @@ public class RestClient {
 	 */
 	public RestClient() {
 	    httpClient = new DefaultHttpClient();
-
-            // make the default timeout 1 seconds so that we don't hang on
-            // a stale connection
-            Integer timeout = new Integer(30000);
-            
-            //determines the timeout in milliseconds until a connection is established.
- //           httpClient.getParams().setParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, timeout);
-            HttpParams params = httpClient.getParams();
-            HttpConnectionParams.setSoTimeout(params, timeout);
-            HttpConnectionParams.setConnectionTimeout(params, timeout);
-            //defines the socket timeout (SO_TIMEOUT) in milliseconds, which is the timeout
-            // for waiting for data or, put differently, a maximum period inactivity between
-            // two consecutive data packets).
-//            httpClient.getParams().setParameter(CoreConnectionPNames.SO_TIMEOUT, timeout);
-            httpClient.setParams(params);
+	    setTimeouts(30 * 1000); // seconds * 1000 = milliseconds  
 	    setupSSL();
+	}
+	
+	/**
+	 * Sets the CONNECTION_TIMEOUT and SO_TIMEOUT values for the underlying httpClient.
+	 * (max delay in initial response, max delay between tcp packets, respectively).  
+	 * Uses the same value for both.
+	 * 
+	 * (The default value set in the constructor is 30 seconds)
+	 * 
+	 * @param milliseconds
+	 */
+	public void setTimeouts(int milliseconds) {
+
+        Integer timeout = new Integer(milliseconds);
+        
+
+        HttpParams params = httpClient.getParams();
+        // the timeout in milliseconds until a connection is established.
+        HttpConnectionParams.setConnectionTimeout(params, timeout);
+        
+        //defines the socket timeout (SO_TIMEOUT) in milliseconds, which is the timeout
+        // for waiting for data or, put differently, a maximum period inactivity between
+        // two consecutive data packets).
+        HttpConnectionParams.setSoTimeout(params, timeout);
+      
+        httpClient.setParams(params);
 	}
 	
 	public void setupSSL() {
