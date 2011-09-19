@@ -126,13 +126,18 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         if ((queryType != null) && !queryType.isEmpty()) {
           paramAdditions = "qt=" + queryType +"&";
         }
-        if (!query.contains("pageSize=\\d+")) {
-            paramAdditions += "pageSize=200&";
+        if (query == null) query = "";
+ 
+        // include default parameters for SOLR search (mercury requirements)
+        if (queryType != null && queryType.equals("SOLR")) {
+        	if (!query.contains("pageSize=\\d+")) {
+        		paramAdditions += "pageSize=200&";
+        	}	
+        	if (!query.contains("start=\\d+")) {
+        		paramAdditions += "start=0&";
+        	}
         }
-        if (!query.contains("start=\\d+")) {
-            paramAdditions += "start=0&";
-        }
-
+ 
         String paramsComplete = paramAdditions + query;
         // clean up paramsComplete string
         if (paramsComplete.endsWith("&")) {

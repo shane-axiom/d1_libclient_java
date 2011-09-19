@@ -218,8 +218,8 @@ public class RestClient {
 	 * assembles the request for POSTs and PUTs (uses a different base class for these entity-enclosing methods)
 	 */
 	private HttpResponse doRequestMMBody(String url,String httpMethod, SimpleMultipartEntity mpe) throws ClientProtocolException, IOException {
-		log.info("restURL: " + url);
-		log.info("method: " + httpMethod);
+		log.info("rest call: " + httpMethod + "  " + url);
+//		log.info("method: " + httpMethod);
 		
 		HttpEntityEnclosingRequestBase req = null;
 		if (httpMethod == Constants.PUT)
@@ -231,7 +231,7 @@ public class RestClient {
 	
 		if (mpe != null) {
 			req.setEntity(mpe);
-			log.info("entity: present");
+			log.info("entity: present, size = " + mpe.getContentLength());
 		} else {
 			log.info("entity: null");
 		}
