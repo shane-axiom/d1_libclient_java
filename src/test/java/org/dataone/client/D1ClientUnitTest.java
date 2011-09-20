@@ -31,6 +31,7 @@ import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.InvalidRequest;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
+import org.dataone.service.exceptions.SynchronizationFailed;
 import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1.Subject;
@@ -92,6 +93,23 @@ public class D1ClientUnitTest  {
 	        session.setSubject(new Subject());
 			subjects = cn.listSubjects(session, null, 0, 0);
 	        assertTrue(subjects != null);
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail(e.getMessage());
+		} 
+    }
+    
+    //@Test
+    public void testError() {
+        printHeader("testError");
+		try {
+	        Session session = new Session();
+	        session.setSubject(new Subject());
+	        SynchronizationFailed message = new SynchronizationFailed("0000", "Test");
+	        message.setPid("test_pid");
+	        //message.setNodeId("test_node");
+			D1Client.getMN("http://localhost:8080/knb/d1/mn").synchronizationFailed(session, message );
+	        assertTrue(true);
 		} catch (Exception e) {
 			e.printStackTrace();
 			fail(e.getMessage());
