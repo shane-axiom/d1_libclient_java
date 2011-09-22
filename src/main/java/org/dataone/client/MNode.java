@@ -29,6 +29,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.logging.LogFactory;
 import org.apache.http.Header;
 import org.apache.http.HttpException;
 import org.apache.http.client.ClientProtocolException;
@@ -83,7 +84,9 @@ import org.jibx.runtime.JiBXException;
 public class MNode extends D1Node 
 implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication 
 {
-    
+  
+	protected static org.apache.commons.logging.Log log = LogFactory.getLog(MNode.class);
+	
     /**
      * Construct a new client-side MNode (Member Node) object, 
      * passing in the base url of the member node for calling its services.
@@ -348,11 +351,13 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
      	D1RestClient client = new D1RestClient();
     	
     	Header[] h = null;
-    	Map<String, String> m = new HashMap<String,String>();
+    	Map<String, String> headersMap = new HashMap<String,String>();
     	try {
     		h = client.doHeadRequest(url.getUrl());
     		for (int i=0;i<h.length; i++) {
-    			m.put(h[i].getName(),h[i].getValue());
+    			log.debug("header: " + h[i].getName() +
+    					" = " + h[i].getValue());
+    			headersMap.put(h[i].getName(),h[i].getValue());
     		}
     	} catch (IdentifierNotUnique e) {
     		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
@@ -384,10 +389,10 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	
   
     	DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-        String objectFormatIdStr = m.get("DataONE-fmtid");//.get(0);
-        String last_modifiedStr = m.get("Last-Modified");//.get(0);
-        String content_lengthStr = m.get("Content-Length");//.get(0);
-        String checksumStr = m.get("DataONE-Checksum");//.get(0);
+        String objectFormatIdStr = headersMap.get("DataONE-fmtid");//.get(0);
+        String last_modifiedStr = headersMap.get("Last-Modified");//.get(0);
+        String content_lengthStr = headersMap.get("Content-Length");//.get(0);
+        String checksumStr = headersMap.get("DataONE-Checksum");//.get(0);
    
         BigInteger content_length;
 		try {
@@ -397,10 +402,10 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 					content_lengthStr + ") to a BigInteger: " + e.getMessage());
 		}
         Date last_modified = null;
-        System.out.println("parsing date");
         try
         {
-            last_modified = dateFormat.parse(last_modifiedStr.trim());
+            if (last_modifiedStr != null) 
+            	last_modified = dateFormat.parse(last_modifiedStr.trim());
             /*Date d = new Date();
             dateFormat.setLenient(false);
             String dStr = dateFormat.format(d);
@@ -418,10 +423,11 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
         // build a checksum object
         Checksum checksum = new Checksum();
-        String[] cs = checksumStr.split(",");
-        checksum.setAlgorithm(cs[0]);
-        checksum.setValue(cs[1]);
-
+        if (checksumStr != null) {
+        	String[] cs = checksumStr.split(",");
+        	checksum.setAlgorithm(cs[0]);
+        	checksum.setValue(cs[1]);
+        }
         // build an objectformat identifier object
         // doesn't check validity of the formatID value
         
