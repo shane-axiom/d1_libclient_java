@@ -70,7 +70,8 @@ public class RestClient {
 	/**
 	 * Constructor to create a new instance.
 	 */
-	public RestClient() {
+	public RestClient() 
+	{
 	    httpClient = new DefaultHttpClient();
 	    setTimeouts(30 * 1000); // seconds * 1000 = milliseconds  
 	    setupSSL();
@@ -85,11 +86,10 @@ public class RestClient {
 	 * 
 	 * @param milliseconds
 	 */
-	public void setTimeouts(int milliseconds) {
-
+	public void setTimeouts(int milliseconds) 
+	{
         Integer timeout = new Integer(milliseconds);
         
-
         HttpParams params = httpClient.getParams();
         // the timeout in milliseconds until a connection is established.
         HttpConnectionParams.setConnectionTimeout(params, timeout);
@@ -102,8 +102,8 @@ public class RestClient {
         httpClient.setParams(params);
 	}
 	
-	public void setupSSL() {
-		
+	public void setupSSL() 
+	{		
 		SSLSocketFactory socketFactory = null;
 		try {
 			socketFactory = CertificateManager.getInstance().getSSLSocketFactory();
@@ -126,11 +126,13 @@ public class RestClient {
 
 
 	
-	public void setHeader(String name, String value) {
+	public void setHeader(String name, String value) 
+	{
 		headers.put(name, value);
 	}
 	
-	public HashMap<String, String> getAddedHeaders() {
+	public HashMap<String, String> getAddedHeaders() 
+	{
 		return headers;
 	}
 	
@@ -140,7 +142,9 @@ public class RestClient {
      * @throws IOException 
      * @throws ClientProtocolException  
 	 */
-	public HttpResponse doGetRequest(String url) throws ClientProtocolException, IOException  {
+	public HttpResponse doGetRequest(String url) 
+	throws ClientProtocolException, IOException  
+	{
 		return doRequestNoBody(url,Constants.GET);
 	}
 
@@ -150,7 +154,9 @@ public class RestClient {
      * @throws ClientProtocolException 
 	 */
 
-	public HttpResponse doHeadRequest(String url) throws ClientProtocolException, IOException  {
+	public HttpResponse doHeadRequest(String url) 
+	throws ClientProtocolException, IOException  
+	{
 		return doRequestNoBody(url,Constants.HEAD);
 	}
 
@@ -160,7 +166,9 @@ public class RestClient {
      * @throws ClientProtocolException 
 	 */
 
-	public HttpResponse doDeleteRequest(String url) throws ClientProtocolException, IOException {
+	public HttpResponse doDeleteRequest(String url) 
+	throws ClientProtocolException, IOException 
+	{
 		return doRequestNoBody(url,Constants.DELETE);
 	}
 	
@@ -170,7 +178,9 @@ public class RestClient {
      * @throws ClientProtocolException 
 	 */
 
-	public HttpResponse doDeleteRequest(String url, SimpleMultipartEntity mpe) throws ClientProtocolException, IOException {
+	public HttpResponse doDeleteRequest(String url, SimpleMultipartEntity mpe) 
+	throws ClientProtocolException, IOException 
+	{
 		return doRequestMMBody(url,Constants.DELETE, mpe);
 	}
 	
@@ -179,7 +189,9 @@ public class RestClient {
      * @throws IOException 
      * @throws ClientProtocolException  
 	 */
-	public HttpResponse doPostRequest(String url, SimpleMultipartEntity mpe) throws ClientProtocolException, IOException   {
+	public HttpResponse doPostRequest(String url, SimpleMultipartEntity mpe) 
+	throws ClientProtocolException, IOException
+	{
 		return doRequestMMBody(url,Constants.POST,mpe);
 	}
 
@@ -188,7 +200,9 @@ public class RestClient {
      * @throws IOException 
      * @throws ClientProtocolException 
 	 */
-	public HttpResponse doPutRequest(String url, SimpleMultipartEntity mpe) throws ClientProtocolException, IOException  {
+	public HttpResponse doPutRequest(String url, SimpleMultipartEntity mpe) 
+	throws ClientProtocolException, IOException  
+	{
 		return doRequestMMBody(url,Constants.PUT,mpe);
 	}
 	
@@ -196,9 +210,10 @@ public class RestClient {
 	/*
 	 * assembles the request for GETs, HEADs and DELETEs - assumes no message body
 	 */
-	private HttpResponse doRequestNoBody(String url,String httpMethod) throws ClientProtocolException, IOException  {
-		log.info("restURL: " + url);
-		log.info("method: " + httpMethod);
+	private HttpResponse doRequestNoBody(String url,String httpMethod) 
+	throws ClientProtocolException, IOException
+	{
+		log.info("rest call: " + httpMethod + "  " + url);
 
 		HttpUriRequest req = null;
 		if (httpMethod == Constants.GET) 
@@ -217,9 +232,10 @@ public class RestClient {
 	/*
 	 * assembles the request for POSTs and PUTs (uses a different base class for these entity-enclosing methods)
 	 */
-	private HttpResponse doRequestMMBody(String url,String httpMethod, SimpleMultipartEntity mpe) throws ClientProtocolException, IOException {
+	private HttpResponse doRequestMMBody(String url,String httpMethod, SimpleMultipartEntity mpe)
+	throws ClientProtocolException, IOException 
+	{
 		log.info("rest call: " + httpMethod + "  " + url);
-//		log.info("method: " + httpMethod);
 		
 		HttpEntityEnclosingRequestBase req = null;
 		if (httpMethod == Constants.PUT)
@@ -244,8 +260,9 @@ public class RestClient {
 	/*
 	 * applies the header settings and executes the request
 	 */
-	private HttpResponse doRequest(HttpUriRequest req) throws ClientProtocolException, IOException {
-
+	private HttpResponse doRequest(HttpUriRequest req) 
+	throws ClientProtocolException, IOException
+	{
 		for (String n: headers.keySet())
 		{
 			req.setHeader(n,(String)headers.get(n));
