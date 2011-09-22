@@ -73,6 +73,7 @@ import org.dataone.service.types.v1.SystemMetadata;
 import org.dataone.service.util.BigIntegerMarshaller;
 import org.dataone.service.util.Constants;
 import org.dataone.service.util.D1Url;
+import org.dataone.service.util.DateTimeMarshaller;
 import org.dataone.service.util.EncodingUtilities;
 import org.jibx.runtime.JiBXException;
 
@@ -405,20 +406,14 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         try
         {
             if (last_modifiedStr != null) 
-            	last_modified = dateFormat.parse(last_modifiedStr.trim());
-            /*Date d = new Date();
-            dateFormat.setLenient(false);
-            String dStr = dateFormat.format(d);
-            System.out.println("d: " + d);
-            System.out.println("dStr: " + dStr);
-            Date e = dateFormat.parse(dStr);
-            System.out.println("e: " + e);*/
+            	last_modified = DateTimeMarshaller.deserializeDateToUTC(last_modifiedStr.trim());
         }
-        catch(java.text.ParseException pe)
+        catch(NullPointerException e)
         {
             throw new ServiceFailure("0", "Could not parse the returned date string " + 
-                    last_modifiedStr + ". It should be in the format 'yyyy-MM-dd'T'hh:mm:ss.SZ': " +
-                    pe.getMessage());
+                    last_modifiedStr + ". The date string needs to be either ISO" +
+                    		" 8601 compliant or http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.3.1 compliant: " +
+                    e.getMessage());
         }
 
         // build a checksum object
@@ -426,7 +421,12 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         if (checksumStr != null) {
         	String[] cs = checksumStr.split(",");
         	checksum.setAlgorithm(cs[0]);
-        	checksum.setValue(cs[1]);
+        	if (cs.length > 1) {
+        		checksum.setValue(cs[1]);
+        	} else {
+        		throw new ServiceFailure("0", "malformed checksum header returned, " +
+        				"checksum value not returned in the response");
+        	}
         }
         // build an objectformat identifier object
         // doesn't check validity of the formatID value
