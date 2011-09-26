@@ -32,6 +32,7 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+import javax.security.auth.x500.X500Principal;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.logging.Log;
@@ -162,6 +163,16 @@ public class CertificateManager {
     }
     
     /**
+     * Returns the RFC2253 string representation for the certificate's subject
+     * This is the standard format used in DataONE.
+     * @param certificate
+     * @return subject DN using RFC2253 format
+     */
+    public String getSubjectDN(X509Certificate certificate) {
+    	return certificate.getSubjectX500Principal().getName(X500Principal.RFC2253);
+    }
+    
+    /**
      * Check the validity of a certificate, and be sure that it is verifiable using the given CA certificate.
      * @param cert the X509Certificate to be verified
      * @param caCert the X509Certificate of the trusted CertificateAuthority (CA)
@@ -224,8 +235,8 @@ public class CertificateManager {
     		X509Certificate[] x509Certificates = (X509Certificate[]) certificate;
     		for (X509Certificate x509Cert:x509Certificates) {
 	    		displayCertificate(x509Cert);
-	    		Principal subjectDN = x509Cert.getSubjectDN();
-	    		subject.setValue(subjectDN.toString());
+	    		String subjectDN = getSubjectDN(x509Cert);
+	    		subject.setValue(subjectDN);
 	    		session.setSubject(subject);
 	    		//TODO get the SubjectList info from certificate
 	    		break;
@@ -411,8 +422,13 @@ public class CertificateManager {
         log.debug("   From: " + fmt.format(notBefore));
         Date notAfter = cert.getNotAfter();
         log.debug("     To: " + fmt.format(notAfter));
-        Principal subjectDN = cert.getSubjectDN();
-        log.debug("Subject: " + subjectDN.toString());
+        log.debug("Subject: " + getSubjectDN(cert));
+//        Principal subjectDN = cert.getSubjectDN();
+//        log.debug("Subject Name: " + subjectDN.getName());
+//        log.debug("Subject x500 Principal default: " + cert.getSubjectX500Principal().getName());
+//        log.debug("Subject x500 Principal CANONICAL: " + cert.getSubjectX500Principal().getName(X500Principal.CANONICAL));
+//        log.debug("Subject x500 Principal RFC1779: " + cert.getSubjectX500Principal().getName(X500Principal.RFC1779));
+//        log.debug("Subject x500 Principal RFC2253: " + cert.getSubjectX500Principal().getName(X500Principal.RFC2253));
         log.debug("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
     }
 }
