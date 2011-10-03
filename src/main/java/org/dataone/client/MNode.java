@@ -164,7 +164,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	url.addNonEmptyParamPair("count", count);
 
     	// send the request
-    	D1RestClient client = new D1RestClient();
+    	D1RestClient client = new D1RestClient(session);
     	InputStream is = null;
     	
     	try {
@@ -224,7 +224,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         	url.addNonEmptyParamPair("formatId", formatId.getValue());
 
     	// send the request
-    	D1RestClient client = new D1RestClient();
+    	D1RestClient client = new D1RestClient(session);
     	InputStream is = null;
     	
     	try {
@@ -349,7 +349,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     		throw new InvalidRequest("1362", "PID cannot be null.");
     	url.addNextPathElement(pid.getValue());
     	
-     	D1RestClient client = new D1RestClient();
+     	D1RestClient client = new D1RestClient(session);
     	
     	Header[] h = null;
     	Map<String, String> headersMap = new HashMap<String,String>();
@@ -457,7 +457,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	url.addNonEmptyParamPair("checksumAlgorithm", checksumAlgorithm);
 
     	// send the request
-    	D1RestClient client = new D1RestClient();
+    	D1RestClient client = new D1RestClient(session);
     	InputStream is = null;
     	
     	try {
@@ -539,7 +539,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 		url.addNonEmptyParamPair("start",start);
 		url.addNonEmptyParamPair("count",count);
 
-		D1RestClient client = new D1RestClient();
+		D1RestClient client = new D1RestClient(session);
 
 		InputStream is = null;
 		try {
@@ -589,7 +589,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 			throw recastClientSideExceptionToServiceFailure(e1);
 		} 
     	
-		D1RestClient client = new D1RestClient();
+		D1RestClient client = new D1RestClient(session);
 
 		InputStream is = null;
 		try {
@@ -641,7 +641,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	url.addNextPathElement(pid.getValue());
     	url.addNonEmptyParamPair("action", action.xmlValue());
     	
-    	D1RestClient client = new D1RestClient();
+    	D1RestClient client = new D1RestClient(session);
     	InputStream is = null;
     	try {
 			is = client.doGetRequest(url.getUrl());
@@ -698,7 +698,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 		}
 
     	// send the request
-    	D1RestClient client = new D1RestClient();
+    	D1RestClient client = new D1RestClient(session);
     	InputStream is = null;
     	
     	try {
@@ -760,7 +760,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 		}
 
     	
-    	D1RestClient client = new D1RestClient();
+    	D1RestClient client = new D1RestClient(session);
     	InputStream is = null;
 
     	try {
@@ -817,7 +817,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 			throw recastClientSideExceptionToServiceFailure(e);	
 		}
     	  	
-    	D1RestClient client = new D1RestClient();
+    	D1RestClient client = new D1RestClient(session);
     	InputStream is = null;
     	
     	try {
@@ -859,7 +859,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     		throw new InvalidRequest("1322", "GUID cannot be null.");
     	url.addNextPathElement(pid.getValue());
     	
-     	D1RestClient client = new D1RestClient();
+     	D1RestClient client = new D1RestClient(session);
     	
     	InputStream is = null;
     	try {
@@ -923,7 +923,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 			throw recastClientSideExceptionToServiceFailure(e);
 		}
     	
-    	D1RestClient client = new D1RestClient();
+    	D1RestClient client = new D1RestClient(session);
     	InputStream is = null;
     	try {
 			is = client.doPostRequest(url.getUrl(),smpe);

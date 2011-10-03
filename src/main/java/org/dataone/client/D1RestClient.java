@@ -47,6 +47,7 @@ import org.dataone.service.exceptions.SynchronizationFailed;
 import org.dataone.service.exceptions.UnsupportedMetadataType;
 import org.dataone.service.exceptions.UnsupportedQueryType;
 import org.dataone.service.exceptions.UnsupportedType;
+import org.dataone.service.types.v1.Session;
 import org.dataone.service.util.ExceptionHandler;
 
 /**
@@ -60,10 +61,17 @@ public class D1RestClient {
     protected RestClient rc;
 
 	/**
-	 * Constructor to create a new instance.
+	 * Default constructor to create a new instance.
 	 */
 	public D1RestClient() {
-		this.rc = new RestClient();
+		this.rc = new RestClient(null);
+	}
+	
+	/**
+	 * Constructor to create a new instance with given session/subject
+	 */
+	public D1RestClient(Session session) {
+		this.rc = new RestClient(session);
 	}
 
 	/**

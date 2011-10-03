@@ -146,7 +146,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
         url.addPreEncodedNonEmptyQueryParams(paramsComplete);
 
-        D1RestClient client = new D1RestClient();
+        D1RestClient client = new D1RestClient(session);
 
         InputStream is = null;
         try {
@@ -206,7 +206,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_RESOLVE);
         url.addNextPathElement(pid.getValue());
 
-        D1RestClient client = new D1RestClient();
+        D1RestClient client = new D1RestClient(session);
 
         InputStream is = null;
         try {
@@ -279,7 +279,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e);	
 		}
 
-        D1RestClient client = new D1RestClient();
+        D1RestClient client = new D1RestClient(session);
         InputStream is = null;
 
         try {
@@ -343,7 +343,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	url.addNonEmptyParamPair("pidOfObject", pidOfObject.getValue());
 
     	// send the request
-    	D1RestClient client = new D1RestClient();
+    	D1RestClient client = new D1RestClient(session);
     	InputStream is = null;
     	
     	try {
@@ -395,7 +395,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient();
+		D1RestClient client = new D1RestClient(session);
 
 		InputStream is = null;
 		try {
@@ -440,7 +440,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	url.addNonEmptyParamPair("permission", permission.xmlValue());
 
     	// send the request
-    	D1RestClient client = new D1RestClient();
+    	D1RestClient client = new D1RestClient(session);
     	InputStream is = null;
     	
     	try {
@@ -491,7 +491,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient();
+		D1RestClient client = new D1RestClient(session);
 
 		InputStream is = null;
 		try {
@@ -543,7 +543,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient();
+		D1RestClient client = new D1RestClient(session);
 
 		InputStream is = null;
 		try {
@@ -877,7 +877,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient();
+		D1RestClient client = new D1RestClient(session);
 
 		InputStream is = null;
 		try {
@@ -930,7 +930,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient();
+		D1RestClient client = new D1RestClient(session);
 
 		InputStream is = null;
 		try {
@@ -982,7 +982,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	url.addNonEmptyParamPair("event", event.xmlValue());
 
     	// send the request
-    	D1RestClient client = new D1RestClient();
+    	D1RestClient client = new D1RestClient(session);
     	InputStream is = null;
     	
     	try {
@@ -1036,7 +1036,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient();
+		D1RestClient client = new D1RestClient(session);
 
 		InputStream is = null;
 		try {
@@ -1089,7 +1089,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient();
+		D1RestClient client = new D1RestClient(session);
 
 		InputStream is = null;
 		try {
@@ -1137,7 +1137,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	url.addNextPathElement(pid.getValue());
 
     	// send the request
-    	D1RestClient client = new D1RestClient();
+    	D1RestClient client = new D1RestClient(session);
     	InputStream is = null;
     	
     	try {
@@ -1189,7 +1189,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient();
+		D1RestClient client = new D1RestClient(session);
 
 		InputStream is = null;
 		try {
@@ -1241,7 +1241,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient();
+		D1RestClient client = new D1RestClient(session);
 
 		InputStream is = null;
 		try {
@@ -1292,7 +1292,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient();
+		D1RestClient client = new D1RestClient(session);
 
 		InputStream is = null;
 		try {
@@ -1344,7 +1344,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient();
+		D1RestClient client = new D1RestClient(session);
 
 		InputStream is = null;
 		try {
@@ -1391,7 +1391,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	url.addNonEmptyParamPair("start", start);
     	url.addNonEmptyParamPair("count", count);
     	
-		D1RestClient client = new D1RestClient();
+		D1RestClient client = new D1RestClient(session);
 
 		InputStream is = null;
 		try {
@@ -1438,7 +1438,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNTS);
     	url.addNextPathElement(subject.getValue());
 
-		D1RestClient client = new D1RestClient();
+		D1RestClient client = new D1RestClient(session);
 
 		InputStream is = null;
 		try {
@@ -1494,7 +1494,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-        D1RestClient client = new D1RestClient();
+        D1RestClient client = new D1RestClient(session);
 
 		InputStream is = null;
 		try {
@@ -1547,7 +1547,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient();
+		D1RestClient client = new D1RestClient(session);
 
 		InputStream is = null;
 		try {
@@ -1600,7 +1600,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient();
+		D1RestClient client = new D1RestClient(session);
 
 		InputStream is = null;
 		try {
@@ -1654,7 +1654,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient();
+		D1RestClient client = new D1RestClient(session);
 
 		InputStream is = null;
 		try {
@@ -1710,7 +1710,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient();
+		D1RestClient client = new D1RestClient(session);
 
 		InputStream is = null;
 		try {
