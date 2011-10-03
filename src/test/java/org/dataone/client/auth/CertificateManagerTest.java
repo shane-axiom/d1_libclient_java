@@ -41,7 +41,7 @@ public class CertificateManagerTest {
         assertTrue(true);
     }
     
-    //@Ignore("will not pass until certificates installed on Hudson")
+    @Ignore("will not pass until certificates installed on Hudson")
     @Test
     public void testCertificateManager() {
         
@@ -64,7 +64,7 @@ public class CertificateManagerTest {
         assertTrue(valid);
     }
     
-    //@Ignore("will not pass until certificates installed on Hudson")
+    @Ignore("will not pass until certificates installed on Hudson")
     @Test
     public void testCustomCertificateManager() {
         
