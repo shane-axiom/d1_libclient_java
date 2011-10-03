@@ -142,14 +142,14 @@ public abstract class D1Node {
      * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.listObjects
      *
      */
-    public InputStream get(Session cert, Identifier pid)
+    public InputStream get(Session session, Identifier pid)
     throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, 
     NotImplemented, InvalidRequest 
     {
        	D1Url url = new D1Url(this.getNodeBaseServiceUrl(),Constants.RESOURCE_OBJECTS);
     	url.addNextPathElement(pid.getValue());
 
-		D1RestClient client = new D1RestClient();
+		D1RestClient client = new D1RestClient(session);
 		
 		InputStream is = null;
 		try {
@@ -200,7 +200,7 @@ public abstract class D1Node {
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(),Constants.RESOURCE_META);
     	url.addNextPathElement(pid.getValue());
 
-		D1RestClient client = new D1RestClient();
+		D1RestClient client = new D1RestClient(session);
 		
 		InputStream is = null;
 	

@@ -26,6 +26,8 @@ import java.security.cert.X509Certificate;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
@@ -70,6 +72,11 @@ public class CertificateManager {
 
     private static CertificateManager cm = null;
     
+    // keep track of the certs and private keys
+    private Map<String, X509Certificate> certificates;
+    
+    private Map<String, PrivateKey> keys;
+    
     /*
      * Some useful links to background info:
      * 
@@ -81,12 +88,17 @@ public class CertificateManager {
      */
     
     /**
-     * CertificateManager is a singleton, so use getInstance() to get it.
+     * CertificateManager is normally a singleton, but custom instances can be created if needed.
+     * Normally, getInstance() will provide the appropriate interface for certificate management.
+     * In cases where the same process needs to act as multiple identities, new custom instances should
+     * be created.
      */
-    private CertificateManager() {
+    public CertificateManager() {
     	try {
 	    	keyStorePassword = Settings.getConfiguration().getString("certificate.keystore.password");
 	    	keyStoreType = Settings.getConfiguration().getString("certificate.keystore.type", KeyStore.getDefaultType());
+	    	certificates = new HashMap<String, X509Certificate>();
+	    	keys = new HashMap<String, PrivateKey>();
     	} catch (Exception e) {
             log.error(e.getMessage(), e);
 		}
@@ -119,6 +131,17 @@ public class CertificateManager {
 	}
 
 
+	/**
+	 * Track certificates and keys by subject 
+	 * @param subject
+	 * @param certificate
+	 * @param key
+	 */
+	public void registerCertificate(String subject, X509Certificate certificate, PrivateKey key) {
+		certificates.put(subject, certificate);
+		keys.put(subject, key);
+	}
+	
 	/**
      * Find the CA certificate to be used to validate user certificates.
      * @return X509Certificate for the root CA
@@ -153,13 +176,30 @@ public class CertificateManager {
         X509Certificate cert = null;
         try {
         	// load up the PEM
-        	KeyStore keyStore = getKeyStore();
+        	KeyStore keyStore = getKeyStore(null);
         	// get it from the store
             cert = (X509Certificate) keyStore.getCertificate("cilogon");
         } catch (Exception e) {
         	log.error(e.getMessage(), e);
         }
         return cert;
+    }
+    
+    /**
+     * Load configured private key from the keystore
+     */
+    public PrivateKey loadKey() {
+
+    	PrivateKey key = null;
+        try {
+        	// load up the PEM
+        	KeyStore keyStore = getKeyStore(null);
+        	// get it from the store
+            key = (PrivateKey) keyStore.getKey("cilogon", keyStorePassword.toCharArray());
+        } catch (Exception e) {
+        	log.error(e.getMessage(), e);
+        }
+        return key;
     }
     
     /**
@@ -257,7 +297,7 @@ public class CertificateManager {
     	return session;
     }
     
-    public SSLSocketFactory getSSLSocketFactory() 
+    public SSLSocketFactory getSSLSocketFactory(Session session) 
     throws NoSuchAlgorithmException, UnrecoverableKeyException, KeyStoreException,
     KeyManagementException, CertificateException, IOException 
     {
@@ -270,7 +310,7 @@ public class CertificateManager {
     	// Catch the exception here so that the TLS connection scheme
     	// will still be setup if the client certificate is not found.
     	try {
-    		keyStore = getKeyStore();
+    		keyStore = getKeyStore(session);
 		} catch (FileNotFoundException e) {
 			// these are somewhat expected for anonymous d1 client use
 			log.warn("Could not set up client side authentication - likely because the certificate could not be located: " + e.getMessage());
@@ -316,40 +356,46 @@ public class CertificateManager {
      * @throws NoSuchAlgorithmException 
      * @throws IOException 
      */
-    private KeyStore getKeyStore() throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
+    private KeyStore getKeyStore(Session session) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
     	
-    	// if the location has been set, use it
-    	String certLoc = certificateLocation;
-    	if (certLoc == null) {
-    		certLoc = locateCertificate();
-    	}
-    	KeyStore keyStore = null;
-    	
-    	keyStore  = KeyStore.getInstance(keyStoreType);
-        keyStore.load(null, keyStorePassword.toCharArray());
-
-        // get the private key and certificate from the PEM
-        // TODO: find a way to do this with default Java provider (not Bouncy Castle)?
-    	Security.addProvider(new BouncyCastleProvider());
-        PEMReader pemReader = new PEMReader(new FileReader(certLoc));
-        Object pemObject = null;
-        X509Certificate certificate = null;
+    	// the important items
+    	X509Certificate certificate = null;
         PrivateKey privateKey = null;
-        KeyPair keyPair = null;
-        while ((pemObject = pemReader.readObject()) != null) {
-			if (pemObject instanceof PrivateKey) {
-				privateKey = (PrivateKey) pemObject;
-			}
-			else if (pemObject instanceof KeyPair) {
-				keyPair = (KeyPair) pemObject;
-				privateKey = keyPair.getPrivate();
-			} else if (pemObject instanceof X509Certificate) {
-				certificate = (X509Certificate) pemObject;
-			}
-		}
-
-        Certificate[] chain = new Certificate[] {certificate};
         
+    	// if we have a session subject, find the registered certificate and key
+    	if (session != null && session.getSubject() != null) {
+    		certificate = certificates.get(session.getSubject().getValue());
+    		privateKey = keys.get(session.getSubject().getValue());
+    	}
+    	else {
+			// if the location has been set, use it
+	    	String certLoc = certificateLocation;
+	    	if (certLoc == null) {
+	    		certLoc = locateCertificate();
+	    	}
+	        // get the private key and certificate from the PEM
+	        // TODO: find a way to do this with default Java provider (not Bouncy Castle)?
+	    	Security.addProvider(new BouncyCastleProvider());
+	        PEMReader pemReader = new PEMReader(new FileReader(certLoc));
+	        Object pemObject = null;
+	        
+	        KeyPair keyPair = null;
+	        while ((pemObject = pemReader.readObject()) != null) {
+				if (pemObject instanceof PrivateKey) {
+					privateKey = (PrivateKey) pemObject;
+				}
+				else if (pemObject instanceof KeyPair) {
+					keyPair = (KeyPair) pemObject;
+					privateKey = keyPair.getPrivate();
+				} else if (pemObject instanceof X509Certificate) {
+					certificate = (X509Certificate) pemObject;
+				}
+			}
+    	}
+    	
+    	KeyStore keyStore  = KeyStore.getInstance(keyStoreType);
+        keyStore.load(null, keyStorePassword.toCharArray());
+        Certificate[] chain = new Certificate[] {certificate};
         // set the entry
 		keyStore.setKeyEntry("cilogon", privateKey, keyStorePassword.toCharArray(), chain);
         

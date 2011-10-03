@@ -46,6 +46,7 @@ import org.apache.http.params.HttpParams;
 import org.apache.http.params.SyncBasicHttpParams;
 import org.dataone.client.auth.CertificateManager;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
+import org.dataone.service.types.v1.Session;
 import org.dataone.service.util.Constants;
 
 
@@ -68,13 +69,21 @@ public class RestClient {
     private HashMap<String, String> headers = new HashMap<String, String>();
     
 	/**
-	 * Constructor to create a new instance.
+	 * Default constructor to create a new instance.
 	 */
 	public RestClient() 
 	{
+	    this(null);
+	}
+	
+	/**
+	 * Constructor to create a new instance using a given session/subject
+	 */
+	public RestClient(Session session) 
+	{
 	    httpClient = new DefaultHttpClient();
 	    setTimeouts(30 * 1000); // seconds * 1000 = milliseconds  
-	    setupSSL();
+	    setupSSL(session);
 	}
 	
 	/**
@@ -102,11 +111,11 @@ public class RestClient {
         httpClient.setParams(params);
 	}
 	
-	public void setupSSL() 
+	public void setupSSL(Session session) 
 	{		
 		SSLSocketFactory socketFactory = null;
 		try {
-			socketFactory = CertificateManager.getInstance().getSSLSocketFactory();
+			socketFactory = CertificateManager.getInstance().getSSLSocketFactory(session);
 		} catch (FileNotFoundException e) {
 			// these are somewhat expected for anonymous d1 client use
 			log.warn("Could not set up SSL connection for client - likely because the certificate could not be located: " + e.getMessage());
