@@ -1230,10 +1230,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented, InvalidRequest
     {
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_GROUPS);
-    	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
-    		mpe.addFilePart("groupName", groupName);
+        	url.addNextPathElement(groupName.getValue());
+    		//mpe.addFilePart("groupName", groupName);
     		mpe.addFilePart("members", members);
     	} catch (IOException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
@@ -1281,7 +1281,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     public boolean confirmMapIdentity(Session session, Subject subject) 
     throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented, InvalidRequest
     {
-    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING);
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING_CONFIRM);
     	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
@@ -1486,13 +1486,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNTS);
     	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
-    	try {
-    		mpe.addFilePart("subject", subject);
-    	} catch (IOException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
-		} catch (JiBXException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
-		}
+    	url.addNextPathElement(subject.getValue());
 
         D1RestClient client = new D1RestClient(session);
 
