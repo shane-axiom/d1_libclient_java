@@ -213,6 +213,17 @@ public class CertificateManager {
     }
     
     /**
+     * Returns D1-wide consistent Subject DN string representations
+     * @param name the [resonable] DN representation
+     * @return the standard D1 representation
+     */
+    public String standardizeDN(String name) {
+    	X500Principal principal = new X500Principal(name);
+		String standardizedName = principal.getName(X500Principal.RFC2253);
+		return standardizedName;
+    }
+    
+    /**
      * Check the validity of a certificate, and be sure that it is verifiable using the given CA certificate.
      * @param cert the X509Certificate to be verified
      * @param caCert the X509Certificate of the trusted CertificateAuthority (CA)
