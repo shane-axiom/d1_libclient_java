@@ -535,13 +535,15 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_GROUPS);
     	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
-    	try {
-    		mpe.addFilePart("groupName", groupName);
-    	} catch (IOException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
-		} catch (JiBXException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
-		}
+    	url.addNextPathElement(groupName.getValue());
+    	
+//    	try {
+//    		mpe.addFilePart("groupName", groupName);
+//    	} catch (IOException e1) {
+//			throw recastClientSideExceptionToServiceFailure(e1);
+//		} catch (JiBXException e1) {
+//			throw recastClientSideExceptionToServiceFailure(e1);
+//		}
 
 		D1RestClient client = new D1RestClient(session);
 
