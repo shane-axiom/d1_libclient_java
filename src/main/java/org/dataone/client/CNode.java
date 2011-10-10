@@ -73,6 +73,7 @@ import org.dataone.service.types.v1.ReplicationPolicy;
 import org.dataone.service.types.v1.ReplicationStatus;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1.Subject;
+import org.dataone.service.types.v1.SubjectInfo;
 import org.dataone.service.types.v1.SubjectList;
 import org.dataone.service.types.v1.SystemMetadata;
 import org.dataone.service.types.v1.util.NodelistUtil;
@@ -1434,7 +1435,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
     @Override
-    public SubjectList getSubjectInfo(Session session, Subject subject) 
+    public SubjectInfo getSubjectInfo(Session session, Subject subject) 
     throws ServiceFailure, InvalidRequest, NotAuthorized, NotImplemented
     {
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNTS);
@@ -1464,7 +1465,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (HttpException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		}
-		return deserializeServiceType(SubjectList.class,is);
+		return deserializeServiceType(SubjectInfo.class,is);
     }
     
     @Override

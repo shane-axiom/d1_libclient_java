@@ -47,6 +47,7 @@ import org.dataone.client.D1Client;
 import org.dataone.configuration.Settings;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1.Subject;
+import org.dataone.service.types.v1.SubjectInfo;
 import org.dataone.service.types.v1.SubjectList;
 
 /**
@@ -297,8 +298,8 @@ public class CertificateManager {
     		if (lookupSubject) {
 	    		try {
 		    		CNode cn = D1Client.getCN();
-					SubjectList subjectList = cn.getSubjectInfo(session, subject);
-					session.setSubjectList(subjectList);
+					SubjectInfo subjectInfo = cn.getSubjectInfo(session, subject);
+					session.setSubjectInfo(subjectInfo);
 				} catch (Exception e) {
 					// TODO: should we throw an exception/fail if this part fails?
 					log.error("Could not retrieve complete Subject info for: " + subject, e);
