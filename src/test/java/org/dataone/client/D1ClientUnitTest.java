@@ -35,6 +35,7 @@ import org.dataone.service.exceptions.SynchronizationFailed;
 import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1.Subject;
+import org.dataone.service.types.v1.SubjectInfo;
 import org.dataone.service.types.v1.SubjectList;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -88,7 +89,7 @@ public class D1ClientUnitTest  {
         printHeader("testListSubjects");
 		try {
 	        CNode cn = D1Client.getCN();
-	        SubjectList subjects = null;
+	        SubjectInfo subjects = null;
 	        Session session = new Session();
 	        session.setSubject(new Subject());
 			subjects = cn.listSubjects(session, null, 0, 0);
