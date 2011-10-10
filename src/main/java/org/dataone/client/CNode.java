@@ -1386,7 +1386,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
  
     @Override
-    public SubjectList listSubjects(Session session, String query, Integer start, Integer count) 
+    public SubjectInfo listSubjects(Session session, String query, Integer start, Integer count) 
     throws ServiceFailure, InvalidToken, NotAuthorized, NotImplemented 
     {
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNTS);
@@ -1430,7 +1430,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (HttpException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		}
-		return deserializeServiceType(SubjectList.class,is);
+		return deserializeServiceType(SubjectInfo.class,is);
     }
 
 
