@@ -1180,11 +1180,12 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     public boolean removeGroupMembers(Session session, Subject groupName, SubjectList members) 
     throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented, InvalidRequest
     {
-    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_GROUPS);
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_GROUPS_REMOVE);
     	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
-    		mpe.addFilePart("groupName", groupName);
+    		url.addNextPathElement(groupName.getValue());
+    		//mpe.addFilePart("groupName", groupName);
     		mpe.addFilePart("members", members);
     	} catch (IOException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
@@ -1196,7 +1197,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		InputStream is = null;
 		try {
-			is = client.doDeleteRequest(url.getUrl(),mpe);
+			is = client.doPostRequest(url.getUrl(),mpe);
 		} catch (InvalidCredentials e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (IdentifierNotUnique e) {
