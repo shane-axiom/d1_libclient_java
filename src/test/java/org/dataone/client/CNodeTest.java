@@ -2,8 +2,12 @@ package org.dataone.client;
 
 import static org.junit.Assert.assertTrue;
 
+import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
+import org.dataone.service.types.v1.Person;
+import org.dataone.service.types.v1.Subject;
+import org.dataone.service.types.v1.SubjectList;
 import org.junit.Test;
 
 public class CNodeTest {
@@ -28,4 +32,37 @@ public class CNodeTest {
 		String returnedUrl = cn.lookupNodeBaseUrl("foo");
 		assertTrue("nonsense ID as parameter returns null string",returnedUrl == null);
 	}
+	
+//	@Test
+	public void reuseableTest() throws Exception 
+	{
+		
+		//Settings.getConfiguration().setProperty("D1Client.CN_URL", "http://localhost:8080/cn");
+		Settings.getConfiguration().setProperty("D1Client.CN_URL", "https://cn-dev.dataone.org/cn");
+		
+		Subject subject = new Subject();
+		//subject.setValue("CN=Benjamin Leinfelder A458,O=University of Chicago,C=US,DC=cilogon,DC=org");
+		subject.setValue("CN=Dave Vieglais T480,O=Google,C=US,DC=cilogon,DC=org");
+		
+		Person person = new Person();
+		person.setSubject(subject);
+		person.setFamilyName("test1");
+		person.addGivenName("test1");
+		person.addEmail("ben@d1.org");
+
+		// register
+		//D1Client.getCN().registerAccount(null, person);
+		// now update
+		//person.setFamilyName("test2");
+		//D1Client.getCN().updateAccount(null, person);
+
+		// group
+		SubjectList members = new SubjectList();
+		members.addSubject(subject);
+		Subject group = new Subject();
+		group.setValue("CN=testGroup,DC=cilogon,DC=org");
+		D1Client.getCN().addGroupMembers(null, group , members);
+
+	}
+	
 }
