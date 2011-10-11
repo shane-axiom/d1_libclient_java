@@ -23,7 +23,6 @@
 package org.dataone.client;
 
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 
@@ -31,6 +30,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpGet;
@@ -38,15 +38,11 @@ import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.conn.scheme.Scheme;
-import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.apache.http.impl.client.AbstractHttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
-import org.apache.http.params.SyncBasicHttpParams;
-import org.dataone.client.auth.CertificateManager;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
-import org.dataone.service.types.v1.Session;
 import org.dataone.service.util.Constants;
 
 
@@ -65,7 +61,7 @@ public class RestClient {
 	protected static Log log = LogFactory.getLog(RestClient.class);
 	
 	
-    private DefaultHttpClient httpClient;
+    private AbstractHttpClient httpClient;
     private HashMap<String, String> headers = new HashMap<String, String>();
     
 	/**
@@ -73,25 +69,39 @@ public class RestClient {
 	 */
 	public RestClient() 
 	{
-	    this(null);
+		httpClient = new DefaultHttpClient();
+	    setTimeouts(30 * 1000);
 	}
 	
+	
 	/**
-	 * Constructor to create a new instance using a given session/subject
+	 * Gets the DefaultHttpClient instance used to make the connection
+	 * @return
 	 */
-	public RestClient(Session session) 
+	public HttpClient getHttpClient() 
 	{
-	    httpClient = new DefaultHttpClient();
-	    setTimeouts(30 * 1000); // seconds * 1000 = milliseconds  
-	    setupSSL(session);
+		return httpClient;
 	}
+	
+	
+	/**
+	 * Sets the AbstractHttpClient instance used for the connection.
+	 * Use with caution.  AbstractHttpClient is necessary to make use of
+	 * the setParams() method.
+	 * @param httpClient
+	 */
+	public void setHttpClient(AbstractHttpClient httpClient) 
+	{
+		this.httpClient = httpClient;
+	}
+	
 	
 	/**
 	 * Sets the CONNECTION_TIMEOUT and SO_TIMEOUT values for the underlying httpClient.
 	 * (max delay in initial response, max delay between tcp packets, respectively).  
 	 * Uses the same value for both.
 	 * 
-	 * (The default value set in the constructor is 30 seconds)
+	 * (The default value set by the constructor is 30 seconds)
 	 * 
 	 * @param milliseconds
 	 */
@@ -110,39 +120,35 @@ public class RestClient {
       
         httpClient.setParams(params);
 	}
-	
-	public void setupSSL(Session session) 
-	{		
-		SSLSocketFactory socketFactory = null;
-		try {
-			socketFactory = CertificateManager.getInstance().getSSLSocketFactory(session);
-		} catch (FileNotFoundException e) {
-			// these are somewhat expected for anonymous d1 client use
-			log.warn("Could not set up SSL connection for client - likely because the certificate could not be located: " + e.getMessage());
-		} catch (Exception e) {
-			// this is likely more severe
-			log.warn("Funky SSL going on: " + e.getMessage());
-		}
-		try {
-			//443 is the default port, this value is overridden if explicitly set in the URL
-			Scheme sch = new Scheme("https", 443, socketFactory );
-			httpClient.getConnectionManager().getSchemeRegistry().register(sch);
-		} catch (Exception e) {
-			// this is likely more severe
-			log.error("Failed to set up SSL connection for client: " + e.getMessage(), e);
-		}
-	}
-
 
 	
+	/**
+	 * adds headers with the provided key and value to the RestClient instance
+	 * to be used for subsequent calls
+	 * @param name
+	 * @param value
+	 */
 	public void setHeader(String name, String value) 
 	{
 		headers.put(name, value);
 	}
 	
+	/**
+	 * returns a Map of the headers added via setHeader(..)
+	 * @return
+	 */
 	public HashMap<String, String> getAddedHeaders() 
 	{
 		return headers;
+	}
+	
+	/**
+	 * clears the map of added headers
+	 * @return
+	 */
+	public void clearAddedHeaders() 
+	{
+		headers.clear();
 	}
 	
 	
