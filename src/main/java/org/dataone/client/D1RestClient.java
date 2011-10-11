@@ -22,6 +22,7 @@
 
 package org.dataone.client;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -31,6 +32,9 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.http.Header;
 import org.apache.http.HttpException;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.dataone.client.auth.CertificateManager;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.exceptions.AuthenticationTimeout;
 import org.dataone.service.exceptions.IdentifierNotUnique;
@@ -51,8 +55,10 @@ import org.dataone.service.types.v1.Session;
 import org.dataone.service.util.ExceptionHandler;
 
 /**
- * This class wraps the RestClient, adding uniform exception deserialization
- * (subclassing the RestClient was impractical due to differences in method signatures)
+ * This class wraps the RestClient, adding uniform exception deserialization and
+ * the setup of SSL for standard DataONE communications.
+ * 
+ * 
  */
 public class D1RestClient {
 	
@@ -61,17 +67,22 @@ public class D1RestClient {
     protected RestClient rc;
 
 	/**
-	 * Default constructor to create a new instance.
+	 * Default constructor to create a new instance.  SSL is setup using
+	 * the default location for the client certificate.
 	 */
 	public D1RestClient() {
-		this.rc = new RestClient(null);
+		this.rc = new RestClient();
+		setupSSL(null);
 	}
 	
 	/**
-	 * Constructor to create a new instance with given session/subject
+	 * Constructor to create a new instance with given session/subject.
+	 * The session's subject is used to find the registered certificate and key
+	 * 
 	 */
 	public D1RestClient(Session session) {
-		this.rc = new RestClient(session);
+		this.rc = new RestClient();
+		setupSSL(session);
 	}
 
 	/**
@@ -88,6 +99,69 @@ public class D1RestClient {
 	}
  
 	
+	/**
+	 * Method used by the constructors to setup the connection with SSL.
+	 * With the current CertificateManager implementation, a null value for 
+	 * the session object causes the certificate at the default location to 
+	 * be used.  If the certificate is not found, a warning will be logged 
+	 * and SSL scheme setup will continue.
+	 * <p>
+	 * Calling from a D1RestClient instance should override previous
+	 * connection setups
+	 *  
+	 * @param session
+	 */
+	public void setupSSL(Session session) 
+	{		
+		SSLSocketFactory socketFactory = null;
+		try {
+			socketFactory = CertificateManager.getInstance().getSSLSocketFactory(session);
+		} catch (FileNotFoundException e) {
+			// these are somewhat expected for anonymous d1 client use
+			log.warn("Could not set up SSL connection for client - likely because the certificate could not be located: " + e.getMessage());
+		} catch (Exception e) {
+			// this is likely more severe
+			log.warn("Funky SSL going on: " + e.getClass() + ":: " + e.getMessage());
+		}
+		try {
+			//443 is the default port, this value is overridden if explicitly set in the URL
+			Scheme sch = new Scheme("https", 443, socketFactory );
+			this.rc.getHttpClient().getConnectionManager().getSchemeRegistry().register(sch);
+		} catch (Exception e) {
+			// this is likely more severe
+			log.error("Failed to set up SSL connection for client. Continuing. " + e.getClass() + ":: " + e.getMessage(), e);
+		}
+	}
+	
+	
+	/**
+	 * Perform an HTTP GET request, setting the headers first and parsing /filtering
+	 * exceptions to the exception stream on the response into their
+	 * respective java instances.
+	 * 
+	 * @param url - the encoded url string
+	 * @return the InputStream from the http Response
+	 * 
+	 * @throws AuthenticationTimeout
+	 * @throws IdentifierNotUnique
+	 * @throws InsufficientResources
+	 * @throws InvalidCredentials
+	 * @throws InvalidRequest
+	 * @throws InvalidSystemMetadata
+	 * @throws InvalidToken
+	 * @throws NotAuthorized
+	 * @throws NotFound
+	 * @throws NotImplemented
+	 * @throws ServiceFailure
+	 * @throws SynchronizationFailed
+	 * @throws UnsupportedMetadataType
+	 * @throws UnsupportedQueryType
+	 * @throws UnsupportedType
+	 * @throws IllegalStateException
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 * @throws HttpException
+	 */
 	public InputStream doGetRequest(String url) 
 	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
 	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
@@ -99,6 +173,7 @@ public class D1RestClient {
 		return ExceptionHandler.filterErrors(rc.doGetRequest(url));
 	}
 
+	
 	public InputStream doDeleteRequest(String url) 
 	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
 	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
