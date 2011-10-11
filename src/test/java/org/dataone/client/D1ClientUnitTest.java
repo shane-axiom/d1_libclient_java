@@ -92,7 +92,7 @@ public class D1ClientUnitTest  {
 	        SubjectInfo subjects = null;
 	        Session session = new Session();
 	        session.setSubject(new Subject());
-			subjects = cn.listSubjects(session, null, 0, 0);
+			subjects = cn.listSubjects(session, null, null, 0, 0);
 	        assertTrue(subjects != null);
 		} catch (Exception e) {
 			e.printStackTrace();

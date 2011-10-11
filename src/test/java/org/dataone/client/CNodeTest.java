@@ -33,7 +33,7 @@ public class CNodeTest {
 		assertTrue("nonsense ID as parameter returns null string",returnedUrl == null);
 	}
 	
-//	@Test
+	@Test
 	public void reuseableTest() throws Exception 
 	{
 		
@@ -61,7 +61,9 @@ public class CNodeTest {
 		members.addSubject(subject);
 		Subject group = new Subject();
 		group.setValue("CN=testGroup,DC=cilogon,DC=org");
-		D1Client.getCN().addGroupMembers(null, group , members);
+		//D1Client.getCN().addGroupMembers(null, group , members);
+		D1Client.getCN().removeGroupMembers(null, group , members);
+
 
 	}
 	
