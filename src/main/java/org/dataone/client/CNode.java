@@ -1387,11 +1387,12 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
  
     @Override
-    public SubjectInfo listSubjects(Session session, String query, Integer start, Integer count) 
+    public SubjectInfo listSubjects(Session session, String query, String status, Integer start, Integer count) 
     throws ServiceFailure, InvalidToken, NotAuthorized, NotImplemented 
     {
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNTS);
     	url.addNonEmptyParamPair("query", query);
+    	url.addNonEmptyParamPair("status", status);
     	url.addNonEmptyParamPair("start", start);
     	url.addNonEmptyParamPair("count", count);
     	
