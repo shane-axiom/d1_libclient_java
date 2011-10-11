@@ -1640,7 +1640,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     public boolean setReplicationPolicy(Session session, Identifier pid, ReplicationPolicy policy) 
     throws ServiceFailure, NotAuthorized, NotFound, NotImplemented, InvalidRequest, InvalidToken 
     {
-    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_POLICY);
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_REPLICATION_POLICY);
     	url.addNextPathElement(pid.getValue());
     	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
@@ -1696,7 +1696,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     public boolean setReplicationStatus(Session session, Identifier pid, NodeReference nodeRef, ReplicationStatus status) 
     throws ServiceFailure, NotImplemented, InvalidToken, NotAuthorized, InvalidRequest, NotFound 
     {
-    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_NOTIFY);
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_REPLICATION_NOTIFY);
     	url.addNextPathElement(pid.getValue());
     	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
