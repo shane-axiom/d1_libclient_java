@@ -21,14 +21,22 @@ package org.dataone.client;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Date;
 import java.util.Map;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpressionException;
 
+import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpException;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
+import org.apache.solr.common.SolrDocumentList;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.util.Constants;
 import org.dataone.service.util.D1Url;
@@ -87,8 +95,11 @@ import org.xml.sax.SAXException;
 public class CNode extends D1Node 
 implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplication 
 {
-
+	protected static org.apache.commons.logging.Log log = LogFactory.getLog(CNode.class);
+	
+	private SolrServer solrServer;
     private Map<String, String> nodeId2URLMap;
+    
 //    private Map<String, String> nodeId2NameMap;
 
     /**
@@ -99,7 +110,28 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
      * @param nodeBaseServiceUrl base url for constructing service endpoints.
      */
     public CNode(String nodeBaseServiceUrl) {
-        super(nodeBaseServiceUrl);
+    	super(nodeBaseServiceUrl);
+
+    	/*
+        CommonsHttpSolrServer is thread-safe and if you are using the following constructor,
+        you *MUST* re-use the same instance for all requests.  If instances are created on
+        the fly, it can cause a connection leak. The recommended practice is to keep a
+        static instance of CommonsHttpSolrServer per solr server url and share it for all requests.
+        See https://issues.apache.org/jira/browse/SOLR-861 for more details
+    	 */
+    	try {
+    		// build solr server url from CN baseUrl.  It is not under the cn path, but 
+        	// at the top level.
+    		URL u = new URL(nodeBaseServiceUrl);
+    		URL solrUrl = new URL(u.getProtocol(),u.getHost(),u.getPort(),"/solr/");
+    		log.info("solr Server path:" + solrUrl.toString());
+    	
+    		solrServer = new CommonsHttpSolrServer(solrUrl.toString());
+    	} catch (MalformedURLException e) {
+    		log.error("error creating solr url: " + e.getClass() + ": " + e.getMessage());
+    		e.printStackTrace();
+    		//but continue anyway...
+    	}
     }
     
     public String getNodeBaseServiceUrl() {
@@ -107,7 +139,42 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	url.addNextPathElement(CNCore.SERVICE_VERSION);
     	return url.getUrl();
     }
+   
     
+    /**
+     * Non DataONE serverAPI method to delegate query formulation to SolrQuery
+     * @param solrQuery
+     * @return
+     * @throws SolrServerException
+     */
+    public SolrDocumentList search(SolrQuery solrQuery) 
+    throws SolrServerException
+    {
+    	SolrDocumentList docs = solrServer.query(solrQuery).getResults();
+    	return docs;
+    }
+    
+    public SolrDocumentList search(String query, Long start, Long count, String[] fields) 
+    throws SolrServerException
+    {
+    	SolrQuery solrQuery = new SolrQuery();
+    	if (query != null) {
+    		solrQuery.setQuery(query);
+    	} else {
+    		solrQuery.setQuery( "*:*" );
+    	}
+    	if (start != null) 
+    		solrQuery.add("start", String.valueOf(start));
+    	if (count != null)
+    		solrQuery.add("rows",String.valueOf(count));
+    	if (fields != null && fields.length > 0) {
+    		for (String field: fields) {
+    			solrQuery.addField(field);
+    		}
+    	}
+    	log.info("solrQuery = " + solrQuery.getQuery());
+    	return search(solrQuery);
+    }
     
     
     public ObjectList search(Session session, String queryType, String query)
