@@ -36,6 +36,8 @@ import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
+import org.apache.solr.client.solrj.request.LukeRequest;
+import org.apache.solr.client.solrj.response.LukeResponse;
 import org.apache.solr.common.SolrDocumentList;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.util.Constants;
@@ -140,11 +142,48 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	return url.getUrl();
     }
    
+ //////////////////////  S O L R      M e t h o d s      ///////////////////////
     
     /**
-     * Non DataONE serverAPI method to delegate query formulation to SolrQuery
-     * @param solrQuery
-     * @return
+     * This method queries the Coordinating Node's solr server for a list
+     * of fields to be used for searches.
+     * @return - a LukeResponse
+     * @throws SolrServerException
+     * @throws IOException
+     */
+    public LukeResponse getSearchFields() 
+    throws SolrServerException, IOException
+    {
+    	LukeRequest heyLuke = new LukeRequest();
+    	return heyLuke.process(solrServer);
+    }
+    
+    /**
+     * This method queries the Coordinating Node's solr server for a list
+     * of fields to be used for solr searches.
+     * 
+     * @param lukeRequest - a LukeRequest instance
+     * @return - a LukeResponse
+     * @throws SolrServerException
+     * @throws IOException
+     */
+    public LukeResponse getSearchFields(LukeRequest lukeRequest) 
+    throws SolrServerException, IOException
+    {
+    	return lukeRequest.process(solrServer);
+    }
+    
+    
+    
+    /**
+     * This method is a simple wrapper for making an org.apache.solr.client.solrj.SolrServer 
+     * call to the Coordinating Node. 
+     * <br>
+     * It is outside of the DataONE service API, but included to expose the full
+     * querying capabilities provided by SolrQuery.
+     * 
+     * @param solrQuery - a SolrQuery object
+     * @return - a SolrDocumentList
      * @throws SolrServerException
      */
     public SolrDocumentList search(SolrQuery solrQuery) 
@@ -154,6 +193,22 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	return docs;
     }
     
+    /**
+     * This method wraps org.apache.solr.client.solrj.SolrQuery to provide 
+     * parameterized way for simple solr queries.  Null values can be provided
+     * for all parameters.
+     * <br>
+     * It is outside of the DataONE server API, but included for simplified use
+     * of solr querying language.
+     * 
+     * @param query - the solrQuery e.g. "*:*" or "repl_verified:[NOW/DAY-1 TO NOW]"
+     * @param start - non-negative integer passed to the solr 'start' parameter
+     * @param count - non-negative integer passed to the solr 'rows' parameter
+     * @param fields - an array of strings representing the fields requested in
+     *                 the response.  examples: "id", "checksum"
+     * @return - a SolrDocumentList 
+     * @throws SolrServerException
+     */
     public SolrDocumentList search(String query, Integer start, Integer count, String[] fields) 
     throws SolrServerException
     {
@@ -175,6 +230,55 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	log.warn("solrQuery = " + solrQuery.toString());
     	return search(solrQuery);
     }
+
+    /**
+     * A convenience method to return all documents (all fields) for a 
+     * given DataONE Identifier.
+     * @param pid  - The Identifier of the object of interest
+     * @return - a SolrDocumentList
+     * @throws SolrServerException
+     */
+    public SolrDocumentList getSolrDocument(Identifier pid)
+    throws SolrServerException
+    {
+    	SolrQuery solrQuery = new SolrQuery();
+    	if (pid != null) {
+    		solrQuery.setQuery("id:"+pid.getValue());
+    	} else {
+    		return null;
+    	}
+    	return search(solrQuery);
+    }
+    
+
+    /**
+     * Convenience method to query solr by using known date fields.
+     * (replica_verified,dateuploaded, datemodified)
+     * 
+     * Specify the time range using Solr formatted times/ranges:  
+     * @see http://wiki.apache.org/solr/SolrQuerySyntax#Default_QParserPlugin:_LuceneQParserPlugin
+     * @see http://lucene.apache.org/solr/api/org/apache/solr/util/DateMathParser.html
+     * 
+     * @param dateField - the name of the date field to perform the search against
+     * @param solrTimeRange - a solr-formatted time range
+     * @param fields - the fields to return in the response, use null to get all fields
+     * @return - s SolrDocumentList
+     * @throws SolrServerException
+     */
+    public SolrDocumentList searchSolrByDate(String dateField, String solrTimeRange, String[] fields) 
+    throws SolrServerException
+    {
+    	SolrQuery solrQuery = new SolrQuery();
+    	if (dateField ==null)  
+    		dateField = "*";
+    	if (solrTimeRange == null) 
+    		solrTimeRange = "*";
+    	
+    	String query = dateField + ":" + solrTimeRange;
+    	
+    	return search(query,null,null,fields);	 
+    }
+
     
     /**
      * Search the SOLR index for a list of documents with identifiers who have
@@ -191,10 +295,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
         return search(solrDateRange, 0, numRows, fields);
     }
-    
-    /**
-     * 
-     */
+
+
     public ObjectList search(Session session, String queryType, String query)
     throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest,
     NotImplemented
