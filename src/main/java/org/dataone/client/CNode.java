@@ -176,7 +176,25 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	return search(solrQuery);
     }
     
+    /**
+     * Search the SOLR index for a list of documents with identifiers who have
+     * Replicas with replicaVerified older than solrDateRange
+     */
+    public SolrDocumentList getAuditShortList(String solrDateRange, int numRows)
+        throws SolrServerException {
+
+        String[] fields = new String[4];
+        fields[0] = "id";
+        fields[1] = "checksum";
+        fields[2] = "replica_mn";
+        fields[3] = "replica_verified";
+
+        return search(solrDateRange, 0, numRows, fields);
+    }
     
+    /**
+     * 
+     */
     public ObjectList search(Session session, String queryType, String query)
     throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest,
     NotImplemented
