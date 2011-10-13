@@ -1,7 +1,12 @@
 package org.dataone.ore;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -12,6 +17,10 @@ import org.dspace.foresite.AggregatedResource;
 import org.dspace.foresite.Aggregation;
 import org.dspace.foresite.OREException;
 import org.dspace.foresite.OREFactory;
+import org.dspace.foresite.OREParser;
+import org.dspace.foresite.OREParserException;
+import org.dspace.foresite.OREParserFactory;
+import org.dspace.foresite.OREResource;
 import org.dspace.foresite.ORESerialiser;
 import org.dspace.foresite.ORESerialiserException;
 import org.dspace.foresite.ORESerialiserFactory;
@@ -19,6 +28,7 @@ import org.dspace.foresite.Predicate;
 import org.dspace.foresite.ResourceMap;
 import org.dspace.foresite.ResourceMapDocument;
 import org.dspace.foresite.Triple;
+import org.dspace.foresite.TripleSelector;
 import org.dspace.foresite.Vocab;
 import org.dspace.foresite.jena.TripleJena;
 
@@ -26,6 +36,8 @@ public class ResourceMapFactory {
 	
 	// TODO: will this always resolve?
 	private static final String D1_URI_PREFIX = Settings.getConfiguration().getString("D1Client.CN_URL") + "/object/";
+
+	private static final String RESOURCE_MAP_SERIALIZATION_FORMAT = "RDF/XML";
 
 	private static Predicate DC_TERMS_IDENTIFIER = null;
 	
@@ -128,9 +140,65 @@ public class ResourceMapFactory {
 		
 	}
 	
+	public Map<Identifier, List<Identifier>> parseResourceMap(String resourceMapContents) 
+		throws OREException, URISyntaxException, UnsupportedEncodingException, OREParserException {
+		Map<Identifier, List<Identifier>> idMap = new HashMap<Identifier, List<Identifier>>();
+		
+		OREParser parser = OREParserFactory.getInstance(RESOURCE_MAP_SERIALIZATION_FORMAT);
+		InputStream is = new ByteArrayInputStream(resourceMapContents.getBytes("UTF-8"));
+		ResourceMap resourceMap = parser.parse(is);
+		Aggregation aggregation = resourceMap.getAggregation();
+		List<AggregatedResource> resources = aggregation.getAggregatedResources();
+		for (AggregatedResource entry: resources) {
+			// metadata entries should have everything we need to reconstruct the model
+			Identifier metadataId = new Identifier();
+			List<Identifier> dataIds = new ArrayList<Identifier>();
+			
+			TripleSelector documentsSelector = new TripleSelector(null, CITO_DOCUMENTS.getURI(), null);
+			List<Triple> documentsTriples = entry.listTriples(documentsSelector);
+			if (documentsTriples.isEmpty()) {
+				continue;
+			}
+			
+			// get the identifier of the metadata
+			TripleSelector identifierSelector = new TripleSelector(null, DC_TERMS_IDENTIFIER.getURI(), null);
+			List<Triple> identifierTriples = entry.listTriples(identifierSelector);
+			if (!identifierTriples.isEmpty()) {
+				String metadataIdValue = identifierTriples.get(0).getObjectLiteral();
+				metadataId.setValue(metadataIdValue);
+			}
+			
+			// iterate through the data entries
+			for (Triple triple: documentsTriples) {
+				String dataIdValue = null;
+				// try getting it from the model
+				OREResource dataResource = triple.getObject();
+				if (dataResource != null) {
+					dataIdValue = dataResource.listTriples(identifierSelector).get(0).getObjectLiteral();
+				}
+				// FIXME: otherwise we use URI parsing, bleck!
+				if (dataIdValue == null) {
+					// get the dataIds we are documenting
+					String dataResourceURI = triple.getObjectURI().toString();
+					dataIdValue = dataResourceURI.substring(D1_URI_PREFIX.length());
+				}
+				Identifier dataId = new Identifier();
+				dataId.setValue(dataIdValue);
+				dataIds.add(dataId);
+			}
+			
+			// add the entry
+			idMap.put(metadataId , dataIds);
+			
+		}
+		
+		return idMap;
+		
+	}
+	
 	public String serializeResourceMap(ResourceMap resourceMap) throws ORESerialiserException {
 		// serialize
-		ORESerialiser serializer = ORESerialiserFactory.getInstance("RDF/XML");
+		ORESerialiser serializer = ORESerialiserFactory.getInstance(RESOURCE_MAP_SERIALIZATION_FORMAT);
 		ResourceMapDocument doc = serializer.serialise(resourceMap);
 		String serialisation = doc.toString();
 		return serialisation;
