@@ -1,5 +1,6 @@
 package org.dataone.ore;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
@@ -13,7 +14,6 @@ import org.dspace.foresite.ResourceMap;
 import org.junit.Test;
 
 public class ResourceMapFactoryTest {
-	
 	
 	@Test
 	public void testCreateResourceMap() {
@@ -37,6 +37,14 @@ public class ResourceMapFactoryTest {
 			String rdfXml = ResourceMapFactory.getInstance().serializeResourceMap(resourceMap);
 			assertNotNull(rdfXml);
 			System.out.println(rdfXml);
+			
+			// now put it back in an object
+			Map<Identifier, List<Identifier>> retIdMap = ResourceMapFactory.getInstance().parseResourceMap(rdfXml);
+			// same size
+			assertEquals(idMap.keySet().size(), retIdMap.keySet().size());
+			// same value
+			assertEquals(idMap.keySet().iterator().next().getValue(), retIdMap.keySet().iterator().next().getValue());
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 			fail();
