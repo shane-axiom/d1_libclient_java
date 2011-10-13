@@ -154,7 +154,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	return docs;
     }
     
-    public SolrDocumentList search(String query, Long start, Long count, String[] fields) 
+    public SolrDocumentList search(String query, Integer start, Integer count, String[] fields) 
     throws SolrServerException
     {
     	SolrQuery solrQuery = new SolrQuery();
@@ -172,7 +172,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     			solrQuery.addField(field);
     		}
     	}
-    	log.info("solrQuery = " + solrQuery.getQuery());
+    	log.warn("solrQuery = " + solrQuery.toString());
     	return search(solrQuery);
     }
     
