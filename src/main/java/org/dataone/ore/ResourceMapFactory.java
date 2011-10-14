@@ -34,7 +34,7 @@ import org.dspace.foresite.jena.TripleJena;
 public class ResourceMapFactory {
 	
 	// TODO: will this always resolve?
-	private static final String D1_URI_PREFIX = Settings.getConfiguration().getString("D1Client.CN_URL") + "/object/";
+	private static final String D1_URI_PREFIX = Settings.getConfiguration().getString("D1Client.CN_URL") + "/v1/object/";
 
 	private static final String RESOURCE_MAP_SERIALIZATION_FORMAT = "RDF/XML";
 
