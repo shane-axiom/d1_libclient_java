@@ -109,19 +109,6 @@
     	<type>jar</type>
     	<scope>compile</scope>
     </dependency>
-    <dependency>
-        <artifactId>solr-solrj</artifactId>
-		<groupId>org.apache.solr</groupId>
-		<version>3.4.0</version>
-    	<type>jar</type>
-        <scope>compile</scope>
-	</dependency>
-	<!--  a co-dependency of solr-solrj -->
-	<dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>1.6.0</version>
-        </dependency>
 	<dependency>
         <groupId>com.googlecode.foresite-toolkit</groupId>
         <artifactId>foresite</artifactId>
