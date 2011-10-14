@@ -20,7 +20,6 @@ import org.dspace.foresite.OREFactory;
 import org.dspace.foresite.OREParser;
 import org.dspace.foresite.OREParserException;
 import org.dspace.foresite.OREParserFactory;
-import org.dspace.foresite.OREResource;
 import org.dspace.foresite.ORESerialiser;
 import org.dspace.foresite.ORESerialiserException;
 import org.dspace.foresite.ORESerialiserFactory;
@@ -99,7 +98,7 @@ public class ResourceMapFactory {
 		Agent creator = OREFactory.createAgent();
 		creator.addName("Java libclient");
 		resourceMap.addCreator(creator);
-		// add the resource map identifer
+		// add the resource map identifier
 		Triple resourceMapIdentifier = new TripleJena();
 		resourceMapIdentifier.initialise(resourceMap);
 		resourceMapIdentifier.relate(DC_TERMS_IDENTIFIER, resourceMapId.getValue());
@@ -175,26 +174,27 @@ public class ResourceMapFactory {
 				metadataId.setValue(metadataIdValue);
 			}
 			
-			// iterate through the data entries
+			// iterate through the data entries to find dcterms:identifier
 			for (Triple triple: documentsTriples) {
 				String dataIdValue = null;
-				// try getting it from the model
-				OREResource dataResource = triple.getObject();
-				if (dataResource != null) {
-					dataIdValue = dataResource.listTriples(identifierSelector).get(0).getObjectLiteral();
+				
+				// get the dataId reference we are documenting
+				URI dataResourceURI = triple.getObjectURI();
+				// look up the data object resource triple to find the dcterms:identifier for it
+				TripleSelector dataIdentifierSelector = new TripleSelector(dataResourceURI, DC_TERMS_IDENTIFIER.getURI(), null);
+				List<Triple> dataIdentifierTriples = resourceMap.listAllTriples(dataIdentifierSelector);
+				if (!dataIdentifierTriples.isEmpty()) {
+					// get the value of the identifier
+					dataIdValue = dataIdentifierTriples.get(0).getObjectLiteral();
 				}
-				// FIXME: otherwise we use URI parsing, bleck!
-				if (dataIdValue == null) {
-					// get the dataIds we are documenting
-					String dataResourceURI = triple.getObjectURI().toString();
-					dataIdValue = dataResourceURI.substring(D1_URI_PREFIX.length());
-				}
+				
+				// add it to our list
 				Identifier dataId = new Identifier();
 				dataId.setValue(dataIdValue);
 				dataIds.add(dataId);
 			}
 			
-			// add the entry
+			// add the metadata entry with the data ids
 			idMap.put(metadataId , dataIds);
 			
 		}
