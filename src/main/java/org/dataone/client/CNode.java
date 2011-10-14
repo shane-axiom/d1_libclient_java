@@ -111,7 +111,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     }
     
     
-    
+    /**
+     * The CN implements two types of search: SOLR, and the dataONE native search
+     * against the underlying datastore.  
+     */
     public ObjectList search(Session session, String queryType, String query)
     throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest,
     NotImplemented
@@ -131,15 +134,16 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         }
         if (query == null) query = "";
  
-        // include default parameters for SOLR search (mercury requirements)
-        if (queryType != null && queryType.equals("SOLR")) {
-        	if (!query.contains("pageSize=\\d+")) {
-        		paramAdditions += "pageSize=200&";
-        	}	
-        	if (!query.contains("start=\\d+")) {
-        		paramAdditions += "start=0&";
-        	}
-        }
+//        // should not be needed in v0.6.x.       
+//        // include default parameters for SOLR search (mercury requirements)
+//        if (queryType != null && queryType.equals("SOLR")) {
+//        	if (!query.contains("pageSize=\\d+")) {
+//        		paramAdditions += "pageSize=200&";
+//        	}	
+//        	if (!query.contains("start=\\d+")) {
+//        		paramAdditions += "start=0&";
+//        	}
+//        }
  
         String paramsComplete = paramAdditions + query;
         // clean up paramsComplete string
