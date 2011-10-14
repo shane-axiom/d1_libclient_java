@@ -51,7 +51,7 @@ public class ResourceMapFactory {
 		DC_TERMS_IDENTIFIER = new Predicate();
 		DC_TERMS_IDENTIFIER.setNamespace(Vocab.dcterms_Agent.ns().toString());
 		DC_TERMS_IDENTIFIER.setPrefix(Vocab.dcterms_Agent.schema());
-		DC_TERMS_IDENTIFIER.setName("identitifer");
+		DC_TERMS_IDENTIFIER.setName("identifier");
 		DC_TERMS_IDENTIFIER.setURI(new URI(DC_TERMS_IDENTIFIER.getNamespace() + DC_TERMS_IDENTIFIER.getName()));
 		
 		// create the CITO:isDocumentedBy predicate
