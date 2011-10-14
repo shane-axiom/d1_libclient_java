@@ -21,8 +21,6 @@ package org.dataone.client;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Date;
 import java.util.Map;
 
@@ -32,13 +30,6 @@ import javax.xml.xpath.XPathExpressionException;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpException;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.SolrServer;
-import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
-import org.apache.solr.client.solrj.request.LukeRequest;
-import org.apache.solr.client.solrj.response.LukeResponse;
-import org.apache.solr.common.SolrDocumentList;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.util.Constants;
 import org.dataone.service.util.D1Url;
@@ -99,9 +90,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 {
 	protected static org.apache.commons.logging.Log log = LogFactory.getLog(CNode.class);
 	
-	private SolrServer solrServer;
     private Map<String, String> nodeId2URLMap;
-    
 //    private Map<String, String> nodeId2NameMap;
 
     /**
@@ -112,28 +101,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
      * @param nodeBaseServiceUrl base url for constructing service endpoints.
      */
     public CNode(String nodeBaseServiceUrl) {
-    	super(nodeBaseServiceUrl);
-
-    	/*
-        CommonsHttpSolrServer is thread-safe and if you are using the following constructor,
-        you *MUST* re-use the same instance for all requests.  If instances are created on
-        the fly, it can cause a connection leak. The recommended practice is to keep a
-        static instance of CommonsHttpSolrServer per solr server url and share it for all requests.
-        See https://issues.apache.org/jira/browse/SOLR-861 for more details
-    	 */
-    	try {
-    		// build solr server url from CN baseUrl.  It is not under the cn path, but 
-        	// at the top level.
-    		URL u = new URL(nodeBaseServiceUrl);
-    		URL solrUrl = new URL(u.getProtocol(),u.getHost(),u.getPort(),"/solr/");
-    		log.info("solr Server path:" + solrUrl.toString());
-    	
-    		solrServer = new CommonsHttpSolrServer(solrUrl.toString());
-    	} catch (MalformedURLException e) {
-    		log.error("error creating solr url: " + e.getClass() + ": " + e.getMessage());
-    		e.printStackTrace();
-    		//but continue anyway...
-    	}
+        super(nodeBaseServiceUrl);
     }
     
     public String getNodeBaseServiceUrl() {
@@ -141,162 +109,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	url.addNextPathElement(CNCore.SERVICE_VERSION);
     	return url.getUrl();
     }
-   
- //////////////////////  S O L R      M e t h o d s      ///////////////////////
-    
-    /**
-     * This method queries the Coordinating Node's solr server for a list
-     * of fields to be used for searches.
-     * @return - a LukeResponse
-     * @throws SolrServerException
-     * @throws IOException
-     */
-    public LukeResponse getSearchFields() 
-    throws SolrServerException, IOException
-    {
-    	LukeRequest heyLuke = new LukeRequest();
-    	return heyLuke.process(solrServer);
-    }
-    
-    /**
-     * This method queries the Coordinating Node's solr server for a list
-     * of fields to be used for solr searches.
-     * 
-     * @param lukeRequest - a LukeRequest instance
-     * @return - a LukeResponse
-     * @throws SolrServerException
-     * @throws IOException
-     */
-    public LukeResponse getSearchFields(LukeRequest lukeRequest) 
-    throws SolrServerException, IOException
-    {
-    	return lukeRequest.process(solrServer);
-    }
     
     
     
-    /**
-     * This method is a simple wrapper for making an org.apache.solr.client.solrj.SolrServer 
-     * call to the Coordinating Node. 
-     * <br>
-     * It is outside of the DataONE service API, but included to expose the full
-     * querying capabilities provided by SolrQuery.
-     * 
-     * @param solrQuery - a SolrQuery object
-     * @return - a SolrDocumentList
-     * @throws SolrServerException
-     */
-    public SolrDocumentList search(SolrQuery solrQuery) 
-    throws SolrServerException
-    {
-    	SolrDocumentList docs = solrServer.query(solrQuery).getResults();
-    	return docs;
-    }
-    
-    /**
-     * This method wraps org.apache.solr.client.solrj.SolrQuery to provide 
-     * parameterized way for simple solr queries.  Null values can be provided
-     * for all parameters.
-     * <br>
-     * It is outside of the DataONE server API, but included for simplified use
-     * of solr querying language.
-     * 
-     * @param query - the solrQuery e.g. "*:*" or "repl_verified:[NOW/DAY-1 TO NOW]"
-     * @param start - non-negative integer passed to the solr 'start' parameter
-     * @param count - non-negative integer passed to the solr 'rows' parameter
-     * @param fields - an array of strings representing the fields requested in
-     *                 the response.  examples: "id", "checksum"
-     * @return - a SolrDocumentList 
-     * @throws SolrServerException
-     */
-    public SolrDocumentList search(String query, Integer start, Integer count, String[] fields) 
-    throws SolrServerException
-    {
-    	SolrQuery solrQuery = new SolrQuery();
-    	if (query != null) {
-    		solrQuery.setQuery(query);
-    	} else {
-    		solrQuery.setQuery( "*:*" );
-    	}
-    	if (start != null) 
-    		solrQuery.add("start", String.valueOf(start));
-    	if (count != null)
-    		solrQuery.add("rows",String.valueOf(count));
-    	if (fields != null && fields.length > 0) {
-    		for (String field: fields) {
-    			solrQuery.addField(field);
-    		}
-    	}
-    	log.warn("solrQuery = " + solrQuery.toString());
-    	return search(solrQuery);
-    }
-
-    /**
-     * A convenience method to return all documents (all fields) for a 
-     * given DataONE Identifier.
-     * @param pid  - The Identifier of the object of interest
-     * @return - a SolrDocumentList
-     * @throws SolrServerException
-     */
-    public SolrDocumentList getSolrDocument(Identifier pid)
-    throws SolrServerException
-    {
-    	SolrQuery solrQuery = new SolrQuery();
-    	if (pid != null) {
-    		solrQuery.setQuery("id:"+pid.getValue());
-    	} else {
-    		return null;
-    	}
-    	return search(solrQuery);
-    }
-    
-
-    /**
-     * Convenience method to query solr by using known date fields.
-     * (replica_verified,dateuploaded, datemodified)
-     * 
-     * Specify the time range using Solr formatted times/ranges:  
-     * @see http://wiki.apache.org/solr/SolrQuerySyntax#Default_QParserPlugin:_LuceneQParserPlugin
-     * @see http://lucene.apache.org/solr/api/org/apache/solr/util/DateMathParser.html
-     * 
-     * @param dateField - the name of the date field to perform the search against
-     * @param solrTimeRange - a solr-formatted time range
-     * @param fields - the fields to return in the response, use null to get all fields
-     * @return - s SolrDocumentList
-     * @throws SolrServerException
-     */
-    public SolrDocumentList searchSolrByDate(String dateField, String solrTimeRange, String[] fields) 
-    throws SolrServerException
-    {
-    	SolrQuery solrQuery = new SolrQuery();
-    	if (dateField ==null)  
-    		dateField = "*";
-    	if (solrTimeRange == null) 
-    		solrTimeRange = "*";
-    	
-    	String query = dateField + ":" + solrTimeRange;
-    	
-    	return search(query,null,null,fields);	 
-    }
-
-    
-    /**
-     * Search the SOLR index for a list of documents with identifiers who have
-     * Replicas with replicaVerified older than solrDateRange
-     */
-    public SolrDocumentList getAuditShortList(String solrDateRange, int numRows)
-        throws SolrServerException {
-
-        String[] fields = new String[4];
-        fields[0] = "id";
-        fields[1] = "checksum";
-        fields[2] = "replica_mn";
-        fields[3] = "replica_verified";
-
-        return search(solrDateRange, 0, numRows, fields);
-    }
-
-
     public ObjectList search(Session session, String queryType, String query)
     throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest,
     NotImplemented
