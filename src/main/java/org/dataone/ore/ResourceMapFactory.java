@@ -147,11 +147,16 @@ public class ResourceMapFactory {
 	}
 	
 	public Map<Identifier, List<Identifier>> parseResourceMap(String resourceMapContents) 
+	throws OREException, URISyntaxException, UnsupportedEncodingException, OREParserException {
+		InputStream is = new ByteArrayInputStream(resourceMapContents.getBytes("UTF-8"));
+		return parseResourceMap(is);
+	}
+	
+	public Map<Identifier, List<Identifier>> parseResourceMap(InputStream is) 
 		throws OREException, URISyntaxException, UnsupportedEncodingException, OREParserException {
 		Map<Identifier, List<Identifier>> idMap = new HashMap<Identifier, List<Identifier>>();
 		
 		OREParser parser = OREParserFactory.getInstance(RESOURCE_MAP_SERIALIZATION_FORMAT);
-		InputStream is = new ByteArrayInputStream(resourceMapContents.getBytes("UTF-8"));
 		ResourceMap resourceMap = parser.parse(is);
 		Aggregation aggregation = resourceMap.getAggregation();
 		List<AggregatedResource> resources = aggregation.getAggregatedResources();
