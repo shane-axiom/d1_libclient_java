@@ -99,9 +99,16 @@ public class ResourceMapFactory {
 		Agent creator = OREFactory.createAgent();
 		creator.addName("Java libclient");
 		resourceMap.addCreator(creator);
+		// add the resource map identifer
+		Triple resourceMapIdentifier = new TripleJena();
+		resourceMapIdentifier.initialise(resourceMap);
+		resourceMapIdentifier.relate(DC_TERMS_IDENTIFIER, resourceMapId.getValue());
+		resourceMap.addTriple(resourceMapIdentifier);
+		
 		//aggregation.addCreator(creator);
 		aggregation.addTitle("DataONE Aggregation");
 		
+		// iterate through the metadata items
 		for (Identifier metadataId: idMap.keySet()) {
 		
 			// add the science metadata
@@ -112,7 +119,7 @@ public class ResourceMapFactory {
 			resourceMap.addTriple(metadataIdentifier);
 			aggregation.addAggregatedResource(metadataResource);
 	
-			// iterate through data
+			// iterate through data items
 			List<Identifier> dataIds = idMap.get(metadataId);
 			for (Identifier dataId: dataIds) {
 				AggregatedResource dataResource = aggregation.createAggregatedResource(new URI(D1_URI_PREFIX + dataId.getValue()));
