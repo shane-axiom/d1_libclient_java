@@ -112,14 +112,62 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     
     
     /**
-     * The CN implements two types of search: SOLR, and the dataONE native search
-     * against the underlying datastore.  
+     * See cn.search(Session session, String queryType, String query)
+     * This is the same method but accepts a D1Url containing the query elements
+     * that will be used for the query.
+     * @param session
+     * @param queryType  
+     * @param query - D1Url object containing the query elements
+     * @return
+     * @throws InvalidToken
+     * @throws ServiceFailure
+     * @throws NotAuthorized
+     * @throws InvalidRequest
+     * @throws NotImplemented
+     */
+    public ObjectList search(Session session, String queryType, D1Url query)
+    throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest,
+    NotImplemented
+	{
+    	return search(session,queryType,query.getAssembledQueryString());
+	}
+    
+    
+    /**
+     * The CN implements two types of search: SOLR, and the DataONE native search
+     * against the underlying data store. In contrast to the default behavior of 
+     * other methods, character encoding is not performed on either the queryType
+     * or query parameters, so the caller needs to send in a url-safe-encoded string.
+     * <br>
+     * One option for encoding is to use the org.dataone.service.util.D1Url class to 
+     * encode and assemble the query string.
+     * <p>
+     *  For SOLR queries, a list of query terms can be found at:
+     *  @see http://mule1.dataone.org/ArchitectureDocs-current/design/SearchMetadata.html
+     *  and query syntax description can be found at:
+     *  @see http://lucene.apache.org/java/2_4_0/queryparsersyntax.html and
+     *  @see http://wiki.apache.org/solr/SolrQuerySyntax
+     *  for example:  query = "q=replica_verified:[* TO NOW]&start=0&rows=10&fl=id%2Cscore
+     *       replica_verified%3A%5B*+TO+NOW%5D
+     * <p>
+     * For DataONE type queries, the same parameters are available as are for mn.listObjects():
+     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.listObjects
+     * for example:  query = "objectFormt=text/csv&start=0&count=25"
+     * 
+     *  @param session - the session object.  If null, will default to 'public'
+     *  @param queryType - the type of query passed in on the query parameter.
+     *                    possible values: SOLR, null
+     *                    null will direct to the DataONE native search
+     *                    SOLR will redirect to the CN's SOLR index
+     *  @param query -  the query string passed used to form the specific query, following
+     *                  the syntax of the query type, and pre-encoded 
+     *                  
+     *  @return - an ObjectList
      */
     public ObjectList search(Session session, String queryType, String query)
     throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest,
     NotImplemented
 	{
-
         if (session == null) {
             session = new Session();
             session.setSubject(new Subject());
@@ -133,17 +181,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
           paramAdditions = "qt=" + queryType +"&";
         }
         if (query == null) query = "";
- 
-//        // should not be needed in v0.6.x.       
-//        // include default parameters for SOLR search (mercury requirements)
-//        if (queryType != null && queryType.equals("SOLR")) {
-//        	if (!query.contains("pageSize=\\d+")) {
-//        		paramAdditions += "pageSize=200&";
-//        	}	
-//        	if (!query.contains("start=\\d+")) {
-//        		paramAdditions += "start=0&";
-//        	}
-//        }
  
         String paramsComplete = paramAdditions + query;
         // clean up paramsComplete string
