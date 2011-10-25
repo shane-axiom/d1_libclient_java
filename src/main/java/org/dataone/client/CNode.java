@@ -1376,11 +1376,65 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
     @Override
-    public boolean mapIdentity(Session session, Subject subject) 
+    public boolean mapIdentity(Session session, Subject primarySubject, Subject secondarySubject) 
     throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
     NotImplemented, InvalidRequest
     {
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING);
+    	
+    	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
+    	try {
+    		mpe.addFilePart("primarySubject", primarySubject);
+    		mpe.addFilePart("secondarySubject", secondarySubject);
+    	} catch (IOException e1) {
+			throw recastClientSideExceptionToServiceFailure(e1);
+		} catch (JiBXException e1) {
+			throw recastClientSideExceptionToServiceFailure(e1);
+		}
+
+		D1RestClient client = new D1RestClient(session);
+
+		InputStream is = null;
+		try {
+			is = client.doPostRequest(url.getUrl(),mpe);
+		} catch (InvalidCredentials e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (IdentifierNotUnique e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedQueryType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InsufficientResources e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (InvalidSystemMetadata e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (AuthenticationTimeout e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (UnsupportedMetadataType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (NotFound e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (ClientProtocolException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IllegalStateException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IOException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (HttpException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		}
+		return true;
+    }
+    
+    @Override
+    public boolean requestMapIdentity(Session session, Subject subject) 
+    throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
+    NotImplemented, InvalidRequest
+    {
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING_REQUEST);
     	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
