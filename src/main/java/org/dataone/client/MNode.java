@@ -910,7 +910,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     		throw new InvalidRequest("2153","'sourceNode' cannot be null");
 		
 		// assemble the url
-        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_REPLICATION_NOTIFY);
+        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_REPLICATE);
     	
     	// assemble the context body
     	SimpleMultipartEntity smpe = new SimpleMultipartEntity();
