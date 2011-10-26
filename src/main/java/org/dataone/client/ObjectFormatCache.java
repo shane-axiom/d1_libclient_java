@@ -160,7 +160,7 @@ public class ObjectFormatCache extends ObjectFormatServiceImpl {
       
       ObjectFormat objectFormat = 
         objectFormatList.getObjectFormat(i);
-      String identifier = objectFormat.getFmtid().getValue();
+      String identifier = objectFormat.getFormatId().getValue();
       getObjectFormatMap().put(identifier, objectFormat);
       
     }

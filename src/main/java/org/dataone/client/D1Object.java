@@ -115,7 +115,7 @@ public class D1Object {
      * @return the type
      */
     public ObjectFormatIdentifier getFmtId() {
-        return sysmeta.getFmtid();
+        return sysmeta.getFormatId();
     }
 
     /**
@@ -327,7 +327,7 @@ public class D1Object {
     	ObjectFormatCache ofc = ObjectFormatCache.getInstance();
     	try {
     		fmt = ofc.getFormat(format);
-    		sm.setFmtid(fmt.getFmtid());
+    		sm.setFormatId(fmt.getFormatId());
     	}
     	catch (NotFound nf) {
     		try {

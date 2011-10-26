@@ -101,22 +101,22 @@ public class DataoneEMLParser
             return null;
         }
         else if(namespace.equals(
-        		ObjectFormatCache.getInstance().getFormat("eml://ecoinformatics.org/eml-2.0.0").getFmtid().getValue()))
+        		ObjectFormatCache.getInstance().getFormat("eml://ecoinformatics.org/eml-2.0.0").getFormatId().getValue()))
         {
             return parseEML200Document(d);
         }
         else if(namespace.equals(
-        		ObjectFormatCache.getInstance().getFormat("eml://ecoinformatics.org/eml-2.0.1").getFmtid().getValue()))
+        		ObjectFormatCache.getInstance().getFormat("eml://ecoinformatics.org/eml-2.0.1").getFormatId().getValue()))
         {
             return parseEML201Document(d);
         }
         else if(namespace.equals(
-        		ObjectFormatCache.getInstance().getFormat("eml://ecoinformatics.org/eml-2.1.0").getFmtid().getValue()))
+        		ObjectFormatCache.getInstance().getFormat("eml://ecoinformatics.org/eml-2.1.0").getFormatId().getValue()))
         {
             return parseEML210Document(d);
         }
         else if(namespace.equals(
-        		ObjectFormatCache.getInstance().getFormat("eml://ecoinformatics.org/eml-2.1.1").getFmtid().getValue()))
+        		ObjectFormatCache.getInstance().getFormat("eml://ecoinformatics.org/eml-2.1.1").getFormatId().getValue()))
         {
             return parseEML211Document(d);
         }

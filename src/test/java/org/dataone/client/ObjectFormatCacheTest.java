@@ -93,7 +93,7 @@ public class ObjectFormatCacheTest {
   	try {
 	    
 			  String result = 
-			  	ObjectFormatCache.getInstance().getFormat(knownFormat).getFmtid().getValue();
+			  	ObjectFormatCache.getInstance().getFormat(knownFormat).getFormatId().getValue();
 		  	assertTrue(result.equals(knownFormat));
 
     } catch (NullPointerException npe) {
@@ -119,7 +119,7 @@ public class ObjectFormatCacheTest {
   	try {
   		
 	    String result = 
-	    	ObjectFormatCache.getInstance().getFormat(badFormat).getFmtid().getValue();
+	    	ObjectFormatCache.getInstance().getFormat(badFormat).getFormatId().getValue();
       
   	} catch (Exception e) {
 	    
