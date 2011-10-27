@@ -158,7 +158,20 @@ public class ResourceMapFactory {
 		
 		OREParser parser = OREParserFactory.getInstance(RESOURCE_MAP_SERIALIZATION_FORMAT);
 		ResourceMap resourceMap = parser.parse(is);
-		Aggregation aggregation = resourceMap.getAggregation();
+        
+		// get the identifier of the whole package ResourceMap
+		// TODO: check that this selection log is correct
+		// TODO: modify function return to include this packageId
+		Identifier packageId = new Identifier();
+        TripleSelector packageIdSelector = new TripleSelector(resourceMap.getURI(), DC_TERMS_IDENTIFIER.getURI(), null);
+        List<Triple> packageIdTriples = resourceMap.listTriples(packageIdSelector);
+        if (!packageIdTriples.isEmpty()) {
+            String packageIdValue = packageIdTriples.get(0).getObjectLiteral();
+            packageId.setValue(packageIdValue);
+        }
+		
+        // Now process the aggregation
+        Aggregation aggregation = resourceMap.getAggregation();
 		List<AggregatedResource> resources = aggregation.getAggregatedResources();
 		for (AggregatedResource entry: resources) {
 			// metadata entries should have everything we need to reconstruct the model
