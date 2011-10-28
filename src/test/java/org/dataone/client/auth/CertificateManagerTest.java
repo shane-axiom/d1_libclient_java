@@ -1,5 +1,6 @@
 package org.dataone.client.auth;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -18,6 +19,8 @@ import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.dataone.configuration.Settings;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1.Subject;
+import org.dataone.service.types.v1.SubjectInfo;
+import org.jibx.runtime.JiBXException;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -62,6 +65,29 @@ public class CertificateManagerTest {
         // Verify the subject's certificate
         boolean valid = cm.verify(cert, caCert);
         assertTrue(valid);
+    }
+    
+    @Ignore("will not pass until certificates installed on Hudson")
+    @Test
+    public void testCertificateManagerExtension() {
+    	try {
+	        // Load the subject's certificate
+	        X509Certificate cert = CertificateManager.getInstance().loadCertificate();
+	        assertNotNull(cert);
+			SubjectInfo subjectInfo = CertificateManager.getInstance().getSubjectInfo(cert);
+			if (subjectInfo != null) {
+				// the certificate should match the first person in the subjectInfo
+				String serviceSubject = CertificateManager.getInstance().standardizeDN(subjectInfo.getPerson(0).getSubject().getValue());
+				String certSubject = CertificateManager.getInstance().getSubjectDN(cert);
+				System.out.println("Subject from certificate extension: " + serviceSubject);
+				assertEquals(serviceSubject, certSubject);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail();
+		} 
+        
+       
     }
     
     @Ignore("will not pass until certificates installed on Hudson")
