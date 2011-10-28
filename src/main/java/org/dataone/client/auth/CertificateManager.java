@@ -1,6 +1,7 @@
 package org.dataone.client.auth;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -40,6 +41,10 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.bouncycastle.asn1.ASN1InputStream;
+import org.bouncycastle.asn1.DERObject;
+import org.bouncycastle.asn1.DEROctetString;
+import org.bouncycastle.asn1.DERUTF8String;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMReader;
 import org.dataone.client.CNode;
@@ -49,6 +54,8 @@ import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1.Subject;
 import org.dataone.service.types.v1.SubjectInfo;
 import org.dataone.service.types.v1.SubjectList;
+import org.dataone.service.util.TypeMarshaller;
+import org.jibx.runtime.JiBXException;
 
 /**
  * Import and manage certificates to be used for authentication against DataONE
@@ -70,6 +77,8 @@ public class CertificateManager {
     // this is packaged with the library
     private static final String caTrustStore = "cilogon-trusted-certs";
     private static final String caTrustStorePass = "cilogon";
+    
+    private static String CILOGON_OID_SUBJECT_INFO = null;
 
     private static CertificateManager cm = null;
     
@@ -100,6 +109,9 @@ public class CertificateManager {
 	    	keyStoreType = Settings.getConfiguration().getString("certificate.keystore.type", KeyStore.getDefaultType());
 	    	certificates = new HashMap<String, X509Certificate>();
 	    	keys = new HashMap<String, PrivateKey>();
+	    	
+	    	CILOGON_OID_SUBJECT_INFO = Settings.getConfiguration().getString("cilogon.oid.subjectinfo", "1.3.6.1.4.1.34998.2.1");
+
     	} catch (Exception e) {
             log.error(e.getMessage(), e);
 		}
@@ -201,6 +213,62 @@ public class CertificateManager {
         	log.error(e.getMessage(), e);
         }
         return key;
+    }
+    
+    /**
+     * Retrieves the extension value given by the OID
+     * @see http://stackoverflow.com/questions/2409618/how-do-i-decode-a-der-encoded-string-in-java 
+     * @param X509Certificate
+     * @param oid
+     * @return
+     * @throws IOException
+     */
+    protected String getExtensionValue(X509Certificate X509Certificate, String oid) throws IOException {
+        String decoded = null;
+        byte[] extensionValue = X509Certificate.getExtensionValue(oid);
+        if (extensionValue != null) {
+            DERObject derObject = toDERObject(extensionValue);
+            if (derObject instanceof DEROctetString) {
+                DEROctetString derOctetString = (DEROctetString) derObject;
+                derObject = toDERObject(derOctetString.getOctets());
+                if (derObject instanceof DERUTF8String) {
+                    DERUTF8String s = DERUTF8String.getInstance(derObject);
+                    decoded = s.getString();
+                }
+            }
+        }
+        return decoded;
+    }
+
+    /**
+     * Converts the byte data into a DERObject
+     * @see http://stackoverflow.com/questions/2409618/how-do-i-decode-a-der-encoded-string-in-java
+     * @param data
+     * @return
+     * @throws IOException
+     */
+    private DERObject toDERObject(byte[] data) throws IOException {
+        ByteArrayInputStream inStream = new ByteArrayInputStream(data);
+        ASN1InputStream asnInputStream = new ASN1InputStream(inStream);
+        return asnInputStream.readObject();
+    }
+    
+    /**
+     * Retrieve the SubjectInfo contained in the given certificate
+     * @param certificate
+     * @return subjectInfo from DataONE representing subject of the certificate 
+     * @throws IOException
+     * @throws InstantiationException
+     * @throws IllegalAccessException
+     * @throws JiBXException
+     */
+    public SubjectInfo getSubjectInfo(X509Certificate certificate) throws IOException, InstantiationException, IllegalAccessException, JiBXException {
+    	String subjectInfoValue = this.getExtensionValue(certificate, CILOGON_OID_SUBJECT_INFO);
+    	SubjectInfo subjectInfo = null;
+    	if (subjectInfoValue != null) {
+    		subjectInfo = TypeMarshaller.unmarshalTypeFromStream(SubjectInfo.class, new ByteArrayInputStream(subjectInfoValue.getBytes("UTF-8")));
+    	}
+    	return subjectInfo;
     }
     
     /**
