@@ -117,7 +117,7 @@ public class CertificateManagerTest {
         subject.setValue(subjectDN);
 		session.setSubject(subject );
         try {
-			SSLSocketFactory ssl = CertificateManager.getInstance().getSSLSocketFactory(session);
+			SSLSocketFactory ssl = CertificateManager.getInstance().getSSLSocketFactory(session.getSubject().getValue());
 			assertNotNull(ssl);
 		} catch (Exception e) {
 			e.printStackTrace();

@@ -115,7 +115,11 @@ public class D1RestClient {
 	{		
 		SSLSocketFactory socketFactory = null;
 		try {
-			socketFactory = CertificateManager.getInstance().getSSLSocketFactory(session);
+			String subject = null;
+			if (session != null && session.getSubject() != null) {
+				subject = session.getSubject().getValue();
+			}
+			socketFactory = CertificateManager.getInstance().getSSLSocketFactory(subject);
 		} catch (FileNotFoundException e) {
 			// these are somewhat expected for anonymous d1 client use
 			log.warn("Could not set up SSL connection for client - likely because the certificate could not be located: " + e.getMessage());
