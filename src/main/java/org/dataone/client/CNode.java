@@ -1329,22 +1329,14 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     public boolean confirmMapIdentity(Session session, Subject subject) 
     throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented, InvalidRequest
     {
-    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING_CONFIRM);
-    	
-    	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
-    	try {
-    		mpe.addFilePart("subject", subject);
-    	} catch (IOException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
-		} catch (JiBXException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
-		}
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING_PENDING);
+    	url.addNextPathElement(subject.getValue());
 
 		D1RestClient client = new D1RestClient(session);
 
 		InputStream is = null;
 		try {
-			is = client.doPostRequest(url.getUrl(),mpe);
+			is = client.doPutRequest(url.getUrl(), null);
 		} catch (InvalidCredentials e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (IdentifierNotUnique e) {
@@ -1435,22 +1427,14 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
     NotImplemented, InvalidRequest
     {
-    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING_REQUEST);
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING_PENDING);
+    	url.addNextPathElement(subject.getValue());
     	
-    	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
-    	try {
-    		mpe.addFilePart("subject", subject);
-    	} catch (IOException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
-		} catch (JiBXException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
-		}
-
 		D1RestClient client = new D1RestClient(session);
 
 		InputStream is = null;
 		try {
-			is = client.doPostRequest(url.getUrl(),mpe);
+			is = client.doPostRequest(url.getUrl(),null);
 		} catch (InvalidCredentials e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (IdentifierNotUnique e) {
