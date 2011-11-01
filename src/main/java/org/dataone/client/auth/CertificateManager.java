@@ -345,23 +345,15 @@ public class CertificateManager {
      */
     public Session getSession(HttpServletRequest request, boolean lookupSubject) {
     	Session session = null;
-    	Object certificate = request.getAttribute("javax.servlet.request.X509Certificate");
-    	log.debug("javax.servlet.request.X509Certificate " + " = " + certificate);
-    	Object sslSession = request.getAttribute("javax.servlet.request.ssl_session");
-    	log.debug("javax.servlet.request.ssl_session " + " = " + sslSession);
-    	if (certificate instanceof X509Certificate[]) {
-    		session = new Session();
-    		Subject subject = new Subject();
-    		X509Certificate[] x509Certificates = (X509Certificate[]) certificate;
-    		for (X509Certificate x509Cert:x509Certificates) {
-	    		displayCertificate(x509Cert);
-	    		String subjectDN = getSubjectDN(x509Cert);
-	    		subject.setValue(subjectDN);
-	    		session.setSubject(subject);
-	    		//TODO get the SubjectList info from certificate
-	    		break;
-    		}
-    		
+    	
+		X509Certificate x509Cert = getCertificate(request);
+		if (x509Cert != null) {
+			String subjectDN = getSubjectDN(x509Cert );
+			Subject subject = new Subject();
+			subject .setValue(subjectDN);
+			session = new Session();
+			session.setSubject(subject);
+
     		// look up the subject information from the CNIdentity service
     		if (lookupSubject) {
 	    		try {
@@ -377,6 +369,37 @@ public class CertificateManager {
     	return session;
     }
     
+    /**
+     * Get the client certificate from the request object
+     * @param request
+     * @return
+     */
+    public X509Certificate getCertificate(HttpServletRequest request) {
+    	Object certificate = request.getAttribute("javax.servlet.request.X509Certificate");
+    	log.debug("javax.servlet.request.X509Certificate " + " = " + certificate);
+    	Object sslSession = request.getAttribute("javax.servlet.request.ssl_session");
+    	log.debug("javax.servlet.request.ssl_session " + " = " + sslSession);
+    	if (certificate instanceof X509Certificate[]) {
+    		X509Certificate[] x509Certificates = (X509Certificate[]) certificate;
+    		for (X509Certificate x509Cert: x509Certificates) {
+	    		displayCertificate(x509Cert);
+	    		return x509Cert;
+    		}
+    	}
+    	return null;
+    }
+    
+    /**
+     * Get SSL socket factory for use when making SSL connection requests as a client
+     * @param session
+     * @return
+     * @throws NoSuchAlgorithmException
+     * @throws UnrecoverableKeyException
+     * @throws KeyStoreException
+     * @throws KeyManagementException
+     * @throws CertificateException
+     * @throws IOException
+     */
     public SSLSocketFactory getSSLSocketFactory(Session session) 
     throws NoSuchAlgorithmException, UnrecoverableKeyException, KeyStoreException,
     KeyManagementException, CertificateException, IOException 
