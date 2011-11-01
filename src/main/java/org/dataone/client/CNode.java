@@ -70,6 +70,7 @@ import org.dataone.service.types.v1.ObjectList;
 import org.dataone.service.types.v1.ObjectLocationList;
 import org.dataone.service.types.v1.Permission;
 import org.dataone.service.types.v1.Person;
+import org.dataone.service.types.v1.Replica;
 import org.dataone.service.types.v1.ReplicationPolicy;
 import org.dataone.service.types.v1.ReplicationStatus;
 import org.dataone.service.types.v1.Session;
@@ -1982,5 +1983,15 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
         return true;
 
+    }
+
+    @Override
+    public boolean updateReplicationMetadata(Session targetNodeSession,
+        Identifier pid, Replica replica) 
+        throws NotImplemented, NotAuthorized, ServiceFailure, NotFound, 
+        InvalidRequest {
+        
+        // TODO Auto-generated method stub
+        return false;
     }
 }
