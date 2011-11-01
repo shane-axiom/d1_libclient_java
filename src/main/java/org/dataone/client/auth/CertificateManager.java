@@ -507,6 +507,58 @@ public class CertificateManager {
     }
     
     /**
+     * Load PrivateKey object from given file
+     * @param fileName
+     * @return
+     * @throws IOException
+     */
+    public PrivateKey loadPrivateKeyFromFile(String fileName) throws IOException {
+		PrivateKey privateKey = null;
+		
+    	// get the private key and certificate from the PEM
+    	Security.addProvider(new BouncyCastleProvider());
+        PEMReader pemReader = new PEMReader(new FileReader(fileName));
+        Object pemObject = null;
+        
+        KeyPair keyPair = null;
+        while ((pemObject = pemReader.readObject()) != null) {
+			if (pemObject instanceof PrivateKey) {
+				privateKey = (PrivateKey) pemObject;
+				break;
+			}
+			else if (pemObject instanceof KeyPair) {
+				keyPair = (KeyPair) pemObject;
+				privateKey = keyPair.getPrivate();
+				break;
+			}
+		}
+        return privateKey;
+    }
+    
+    /**
+     * Load X509Certificate object from given file
+     * @param fileName
+     * @return
+     * @throws IOException
+     */
+    public X509Certificate loadCertificateFromFile(String fileName) throws IOException {
+		X509Certificate certificate = null;
+		
+    	// get the private key and certificate from the PEM
+    	Security.addProvider(new BouncyCastleProvider());
+        PEMReader pemReader = new PEMReader(new FileReader(fileName));
+        Object pemObject = null;
+        
+        while ((pemObject = pemReader.readObject()) != null) {
+			if (pemObject instanceof X509Certificate) {
+				certificate = (X509Certificate) pemObject;
+				break;
+			}
+		}
+        return certificate;
+    }
+    
+    /**
      * Locate the default certificate location
      * http://www.cilogon.org/cert-howto#TOC-Finding-CILogon-Certificates
      * @return
