@@ -400,7 +400,7 @@ public class CertificateManager {
      * @throws CertificateException
      * @throws IOException
      */
-    public SSLSocketFactory getSSLSocketFactory(Session session) 
+    public SSLSocketFactory getSSLSocketFactory(String subject) 
     throws NoSuchAlgorithmException, UnrecoverableKeyException, KeyStoreException,
     KeyManagementException, CertificateException, IOException 
     {
@@ -413,7 +413,7 @@ public class CertificateManager {
     	// Catch the exception here so that the TLS connection scheme
     	// will still be setup if the client certificate is not found.
     	try {
-    		keyStore = getKeyStore(session);
+    		keyStore = getKeyStore(subject);
 		} catch (FileNotFoundException e) {
 			// these are somewhat expected for anonymous d1 client use
 			log.warn("Could not set up client side authentication - likely because the certificate could not be located: " + e.getMessage());
@@ -459,16 +459,16 @@ public class CertificateManager {
      * @throws NoSuchAlgorithmException 
      * @throws IOException 
      */
-    private KeyStore getKeyStore(Session session) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
+    private KeyStore getKeyStore(String subject) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
     	
     	// the important items
     	X509Certificate certificate = null;
         PrivateKey privateKey = null;
         
     	// if we have a session subject, find the registered certificate and key
-    	if (session != null && session.getSubject() != null) {
-    		certificate = certificates.get(session.getSubject().getValue());
-    		privateKey = keys.get(session.getSubject().getValue());
+    	if (subject != null) {
+    		certificate = certificates.get(subject);
+    		privateKey = keys.get(subject);
     	}
     	else {
 			// if the location has been set, use it
