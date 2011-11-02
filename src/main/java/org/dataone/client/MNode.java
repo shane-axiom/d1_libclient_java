@@ -770,8 +770,6 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
     	} catch (InvalidCredentials e) {
     		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-    	} catch (InvalidRequest e) {
-    		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
     	} catch (AuthenticationTimeout e) {
     		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
     	} catch (UnsupportedMetadataType e) {

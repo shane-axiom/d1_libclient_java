@@ -329,6 +329,9 @@ public class D1Object {
     	//set the size
     	sm.setSize(new BigInteger(String.valueOf(data.length)));
 
+    	// serializer needs a value, though MN will ignore the value
+    	sm.setSerialVersion(BigInteger.ONE);
+    	
     	// set submitter and rightholder from the associated string
     	Subject p = new Subject();
     	p.setValue(submitter);
