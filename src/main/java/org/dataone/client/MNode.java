@@ -1040,7 +1040,8 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 		SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
             mpe.addFilePart("pid", pid);
-            mpe.addFilePart("dateSysMetaLastModified", dateSysMetaLastModified);
+            mpe.addParamPart("dateSysMetaLastModified", 
+                    DateTimeMarshaller.serializeDateToUTC(dateSysMetaLastModified));
             mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
 		} catch (IOException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
