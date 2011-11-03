@@ -1030,5 +1030,59 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         return is;
     }
 
+    public void systemMetadataChanged(Session session, Identifier pid, 
+        long serialVersion, Date dateSysMetaLastModified) 
+        throws NotImplemented, NotAuthorized, InvalidToken, ServiceFailure, 
+        InvalidRequest {
+
+		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_META_CHANGED);
+
+		SimpleMultipartEntity mpe = new SimpleMultipartEntity();
+    	try {
+            mpe.addFilePart("pid", pid);
+            mpe.addFilePart("dateSysMetaLastModified", dateSysMetaLastModified);
+            mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
+		} catch (IOException e1) {
+			throw recastClientSideExceptionToServiceFailure(e1);
+		} catch (JiBXException e1) {
+			throw recastClientSideExceptionToServiceFailure(e1);
+		}
+    	
+		D1RestClient client = new D1RestClient(session);
+
+		InputStream is = null;
+		try {
+			is = client.doPostRequest(url.getUrl(), mpe);
+		} catch (NotFound e) {
+			throw new ServiceFailure("1000", "Method threw unexpected exception: " + e.getMessage());
+		} catch (IdentifierNotUnique e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (UnsupportedType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (UnsupportedQueryType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InsufficientResources e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InvalidSystemMetadata e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (InvalidCredentials e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (UnsupportedMetadataType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (AuthenticationTimeout e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
+		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (ClientProtocolException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IllegalStateException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (IOException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} catch (HttpException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		}
+
+    }
 
 }
