@@ -425,7 +425,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
     
     @Override
-    public Identifier setOwner(Session session, Identifier pid, Subject userId) 
+    public Identifier setOwner(Session session, Identifier pid, Subject userId, long serialVersion) 
     throws InvalidToken, ServiceFailure, NotFound, NotAuthorized, NotImplemented, InvalidRequest
     {
    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING);
@@ -434,6 +434,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	try {
     		mpe.addFilePart("pid", pid);
     		mpe.addFilePart("userId", userId);
+    		mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
     	} catch (IOException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
 		} catch (JiBXException e1) {
@@ -521,8 +522,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     }
 
     @Override
-    public boolean setAccessPolicy(Session session, Identifier pid, AccessPolicy accessPolicy)
-    throws InvalidToken, NotFound, NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest
+    public boolean setAccessPolicy(Session session, Identifier pid, AccessPolicy accessPolicy, long serialVersion)
+    throws  InvalidToken, ServiceFailure, NotFound, NotAuthorized, NotImplemented, InvalidRequest 
     {
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCESS);
     	
@@ -530,6 +531,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	try {
     		mpe.addFilePart("pid", pid);
     		mpe.addFilePart("accessPolicy", accessPolicy);
+    		mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
     	} catch (IOException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
 		} catch (JiBXException e1) {
@@ -1849,7 +1851,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     
 
     @Override
-    public boolean setReplicationPolicy(Session session, Identifier pid, ReplicationPolicy policy) 
+    public boolean setReplicationPolicy(Session session, Identifier pid, ReplicationPolicy policy, long serialVersion) 
     throws ServiceFailure, NotAuthorized, NotFound, NotImplemented, InvalidRequest, InvalidToken 
     {
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_REPLICATION_POLICY);
@@ -1858,6 +1860,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
     		mpe.addFilePart("policy", policy);
+    		mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
     	} catch (IOException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
 		} catch (JiBXException e1) {
@@ -1905,7 +1908,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
   
     
     @Override
-    public boolean setReplicationStatus(Session session, Identifier pid, NodeReference nodeRef, ReplicationStatus status) 
+    public boolean setReplicationStatus(Session session, Identifier pid, NodeReference nodeRef, ReplicationStatus status, long serialVersion) 
     throws ServiceFailure, NotImplemented, InvalidToken, NotAuthorized, InvalidRequest, NotFound 
     {
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_REPLICATION_NOTIFY);
@@ -1914,6 +1917,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
     		mpe.addFilePart("status", status);
+    		mpe.addFilePart("nodeRef", nodeRef);
+    		mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
     	} catch (IOException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
 		} catch (JiBXException e1) {
@@ -1963,7 +1968,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     public boolean isNodeAuthorized(Session originatingNodeSession, 
         Subject targetNodeSubject, Identifier pid, Permission executePermission)
         throws NotImplemented, NotAuthorized, InvalidToken, ServiceFailure, 
-        NotFound, InvalidRequest{
+        NotFound, InvalidRequest
+    {
 
         return true;
 
@@ -1971,7 +1977,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
     @Override
     public boolean updateReplicationMetadata(Session targetNodeSession,
-        Identifier pid, Replica replica) 
+        Identifier pid, Replica replica, long serialVersion) 
         throws NotImplemented, NotAuthorized, ServiceFailure, NotFound, 
         InvalidRequest {
         
@@ -1982,6 +1988,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
     	try {
     		mpe.addFilePart("replica", replica);
+    		mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
     	} catch (IOException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
 		} catch (JiBXException e1) {
