@@ -110,8 +110,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	url.addNextPathElement(CNCore.SERVICE_VERSION);
     	return url.getUrl();
     }
-    
-    
+        
     /**
      * See cn.search(Session session, String queryType, String query)
      * This is the same method but accepts a D1Url containing the query elements
@@ -132,8 +131,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	{
     	return search(session,queryType,query.getAssembledQueryString());
 	}
-    
-    
+        
     /**
      * The CN implements two types of search: SOLR, and the DataONE native search
      * against the underlying data store. In contrast to the default behavior of 
@@ -240,7 +238,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         throws InvalidToken, NotImplemented, ServiceFailure, NotAuthorized, NotFound, InvalidRequest {
         return super.getSystemMetadata(session, pid);
     }
-
     
     @Override
     public ObjectLocationList resolve(Session session, Identifier pid)
@@ -286,7 +283,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         return deserializeServiceType(ObjectLocationList.class,is);
     }
     
-
     /**
      * create both a system metadata resource and science metadata resource with
      * the specified pid
@@ -353,8 +349,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         return  deserializeServiceType(Identifier.class, is);
     }
 
-
-
     @Override
     public boolean reserveIdentifier(Session session, Identifier pid)
 	throws InvalidToken, ServiceFailure,
@@ -375,7 +369,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         NotAuthorized, IdentifierNotUnique, InvalidRequest, NotImplemented {
             throw new NotImplemented("4191", "Client does not implement hasReservation method.");
     }
-
 
     @Override
     public boolean assertRelation(Session session, Identifier pidOfSubject,
@@ -422,7 +415,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	}  
     	return true;
     }
-
     
     @Override
     public Identifier setOwner(Session session, Identifier pid, Subject userId, long serialVersion) 
@@ -475,7 +467,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		}
         return  deserializeServiceType(Identifier.class,is);
     }
-
 
     @Override
     public boolean isAuthorized(Session session, Identifier pid, Permission permission) 
@@ -572,7 +563,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		}
         return true;
     }
-
     
     @Override
     public Subject createGroup(Session session, Subject groupName) 
@@ -785,7 +775,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	}	
     	return deserializeServiceType(ObjectFormatList.class, is); 
     }
-
     
     /**
      * Get the object format from the object format list based on the given
@@ -851,8 +840,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         } 
     	return deserializeServiceType(ObjectFormat.class, is); 	
     }
-    
-    
+        
     @Override
     public NodeList listNodes() throws NotImplemented, ServiceFailure {
     	// the actual call is delegated to fetchNodeList, because the call is also used
@@ -860,8 +848,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	InputStream is = fetchNodeList();
     	return deserializeServiceType(NodeList.class, is);
     }
-    
-    
+        
     private InputStream fetchNodeList() throws NotImplemented, ServiceFailure {
 
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_NODE);
@@ -908,7 +895,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         }
         return is;       
     }
-
 
     @Override
     public boolean updateNodeCapabilities(Session session, NodeReference nodeid, Node node) 
@@ -963,7 +949,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		return true;
     }
 
-
     @Override
     public NodeReference register(Session session, Node node)
     throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, IdentifierNotUnique 
@@ -1016,7 +1001,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		return deserializeServiceType(NodeReference.class,is);
     }
 
-
     @Override
     public Log getLogRecords(Session session, Date fromDate, Date toDate, Event event, 
     		Integer start, Integer count) 
@@ -1067,8 +1051,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	}  
     	return deserializeServiceType(Log.class, is);
     }
-   
-    
+       
     @Override
     public Identifier registerSystemMetadata(Session session, Identifier pid, SystemMetadata sysmeta)
     throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, InvalidSystemMetadata 
@@ -1173,7 +1156,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		return true;
     }
 
-
     @Override
     public Checksum getChecksum(Session session, Identifier pid) 
     throws NotImplemented, ServiceFailure, NotFound, NotAuthorized, InvalidRequest, InvalidToken 
@@ -1220,7 +1202,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	}  
     	return deserializeServiceType(Checksum.class, is);
     }
-
 
     @Override
     public boolean removeGroupMembers(Session session, Subject groupName, SubjectList members) 
@@ -1274,7 +1255,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		return true;
     }
 
-
     @Override
     public boolean addGroupMembers(Session session, Subject groupName, SubjectList members) 
     throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented, InvalidRequest
@@ -1326,7 +1306,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		return true;
     }
     
-
     @Override
     public boolean confirmMapIdentity(Session session, Subject subject) 
     throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented, InvalidRequest
@@ -1368,7 +1347,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		}
 		return true;
     }
-
 
     @Override
     public boolean mapIdentity(Session session, Subject primarySubject, Subject secondarySubject) 
@@ -1470,7 +1448,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     }
     
     @Override
-	public boolean denyMapIdentity(Session session, Subject subject)
+	  public boolean denyMapIdentity(Session session, Subject subject)
 			throws ServiceFailure, InvalidToken, NotAuthorized, NotFound,
 			NotImplemented, InvalidRequest {
     	
@@ -1512,8 +1490,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		return true;
 	}
 
-	@Override
-	public SubjectInfo getPendingMapIdentity(Session session, Subject subject)
+	  @Override
+	  public SubjectInfo getPendingMapIdentity(Session session, Subject subject)
 			throws ServiceFailure, InvalidToken, NotAuthorized, NotFound,
 			NotImplemented, InvalidRequest {
 		
@@ -1557,8 +1535,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		return deserializeServiceType(SubjectInfo.class,is);
 	}
 
-	@Override
-	public boolean removeMapIdentity(Session session, Subject subject)
+	  @Override
+	  public boolean removeMapIdentity(Session session, Subject subject)
 			throws ServiceFailure, InvalidToken, NotAuthorized, NotFound,
 			NotImplemented, InvalidRequest {
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING);
@@ -1647,7 +1625,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		}
 		return deserializeServiceType(SubjectInfo.class,is);
     }
-
 
     @Override
     public SubjectInfo getSubjectInfo(Session session, Subject subject) 
@@ -1743,7 +1720,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		return true;
     }
     
-
     @Override
     public Subject updateAccount(Session session, Person person) 
     throws ServiceFailure, IdentifierNotUnique, InvalidCredentials, NotImplemented, InvalidRequest 
@@ -1795,8 +1771,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		}
 		return deserializeServiceType(Subject.class,is);
     }
-    
-    
+        
     @Override
     public Subject registerAccount(Session session, Person person) 
     throws ServiceFailure, IdentifierNotUnique, InvalidCredentials, NotImplemented, InvalidRequest 
@@ -1849,7 +1824,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		return deserializeServiceType(Subject.class,is);
     }
     
-
     @Override
     public boolean setReplicationPolicy(Session session, Identifier pid, ReplicationPolicy policy, long serialVersion) 
     throws ServiceFailure, NotAuthorized, NotFound, NotImplemented, InvalidRequest, InvalidToken 
@@ -1905,8 +1879,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		}
 		return true;
     }
-  
-    
+      
     @Override
     public boolean setReplicationStatus(Session session, Identifier pid, NodeReference nodeRef, ReplicationStatus status, long serialVersion) 
     throws ServiceFailure, NotImplemented, InvalidToken, NotAuthorized, InvalidRequest, NotFound 
@@ -1965,11 +1938,77 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     /**
      * TODO: finish implementation
      */
+    @Override
     public boolean isNodeAuthorized(Session originatingNodeSession, 
-        Subject targetNodeSubject, Identifier pid, Permission executePermission)
+        Subject targetNodeSubject, Identifier pid, Permission replicatePermission)
         throws NotImplemented, NotAuthorized, InvalidToken, ServiceFailure, 
         NotFound, InvalidRequest
     {
+        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_REPLICATION_AUTHORIZED);
+        url.addNextPathElement(pid.getValue());
+
+        SimpleMultipartEntity mpe = new SimpleMultipartEntity();
+        
+        mpe.addParamPart("targetNodeSubject", targetNodeSubject.getValue());
+        mpe.addParamPart("replicatePermission", targetNodeSubject.getValue());
+        D1RestClient client = new D1RestClient(originatingNodeSession);
+
+        InputStream is = null;
+        try {
+            is = client.doPutRequest(url.getUrl(), mpe);
+            
+        } catch (AuthenticationTimeout e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + 
+                    e.getClass() + ": " + e.getMessage()); 
+
+        } catch (IdentifierNotUnique e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + 
+                    e.getClass() + ": " + e.getMessage()); 
+
+        } catch (InsufficientResources e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + 
+                    e.getClass() + ": " + e.getMessage()); 
+
+        } catch (InvalidCredentials e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + 
+                    e.getClass() + ": " + e.getMessage()); 
+
+        } catch (InvalidSystemMetadata e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + 
+                    e.getClass() + ": " + e.getMessage()); 
+
+        } catch (SynchronizationFailed e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + 
+                    e.getClass() + ": " + e.getMessage()); 
+
+        } catch (UnsupportedMetadataType e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + 
+                    e.getClass() + ": " + e.getMessage()); 
+
+        } catch (UnsupportedQueryType e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + 
+                    e.getClass() + ": " + e.getMessage()); 
+
+        } catch (UnsupportedType e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + 
+                    e.getClass() + ": " + e.getMessage()); 
+
+        } catch (IllegalStateException e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + 
+                    e.getClass() + ": " + e.getMessage()); 
+
+        } catch (ClientProtocolException e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + 
+                    e.getClass() + ": " + e.getMessage()); 
+
+        } catch (IOException e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + 
+                    e.getClass() + ": " + e.getMessage()); 
+
+        } catch (HttpException e) {
+            throw new ServiceFailure("0", "unexpected exception from the service - " + 
+                    e.getClass() + ": " + e.getMessage()); 
+        }
 
         return true;
 
