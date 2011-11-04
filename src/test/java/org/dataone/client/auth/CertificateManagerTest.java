@@ -6,13 +6,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.IOException;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
 import org.apache.http.conn.ssl.SSLSocketFactory;
@@ -20,7 +14,6 @@ import org.dataone.configuration.Settings;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1.Subject;
 import org.dataone.service.types.v1.SubjectInfo;
-import org.jibx.runtime.JiBXException;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
