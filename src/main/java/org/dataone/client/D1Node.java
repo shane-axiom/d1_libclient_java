@@ -22,12 +22,17 @@
 
 package org.dataone.client;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpException;
 import org.apache.http.client.ClientProtocolException;
+import org.dataone.client.cache.LocalCache;
+import org.dataone.client.exception.NotCached;
+import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.AuthenticationTimeout;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.IdentifierNotUnique;
@@ -64,11 +69,14 @@ public abstract class D1Node {
     private String nodeBaseServiceUrl;
     private String nodeId;
     
+    private boolean useLocalCache = false;
+
 	/**
 	 * Constructor to create a new instance.
 	 */
 	public D1Node(String nodeBaseServiceUrl) {
 	    setNodeBaseServiceUrl(nodeBaseServiceUrl);
+	    useLocalCache = Settings.getConfiguration().getBoolean("D1Client.useLocalCache");
 	}
 
 	// TODO: this constructor should not exist
@@ -78,6 +86,7 @@ public abstract class D1Node {
 	 * default constructor needed by some clients.  This constructor will probably
 	 * go away so don't depend on it.  Use public D1Node(String nodeBaseServiceUrl) instead.
 	 */
+	@Deprecated
 	public D1Node() {
 	}
 
@@ -137,23 +146,41 @@ public abstract class D1Node {
     
 	/**
      * Get the resource with the specified guid.  Used by both the CNode and 
-     * MNode subclasses.
+     * MNode subclasses. A LocalCache is used to cache objects in memory and in 
+     * a local disk cache if the "D1Client.useLocalCache" configuration property
+     * was set to true when the D1Node was created. Otherwise
      * InputStream is the Java native version of D1's OctetStream
      * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.listObjects
-     *
      */
     public InputStream get(Session session, Identifier pid)
     throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, 
     NotImplemented, InvalidRequest 
     {
+        InputStream is = null;        
+        boolean cacheMissed = false;
+        
+        if (useLocalCache) {
+            try {
+                byte[] data = LocalCache.instance().getData(pid);
+                is = new ByteArrayInputStream(data);
+                return is;
+            } catch (NotCached e) {
+                cacheMissed = true;
+            }
+        }
        	D1Url url = new D1Url(this.getNodeBaseServiceUrl(),Constants.RESOURCE_OBJECTS);
     	url.addNextPathElement(pid.getValue());
 
 		D1RestClient client = new D1RestClient(session);
 		
-		InputStream is = null;
 		try {
 			is = client.doGetRequest(url.getUrl());
+			if (cacheMissed) {
+			    // Cache the result, and reset the stream mark
+			    byte[] data = IOUtils.toByteArray(is);
+			    LocalCache.instance().putData(pid, data);
+			    is = new ByteArrayInputStream(data);
+			}
 		} catch (IdentifierNotUnique e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (UnsupportedType e) {
@@ -187,25 +214,58 @@ public abstract class D1Node {
     }
  
     
-	/**
+    /**
      * Get the system metadata from a resource with the specified guid. Used
-     * by both the CNode and MNode implementations.
+     * by both the CNode and MNode implementations. Note that this method defaults
+     * to not using the local system metadata cache provided by the client, as
+     * SystemMetadata is mutable and so cacheing can lead to issues.  In specific
+     * cases where a client wants to utilize the same system metadata in rapid succession,
+     * it may make sense to temporarily use the local cache by calling @see #getSystemMetadata(Session, Identifier, boolean).
      * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.getSystemMetadata
      */
-	public SystemMetadata getSystemMetadata(Session session, Identifier pid)
+    public SystemMetadata getSystemMetadata(Session session, Identifier pid)
+    throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
+        InvalidRequest, NotImplemented {
+        return getSystemMetadata(session, pid, false);
+    }
+
+    /**
+     * Get the system metadata from a resource with the specified guid, potentially using the local
+     * system metadata cache if specified to do so. Used by both the CNode and MNode implementations. 
+     * Because SystemMetadata is mutable, cacheing can lead to currency issues.  In specific
+     * cases where a client wants to utilize the same system metadata in rapid succession,
+     * it may make sense to temporarily use the local cache by setting useSystemMetadadataCache to true.
+     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.getSystemMetadata
+     */
+	public SystemMetadata getSystemMetadata(Session session, Identifier pid, boolean useSystemMetadataCache)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
 		InvalidRequest, NotImplemented 
 	{
-		
+        boolean cacheMissed = false;
+
+	    if (useSystemMetadataCache) {
+            try {
+                SystemMetadata sysmeta = LocalCache.instance().getSystemMetadata(pid);
+                return sysmeta;
+            } catch (NotCached e) {
+                cacheMissed = true;
+            }
+        }
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(),Constants.RESOURCE_META);
     	url.addNextPathElement(pid.getValue());
 
 		D1RestClient client = new D1RestClient(session);
 		
 		InputStream is = null;
-	
+		SystemMetadata sysmeta = null;
+		
 		try {
-			is = client.doGetRequest(url.getUrl());		
+			is = client.doGetRequest(url.getUrl());	
+			if (cacheMissed) {
+                // Cache the result in the system metadata cache
+			    sysmeta = deserializeServiceType(SystemMetadata.class,is);
+                LocalCache.instance().putSystemMetadata(pid, sysmeta);
+            }
 		} catch (IdentifierNotUnique e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (UnsupportedQueryType e) {
@@ -233,7 +293,7 @@ public abstract class D1Node {
 		} catch (HttpException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		}
-		return deserializeServiceType(SystemMetadata.class,is);
+        return sysmeta;
 	}
    
 	
