@@ -55,6 +55,7 @@ import org.dataone.service.exceptions.SynchronizationFailed;
 import org.dataone.service.exceptions.UnsupportedMetadataType;
 import org.dataone.service.exceptions.UnsupportedQueryType;
 import org.dataone.service.exceptions.UnsupportedType;
+import org.dataone.service.exceptions.VersionMismatch;
 import org.dataone.service.types.v1.AccessPolicy;
 import org.dataone.service.types.v1.Checksum;
 import org.dataone.service.types.v1.Event;
@@ -214,6 +215,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
             throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (SynchronizationFailed e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (VersionMismatch e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
         } catch (ClientProtocolException e) {
             throw recastClientSideExceptionToServiceFailure(e);
         } catch (IllegalStateException e) {
@@ -229,13 +232,15 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
     @Override
     public InputStream get(Session session, Identifier pid)
-            throws NotAuthorized, NotImplemented, NotFound, ServiceFailure, InvalidToken, InvalidRequest {
+    throws NotAuthorized, NotImplemented, NotFound, ServiceFailure, InvalidToken 
+    {
         return super.get(session, pid);
     }
 
     @Override
     public SystemMetadata getSystemMetadata(Session session, Identifier pid)
-        throws InvalidToken, NotImplemented, ServiceFailure, NotAuthorized, NotFound, InvalidRequest {
+    throws InvalidToken, NotImplemented, ServiceFailure, NotAuthorized, NotFound 
+    {
         return super.getSystemMetadata(session, pid);
     }
     
@@ -270,6 +275,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         } catch (UnsupportedMetadataType e) {
             throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());    
 		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (VersionMismatch e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
         } catch (ClientProtocolException e) {
             throw recastClientSideExceptionToServiceFailure(e);
@@ -336,6 +343,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (UnsupportedQueryType e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (VersionMismatch e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
             throw new ServiceFailure("1090", e.getClass().getSimpleName() + ": " + e.getMessage());
@@ -404,6 +413,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (SynchronizationFailed e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (VersionMismatch e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
     	} catch (IllegalStateException e) {
@@ -456,6 +467,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (SynchronizationFailed e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (VersionMismatch e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (IllegalStateException e) {
@@ -499,6 +512,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (UnsupportedMetadataType e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (VersionMismatch e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
@@ -552,6 +567,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (SynchronizationFailed e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (VersionMismatch e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (IllegalStateException e) {
@@ -602,6 +619,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (AuthenticationTimeout e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (UnsupportedMetadataType e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (VersionMismatch e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
@@ -766,6 +785,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (SynchronizationFailed e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (VersionMismatch e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
     	} catch (ClientProtocolException e) {
     		throw recastClientSideExceptionToServiceFailure(e);    	
     	} catch (IOException e) {
@@ -829,6 +850,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (SynchronizationFailed e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (VersionMismatch e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
     	} catch (ClientProtocolException e) {
             throw recastClientSideExceptionToServiceFailure(e);
         } catch (IllegalStateException e) {
@@ -884,6 +907,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         	throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (SynchronizationFailed e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (VersionMismatch e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
         } catch (ClientProtocolException e) {
             throw recastClientSideExceptionToServiceFailure(e);
         } catch (IllegalStateException e) {
@@ -937,6 +962,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (SynchronizationFailed e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (VersionMismatch e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (IllegalStateException e) {
@@ -989,6 +1016,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (SynchronizationFailed e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (VersionMismatch e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (IllegalStateException e) {
@@ -1039,6 +1068,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (UnsupportedMetadataType e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (VersionMismatch e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
@@ -1093,6 +1124,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (SynchronizationFailed e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (VersionMismatch e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (IllegalStateException e) {
@@ -1144,6 +1177,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (SynchronizationFailed e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (VersionMismatch e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (IllegalStateException e) {
@@ -1190,6 +1225,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (UnsupportedMetadataType e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
 		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (VersionMismatch e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
@@ -1243,6 +1280,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (SynchronizationFailed e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (VersionMismatch e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (IllegalStateException e) {
@@ -1294,6 +1333,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (SynchronizationFailed e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (VersionMismatch e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (IllegalStateException e) {
@@ -1335,6 +1376,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (UnsupportedMetadataType e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (VersionMismatch e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
@@ -1390,6 +1433,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (SynchronizationFailed e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (VersionMismatch e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (IllegalStateException e) {
@@ -1435,6 +1480,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (SynchronizationFailed e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (VersionMismatch e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (IllegalStateException e) {
@@ -1477,6 +1524,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (NotFound e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (VersionMismatch e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
@@ -1523,6 +1572,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (SynchronizationFailed e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (VersionMismatch e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (IllegalStateException e) {
@@ -1564,6 +1615,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (NotFound e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (VersionMismatch e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
@@ -1613,6 +1666,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (NotFound e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (VersionMismatch e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
@@ -1708,6 +1763,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (SynchronizationFailed e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (VersionMismatch e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (IllegalStateException e) {
@@ -1760,6 +1817,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (SynchronizationFailed e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (VersionMismatch e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (IllegalStateException e) {
@@ -1811,6 +1870,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (NotFound e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (VersionMismatch e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
@@ -1868,6 +1929,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (SynchronizationFailed e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (VersionMismatch e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		} catch (IllegalStateException e) {
@@ -1920,6 +1983,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (UnsupportedMetadataType e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (VersionMismatch e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);
@@ -2009,7 +2074,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
             throw new ServiceFailure("0", "unexpected exception from the service - " + 
                     e.getClass() + ": " + e.getMessage()); 
         }
-
+        catch (VersionMismatch e) {
+		throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+        }
         return true;
 
     }
@@ -2058,6 +2125,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (UnsupportedMetadataType e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (SynchronizationFailed e) {
+			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
+		} catch (VersionMismatch e) {
 			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
 		} catch (ClientProtocolException e) {
 			throw recastClientSideExceptionToServiceFailure(e);

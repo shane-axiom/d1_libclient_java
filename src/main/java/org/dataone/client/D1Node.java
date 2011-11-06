@@ -49,6 +49,7 @@ import org.dataone.service.exceptions.SynchronizationFailed;
 import org.dataone.service.exceptions.UnsupportedMetadataType;
 import org.dataone.service.exceptions.UnsupportedQueryType;
 import org.dataone.service.exceptions.UnsupportedType;
+import org.dataone.service.exceptions.VersionMismatch;
 import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1.Subject;
@@ -153,8 +154,7 @@ public abstract class D1Node {
      * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.listObjects
      */
     public InputStream get(Session session, Identifier pid)
-    throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, 
-    NotImplemented, InvalidRequest 
+    throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented 
     {
         InputStream is = null;        
         boolean cacheMissed = false;
@@ -181,36 +181,21 @@ public abstract class D1Node {
 			    LocalCache.instance().putData(pid, data);
 			    is = new ByteArrayInputStream(data);
 			}
-		} catch (IdentifierNotUnique e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (UnsupportedType e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (UnsupportedQueryType e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (InsufficientResources e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (InvalidSystemMetadata e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (InvalidCredentials e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (UnsupportedMetadataType e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (InvalidRequest e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (AuthenticationTimeout e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (SynchronizationFailed e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
-		} catch (ClientProtocolException e) {
-			throw recastClientSideExceptionToServiceFailure(e);
-		} catch (IllegalStateException e) {
-			throw recastClientSideExceptionToServiceFailure(e);
-		} catch (IOException e) {
-			throw recastClientSideExceptionToServiceFailure(e);
-		} catch (HttpException e) {
-			throw recastClientSideExceptionToServiceFailure(e);
-		}
-		return is;
+		} catch (BaseException be) {
+            if (be instanceof InvalidToken)      throw (InvalidToken) be;
+            if (be instanceof NotAuthorized)     throw (NotAuthorized) be;
+            if (be instanceof NotImplemented)    throw (NotImplemented) be;
+            if (be instanceof ServiceFailure)    throw (ServiceFailure) be;
+            if (be instanceof NotFound)          throw (NotFound) be;
+                    
+            throw recastDataONEExceptionToServiceFailure(be);
+        } 
+        catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+        catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
+        catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
+        catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+
+        return is;
     }
  
     
@@ -224,8 +209,8 @@ public abstract class D1Node {
      * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.getSystemMetadata
      */
     public SystemMetadata getSystemMetadata(Session session, Identifier pid)
-    throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
-        InvalidRequest, NotImplemented {
+    throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented 
+    {
         return getSystemMetadata(session, pid, false);
     }
 
@@ -238,8 +223,7 @@ public abstract class D1Node {
      * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.getSystemMetadata
      */
 	public SystemMetadata getSystemMetadata(Session session, Identifier pid, boolean useSystemMetadataCache)
-	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
-		InvalidRequest, NotImplemented 
+	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented 
 	{
         boolean cacheMissed = false;
 
@@ -266,33 +250,20 @@ public abstract class D1Node {
 			    sysmeta = deserializeServiceType(SystemMetadata.class,is);
                 LocalCache.instance().putSystemMetadata(pid, sysmeta);
             }
-		} catch (IdentifierNotUnique e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (UnsupportedQueryType e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (UnsupportedType e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (InsufficientResources e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (InvalidSystemMetadata e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (InvalidCredentials e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (AuthenticationTimeout e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (UnsupportedMetadataType e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": "+ e.getMessage());
-		} catch (SynchronizationFailed e) {
-			throw new ServiceFailure("0", "unexpected exception from the service - " + e.getClass() + ": " + e.getMessage());
-		} catch (ClientProtocolException e) {
-			throw recastClientSideExceptionToServiceFailure(e);
-		} catch (IllegalStateException e) {
-			throw recastClientSideExceptionToServiceFailure(e);
-		} catch (IOException e) {
-			throw recastClientSideExceptionToServiceFailure(e);
-		} catch (HttpException e) {
-			throw recastClientSideExceptionToServiceFailure(e);
-		}
+		} catch (BaseException be) {
+            if (be instanceof InvalidToken)      throw (InvalidToken) be;
+            if (be instanceof NotAuthorized)     throw (NotAuthorized) be;
+            if (be instanceof NotImplemented)    throw (NotImplemented) be;
+            if (be instanceof ServiceFailure)    throw (ServiceFailure) be;
+            if (be instanceof NotFound)          throw (NotFound) be;
+                    
+            throw recastDataONEExceptionToServiceFailure(be);
+        } 
+        catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+        catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
+        catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
+        catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+	
         return sysmeta;
 	}
    

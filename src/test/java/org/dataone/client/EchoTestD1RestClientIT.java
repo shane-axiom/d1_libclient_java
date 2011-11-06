@@ -28,6 +28,7 @@ import org.dataone.service.exceptions.SynchronizationFailed;
 import org.dataone.service.exceptions.UnsupportedMetadataType;
 import org.dataone.service.exceptions.UnsupportedQueryType;
 import org.dataone.service.exceptions.UnsupportedType;
+import org.dataone.service.exceptions.VersionMismatch;
 import org.junit.Test;
 
 
@@ -38,11 +39,7 @@ public class EchoTestD1RestClientIT {
 	
 	@Test
 	public void testDoGetRequest() 
-	throws ClientProtocolException, IOException, NotFound, InvalidToken, ServiceFailure, 
-	NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources, 
-	InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest, 
-	IllegalStateException, AuthenticationTimeout, UnsupportedMetadataType, HttpException,
-	UnsupportedQueryType, SynchronizationFailed
+	throws ClientProtocolException, IOException, HttpException, BaseException
 	{
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
@@ -59,11 +56,7 @@ public class EchoTestD1RestClientIT {
 
 	@Test
 	public void testdoDeleteRequest() 
-	throws ClientProtocolException, IOException, NotFound, InvalidToken, ServiceFailure, 
-	NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources,
-	InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest,
-	IllegalStateException, AuthenticationTimeout, UnsupportedMetadataType, HttpException,
-	UnsupportedQueryType, SynchronizationFailed
+	throws ClientProtocolException, IOException, HttpException, BaseException
 	{
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
@@ -80,11 +73,7 @@ public class EchoTestD1RestClientIT {
 	
 	@Test
 	public void testDoHeadRequest() 
-	throws ClientProtocolException, IOException, NotFound, InvalidToken, ServiceFailure, 
-	NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources, 
-	InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest, 
-	IllegalStateException, AuthenticationTimeout, UnsupportedMetadataType, HttpException, 
-	UnsupportedQueryType, SynchronizationFailed 
+	throws ClientProtocolException, IOException, HttpException, BaseException
 	{
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
@@ -101,11 +90,7 @@ public class EchoTestD1RestClientIT {
 	
 	@Test
 	public void testdoPutRequestNullBody() 
-	throws ClientProtocolException, IOException, NotFound, InvalidToken, ServiceFailure, 
-	NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources, 
-	InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest, 
-	IllegalStateException, AuthenticationTimeout, UnsupportedMetadataType, HttpException, 
-	UnsupportedQueryType, SynchronizationFailed 
+	throws ClientProtocolException, IOException, HttpException, BaseException
 	{
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
@@ -122,11 +107,7 @@ public class EchoTestD1RestClientIT {
 	
 	@Test
 	public void testdoPostRequestNullBody() 
-	throws ClientProtocolException, IOException, NotFound, InvalidToken, ServiceFailure, 
-	NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources, 
-	InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest, 
-	IllegalStateException, AuthenticationTimeout, UnsupportedMetadataType, HttpException, 
-	UnsupportedQueryType, SynchronizationFailed 
+	throws ClientProtocolException, IOException, HttpException, BaseException
 	{
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
@@ -142,11 +123,7 @@ public class EchoTestD1RestClientIT {
 	
 //	@Test
 	public void testdoPutRequest() 
-	throws ClientProtocolException, IOException, NotFound, InvalidToken, ServiceFailure, 
-	NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources, 
-	InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest, 
-	IllegalStateException, AuthenticationTimeout, UnsupportedMetadataType, HttpException, 
-	UnsupportedQueryType, SynchronizationFailed 
+	throws ClientProtocolException, IOException, HttpException, BaseException
 	{
 		D1Url u = new D1Url(echoNode, mmEchoResource);
 		u.addNextPathElement("bizz");
@@ -165,11 +142,7 @@ public class EchoTestD1RestClientIT {
 	
 	@Test
 	public void testdoPostRequest() 
-	throws ClientProtocolException, IOException, NotFound, InvalidToken, ServiceFailure, 
-	NotAuthorized, IdentifierNotUnique, UnsupportedType, InsufficientResources, 
-	InvalidSystemMetadata, NotImplemented, InvalidCredentials, InvalidRequest, 
-	IllegalStateException, AuthenticationTimeout, UnsupportedMetadataType, HttpException, 
-	UnsupportedQueryType, SynchronizationFailed 
+	throws ClientProtocolException, IOException, HttpException, BaseException
 	{
 		D1Url u = new D1Url(echoNode, mmEchoResource);
 		u.addNextPathElement("bizz");
