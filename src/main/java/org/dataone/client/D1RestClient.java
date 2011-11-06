@@ -51,6 +51,7 @@ import org.dataone.service.exceptions.SynchronizationFailed;
 import org.dataone.service.exceptions.UnsupportedMetadataType;
 import org.dataone.service.exceptions.UnsupportedQueryType;
 import org.dataone.service.exceptions.UnsupportedType;
+import org.dataone.service.exceptions.VersionMismatch;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.util.ExceptionHandler;
 
@@ -165,13 +166,14 @@ public class D1RestClient {
 	 * @throws ClientProtocolException
 	 * @throws IOException
 	 * @throws HttpException
+	 * @throws VersionMismatch 
 	 */
 	public InputStream doGetRequest(String url) 
 	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
 	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
 	NotAuthorized, NotFound, NotImplemented, ServiceFailure, SynchronizationFailed,
 	UnsupportedMetadataType, UnsupportedQueryType, UnsupportedType,
-	IllegalStateException, ClientProtocolException, IOException, HttpException 
+	IllegalStateException, ClientProtocolException, IOException, HttpException, VersionMismatch 
 	{
 		rc.setHeader("Accept", "text/xml");
 		return ExceptionHandler.filterErrors(rc.doGetRequest(url));
@@ -183,7 +185,7 @@ public class D1RestClient {
 	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
 	NotAuthorized, NotFound, NotImplemented, ServiceFailure, SynchronizationFailed,
 	UnsupportedMetadataType, UnsupportedQueryType, UnsupportedType,
-	IllegalStateException, ClientProtocolException, IOException, HttpException 
+	IllegalStateException, ClientProtocolException, IOException, HttpException, VersionMismatch 
 	{
 		rc.setHeader("Accept", "text/xml");
 		return ExceptionHandler.filterErrors(rc.doDeleteRequest(url));
@@ -194,7 +196,7 @@ public class D1RestClient {
 	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
 	NotAuthorized, NotFound, NotImplemented, ServiceFailure, SynchronizationFailed,
 	UnsupportedMetadataType, UnsupportedQueryType, UnsupportedType,
-	IllegalStateException, ClientProtocolException, IOException, HttpException 
+	IllegalStateException, ClientProtocolException, IOException, HttpException, VersionMismatch 
 	{
 		rc.setHeader("Accept", "text/xml");
 		return ExceptionHandler.filterErrors(rc.doDeleteRequest(url, mpe));
@@ -205,7 +207,7 @@ public class D1RestClient {
 	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
 	NotAuthorized, NotFound, NotImplemented, ServiceFailure, SynchronizationFailed,
 	UnsupportedMetadataType, UnsupportedQueryType, UnsupportedType,
-	IllegalStateException, ClientProtocolException, IOException, HttpException 
+	IllegalStateException, ClientProtocolException, IOException, HttpException, VersionMismatch 
 	{
 		rc.setHeader("Accept", "text/xml");
 		return ExceptionHandler.filterErrorsHeader(rc.doHeadRequest(url));
@@ -216,7 +218,7 @@ public class D1RestClient {
 	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
 	NotAuthorized, NotFound, NotImplemented, ServiceFailure, SynchronizationFailed,
 	UnsupportedMetadataType, UnsupportedQueryType, UnsupportedType,
-	IllegalStateException, ClientProtocolException, IOException, HttpException 
+	IllegalStateException, ClientProtocolException, IOException, HttpException, VersionMismatch 
 	{
 		rc.setHeader("Accept", "text/xml");
 		return ExceptionHandler.filterErrors(rc.doPutRequest(url, entity));
@@ -227,7 +229,7 @@ public class D1RestClient {
 	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
 	NotAuthorized, NotFound, NotImplemented, ServiceFailure, SynchronizationFailed,
 	UnsupportedMetadataType, UnsupportedQueryType, UnsupportedType,
-	IllegalStateException, ClientProtocolException, IOException, HttpException 
+	IllegalStateException, ClientProtocolException, IOException, HttpException, VersionMismatch 
 	{
 		rc.setHeader("Accept", "text/xml");
 		return ExceptionHandler.filterErrors(rc.doPostRequest(url,entity));
