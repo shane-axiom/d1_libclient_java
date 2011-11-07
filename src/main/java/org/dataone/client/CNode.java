@@ -2011,16 +2011,14 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     {
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_REPLICATION_AUTHORIZED);
         url.addNextPathElement(pid.getValue());
-
-        SimpleMultipartEntity mpe = new SimpleMultipartEntity();
         
-        mpe.addParamPart("targetNodeSubject", targetNodeSubject.getValue());
-        mpe.addParamPart("replicatePermission", targetNodeSubject.getValue());
+        url.addNonEmptyParamPair("targetNodeSubject", targetNodeSubject.getValue());
+        url.addNonEmptyParamPair("replicatePermission", Permission.REPLICATE.toString());
         D1RestClient client = new D1RestClient(originatingNodeSession);
 
         InputStream is = null;
         try {
-            is = client.doPutRequest(url.getUrl(), mpe);
+            is = client.doGetRequest(url.getUrl());
             
         } catch (AuthenticationTimeout e) {
             throw new ServiceFailure("0", "unexpected exception from the service - " + 
