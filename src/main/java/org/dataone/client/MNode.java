@@ -164,6 +164,24 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	return theLog;
     }
 
+    
+	@Override
+	public ObjectList listObjects(Session session) 
+			throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented,
+			ServiceFailure 
+	{
+		return super.listObjects(session);
+	}
+	
+	@Override
+	public ObjectList listObjects(Session session, Date startTime,
+			Date endTime, ObjectFormatIdentifier formatid,
+			Boolean replicaStatus, Integer start, Integer count)
+			throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented,
+			ServiceFailure 
+	{
+		return super.listObjects(session,startTime,endTime,formatid,replicaStatus,start,count);
+	}
 
     /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_core.getCapabilities */
 
