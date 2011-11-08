@@ -47,6 +47,7 @@ import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERUTF8String;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMReader;
+import org.bouncycastle.openssl.PasswordFinder;
 import org.dataone.client.CNode;
 import org.dataone.client.D1Client;
 import org.dataone.configuration.Settings;
@@ -512,13 +513,26 @@ public class CertificateManager {
      * @return
      * @throws IOException
      */
-    public PrivateKey loadPrivateKeyFromFile(String fileName) throws IOException {
-		PrivateKey privateKey = null;
+    public PrivateKey loadPrivateKeyFromFile(String fileName, final String password) throws IOException {
 		
-    	// get the private key and certificate from the PEM
+        // get the private key and certificate from the PEM
     	Security.addProvider(new BouncyCastleProvider());
-        PEMReader pemReader = new PEMReader(new FileReader(fileName));
         Object pemObject = null;
+        PrivateKey privateKey = null;
+        
+        // is there a password for the key?
+        PEMReader pemReader = null;
+        if (password != null) {
+        	PasswordFinder passwordFinder = new PasswordFinder() {
+				@Override
+				public char[] getPassword() {
+					return password.toCharArray();
+				}
+        	};
+			pemReader = new PEMReader(new FileReader(fileName), passwordFinder );
+        } else {
+        	pemReader = new PEMReader(new FileReader(fileName));
+        }
         
         KeyPair keyPair = null;
         while ((pemObject = pemReader.readObject()) != null) {
