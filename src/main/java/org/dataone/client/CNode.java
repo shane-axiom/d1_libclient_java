@@ -414,10 +414,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		// send the request
 		D1RestClient client = new D1RestClient(session);
-		InputStream is = null;
 
 		try {
-			is = client.doGetRequest(url.getUrl());
+			client.doGetRequest(url.getUrl());
 		} catch (BaseException be) {
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
@@ -681,10 +680,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	
 		// send the request
 		D1RestClient client = new D1RestClient(session);
-		InputStream is = null;
 
 		try {
-			is = client.doGetRequest(url.getUrl());
+			client.doGetRequest(url.getUrl());
 		} catch (BaseException be) {
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
@@ -700,7 +698,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-		// TODO: check return statement
 		return true;
 	}
 
@@ -938,9 +935,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		D1RestClient client = new D1RestClient(session);
 
-		InputStream is = null;
 		try {
-			is = client.doPutRequest(url.getUrl(),mpe);
+			client.doPutRequest(url.getUrl(),mpe);
 		} catch (BaseException be) {
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
 			if (be instanceof NotFound)               throw (NotFound) be;
@@ -957,7 +953,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-		// TODO: check return statement
 		return true;
 	}
 
@@ -1068,9 +1063,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
         D1RestClient client = new D1RestClient(session);
 
-		InputStream is = null;
 		try {
-			is = client.doPostRequest(url.getUrl(),mpe);
+			client.doPostRequest(url.getUrl(),mpe);
 		} catch (BaseException be) {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
@@ -1086,7 +1080,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-		// TODO: check return statement
 		return true;
 	}
 
@@ -1162,7 +1155,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.mapIdentity */
 
-	public  boolean mapIdentity(Session session, Subject primarySubject, Subject secondarySubject) 
+	public boolean mapIdentity(Session session, Subject primarySubject, Subject secondarySubject) 
 			throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
 			NotImplemented, InvalidRequest, IdentifierNotUnique
 	{
@@ -1182,9 +1175,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		D1RestClient client = new D1RestClient(session);
 
-		InputStream is = null;
 		try {
-			is = client.doPostRequest(url.getUrl(),mpe);
+			client.doPostRequest(url.getUrl(),mpe);
 		} catch (BaseException be) {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
@@ -1201,7 +1193,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-		// TODO: check return statement
 		return true;
 	}
 
@@ -1219,9 +1210,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	
 		D1RestClient client = new D1RestClient(session);
 
-		InputStream is = null;
 		try {
-			is = client.doPostRequest(url.getUrl(),null);
+			client.doPostRequest(url.getUrl(),null);
 		} catch (BaseException be) {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
@@ -1237,7 +1227,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-		// TODO: check return statement
 		return true;
 	}
 
@@ -1256,10 +1245,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		D1RestClient client = new D1RestClient(session);
 
-		InputStream is = null;
 		try {
-			// TODO: is this really an empty put?
-			is = client.doPutRequest(url.getUrl(), null);
+			client.doPutRequest(url.getUrl(), null);
 		} catch (BaseException be) {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
@@ -1274,7 +1261,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-		// TODO: check return statement
 		return true;
 	}
 
@@ -1290,9 +1276,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING_PENDING);
     	url.addNextPathElement(subject.getValue());
 		D1RestClient client = new D1RestClient(session);
-		InputStream is = null;
 		try {
-			is = client.doDeleteRequest(url.getUrl());
+			client.doDeleteRequest(url.getUrl());
 		} catch (BaseException be) {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
@@ -1308,7 +1293,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-		// TODO: check return statement
 		return true;
 	}
 
@@ -1324,9 +1308,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING);
     	url.addNextPathElement(subject.getValue());
 		D1RestClient client = new D1RestClient(session);
-		InputStream is = null;
+
 		try {
-			is = client.doDeleteRequest(url.getUrl());
+			client.doDeleteRequest(url.getUrl());
 		} catch (BaseException be) {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
@@ -1342,7 +1326,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-		// TODO: check return statement
 		return true;
 	}
 
@@ -1404,9 +1387,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		D1RestClient client = new D1RestClient(session);
 
-		InputStream is = null;
 		try {
-			is = client.doPutRequest(url.getUrl(),mpe);
+			client.doPutRequest(url.getUrl(),mpe);
 		} catch (BaseException be) {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
@@ -1422,7 +1404,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-		// TODO: check return statement
 		return true;
 	}
 
@@ -1451,9 +1432,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		D1RestClient client = new D1RestClient(session);
 
-		InputStream is = null;
 		try {
-			is = client.doPostRequest(url.getUrl(),mpe);
+			client.doPostRequest(url.getUrl(),mpe);
 		} catch (BaseException be) {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
@@ -1469,83 +1449,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-		// TODO: check return statement
 		return true;
 	}
 
-
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.isGroup */
-
-	public  boolean isGroup(Session session, Subject subject) 
-			throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
-			NotImplemented, InvalidRequest
-	{
-		D1Url url = null;
-		// TODO: translate method parameters into url and message body
-
-
-		// send the request
-		D1RestClient client = new D1RestClient(session);
-		InputStream is = null;
-
-		try {
-			// TODO: check the http verb GET POST PUT
-			is = client.doGetRequest(url.getUrl());
-		} catch (BaseException be) {
-			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
-			if (be instanceof InvalidToken)           throw (InvalidToken) be;
-			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
-			if (be instanceof NotFound)               throw (NotFound) be;
-			if (be instanceof NotImplemented)         throw (NotImplemented) be;
-			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
-
-			throw recastDataONEExceptionToServiceFailure(be);
-		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
-		// TODO: check return statement
-		return true;
-	}
-
-
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.isPublic */
-
-	public  boolean isPublic(Session session, Subject subject) 
-			throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
-			NotImplemented, InvalidRequest
-	{
-		D1Url url = null;
-		// TODO: translate method parameters into url and message body
-
-
-		// send the request
-		D1RestClient client = new D1RestClient(session);
-		InputStream is = null;
-
-		try {
-			// TODO: check the http verb GET POST PUT
-			is = client.doGetRequest(url.getUrl());
-		} catch (BaseException be) {
-			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
-			if (be instanceof InvalidToken)           throw (InvalidToken) be;
-			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
-			if (be instanceof NotFound)               throw (NotFound) be;
-			if (be instanceof NotImplemented)         throw (NotImplemented) be;
-			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
-
-			throw recastDataONEExceptionToServiceFailure(be);
-		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
-		// TODO: check return statement
-		return true;
-	}
 
 
 	///////////// CN REGISTER API   ////////////////
@@ -1571,9 +1477,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		D1RestClient client = new D1RestClient(session);
 
-		InputStream is = null;
 		try {
-			is = client.doPutRequest(url.getUrl(),mpe);
+			client.doPutRequest(url.getUrl(),mpe);
 		} catch (BaseException be) {
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
@@ -1588,7 +1493,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-		// TODO: check return statement
 		return true;
 	}
 
@@ -1663,9 +1567,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		D1RestClient client = new D1RestClient(session);
 
-		InputStream is = null;
 		try {
-			is = client.doPostRequest(url.getUrl(),mpe);
+			client.doPostRequest(url.getUrl(),mpe);
 		} catch (BaseException be) {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
@@ -1682,7 +1585,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-		// TODO: check return statement
 		return true;
 	}
 
@@ -1712,9 +1614,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		D1RestClient client = new D1RestClient(session);
 
-		InputStream is = null;
 		try {
-			is = client.doPutRequest(url.getUrl(),mpe);
+			client.doPutRequest(url.getUrl(),mpe);
 		} catch (BaseException be) {
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 			if (be instanceof NotFound)               throw (NotFound) be;
@@ -1731,7 +1632,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-		// TODO: check return statement
 		return true;
 	}
 
@@ -1752,10 +1652,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         url.addNonEmptyParamPair("targetNodeSubject", targetNodeSubject.getValue());
         url.addNonEmptyParamPair("replicatePermission", Permission.REPLICATE.toString());
         D1RestClient client = new D1RestClient(originatingNodeSession);
-		InputStream is = null;
 
 		try {
-			is = client.doGetRequest(url.getUrl());
+			client.doGetRequest(url.getUrl());
 		} catch (BaseException be) {
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
@@ -1771,7 +1670,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-		// TODO: check return statement
 		return true;
 	}
 
@@ -1801,9 +1699,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		D1RestClient client = new D1RestClient(targetNodeSession);
 
-		InputStream is = null;
 		try {
-			is = client.doPutRequest(url.getUrl(),mpe);
+			client.doPutRequest(url.getUrl(),mpe);
 		} catch (BaseException be) {
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
@@ -1819,7 +1716,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-		// TODO: check return statement
 		return true;
 	}
 }
