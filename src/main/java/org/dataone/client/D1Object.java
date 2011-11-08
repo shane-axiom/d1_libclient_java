@@ -275,8 +275,6 @@ public class D1Object {
             e.printStackTrace();
         } catch (NotFound e) {
             e.printStackTrace();
-        } catch (InvalidRequest e) {
-            e.printStackTrace();
         } catch (NotImplemented e) {
             e.printStackTrace();
         }

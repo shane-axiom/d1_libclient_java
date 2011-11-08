@@ -25,6 +25,7 @@ package org.dataone.client;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Date;
 import java.util.Iterator;
 
 import org.apache.commons.io.IOUtils;
@@ -50,7 +51,12 @@ import org.dataone.service.exceptions.UnsupportedMetadataType;
 import org.dataone.service.exceptions.UnsupportedQueryType;
 import org.dataone.service.exceptions.UnsupportedType;
 import org.dataone.service.exceptions.VersionMismatch;
+import org.dataone.service.types.v1.Event;
 import org.dataone.service.types.v1.Identifier;
+import org.dataone.service.types.v1.Log;
+import org.dataone.service.types.v1.ObjectFormatIdentifier;
+import org.dataone.service.types.v1.ObjectList;
+import org.dataone.service.types.v1.Permission;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1.Subject;
 import org.dataone.service.types.v1.SystemMetadata;
@@ -144,6 +150,113 @@ public abstract class D1Node {
     	return session;
     }   
   
+    /**
+     * A convenience method for listObjects using no filtering parameters
+     * @return
+     * @throws InvalidRequest
+     * @throws InvalidToken
+     * @throws NotAuthorized
+     * @throws NotImplemented
+     * @throws ServiceFailure
+     */
+    public ObjectList listObjects(Session session) 
+    throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
+    {
+    	return listObjects(session,null,null,null,null,null,null);
+    }
+
+
+    /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.listObjects */
+
+    public ObjectList listObjects(Session session, Date startTime, Date endTime, 
+      ObjectFormatIdentifier formatid, Boolean replicaStatus, Integer start, Integer count) 
+    throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
+    {
+
+        // TODO: create JavaDoc and fix doc reference
+    	
+    	if (endTime != null && startTime != null && !endTime.after(startTime))
+			throw new InvalidRequest("1000", "startTime must be after stopTime in NMode.listObjects");
+
+		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
+		
+		url.addDateParamPair("startTime", startTime);
+		url.addDateParamPair("endTime", endTime);
+		if (formatid != null) 
+			url.addNonEmptyParamPair("objectFormat", formatid.getValue());
+		if (replicaStatus != null) {
+			if (replicaStatus) {
+				url.addNonEmptyParamPair("replicaStatus", 1);
+			} else {
+				url.addNonEmptyParamPair("replicaStatus", 0);
+			}
+		}
+		url.addNonEmptyParamPair("start",start);
+		url.addNonEmptyParamPair("count",count);
+		
+        // send the request
+        D1RestClient client = new D1RestClient(session);
+        InputStream is = null;
+
+        try {
+        	is = client.doGetRequest(url.getUrl());
+        } catch (BaseException be) {
+            if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
+            if (be instanceof InvalidToken)           throw (InvalidToken) be;
+            if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
+            if (be instanceof NotImplemented)         throw (NotImplemented) be;
+            if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
+                    
+            throw recastDataONEExceptionToServiceFailure(be);
+        } 
+        catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+        catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
+        catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
+        catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+
+        return deserializeServiceType(ObjectList.class, is);
+    }
+
+    
+	public  Log getLogRecords(Session session, Date fromDate, Date toDate,
+			Event event, Integer start, Integer count) 
+	throws InvalidToken, InvalidRequest, ServiceFailure,
+	NotAuthorized, NotImplemented, InsufficientResources
+	{
+		// TODO: create JavaDoc and fix doc reference
+
+		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_LOG);
+        if (fromDate == null) {
+        	throw new InvalidRequest("","The 'fromDate' parameter cannot be null");
+        }
+    	url.addDateParamPair("fromDate", fromDate);
+    	url.addDateParamPair("toDate", toDate);
+    	url.addNonEmptyParamPair("event", event.xmlValue());
+    	
+		// send the request
+		D1RestClient client = new D1RestClient(session);
+		InputStream is = null;
+
+		try {
+			is = client.doGetRequest(url.getUrl());
+		} catch (BaseException be) {
+			if (be instanceof InvalidToken)           throw (InvalidToken) be;
+			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
+			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
+			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
+			if (be instanceof NotImplemented)         throw (NotImplemented) be;
+			if (be instanceof InsufficientResources)  throw (InsufficientResources) be;
+
+			throw recastDataONEExceptionToServiceFailure(be);
+		} 
+		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+
+		return deserializeServiceType(Log.class, is);
+	}
+    
     
 	/**
      * Get the resource with the specified guid.  Used by both the CNode and 
@@ -266,6 +379,44 @@ public abstract class D1Node {
 	
         return sysmeta;
 	}
+	
+	
+    public boolean isAuthorized(Session session, Identifier pid, Permission action)
+    throws ServiceFailure, InvalidRequest, InvalidToken, NotFound, NotAuthorized, NotImplemented
+    {
+
+        // TODO: create JavaDoc and fix doc reference
+    	
+    	if (pid == null || pid.getValue().trim().equals(""))
+            throw new InvalidRequest("1761", "PID cannot be null nor empty");
+
+        // assemble the url
+        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_AUTHORIZATION);
+    	url.addNextPathElement(pid.getValue());
+    	url.addNonEmptyParamPair("action", action.xmlValue());
+    	
+        // send the request
+        D1RestClient client = new D1RestClient(session);
+
+        try {
+        	client.doGetRequest(url.getUrl());
+        } catch (BaseException be) {
+            if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
+            if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
+            if (be instanceof InvalidToken)           throw (InvalidToken) be;
+            if (be instanceof NotFound)               throw (NotFound) be;
+            if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
+            if (be instanceof NotImplemented)         throw (NotImplemented) be;
+                    
+            throw recastDataONEExceptionToServiceFailure(be);
+        } 
+        catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+        catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
+        catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
+        catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+
+        return true;
+    }
    
 	
     /**

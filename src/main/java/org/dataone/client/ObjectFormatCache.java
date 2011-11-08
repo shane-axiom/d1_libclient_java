@@ -135,14 +135,8 @@ public class ObjectFormatCache extends ObjectFormatServiceImpl {
 	    
 	    // get the object format list from the CN
 	    objectFormatList = cn.listFormats();
-    
-    } catch (InvalidRequest e) {
-      objectFormatList = ObjectFormatServiceImpl.getInstance().listFormats();
       
     } catch (ServiceFailure e) {
-      objectFormatList = ObjectFormatServiceImpl.getInstance().listFormats();
-
-    } catch (NotFound e) {
       objectFormatList = ObjectFormatServiceImpl.getInstance().listFormats();
 
     } catch (InsufficientResources e) {

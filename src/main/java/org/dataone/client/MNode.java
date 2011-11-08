@@ -149,43 +149,19 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
     /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_core.getLogRecords */
 
-    public Log getLogRecords(Session cert, Date fromDate, Date toDate, 
+    public Log getLogRecords(Session session, Date fromDate, Date toDate, 
                Event event, Integer start, Integer count) 
     throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
     {
         // TODO: create JavaDoc and fix doc reference
 
-    	// assemble the url
-        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_LOG);
-        
-    	url.addDateParamPair("fromDate", fromDate);
-    	url.addDateParamPair("toDate", toDate);
-    	if (event != null)
-    		url.addNonEmptyParamPair("event", event.xmlValue());
-    	url.addNonEmptyParamPair("start", start);
-    	url.addNonEmptyParamPair("count", count);
-
-        // send the request
-        D1RestClient client = new D1RestClient();
-        InputStream is = null;
-
-        try {
-	    	is = client.doGetRequest(url.getUrl());
-        } catch (BaseException be) {
-            if (be instanceof InvalidRequest)       throw (InvalidRequest) be;
-            if (be instanceof InvalidToken)         throw (InvalidToken) be;
-            if (be instanceof NotAuthorized)        throw (NotAuthorized) be;
-            if (be instanceof NotImplemented)       throw (NotImplemented) be;
-            if (be instanceof ServiceFailure)       throw (ServiceFailure) be;
-                    
-            throw recastDataONEExceptionToServiceFailure(be);
-        } 
-        catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
-        return deserializeServiceType(Log.class, is);
+    	Log theLog = null;
+		try {
+			theLog = super.getLogRecords(session, fromDate, toDate, event, start, count);
+		} catch (InsufficientResources e) {
+			recastDataONEExceptionToServiceFailure(e);
+		}
+    	return theLog;
     }
 
 
@@ -222,54 +198,29 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
     /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.get */
 
-    public InputStream get(Session cert, Identifier pid)
+    public InputStream get(Session session, Identifier pid)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound
     {
         // TODO: create JavaDoc and fix doc reference
-    	return super.get(cert, pid);
+    	return super.get(session, pid);
     }
 
 
     /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.getSystemMetadata */
 
-    public SystemMetadata getSystemMetadata(Session cert, Identifier pid)
+    public SystemMetadata getSystemMetadata(Session session, Identifier pid)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound
     {
         // TODO: create JavaDoc and fix doc reference
-
-    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(),Constants.RESOURCE_META);
-    	url.addNextPathElement(pid.getValue());
-    	
-        // send the request
-        D1RestClient client = new D1RestClient();
-        InputStream is = null;
-
-        try {
-        	is = client.doGetRequest(url.getUrl());
-        } catch (BaseException be) {
-            if (be instanceof InvalidToken)      throw (InvalidToken) be;
-            if (be instanceof NotAuthorized)     throw (NotAuthorized) be;
-            if (be instanceof NotImplemented)    throw (NotImplemented) be;
-            if (be instanceof ServiceFailure)    throw (ServiceFailure) be;
-            if (be instanceof NotFound)          throw (NotFound) be;
-                    
-            throw recastDataONEExceptionToServiceFailure(be);
-        } 
-        catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
-        return deserializeServiceType(SystemMetadata.class, is);
+    	return super.getSystemMetadata(session,pid);
     }
 
 
     /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.describe */
 
-    public DescribeResponse describe(Session cert, Identifier pid)
+    public DescribeResponse describe(Session session, Identifier pid)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound
     {
-
         // TODO: create JavaDoc and fix doc reference
 
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
@@ -278,7 +229,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     		throw new NotFound("0000", "supplied PID was null, and cannot be");
     	url.addNextPathElement(pid.getValue());
     	
-     	D1RestClient client = new D1RestClient();
+     	D1RestClient client = new D1RestClient(session);
     	
     	Header[] h = null;
     	Map<String, String> headersMap = new HashMap<String,String>();
@@ -357,7 +308,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
     /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.getChecksum */
 
-    public Checksum getChecksum(Session cert, Identifier pid, String checksumAlgorithm)
+    public Checksum getChecksum(Session session, Identifier pid, String checksumAlgorithm)
     throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound
     {
 
@@ -373,7 +324,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	url.addNonEmptyParamPair("checksumAlgorithm", checksumAlgorithm);
 
         // send the request
-        D1RestClient client = new D1RestClient();
+        D1RestClient client = new D1RestClient(session);
         InputStream is = null;
 
         try {
@@ -397,77 +348,11 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     }
 
     
-    /**
-     * A convenience method for listObjects using no filtering parameters
-     * @return
-     * @throws InvalidRequest
-     * @throws InvalidToken
-     * @throws NotAuthorized
-     * @throws NotImplemented
-     * @throws ServiceFailure
-     */
-    public ObjectList listObjects(Session cert) 
-    throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
-    {
-    	return listObjects(cert,null,null,null,null,null,null);
-    }
-
-
-    /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.listObjects */
-
-    public ObjectList listObjects(Session cert, Date startTime, Date endTime, 
-      ObjectFormatIdentifier formatid, Boolean replicaStatus, Integer start, Integer count) 
-    throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
-    {
-
-        // TODO: create JavaDoc and fix doc reference
-    	
-    	if (endTime != null && startTime != null && !endTime.after(startTime))
-			throw new InvalidRequest("1000", "startTime must be after stopTime in NMode.listObjects");
-
-		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
-		
-		url.addDateParamPair("startTime", startTime);
-		url.addDateParamPair("endTime", endTime);
-		if (formatid != null) 
-			url.addNonEmptyParamPair("objectFormat", formatid.getValue());
-		if (replicaStatus != null) {
-			if (replicaStatus) {
-				url.addNonEmptyParamPair("replicaStatus", 1);
-			} else {
-				url.addNonEmptyParamPair("replicaStatus", 0);
-			}
-		}
-		url.addNonEmptyParamPair("start",start);
-		url.addNonEmptyParamPair("count",count);
-		
-        // send the request
-        D1RestClient client = new D1RestClient();
-        InputStream is = null;
-
-        try {
-        	is = client.doGetRequest(url.getUrl());
-        } catch (BaseException be) {
-            if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
-            if (be instanceof InvalidToken)           throw (InvalidToken) be;
-            if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
-            if (be instanceof NotImplemented)         throw (NotImplemented) be;
-            if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
-                    
-            throw recastDataONEExceptionToServiceFailure(be);
-        } 
-        catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
-        return deserializeServiceType(ObjectList.class, is);
-    }
 
 
     /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.synchronizationFailed */
 
-    public void synchronizationFailed(Session cert, SynchronizationFailed message)
+    public void synchronizationFailed(Session session, SynchronizationFailed message)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
     {
 
@@ -482,7 +367,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 		}
     	
         // send the request
-        D1RestClient client = new D1RestClient();
+        D1RestClient client = new D1RestClient(session);
 
         try {
         	client.doPostRequest(url.getUrl(),mpe);
@@ -505,47 +390,18 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
     /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_authorization.isAuthorized */
 
-    public boolean isAuthorized(Session cert, Identifier pid, Permission action)
+    public boolean isAuthorized(Session session, Identifier pid, Permission action)
     throws ServiceFailure, InvalidRequest, InvalidToken, NotFound, NotAuthorized, NotImplemented
     {
-
-        // TODO: create JavaDoc and fix doc reference
-    	
-    	if (pid == null || pid.getValue().trim().equals(""))
-            throw new InvalidRequest("1761", "PID cannot be null nor empty");
-
-        // assemble the url
-        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_AUTHORIZATION);
-    	url.addNextPathElement(pid.getValue());
-    	url.addNonEmptyParamPair("action", action.xmlValue());
-    	
-        // send the request
-        D1RestClient client = new D1RestClient();
-
-        try {
-        	client.doGetRequest(url.getUrl());
-        } catch (BaseException be) {
-            if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
-            if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
-            if (be instanceof InvalidToken)           throw (InvalidToken) be;
-            if (be instanceof NotFound)               throw (NotFound) be;
-            if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
-            if (be instanceof NotImplemented)         throw (NotImplemented) be;
-                    
-            throw recastDataONEExceptionToServiceFailure(be);
-        } 
-        catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
-        return true;
+    	// TODO: create JavaDoc and fix doc reference
+    	return super.isAuthorized(session, pid, action);
     }
+
 
 
     /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_authorization.setAccessPolicy */
     @Deprecated
-    public boolean setAccessPolicy(Session cert, Identifier pid, AccessPolicy accessPolicy)
+    public boolean setAccessPolicy(Session session, Identifier pid, AccessPolicy accessPolicy)
     throws InvalidToken, ServiceFailure, NotFound, NotAuthorized, 
       NotImplemented, InvalidRequest
     {
@@ -570,7 +426,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 		}
 
     	// send the request
-    	D1RestClient client = new D1RestClient();
+    	D1RestClient client = new D1RestClient(session);
     	try {
     		client.doPutRequest(url.getUrl(),smpe);
         } catch (BaseException be) {
@@ -594,7 +450,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
     /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_storage.create */
 
-    public  Identifier create(Session cert, Identifier pid, InputStream object, 
+    public  Identifier create(Session session, Identifier pid, InputStream object, 
             SystemMetadata sysmeta) 
     throws IdentifierNotUnique, InsufficientResources, InvalidRequest, InvalidSystemMetadata, 
         	InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, UnsupportedType
@@ -616,7 +472,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 		}
 
     	
-    	D1RestClient client = new D1RestClient();
+    	D1RestClient client = new D1RestClient(session);
     	InputStream is = null;
 
     	try {
@@ -645,7 +501,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
     /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_storage.update */
 
-    public  Identifier update(Session cert, Identifier pid, InputStream object, 
+    public  Identifier update(Session session, Identifier pid, InputStream object, 
             Identifier newPid, SystemMetadata sysmeta) 
         throws IdentifierNotUnique, InsufficientResources, InvalidRequest, InvalidSystemMetadata, 
             InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, UnsupportedType,
@@ -667,7 +523,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 			throw recastClientSideExceptionToServiceFailure(e);	
 		}
     	  	
-    	D1RestClient client = new D1RestClient();
+    	D1RestClient client = new D1RestClient(session);
     	InputStream is = null;
     	
     	try {
@@ -697,7 +553,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
     /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_storage.delete */
 
-    public  Identifier delete(Session cert, Identifier pid)
+    public  Identifier delete(Session session, Identifier pid)
         throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
     {
 
@@ -709,7 +565,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     		throw new NotFound("0000", "GUID cannot be null.");
     	url.addNextPathElement(pid.getValue());
     	
-     	D1RestClient client = new D1RestClient();
+     	D1RestClient client = new D1RestClient(session);
     	
     	InputStream is = null;
     	try {
@@ -734,7 +590,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
     /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_storage.systemMetadataChanged */
 
-    public  void systemMetadataChanged(Session cert, Identifier pid, long serialVersion,
+    public  void systemMetadataChanged(Session session, Identifier pid, long serialVersion,
         	Date dateSystemMetadataLastModified)
         throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented, InvalidRequest
     {
@@ -755,7 +611,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
     	
-		D1RestClient client = new D1RestClient();
+		D1RestClient client = new D1RestClient(session);
 		try {
 			client.doPostRequest(url.getUrl(), mpe);
         } catch (BaseException be) {
@@ -776,7 +632,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
     /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_replication.replicate */
 
-    public boolean replicate(Session cert, SystemMetadata sysmeta, NodeReference sourceNode) 
+    public boolean replicate(Session session, SystemMetadata sysmeta, NodeReference sourceNode) 
     throws NotImplemented, ServiceFailure, NotAuthorized, InvalidRequest, 
         InsufficientResources, UnsupportedType
     {
@@ -801,7 +657,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 			throw recastClientSideExceptionToServiceFailure(e);
 		}
     	
-    	D1RestClient client = new D1RestClient();
+    	D1RestClient client = new D1RestClient(session);
     	try {
 			client.doPostRequest(url.getUrl(),smpe);
         } catch (BaseException be) {
@@ -825,7 +681,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
     /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_replication.getReplica */
 
-    public InputStream getReplica(Session cert, Identifier pid)
+    public InputStream getReplica(Session session, Identifier pid)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound
     {
         // TODO: create JavaDoc and fix doc reference
@@ -834,7 +690,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         url.addNextPathElement(pid.getValue());
 
         // send the request
-        D1RestClient client = new D1RestClient();
+        D1RestClient client = new D1RestClient(session);
         InputStream is = null;
         try {
         	is = client.doGetRequest(url.getUrl());
