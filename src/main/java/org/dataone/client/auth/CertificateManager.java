@@ -522,7 +522,7 @@ public class CertificateManager {
         
         // is there a password for the key?
         PEMReader pemReader = null;
-        if (password != null) {
+        if (password != null && password.length() > 0) {
         	PasswordFinder passwordFinder = new PasswordFinder() {
 				@Override
 				public char[] getPassword() {
