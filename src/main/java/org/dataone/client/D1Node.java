@@ -83,7 +83,8 @@ public abstract class D1Node {
 	 */
 	public D1Node(String nodeBaseServiceUrl) {
 	    setNodeBaseServiceUrl(nodeBaseServiceUrl);
-	    useLocalCache = Settings.getConfiguration().getBoolean("D1Client.useLocalCache");
+	    // (second parameter is a default value)
+	    useLocalCache = Settings.getConfiguration().getBoolean("D1Client.useLocalCache",useLocalCache);
 	}
 
 	// TODO: this constructor should not exist
