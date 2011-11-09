@@ -1555,15 +1555,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	url.addNextPathElement(pid.getValue());
     	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
-    	try {
-    		mpe.addFilePart("status", status);
-    		mpe.addFilePart("nodeRef", nodeRef);
-    		mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
-    	} catch (IOException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
-		} catch (JiBXException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
-		}
+        mpe.addParamPart("nodeRef", nodeRef.getValue());
+        mpe.addParamPart("status", status.toString());
+        mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
 
 		D1RestClient client = new D1RestClient(session);
 
