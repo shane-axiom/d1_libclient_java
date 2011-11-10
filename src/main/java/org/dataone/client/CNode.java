@@ -1562,7 +1562,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		D1RestClient client = new D1RestClient(session);
 
 		try {
-			client.doPostRequest(url.getUrl(),mpe);
+			client.doPutRequest(url.getUrl(),mpe);
 		} catch (BaseException be) {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
