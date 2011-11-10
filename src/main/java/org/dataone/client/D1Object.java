@@ -392,7 +392,7 @@ public class D1Object {
     protected static void checkLength(List<String> strings) throws InvalidRequest {
         for (String string : strings) {
             if (string.length() < 1) {
-                throw new InvalidRequest("0", "String paramter had length 0.");
+                throw new InvalidRequest("0", "String parameter had length 0.");
             }
         }
     }
