@@ -294,6 +294,18 @@ public class CertificateManager {
     }
     
     /**
+     * Compare Subject DNs for equality
+     * @param dn1 the DN representation
+     * @param dn2 the other DN representation
+     * @return the true if they are "equal"
+     */
+    public boolean equalsDN(String dn1, String dn2) {
+    	// compare the standardized DNs
+		return CertificateManager.getInstance().standardizeDN(dn1).equals(
+				CertificateManager.getInstance().standardizeDN(dn2));
+    }
+    
+    /**
      * Check the validity of a certificate, and be sure that it is verifiable using the given CA certificate.
      * @param cert the X509Certificate to be verified
      * @param caCert the X509Certificate of the trusted CertificateAuthority (CA)
