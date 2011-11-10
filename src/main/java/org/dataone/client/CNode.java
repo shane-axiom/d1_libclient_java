@@ -1231,6 +1231,37 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 
 
+	/**
+     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNIdentity.getPendingMapIdentity
+     */
+    public SubjectInfo getPendingMapIdentity(Session session, Subject subject) 
+        throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
+        NotImplemented, InvalidRequest {
+    	
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING_PENDING);
+    	url.addNextPathElement(subject.getValue());
+    	
+		D1RestClient client = new D1RestClient(session);
+		InputStream is = null;
+
+		try {
+			is = client.doGetRequest(url.getUrl());
+		} catch (BaseException be) {
+			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
+			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
+			if (be instanceof NotImplemented)         throw (NotImplemented) be;
+			if (be instanceof NotFound)               throw (NotFound) be;
+
+			throw recastDataONEExceptionToServiceFailure(be);
+		} 
+		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+
+		return deserializeServiceType(SubjectInfo.class, is);
+    }
+    
 	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.confirmMapIdentity */
 
 	public boolean confirmMapIdentity(Session session, Subject subject) 
