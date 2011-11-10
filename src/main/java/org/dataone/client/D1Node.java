@@ -232,7 +232,8 @@ public abstract class D1Node {
         }
     	url.addDateParamPair("fromDate", fromDate);
     	url.addDateParamPair("toDate", toDate);
-    	url.addNonEmptyParamPair("event", event.xmlValue());
+    	if (event != null)
+    		url.addNonEmptyParamPair("event", event.xmlValue());
     	
 		// send the request
 		D1RestClient client = new D1RestClient(session);
@@ -358,10 +359,10 @@ public abstract class D1Node {
 		SystemMetadata sysmeta = null;
 		
 		try {
-			is = client.doGetRequest(url.getUrl());	
+			is = client.doGetRequest(url.getUrl());
+			sysmeta = deserializeServiceType(SystemMetadata.class,is);
 			if (cacheMissed) {
                 // Cache the result in the system metadata cache
-			    sysmeta = deserializeServiceType(SystemMetadata.class,is);
                 LocalCache.instance().putSystemMetadata(pid, sysmeta);
             }
 		} catch (BaseException be) {
