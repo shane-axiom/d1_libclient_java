@@ -618,17 +618,11 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_META_CHANGED);
 
 		SimpleMultipartEntity mpe = new SimpleMultipartEntity();
-    	try {
-            mpe.addFilePart("pid", pid);
-            mpe.addParamPart("dateSysMetaLastModified", 
-                    DateTimeMarshaller.serializeDateToUTC(dateSystemMetadataLastModified));
-            mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
-		} catch (IOException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
-		} catch (JiBXException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
-		}
-    	
+        mpe.addParamPart("pid", pid.getValue());
+        mpe.addParamPart("dateSysMetaLastModified", 
+                DateTimeMarshaller.serializeDateToUTC(dateSystemMetadataLastModified));
+        mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
+		    	
 		D1RestClient client = new D1RestClient(session);
 		try {
 			client.doPostRequest(url.getUrl(), mpe);
