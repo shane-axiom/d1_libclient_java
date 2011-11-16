@@ -361,7 +361,7 @@ public class CertificateManager {
     	
 		X509Certificate x509Cert = getCertificate(request);
 		if (x509Cert != null) {
-			String subjectDN = getSubjectDN(x509Cert );
+			String subjectDN = getSubjectDN(x509Cert);
 			Subject subject = new Subject();
 			subject .setValue(subjectDN);
 			session = new Session();
@@ -637,7 +637,7 @@ public class CertificateManager {
      * Show details of an X509 certificate, printing the information to STDOUT.
      * @param cert the certificate to be displayed
      */
-    protected void displayCertificate(X509Certificate cert) {
+    public void displayCertificate(X509Certificate cert) {
         if (cert == null) {
             return;
         }
