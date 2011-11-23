@@ -273,7 +273,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
  //   	DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-        String objectFormatIdStr = headersMap.get("DataONE-fmtid");//.get(0);
+        String objectFormatIdStr = headersMap.get("DataONE-ObjectFormat");//.get(0);
         String last_modifiedStr = headersMap.get("Last-Modified");//.get(0);
         String content_lengthStr = headersMap.get("Content-Length");//.get(0);
         String checksumStr = headersMap.get("DataONE-Checksum");//.get(0);
