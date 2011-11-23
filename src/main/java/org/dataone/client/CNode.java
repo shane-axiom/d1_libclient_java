@@ -1587,7 +1587,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
         mpe.addParamPart("nodeRef", nodeRef.getValue());
-        mpe.addParamPart("status", status.toString());
+        mpe.addParamPart("status", status.xmlValue());
         mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
 
 		D1RestClient client = new D1RestClient(session);
