@@ -329,8 +329,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_RESERVE);
 		SimpleMultipartEntity smpe = new SimpleMultipartEntity();
-		if (pid == null || pid.getValue().trim().equals("")) {
-			throw new InvalidRequest("0000","PID cannot be null or whitespace string");
+		if (pid == null) {
+			throw new InvalidRequest("0000","PID cannot be null");
 		}
 		smpe.addParamPart("pid", pid.getValue());
 
@@ -367,8 +367,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_GENERATE);
 		SimpleMultipartEntity smpe = new SimpleMultipartEntity();
-		if (scheme == null || scheme.trim().equals("")) {
-			throw new InvalidRequest("0000","'scheme' cannot be null or whitespace string");
+		if (scheme == null) {
+			throw new InvalidRequest("0000","'scheme' cannot be null");
 		}
 		smpe.addParamPart("scheme", scheme);
 		if (fragment != null) {
@@ -407,8 +407,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		// TODO: create JavaDoc and fix doc reference
 		
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_RESERVE);
-		if (pid == null || pid.getValue().trim().equals("")) {
-			throw new NotFound("0000", "PID cannot be null or empty string or whitespace");
+		if (pid == null) {
+			throw new NotFound("0000", "'pid' cannot be null");
 		}
 		url.addNextPathElement(pid.getValue());
 
@@ -447,6 +447,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		// TODO: create JavaDoc and fix doc reference
 
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
+		if (pid == null) {
+			throw new InvalidRequest("0000", "PID cannot be null");
+		}
         url.addNextPathElement(pid.getValue());
 
         SimpleMultipartEntity mpe = new SimpleMultipartEntity();
@@ -510,6 +513,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		// TODO: create JavaDoc and fix doc reference
 
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_META);
+		if (pid == null) {
+			throw new InvalidRequest("0000","'pid' cannot be null");
+		}
     	url.addNextPathElement(pid.getValue());
     	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
@@ -637,6 +643,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		// TODO: create JavaDoc and fix doc reference
 
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_RESOLVE);
+		if (pid == null) {
+			throw new NotFound("0000", "'pid' cannot be null");
+		}
         url.addNextPathElement(pid.getValue());
 
 
@@ -674,8 +683,14 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		// TODO: create JavaDoc and fix doc reference
 
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_RELATIONSHIP);
+		if (pidOfSubject == null) {
+			throw new InvalidRequest("0000","'pidOfSubject' cannot be null");
+		}
     	url.addNextPathElement(pidOfSubject.getValue());
     	url.addNonEmptyParamPair("relationship", relationship);
+    	if (pidOfObject == null) {
+    		throw new InvalidRequest("0000","'pidOfObject' cannot be null");
+    	}
     	url.addNonEmptyParamPair("pidOfObject", pidOfObject.getValue());
     	
 		// send the request
@@ -709,8 +724,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	{
 		// TODO: create JavaDoc and fix doc reference
 
-		if(pid == null || pid.getValue().trim().equals(""))
-            throw new NotFound("0000", "PID cannot be null nor empty");
+		if (pid == null)
+            throw new NotFound("0000", "PID cannot be null");
 
         // assemble the url
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_CHECKSUM);
@@ -803,12 +818,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			NotImplemented
 			{
 
-		// TODO: do we need to create a public user?
-//		if (session == null) {
-//            session = new Session();
-//            session.setSubject(new Subject());
-//            session.getSubject().setValue("public");
-//        }
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
 
         // set default params, if need be
@@ -862,7 +871,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		// TODO: create JavaDoc and fix doc reference
 
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING);
-    	
+//		if (pid == null)
+//			throw new InvalidRequest("0000","'pid' cannot be null");
+//		url.addNextPathElement(pid.getValue());
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
     		mpe.addFilePart("pid", pid);
@@ -921,7 +932,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		// TODO: create JavaDoc and fix doc reference
 
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCESS);
-    	
+//		if (pid == null)
+//			throw new InvalidRequest("0000","'pid' cannot be null");
+//		url.addNextPathElement(pid.getValue());
+		
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
     		mpe.addFilePart("pid", pid);
@@ -1057,14 +1071,16 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		// TODO: create JavaDoc and fix doc reference
 
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNTS);
-    	
-    	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
-    	url.addNextPathElement(subject.getValue());
+		if (subject == null)
+			throw new InvalidRequest("0000","'subject' cannot be null");
+		url.addNextPathElement(subject.getValue());
+		
+//    	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
 
         D1RestClient client = new D1RestClient(session);
 
 		try {
-			client.doPostRequest(url.getUrl(),mpe);
+			client.doPostRequest(url.getUrl(),null);
 		} catch (BaseException be) {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
@@ -1092,7 +1108,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		// TODO: create JavaDoc and fix doc reference
 
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNTS);
-    	url.addNextPathElement(subject.getValue());
+		if (subject == null)
+			throw new NotFound("0000","'subject' cannot be null");
+		url.addNextPathElement(subject.getValue());
 
 		D1RestClient client = new D1RestClient(session);
 		InputStream is = null;
