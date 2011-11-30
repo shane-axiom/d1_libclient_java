@@ -177,7 +177,8 @@ public abstract class D1Node {
         // TODO: create JavaDoc and fix doc reference
     	
     	if (endTime != null && startTime != null && !endTime.after(startTime))
-			throw new InvalidRequest("1000", "startTime must be after stopTime in NMode.listObjects");
+			throw new InvalidRequest("1000", "startTime must be before endTime in listObjects() call. "
+					+ startTime + " " + endTime);
 
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
 		
