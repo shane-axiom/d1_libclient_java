@@ -158,8 +158,13 @@ public class EchoTestD1RestClientIT {
 		ent.addParamPart("Jabberwocky", "Twas brillig and the slithy tove, did gyre and gimble in the wabe");
 		ent.addFilePart("Jabberwocky2", "All mimsy was the borogrove, and the mome wrath ungrabe.");
 		D1RestClient rc = new D1RestClient();
-		InputStream is = rc.doPutRequest(u.getUrl(),ent);
-		String contentString = IOUtils.toString(is);
+		String contentString = null;
+		try {
+			InputStream is = rc.doPutRequest(u.getUrl(),ent);
+			contentString = IOUtils.toString(is);
+		} catch (ServiceFailure e) {	
+			contentString = e.getDescription();
+		}
 		System.out.println(contentString);
 		assertTrue("",contentString.contains("request.META[ CONTENT_TYPE ] = multipart/form-data"));		
 		assertTrue("",contentString.contains("request.REQUEST[ Jabberwocky ] = Twas brillig and the slithy tove, did gyre and gimble in the wabe"));
@@ -177,9 +182,13 @@ public class EchoTestD1RestClientIT {
 		ent.addParamPart("Jabberwocky", "Twas brillig and the slithy tove, did gyre and gimble in the wabe");
 		ent.addFilePart("Jabberwocky2", "All mimsy was the borogrove, and the mome wrath ungrabe.");
 		D1RestClient rc = new D1RestClient();
-//		HttpResponse resp = rc.doPostRequest(u.getUrl(),ent);
-		InputStream is = rc.doPostRequest(u.getUrl(),ent);
-		String contentString = IOUtils.toString(is);
+		String contentString = null;
+		try {
+			InputStream is = rc.doPostRequest(u.getUrl(),ent);
+			contentString = IOUtils.toString(is);
+		} catch (ServiceFailure e) {	
+			contentString = e.getDescription();
+		}
 		System.out.println(contentString);
 		assertTrue("",contentString.contains("request.META[ CONTENT_TYPE ] = multipart/form-data"));		
 		assertTrue("",contentString.contains("request.REQUEST[ Jabberwocky ] = Twas brillig and the slithy tove, did gyre and gimble in the wabe"));
@@ -194,12 +203,8 @@ public class EchoTestD1RestClientIT {
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
 		D1RestClient rc = new D1RestClient();
-//		HttpResponse resp = rc.doGetRequest(u.getUrl());
-//		int status = resp.getStatusLine().getStatusCode();
-//		System.out.println("status code = " + status);
-		
+
 		try {
-//			is = rc.filterErrors(resp);
 			InputStream is = rc.doGetRequest(u.getUrl());
 			String contentString = IOUtils.toString(is);
 			System.out.println(contentString);
