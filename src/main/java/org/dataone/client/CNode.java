@@ -1507,13 +1507,13 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_register.updateNodeCapabilities */
 
-	public boolean updateNodeCapabilities(Session session, NodeReference nodeid, 
-	Node node) throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, NotFound
+	public boolean updateNodeCapabilities(Session session, NodeReference nodeid, Node node) 
+	throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, NotFound
 	{
 
 		// TODO: create JavaDoc and fix doc reference
 
-		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_GROUPS);
+		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_NODE);
     	url.addNextPathElement(nodeid.getValue());
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
