@@ -191,16 +191,16 @@ public class D1RestClient {
 		return ExceptionHandler.filterErrors(rc.doDeleteRequest(url));
 	}
 	
-	public InputStream doDeleteRequest(String url, SimpleMultipartEntity mpe) 
-	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
-	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
-	NotAuthorized, NotFound, NotImplemented, ServiceFailure, SynchronizationFailed,
-	UnsupportedMetadataType, UnsupportedQueryType, UnsupportedType,
-	IllegalStateException, ClientProtocolException, IOException, HttpException, VersionMismatch 
-	{
-		rc.setHeader("Accept", "text/xml");
-		return ExceptionHandler.filterErrors(rc.doDeleteRequest(url, mpe));
-	}
+//	public InputStream doDeleteRequest(String url, SimpleMultipartEntity mpe) 
+//	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
+//	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
+//	NotAuthorized, NotFound, NotImplemented, ServiceFailure, SynchronizationFailed,
+//	UnsupportedMetadataType, UnsupportedQueryType, UnsupportedType,
+//	IllegalStateException, ClientProtocolException, IOException, HttpException, VersionMismatch 
+//	{
+//		rc.setHeader("Accept", "text/xml");
+//		return ExceptionHandler.filterErrors(rc.doDeleteRequest(url, mpe));
+//	}
 	
 	public Header[] doHeadRequest(String url) 
 	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 

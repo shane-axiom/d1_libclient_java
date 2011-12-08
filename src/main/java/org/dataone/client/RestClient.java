@@ -32,6 +32,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpDeleteWithBody;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
@@ -51,10 +52,13 @@ import org.dataone.service.util.Constants;
  * A generic client class that contains base functionality for making REST calls
  * to remote REST servers.  
  * It is built to encapsulate the communication conventions dataONE is following
- * but does not know about dataone objects (see D1RestClient for that)
+ * but does not know about dataone objects (see D1RestClient for that).  
+ * Specifically, it requires encoding of message bodies as mime-multipart.
+ * It exposes the underlying httpClient for further configuration of the 
+ * connection.
  * 
- * (Each RestClient instance has an HttpClient that is reused for the various
- * calls to the memberNode)
+ * ( Each RestClient has an HttpClient that is reused for all do{XX}Requests )
+ * 
  * */
 public class RestClient {
 
@@ -187,17 +191,17 @@ public class RestClient {
 		return doRequestNoBody(url,Constants.DELETE);
 	}
 	
-	/**
-	 * send a body-containing Delete request to the resource and get the response
-     * @throws IOException 
-     * @throws ClientProtocolException 
-	 */
-
-	public HttpResponse doDeleteRequest(String url, SimpleMultipartEntity mpe) 
-	throws ClientProtocolException, IOException 
-	{
-		return doRequestMMBody(url,Constants.DELETE, mpe);
-	}
+//	/**
+//	 * send a body-containing Delete request to the resource and get the response
+//     * @throws IOException 
+//     * @throws ClientProtocolException 
+//	 */
+//
+//	public HttpResponse doDeleteRequest(String url, SimpleMultipartEntity mpe) 
+//	throws ClientProtocolException, IOException 
+//	{
+//		return doRequestMMBody(url,Constants.DELETE, mpe);
+//	}
 	
     /**
 	 * send a POST request to the resource and get the response
@@ -257,6 +261,8 @@ public class RestClient {
 			req = new HttpPut(url);
 		else if (httpMethod == Constants.POST)
 			req = new HttpPost(url);
+		else if (httpMethod == Constants.DELETE)
+			req = new HttpDeleteWithBody(url);    
 		else 
 			throw new ClientProtocolException("method requested not defined: " + httpMethod);
 	

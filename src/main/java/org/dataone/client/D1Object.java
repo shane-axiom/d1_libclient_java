@@ -96,8 +96,8 @@ public class D1Object {
      * @param nodeId the identifier of the node on which the object will be created
      * @throws NoSuchAlgorithmException if the checksum algorithm does not exist
      * @throws IOException if the data bytes can not be read
-     * @throws NotFound 
-     * @throws InvalidRequest 
+     * @throws NotFound if the format specified is not found in the formatCache
+     * @throws InvalidRequest if the content of parameters is not correct
      */
     public D1Object(Identifier id, byte[] data, String format, String submitter, String nodeId) 
         throws NoSuchAlgorithmException, IOException, NotFound, InvalidRequest {
@@ -292,8 +292,8 @@ public class D1Object {
      * @return the generated SystemMetadata instance
      * @throws NoSuchAlgorithmException if the checksum algorithm does not exist
      * @throws IOException if the data bytes can not be read
-     * @throws NotFound 
-     * @throws InvalidRequest 
+     * @throws NotFound if the objectFormat string cannot be found in the formatCache
+     * @throws InvalidRequest if the parameter content is not correctly specified
      */
     private SystemMetadata generateSystemMetadata(Identifier id, byte[] data, 
     		String format, String submitter, String nodeId) 

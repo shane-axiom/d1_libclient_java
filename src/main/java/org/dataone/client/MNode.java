@@ -159,7 +159,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 		try {
 			theLog = super.getLogRecords(session, fromDate, toDate, event, start, count);
 		} catch (InsufficientResources e) {
-			recastDataONEExceptionToServiceFailure(e);
+			throw recastDataONEExceptionToServiceFailure(e);
 		}
     	return theLog;
     }

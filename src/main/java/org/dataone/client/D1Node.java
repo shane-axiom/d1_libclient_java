@@ -236,6 +236,9 @@ public abstract class D1Node {
     	if (event != null)
     		url.addNonEmptyParamPair("event", event.xmlValue());
     	
+    	url.addNonEmptyParamPair("start", start);
+    	url.addNonEmptyParamPair("count", count);
+    	
 		// send the request
 		D1RestClient client = new D1RestClient(session);
 		InputStream is = null;
