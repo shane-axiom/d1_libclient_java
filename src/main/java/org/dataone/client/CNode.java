@@ -1693,7 +1693,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         url.addNextPathElement(pid.getValue());
         
         url.addNonEmptyParamPair("targetNodeSubject", targetNodeSubject.getValue());
-        url.addNonEmptyParamPair("replicatePermission", Permission.REPLICATE.toString());
+        url.addNonEmptyParamPair("replicatePermission", replicatePermission.toString());
         D1RestClient client = new D1RestClient(originatingNodeSession);
 
 		try {
