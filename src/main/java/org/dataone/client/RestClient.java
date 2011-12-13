@@ -32,7 +32,6 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpDeleteWithBody;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
@@ -261,8 +260,6 @@ public class RestClient {
 			req = new HttpPut(url);
 		else if (httpMethod == Constants.POST)
 			req = new HttpPost(url);
-		else if (httpMethod == Constants.DELETE)
-			req = new HttpDeleteWithBody(url);    
 		else 
 			throw new ClientProtocolException("method requested not defined: " + httpMethod);
 	
