@@ -1594,7 +1594,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_replication.setReplicationStatus */
 
 	public  boolean setReplicationStatus(Session session, Identifier pid, 
-			NodeReference nodeRef, ReplicationStatus status, long serialVersion) 
+			NodeReference nodeRef, ReplicationStatus status, BaseException failure) 
 					throws ServiceFailure, NotImplemented, InvalidToken, NotAuthorized, 
 					InvalidRequest, NotFound, VersionMismatch
 	{
@@ -1606,7 +1606,12 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
         mpe.addParamPart("nodeRef", nodeRef.getValue());
         mpe.addParamPart("status", status.xmlValue());
-        mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
+        try {
+            mpe.addFilePart("failure", failure.serialize(0));
+        } catch (IOException e1) {
+            
+            throw recastClientSideExceptionToServiceFailure(e1);        
+        }
 
 		D1RestClient client = new D1RestClient(session);
 
