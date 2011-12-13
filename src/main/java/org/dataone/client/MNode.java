@@ -277,6 +277,8 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         String last_modifiedStr = headersMap.get("Last-Modified");//.get(0);
         String content_lengthStr = headersMap.get("Content-Length");//.get(0);
         String checksumStr = headersMap.get("DataONE-Checksum");//.get(0);
+        String serialVersionStr = headersMap.get("DataONE-SerialVersion");//.get(0);
+
    
         BigInteger content_length;
 		try {
@@ -319,8 +321,16 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         
         ObjectFormatIdentifier ofID = new ObjectFormatIdentifier();
         ofID.setValue(objectFormatIdStr);
+        
+        BigInteger serialVersion = null;
+		try {
+			serialVersion = BigIntegerMarshaller.deserializeBigInteger(serialVersionStr);
+		} catch (JiBXException e) {
+			throw new ServiceFailure("0", "Could not convert the returned serialVersion string (" + 
+					serialVersionStr + ") to a BigInteger: " + e.getMessage());
+		}
 
-        return new DescribeResponse(ofID, content_length, last_modified, checksum);
+        return new DescribeResponse(ofID, content_length, last_modified, checksum, serialVersion);
     }
 
 
