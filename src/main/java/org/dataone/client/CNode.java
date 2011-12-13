@@ -1682,7 +1682,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_replication.isNodeAuthorized */
 
 	public  boolean isNodeAuthorized(Session originatingNodeSession, 
-			Subject targetNodeSubject, Identifier pid, Permission replicatePermission)
+			Subject targetNodeSubject, Identifier pid)
 	throws NotImplemented, NotAuthorized, InvalidToken, ServiceFailure, 
 	NotFound, InvalidRequest
 	{
@@ -1693,7 +1693,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         url.addNextPathElement(pid.getValue());
         
         url.addNonEmptyParamPair("targetNodeSubject", targetNodeSubject.getValue());
-        url.addNonEmptyParamPair("replicatePermission", replicatePermission.toString());
         D1RestClient client = new D1RestClient(originatingNodeSession);
 
 		try {
