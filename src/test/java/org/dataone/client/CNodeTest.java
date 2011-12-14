@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
+import org.dataone.service.types.v1.Group;
 import org.dataone.service.types.v1.Person;
 import org.dataone.service.types.v1.Subject;
 import org.dataone.service.types.v1.SubjectList;
@@ -59,10 +60,11 @@ public class CNodeTest {
 		// group
 		SubjectList members = new SubjectList();
 		members.addSubject(subject);
-		Subject group = new Subject();
-		group.setValue("CN=testGroup,DC=cilogon,DC=org");
-		//D1Client.getCN().addGroupMembers(null, group , members);
-		D1Client.getCN().removeGroupMembers(null, group , members);
+		Subject groupSubject = new Subject();
+		groupSubject.setValue("CN=testGroup,DC=cilogon,DC=org");
+		Group group = new Group();
+		group.setSubject(groupSubject);
+		D1Client.getCN().updateGroup(null, group);
 
 
 	}
