@@ -50,6 +50,7 @@ import org.dataone.service.exceptions.VersionMismatch;
 import org.dataone.service.types.v1.AccessPolicy;
 import org.dataone.service.types.v1.Checksum;
 import org.dataone.service.types.v1.Event;
+import org.dataone.service.types.v1.Group;
 import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.types.v1.Log;
 import org.dataone.service.types.v1.Node;
@@ -1381,21 +1382,28 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.createGroup */
 
-	public Subject createGroup(Session session, Subject groupName) 
+	public Subject createGroup(Session session, Group group) 
 	throws ServiceFailure, InvalidToken, NotAuthorized, NotImplemented, IdentifierNotUnique
 	{
 		// TODO: create JavaDoc and fix doc reference
 
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_GROUPS);
-    	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
-    	url.addNextPathElement(groupName.getValue());
+    	try {
+        	//url.addNextPathElement(group.getSubject().getValue());
+    		mpe.addFilePart("group", group);
+    	} catch (IOException e1) {
+			throw recastClientSideExceptionToServiceFailure(e1);
+		} catch (JiBXException e1) {
+			throw recastClientSideExceptionToServiceFailure(e1);
+		}
+
 		// send the request
 		D1RestClient client = new D1RestClient(session);
 		InputStream is = null;
 
 		try {
-			is = client.doPostRequest(url.getUrl(),mpe);
+			is = client.doPostRequest(url.getUrl(), mpe);
 		} catch (BaseException be) {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
@@ -1416,8 +1424,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.addGroupMembers */
 
-	public  boolean addGroupMembers(Session session, Subject groupName, 
-			SubjectList members) throws ServiceFailure, InvalidToken, 
+	public boolean updateGroup(Session session, Group group) 
+		throws ServiceFailure, InvalidToken, 
 			NotAuthorized, NotFound, NotImplemented, InvalidRequest
 	{
 		// TODO: create JavaDoc and fix doc reference
@@ -1425,9 +1433,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_GROUPS);
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
-        	url.addNextPathElement(groupName.getValue());
-    		//mpe.addFilePart("groupName", groupName);
-    		mpe.addFilePart("members", members);
+        	url.addNextPathElement(group.getSubject().getValue());
+    		mpe.addFilePart("group", group);
     	} catch (IOException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
 		} catch (JiBXException e1) {
@@ -1455,53 +1462,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		return true;
 	}
-
-
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.removeGroupMembers */
-
-	public boolean removeGroupMembers(Session session, Subject groupName, 
-			SubjectList members) throws ServiceFailure, InvalidToken, NotAuthorized, 
-			NotFound, NotImplemented, InvalidRequest
-	{
-
-		// TODO: create JavaDoc and fix doc reference
-
-		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_GROUPS_REMOVE);
-    	
-    	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
-    	try {
-    		url.addNextPathElement(groupName.getValue());
-    		//mpe.addFilePart("groupName", groupName);
-    		mpe.addFilePart("members", members);
-    	} catch (IOException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
-		} catch (JiBXException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
-		}
-
-		D1RestClient client = new D1RestClient(session);
-
-		try {
-			client.doPostRequest(url.getUrl(),mpe);
-		} catch (BaseException be) {
-			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
-			if (be instanceof InvalidToken)           throw (InvalidToken) be;
-			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
-			if (be instanceof NotFound)               throw (NotFound) be;
-			if (be instanceof NotImplemented)         throw (NotImplemented) be;
-			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
-
-			throw recastDataONEExceptionToServiceFailure(be);
-		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
-		return true;
-	}
-
-
 
 	///////////// CN REGISTER API   ////////////////
 
