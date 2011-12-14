@@ -1593,7 +1593,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_replication.setReplicationStatus */
 
-	public  boolean setReplicationStatus(Session session, Identifier pid, 
+	public boolean setReplicationStatus(Session session, Identifier pid, 
 			NodeReference nodeRef, ReplicationStatus status, BaseException failure) 
 					throws ServiceFailure, NotImplemented, InvalidToken, NotAuthorized, 
 					InvalidRequest, NotFound, VersionMismatch
