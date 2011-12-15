@@ -1433,7 +1433,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_GROUPS);
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
-        	url.addNextPathElement(group.getSubject().getValue());
+        	//url.addNextPathElement(group.getSubject().getValue());
     		mpe.addFilePart("group", group);
     	} catch (IOException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
