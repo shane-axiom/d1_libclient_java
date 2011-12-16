@@ -139,9 +139,6 @@ public class ObjectFormatCache extends ObjectFormatServiceImpl {
     } catch (ServiceFailure e) {
       objectFormatList = ObjectFormatServiceImpl.getInstance().listFormats();
 
-    } catch (InsufficientResources e) {
-      objectFormatList = ObjectFormatServiceImpl.getInstance().listFormats();
-
     } catch (NotImplemented e) {
       objectFormatList = ObjectFormatServiceImpl.getInstance().listFormats();
 

@@ -49,6 +49,8 @@ import org.dataone.service.exceptions.UnsupportedType;
 import org.dataone.service.exceptions.VersionMismatch;
 import org.dataone.service.types.v1.AccessPolicy;
 import org.dataone.service.types.v1.Checksum;
+import org.dataone.service.types.v1.ChecksumAlgorithmList;
+import org.dataone.service.types.v1.DescribeResponse;
 import org.dataone.service.types.v1.Event;
 import org.dataone.service.types.v1.Group;
 import org.dataone.service.types.v1.Identifier;
@@ -175,10 +177,17 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     }
 	
 
+    /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.ping */
+
+    public Date ping() throws NotImplemented, ServiceFailure, InsufficientResources
+    {
+    	return super.ping();
+    }
+    
 	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.listFormats */
 
 	public  ObjectFormatList listFormats()
-	throws ServiceFailure, InsufficientResources, NotImplemented
+	throws ServiceFailure, NotImplemented
 	{
 		// TODO: create JavaDoc and fix doc reference
 
@@ -192,7 +201,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			is = client.doGetRequest(url.getUrl());
 		} catch (BaseException be) {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
-			if (be instanceof InsufficientResources)  throw (InsufficientResources) be;
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 
 			throw recastDataONEExceptionToServiceFailure(be);
@@ -209,7 +217,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.getFormat */
 
 	public  ObjectFormat getFormat(ObjectFormatIdentifier formatid)
-	throws ServiceFailure, NotFound, InsufficientResources, NotImplemented
+	throws ServiceFailure, NotFound, NotImplemented
 	{
 		// TODO: create JavaDoc and fix doc reference
 
@@ -225,7 +233,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (BaseException be) {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof NotFound)               throw (NotFound) be;
-			if (be instanceof InsufficientResources)  throw (InsufficientResources) be;
+//			if (be instanceof InsufficientResources)  throw (InsufficientResources) be;
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 
 			throw recastDataONEExceptionToServiceFailure(be);
@@ -239,34 +247,33 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 	
 	
-	// TODO: uncomment method when return type available
-//  /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.getChecksumAlgorithms */
-//	
-//	public ChecksumAlgorithmList getChecksumAlgorithms() throws ServiceFailure, NotImplemented 
-//	{
-//		// TODO: create JavaDoc and fix doc reference
-//
-//		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_CHECKSUM);
-//
-//		D1RestClient client = new D1RestClient();
-//
-//		InputStream is = null;
-//		try {
-//			is = client.doGetRequest(url.getUrl());
-//		} catch (BaseException be) {
-//			if (be instanceof NotImplemented)         throw (NotImplemented) be;
-//			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
-//
-//			throw recastDataONEExceptionToServiceFailure(be);
-//		} 
-//		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-//		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-//		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-//		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-//		
-//		// TODO Auto-generated method stub
-//		return deserializeServiceType(ChecksumAlgorithmList.class, is);
-//	}
+  /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.getChecksumAlgorithms */
+	
+	public ChecksumAlgorithmList listChecksumAlgorithms() throws ServiceFailure, NotImplemented 
+	{
+		// TODO: create JavaDoc and fix doc reference
+
+		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_CHECKSUM);
+
+		D1RestClient client = new D1RestClient();
+
+		InputStream is = null;
+		try {
+			is = client.doGetRequest(url.getUrl());
+		} catch (BaseException be) {
+			if (be instanceof NotImplemented)         throw (NotImplemented) be;
+			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
+
+			throw recastDataONEExceptionToServiceFailure(be);
+		} 
+		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+		
+		// TODO Auto-generated method stub
+		return deserializeServiceType(ChecksumAlgorithmList.class, is);
+	}
 
 
 	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.getLogRecords */
@@ -551,51 +558,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 
 
-//	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.updateSystemMetadata */
-//
-//	public boolean updateSystemMetadata(Session session, Identifier pid) 
-//	throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest,
-//	InvalidSystemMetadata, NotFound
-//	{
-//
-//		// TODO: create JavaDoc and fix doc reference
-//
-//		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_META);
-//    	url.addNextPathElement(pid.getValue());
-//    	
-//    	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
-//    	try {
-//    		mpe.addFilePart("sysmeta", sysmeta);
-//    	} catch (IOException e1) {
-//			throw recastClientSideExceptionToServiceFailure(e1);
-//		} catch (JiBXException e1) {
-//			throw recastClientSideExceptionToServiceFailure(e1);
-//		}
-//
-//		D1RestClient client = new D1RestClient(session);
-//
-//		InputStream is = null;
-//		try {
-//			is = client.doPutRequest(url.getUrl(),mpe);
-//		} catch (BaseException be) {
-//			if (be instanceof NotImplemented)         throw (NotImplemented) be;
-//			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
-//			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
-//			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
-//			if (be instanceof InvalidSystemMetadata)  throw (InvalidSystemMetadata) be;
-//			if (be instanceof NotFound)               throw (NotFound) be;
-//
-//			throw recastDataONEExceptionToServiceFailure(be);
-//		} 
-//		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-//		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-//		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-//		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-//
-//		// TODO: check return statement
-//		return true;
-//	}
-
 	////////////////   CN READ API  //////////////
 
 	@Override
@@ -607,13 +569,13 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 	
 	@Override
-	public ObjectList listObjects(Session session, Date startTime,
-			Date endTime, ObjectFormatIdentifier formatid,
+	public ObjectList listObjects(Session session, Date fromDate,
+			Date toDate, ObjectFormatIdentifier formatid,
 			Boolean replicaStatus, Integer start, Integer count)
 			throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented,
 			ServiceFailure 
 	{
-		return super.listObjects(session,startTime,endTime,formatid,replicaStatus,start,count);
+		return super.listObjects(session,fromDate,toDate,formatid,replicaStatus,start,count);
 	}
 	
 	
@@ -622,7 +584,11 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	public InputStream get(Session session, Identifier pid)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
 	{
-		return super.get(session, pid);
+		try {
+			return super.get(session, pid);
+		} catch (InsufficientResources e) {
+			throw recastDataONEExceptionToServiceFailure(e);
+		}
 	}
 
 
@@ -635,6 +601,18 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 
 
+    /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_read.describe */
+
+    public DescribeResponse describe(Session session, Identifier pid)
+    throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound
+    {
+        // TODO: create JavaDoc and fix doc reference
+    	return super.describe(session,pid);
+    }
+
+
+
+	
 	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_read.resolve */
 
 	public ObjectLocationList resolve(Session session, Identifier pid)
@@ -819,22 +797,25 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			NotImplemented
 			{
 
-        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
+        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_SEARCH);
 
-        // set default params, if need be
-        String paramAdditions = "";
-        if ((queryType != null) && !queryType.isEmpty()) {
-          paramAdditions = "qt=" + queryType +"&";
-        }
-        if (query == null) query = "";
- 
-        String paramsComplete = paramAdditions + query;
-        // clean up paramsComplete string
-        if (paramsComplete.endsWith("&")) {
-            paramsComplete = paramsComplete.substring(0, paramsComplete.length() - 1);
-        }
-
-        url.addPreEncodedNonEmptyQueryParams(paramsComplete);
+        url.addNonEmptyParamPair("qt", queryType);
+        url.addPreEncodedNonEmptyQueryParams(query);
+        
+//        // set default params, if need be
+//        String paramAdditions = "";
+//        if ((queryType != null) && !queryType.isEmpty()) {
+//          paramAdditions = "qt=" + queryType +"&";
+//        }
+//        if (query == null) query = "";
+// 
+//        String paramsComplete = paramAdditions + query;
+//        // clean up paramsComplete string
+//        if (paramsComplete.endsWith("&")) {
+//            paramsComplete = paramsComplete.substring(0, paramsComplete.length() - 1);
+//        }
+//
+//        url.addPreEncodedNonEmptyQueryParams(paramsComplete);
 
         D1RestClient client = new D1RestClient(session);
 
@@ -861,9 +842,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 	////////// CN Authorization API //////////////
 	
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_authorization.setOwner */
+	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_authorization.setRightsHolder */
 
-	public  Identifier setOwner(Session session, Identifier pid, Subject userId, 
+	public  Identifier setRightsHolder(Session session, Identifier pid, Subject userId, 
 			long serialVersion)
 	throws InvalidToken, ServiceFailure, NotFound, NotAuthorized, NotImplemented, 
 	InvalidRequest, VersionMismatch
@@ -871,20 +852,17 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		// TODO: create JavaDoc and fix doc reference
 
-		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING);
-//		if (pid == null)
-//			throw new InvalidRequest("0000","'pid' cannot be null");
-//		url.addNextPathElement(pid.getValue());
+		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OWNER);
+		if (pid == null)
+			throw new InvalidRequest("0000","'pid' cannot be null");
+		url.addNextPathElement(pid.getValue());
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
-    	try {
-    		mpe.addFilePart("pid", pid);
-    		mpe.addFilePart("userId", userId);
-    		mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
-    	} catch (IOException e) {
-			throw recastClientSideExceptionToServiceFailure(e);
-		} catch (JiBXException e) {
-			throw recastClientSideExceptionToServiceFailure(e);	
-		}
+
+    	if (userId == null)
+    		throw new InvalidRequest("0000","parameter 'userId' cannot be null");
+    	mpe.addParamPart("userId", userId.getValue());
+    	mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
+
 		// send the request
 		D1RestClient client = new D1RestClient(session);
 		InputStream is = null;
@@ -898,7 +876,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
-			if (be instanceof VersionMismatch)         throw (VersionMismatch) be;
+			if (be instanceof VersionMismatch)        throw (VersionMismatch) be;
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
@@ -933,13 +911,13 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		// TODO: create JavaDoc and fix doc reference
 
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCESS);
-//		if (pid == null)
-//			throw new InvalidRequest("0000","'pid' cannot be null");
-//		url.addNextPathElement(pid.getValue());
+		if (pid == null)
+			throw new InvalidRequest("0000","'pid' cannot be null");
+		url.addNextPathElement(pid.getValue());
 		
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
-    		mpe.addFilePart("pid", pid);
+//    		mpe.addFilePart("pid", pid);
     		mpe.addFilePart("accessPolicy", accessPolicy);
     		mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
     	} catch (IOException e1) {
@@ -1022,7 +1000,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.updateAccount */
 
 	public  Subject updateAccount(Session session, Person person) 
-			throws ServiceFailure, NotAuthorized, IdentifierNotUnique, InvalidCredentials, 
+			throws ServiceFailure, NotAuthorized, InvalidCredentials, 
 			NotImplemented, InvalidRequest, NotFound
 	{
 		// TODO: create JavaDoc and fix doc reference
@@ -1046,7 +1024,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (BaseException be) {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
-			if (be instanceof IdentifierNotUnique)    throw (IdentifierNotUnique) be;
 			if (be instanceof InvalidCredentials)     throw (InvalidCredentials) be;
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
@@ -1067,7 +1044,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 	public boolean verifyAccount(Session session, Subject subject) 
 			throws ServiceFailure, NotAuthorized, NotImplemented, InvalidToken, 
-			InvalidRequest, NotFound
+			InvalidRequest
 	{
 		// TODO: create JavaDoc and fix doc reference
 
@@ -1088,7 +1065,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
 			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
-			if (be instanceof NotFound)               throw (NotFound) be;
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
@@ -1104,7 +1080,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.getSubjectInfo */
 
 	public SubjectInfo getSubjectInfo(Session session, Subject subject)
-	throws ServiceFailure, NotAuthorized, NotImplemented, NotFound
+	throws ServiceFailure, NotAuthorized, NotImplemented, NotFound, InvalidToken
 	{
 		// TODO: create JavaDoc and fix doc reference
 
@@ -1122,6 +1098,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
+			if (be instanceof InvalidToken)           throw (InvalidToken) be;
 			if (be instanceof NotFound)               throw (NotFound) be;
 
 			throw recastDataONEExceptionToServiceFailure(be);
@@ -1174,23 +1151,17 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.mapIdentity */
 
-	public boolean mapIdentity(Session session, Subject primarySubject, Subject secondarySubject) 
-			throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
+	public boolean mapIdentity(Session session, Subject subject)
+	throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
 			NotImplemented, InvalidRequest, IdentifierNotUnique
 	{
 		// TODO: create JavaDoc and fix doc reference
 
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING);
-    	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
-    	try {
-    		mpe.addFilePart("primarySubject", primarySubject);
-    		mpe.addFilePart("secondarySubject", secondarySubject);
-    	} catch (IOException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
-		} catch (JiBXException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
-		}
+
+    	mpe.addParamPart("subject", subject.getValue());
+ 
 
 		D1RestClient client = new D1RestClient(session);
 
@@ -1220,7 +1191,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 	public boolean requestMapIdentity(Session session, Subject subject) 
 			throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
-			NotImplemented, InvalidRequest
+			NotImplemented, InvalidRequest, IdentifierNotUnique
 	{
 		// TODO: create JavaDoc and fix doc reference
 
@@ -1238,6 +1209,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof NotFound)               throw (NotFound) be;
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
+			if (be instanceof IdentifierNotUnique)    throw (IdentifierNotUnique) be;
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
@@ -1254,8 +1226,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
      * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNIdentity.getPendingMapIdentity
      */
     public SubjectInfo getPendingMapIdentity(Session session, Subject subject) 
-        throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
-        NotImplemented, InvalidRequest {
+        throws ServiceFailure, NotAuthorized, NotFound, NotImplemented 
+    {
     	
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING_PENDING);
     	url.addNextPathElement(subject.getValue());
@@ -1319,7 +1291,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 	public boolean denyMapIdentity(Session session, Subject subject) 
 	throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
-			NotImplemented, InvalidRequest
+			NotImplemented
 	{
 		// TODO: create JavaDoc and fix doc reference
 
@@ -1334,7 +1306,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
 			if (be instanceof NotFound)               throw (NotFound) be;
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
-			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
@@ -1351,7 +1322,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 	public  boolean removeMapIdentity(Session session, Subject subject) 
 			throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
-			NotImplemented, InvalidRequest
+			NotImplemented
 	{
 		// TODO: create JavaDoc and fix doc reference
 
@@ -1367,7 +1338,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
 			if (be instanceof NotFound)               throw (NotFound) be;
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
-			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
+//			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
@@ -1468,7 +1439,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_register.updateNodeCapabilities */
 
 	public boolean updateNodeCapabilities(Session session, NodeReference nodeid, Node node) 
-	throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, NotFound
+	throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, NotFound, InvalidToken
 	{
 
 		// TODO: create JavaDoc and fix doc reference
@@ -1493,6 +1464,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
+			if (be instanceof InvalidToken)           throw (InvalidToken) be;
 			if (be instanceof NotFound)               throw (NotFound) be;
 
 			throw recastDataONEExceptionToServiceFailure(be);
@@ -1686,7 +1658,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	public boolean updateReplicationMetadata(Session targetNodeSession, 
 			Identifier pid, Replica replicaMetadata, long serialVersion)
 	throws NotImplemented, NotAuthorized, ServiceFailure, NotFound, 
-	InvalidRequest, VersionMismatch
+	InvalidRequest, InvalidToken, VersionMismatch
 	{
 		// TODO: create JavaDoc and fix doc reference
 
@@ -1714,6 +1686,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof NotFound)               throw (NotFound) be;
 			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
+			if (be instanceof InvalidToken)           throw (InvalidToken) be;
 			if (be instanceof VersionMismatch)         throw (VersionMismatch) be;
 
 			throw recastDataONEExceptionToServiceFailure(be);
