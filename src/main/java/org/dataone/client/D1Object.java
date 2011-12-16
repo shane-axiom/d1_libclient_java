@@ -200,7 +200,7 @@ public class D1Object {
     throws ServiceFailure, InvalidToken, NotFound, NotAuthorized, NotImplemented, InvalidRequest 
     {
         String mn_url = D1Client.getCN().lookupNodeBaseUrl(sysmeta.getAuthoritativeMemberNode().getValue());
-        MNode mn = D1Client.getMN(mn_url);
+        D1Node mn = D1Client.getMN(mn_url);
         AccessPolicy ap = new AccessPolicy();
         AccessRule ar = new AccessRule();
         Subject s = new Subject();
@@ -208,7 +208,7 @@ public class D1Object {
         ar.addSubject(s);
         ar.addPermission(Permission.READ);
         ap.addAllow(ar);
-        mn.setAccessPolicy(token, sysmeta.getIdentifier(), ap);
+//        mn.setAccessPolicy(token, sysmeta.getIdentifier(), ap);
     }
     
     /**
@@ -262,7 +262,9 @@ public class D1Object {
                     e.printStackTrace();
                 } catch (NotImplemented e) {
                     e.printStackTrace();
-                }
+                } catch (InsufficientResources e) {
+					e.printStackTrace();
+				}
             }
             if (!gotData) {
                 System.out.println("Never found the data on MN.");

@@ -25,10 +25,15 @@ package org.dataone.client;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.logging.LogFactory;
+import org.apache.http.Header;
 import org.apache.http.HttpException;
 import org.apache.http.client.ClientProtocolException;
 import org.dataone.client.cache.LocalCache;
@@ -51,6 +56,8 @@ import org.dataone.service.exceptions.UnsupportedMetadataType;
 import org.dataone.service.exceptions.UnsupportedQueryType;
 import org.dataone.service.exceptions.UnsupportedType;
 import org.dataone.service.exceptions.VersionMismatch;
+import org.dataone.service.types.v1.Checksum;
+import org.dataone.service.types.v1.DescribeResponse;
 import org.dataone.service.types.v1.Event;
 import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.types.v1.Log;
@@ -60,8 +67,10 @@ import org.dataone.service.types.v1.Permission;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1.Subject;
 import org.dataone.service.types.v1.SystemMetadata;
+import org.dataone.service.util.BigIntegerMarshaller;
 import org.dataone.service.util.Constants;
 import org.dataone.service.util.D1Url;
+import org.dataone.service.util.DateTimeMarshaller;
 import org.dataone.service.util.TypeMarshaller;
 import org.jibx.runtime.JiBXException;
 
@@ -71,6 +80,8 @@ import org.jibx.runtime.JiBXException;
  */
 public abstract class D1Node {
 
+	protected static org.apache.commons.logging.Log log = LogFactory.getLog(CNode.class);
+	
 	// TODO: This class should implement the MemberNodeAuthorization interface as well
     /** The URL string for the node REST API */
     private String nodeBaseServiceUrl;
@@ -150,7 +161,43 @@ public abstract class D1Node {
     	session.setSubject(sub);
     	return session;
     }   
-  
+
+    
+	public Date ping() throws NotImplemented, ServiceFailure,
+	InsufficientResources {
+	
+		// TODO: create JavaDoc and fix doc reference
+	
+		// assemble the url
+		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_MONITOR_PING);
+		// send the request
+		D1RestClient client = new D1RestClient();
+		InputStream is = null;
+	
+	    try {
+	    	is = client.doGetRequest(url.getUrl());
+		} catch (BaseException be) {
+			if (be instanceof NotImplemented)         throw (NotImplemented) be;
+			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
+			if (be instanceof InsufficientResources)  throw (InsufficientResources) be;
+	
+			throw recastDataONEExceptionToServiceFailure(be);
+		} 
+		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+	
+		// if exception not thrown, and we got this far,
+		// then success (input stream should be empty)
+	    Date date = null;
+		try {
+			date = DateTimeMarshaller.deserializeDateToUTC(IOUtils.toString(is));
+		} catch (IOException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		}
+	    return date;
+	}
     /**
      * A convenience method for listObjects using no filtering parameters
      * @return
@@ -169,23 +216,23 @@ public abstract class D1Node {
 
     /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.listObjects */
 
-    public ObjectList listObjects(Session session, Date startTime, Date endTime, 
+    public ObjectList listObjects(Session session, Date fromDate, Date toDate, 
       ObjectFormatIdentifier formatid, Boolean replicaStatus, Integer start, Integer count) 
     throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
     {
 
         // TODO: create JavaDoc and fix doc reference
     	
-    	if (endTime != null && startTime != null && !endTime.after(startTime))
-			throw new InvalidRequest("1000", "startTime must be before endTime in listObjects() call. "
-					+ startTime + " " + endTime);
+    	if (toDate != null && fromDate != null && !toDate.after(fromDate))
+			throw new InvalidRequest("1000", "fromDate must be before toDate in listObjects() call. "
+					+ fromDate + " " + toDate);
 
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
 		
-		url.addDateParamPair("startTime", startTime);
-		url.addDateParamPair("endTime", endTime);
+		url.addDateParamPair("fromDate", fromDate);
+		url.addDateParamPair("toDate", toDate);
 		if (formatid != null) 
-			url.addNonEmptyParamPair("objectFormat", formatid.getValue());
+			url.addNonEmptyParamPair("formatId", formatid.getValue());
 		if (replicaStatus != null) {
 			if (replicaStatus) {
 				url.addNonEmptyParamPair("replicaStatus", 1);
@@ -273,7 +320,8 @@ public abstract class D1Node {
      * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.listObjects
      */
     public InputStream get(Session session, Identifier pid)
-    throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented 
+    throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, 
+      NotImplemented, InsufficientResources
     {
         InputStream is = null;        
         boolean cacheMissed = false;
@@ -305,7 +353,8 @@ public abstract class D1Node {
             if (be instanceof NotAuthorized)     throw (NotAuthorized) be;
             if (be instanceof NotImplemented)    throw (NotImplemented) be;
             if (be instanceof ServiceFailure)    throw (ServiceFailure) be;
-            if (be instanceof NotFound)          throw (NotFound) be;
+            if (be instanceof NotFound)                throw (NotFound) be;
+            if (be instanceof InsufficientResources)   throw (InsufficientResources) be;
                     
             throw recastDataONEExceptionToServiceFailure(be);
         } 
@@ -385,6 +434,107 @@ public abstract class D1Node {
 	
         return sysmeta;
 	}
+
+	
+    public DescribeResponse describe(Session session, Identifier pid)
+    throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound
+    {
+        // TODO: create JavaDoc and fix doc reference
+
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
+    	
+    	if(pid == null || pid.getValue().trim().equals(""))
+    		throw new NotFound("0000", "supplied PID was null, and cannot be");
+    	url.addNextPathElement(pid.getValue());
+    	
+     	D1RestClient client = new D1RestClient(session);
+    	
+    	Header[] headers = null;
+    	Map<String, String> headersMap = new HashMap<String,String>();
+    	try {
+    		headers = client.doHeadRequest(url.getUrl());
+    		for (Header header: headers) {
+    			if (log.isDebugEnabled())
+    				log.debug(String.format("header: %s = %s", 
+    										header.getName(), 
+    										header.getValue() ));
+    			headersMap.put(header.getName(), header.getValue());
+    		}
+        } catch (BaseException be) {
+            if (be instanceof InvalidToken)     throw (InvalidToken) be;
+            if (be instanceof NotAuthorized)    throw (NotAuthorized) be;
+            if (be instanceof NotImplemented)   throw (NotImplemented) be;
+            if (be instanceof ServiceFailure)   throw (ServiceFailure) be;
+            if (be instanceof NotFound)         throw (NotFound) be;
+                    
+            throw recastDataONEExceptionToServiceFailure(be);
+        } 
+        catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+        catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
+        catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
+        catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+
+ //   	DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+        String objectFormatIdStr = headersMap.get("DataONE-ObjectFormat");//.get(0);
+        String last_modifiedStr = headersMap.get("Last-Modified");//.get(0);
+        String content_lengthStr = headersMap.get("Content-Length");//.get(0);
+        String checksumStr = headersMap.get("DataONE-Checksum");//.get(0);
+        String serialVersionStr = headersMap.get("DataONE-SerialVersion");//.get(0);
+
+   
+        BigInteger content_length;
+		try {
+			content_length = BigIntegerMarshaller.deserializeBigInteger(content_lengthStr);
+		} catch (JiBXException e) {
+			throw new ServiceFailure("0", "Could not convert the returned content_length string (" + 
+					content_lengthStr + ") to a BigInteger: " + e.getMessage());
+		}
+        Date last_modified = null;
+        try
+        {
+            if (last_modifiedStr != null) 
+            	last_modified = DateTimeMarshaller.deserializeDateToUTC(last_modifiedStr.trim());
+        }
+        catch(NullPointerException e)
+        {
+            throw new ServiceFailure("0", "Could not parse the returned date string " + 
+            	last_modifiedStr + ". The date string needs to be either ISO" +
+            	" 8601 compliant or http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.3.1 compliant: " +
+                e.getMessage());
+        }
+
+        // build a checksum object
+        Checksum checksum = new Checksum();
+        if (checksumStr != null) {
+        	String[] cs = checksumStr.split(",");
+        	checksum.setAlgorithm(cs[0]);
+        	if (cs.length > 1) {
+        		checksum.setValue(cs[1]);
+        	} else {
+        		throw new ServiceFailure("0", "malformed checksum header returned, " +
+        				"checksum value not returned in the response");
+        	}
+        }
+        // build an objectformat identifier object
+        // doesn't check validity of the formatID value
+        
+        // to do the check, uncomment following line, and work it in to the code
+        //        ObjectFormat format = ObjectFormatCache.getInstance().getFormat(objectFormatIdStr);
+        
+        ObjectFormatIdentifier formatId = new ObjectFormatIdentifier();
+        formatId.setValue(objectFormatIdStr);
+        
+        BigInteger serialVersion = null;
+		try {
+			serialVersion = BigIntegerMarshaller.deserializeBigInteger(serialVersionStr);
+		} catch (JiBXException e) {
+			throw new ServiceFailure("0", "Could not convert the returned serialVersion string (" + 
+					serialVersionStr + ") to a BigInteger: " + e.getMessage());
+		}
+
+        return new DescribeResponse(formatId, content_length, last_modified, checksum, serialVersion);
+    }
+	
 	
 	
     public boolean isAuthorized(Session session, Identifier pid, Permission action)
