@@ -1151,7 +1151,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.mapIdentity */
 
-	public boolean mapIdentity(Session session, Subject subject)
+	public boolean mapIdentity(Session session, Subject primarySubject, Subject secondarySubject)
 	throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
 			NotImplemented, InvalidRequest, IdentifierNotUnique
 	{
@@ -1160,9 +1160,15 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING);
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
 
-    	mpe.addParamPart("subject", subject.getValue());
- 
-
+    	try {
+	    	mpe.addFilePart("primarySubject", primarySubject);
+	    	mpe.addFilePart("secondarySubject", secondarySubject);
+    	} catch (IOException e1) {
+			throw recastClientSideExceptionToServiceFailure(e1);
+		} catch (JiBXException e1) {
+			throw recastClientSideExceptionToServiceFailure(e1);
+		}
+			
 		D1RestClient client = new D1RestClient(session);
 
 		try {
