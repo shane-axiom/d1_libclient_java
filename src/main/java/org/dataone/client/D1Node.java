@@ -39,23 +39,14 @@ import org.apache.http.client.ClientProtocolException;
 import org.dataone.client.cache.LocalCache;
 import org.dataone.client.exception.NotCached;
 import org.dataone.configuration.Settings;
-import org.dataone.service.exceptions.AuthenticationTimeout;
 import org.dataone.service.exceptions.BaseException;
-import org.dataone.service.exceptions.IdentifierNotUnique;
 import org.dataone.service.exceptions.InsufficientResources;
-import org.dataone.service.exceptions.InvalidCredentials;
 import org.dataone.service.exceptions.InvalidRequest;
-import org.dataone.service.exceptions.InvalidSystemMetadata;
 import org.dataone.service.exceptions.InvalidToken;
 import org.dataone.service.exceptions.NotAuthorized;
 import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
-import org.dataone.service.exceptions.SynchronizationFailed;
-import org.dataone.service.exceptions.UnsupportedMetadataType;
-import org.dataone.service.exceptions.UnsupportedQueryType;
-import org.dataone.service.exceptions.UnsupportedType;
-import org.dataone.service.exceptions.VersionMismatch;
 import org.dataone.service.types.v1.Checksum;
 import org.dataone.service.types.v1.DescribeResponse;
 import org.dataone.service.types.v1.Event;
@@ -170,12 +161,15 @@ public abstract class D1Node {
 	
 		// assemble the url
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_MONITOR_PING);
-		// send the request
+		
+		// using the simple RestClient because we are going to get the date from
+		// the headers instead of looking in the message body
+
 		D1RestClient client = new D1RestClient();
-		InputStream is = null;
+		Header[] headers = null;
 	
 	    try {
-	    	is = client.doGetRequest(url.getUrl());
+	    	headers = client.doGetRequestForHeaders(url.getUrl());
 		} catch (BaseException be) {
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
@@ -189,13 +183,19 @@ public abstract class D1Node {
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 	
 		// if exception not thrown, and we got this far,
-		// then success (input stream should be empty)
-	    Date date = null;
-		try {
-			date = DateTimeMarshaller.deserializeDateToUTC(IOUtils.toString(is));
-		} catch (IOException e) {
-			throw recastClientSideExceptionToServiceFailure(e);
+		// then pull the date info from the headers
+		Date date = null;
+		for (Header header: headers) {
+			if (log.isDebugEnabled())
+				log.debug(String.format("header: %s = %s", 
+										header.getName(), 
+										header.getValue() ));
+			if (header.getName().equals("Date")) 
+				date = DateTimeMarshaller.deserializeDateToUTC(header.getValue());
 		}
+		if (date == null) 
+			throw new ServiceFailure("0000", "Could not get date information from response's 'Date' header.");
+		
 	    return date;
 	}
     /**

@@ -53,6 +53,7 @@ import org.dataone.service.exceptions.UnsupportedQueryType;
 import org.dataone.service.exceptions.UnsupportedType;
 import org.dataone.service.exceptions.VersionMismatch;
 import org.dataone.service.types.v1.Session;
+import org.dataone.service.util.Constants;
 import org.dataone.service.util.ExceptionHandler;
 
 /**
@@ -179,6 +180,16 @@ public class D1RestClient {
 		return ExceptionHandler.filterErrors(rc.doGetRequest(url));
 	}
 
+	public Header[] doGetRequestForHeaders(String url) 
+	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
+	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
+	NotAuthorized, NotFound, NotImplemented, ServiceFailure, SynchronizationFailed,
+	UnsupportedMetadataType, UnsupportedQueryType, UnsupportedType,
+	IllegalStateException, ClientProtocolException, IOException, HttpException, VersionMismatch 
+	{
+		rc.setHeader("Accept", "text/xml");
+		return ExceptionHandler.filterErrorsHeader(rc.doGetRequest(url),Constants.GET);
+	}
 	
 	public InputStream doDeleteRequest(String url) 
 	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
@@ -210,7 +221,7 @@ public class D1RestClient {
 	IllegalStateException, ClientProtocolException, IOException, HttpException, VersionMismatch 
 	{
 		rc.setHeader("Accept", "text/xml");
-		return ExceptionHandler.filterErrorsHeader(rc.doHeadRequest(url));
+		return ExceptionHandler.filterErrorsHeader(rc.doHeadRequest(url),Constants.HEAD);
 	}
 	
 	public InputStream doPutRequest(String url, SimpleMultipartEntity entity) 
