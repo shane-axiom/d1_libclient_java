@@ -642,9 +642,9 @@ public class CertificateManager {
             return;
         }
         log.debug("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-        Principal issuerDN = cert.getIssuerDN();
-        log.debug(" Issuer: " + issuerDN.toString());
-        Date notBefore = cert.getNotBefore();
+
+        log.debug(" Issuer: " + cert.getIssuerX500Principal().getName(X500Principal.RFC2253));
+        Date notBefore = cert.getNotBefore(); 
         DateFormat fmt = SimpleDateFormat.getDateTimeInstance();
         log.debug("   From: " + fmt.format(notBefore));
         Date notAfter = cert.getNotAfter();
