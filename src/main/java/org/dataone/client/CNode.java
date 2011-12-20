@@ -1545,7 +1545,11 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         mpe.addParamPart("nodeRef", nodeRef.getValue());
         mpe.addParamPart("status", status.xmlValue());
         try {
-            mpe.addFilePart("failure", failure.serialize(0));
+            if ( failure != null ) {
+                mpe.addFilePart("failure", failure.serialize(0));
+                
+            }
+            
         } catch (IOException e1) {
             
             throw recastClientSideExceptionToServiceFailure(e1);        
