@@ -652,50 +652,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 
 
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_read.assertRelation */
-	@Deprecated
-	public boolean assertRelation(Session session, Identifier pidOfSubject, 
-	    String relationship, Identifier pidOfObject) throws InvalidToken, 
-		ServiceFailure, NotAuthorized, NotFound, InvalidRequest, NotImplemented
-	{
-
-		// TODO: create JavaDoc and fix doc reference
-
-		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_RELATIONSHIP);
-		if (pidOfSubject == null) {
-			throw new InvalidRequest("0000","'pidOfSubject' cannot be null");
-		}
-    	url.addNextPathElement(pidOfSubject.getValue());
-    	url.addNonEmptyParamPair("relationship", relationship);
-    	if (pidOfObject == null) {
-    		throw new InvalidRequest("0000","'pidOfObject' cannot be null");
-    	}
-    	url.addNonEmptyParamPair("pidOfObject", pidOfObject.getValue());
-    	
-		// send the request
-		D1RestClient client = new D1RestClient(session);
-
-		try {
-			client.doGetRequest(url.getUrl());
-		} catch (BaseException be) {
-			if (be instanceof InvalidToken)           throw (InvalidToken) be;
-			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
-			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
-			if (be instanceof NotFound)               throw (NotFound) be;
-			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
-			if (be instanceof NotImplemented)         throw (NotImplemented) be;
-
-			throw recastDataONEExceptionToServiceFailure(be);
-		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
-		return true;
-	}
-
-
 	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_read.getChecksum */
 
 	public Checksum getChecksum(Session session, Identifier pid)
