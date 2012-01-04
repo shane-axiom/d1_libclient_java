@@ -26,56 +26,53 @@
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
  xsi:schemaLocation="http://dataone.org/service/types/0.5.1 https://repository.dataone.org/software/cicore/tags/D1_SCHEMA_0_5_1/dataoneTypes.xsd">
 
-<!-- CN-RPW
-    <node type="member" synchronize="true" replicate="true">
-        <identifier>1</identifier>
-        <name>knb-mn</name>
-        <baseURL>http://cn-rpw/knb/</baseURL>
+    <node replicate="false" synchronize="false" type="cn" state="up">
+        <identifier>testcn</identifier>
+        <name>localhost-cntest-1</name>
+        <description>Nowhere Test Member node</description>
+        <baseURL>https://nowhere.com/cn</baseURL>
         <services>
-            <service api="mn_crud" method="get" rest="object/${GUID}" available="true"    datechecked="2010-06-07T23:55:10Z" />
-            <service api="mn_crud" method="getSystemMetadata" rest="meta/${GUID}" available="true"     datechecked="2010-06-07T23:55:10Z" />
-            <service api="mn_replicate" method="listObjects" rest="object" available="true"    datechecked="2010-06-07T23:55:10Z" />
+            <service name="CNCore" version="v1" available="true"/>
+            <service name="CNRead" version="v1" available="true"/>
+            <service name="CNAuthorization" version="v1" available="true"/>
+            <service name="CNRegister" version="v1" available="true"/>
+            <service name="CNReplication" version="v1" available="true" />
+            <service name="CNIdentity" version="v1" available="true">
+                <restriction methodName="mapIdentity">
+                    <subject>cn=test,dc=dataone,dc=org</subject>
+                    <subject>cn=test2,dc=dataone,dc=org</subject>
+                    <subject>cn=test3,dc=dataone,dc=org</subject>
+                </restriction>
+            </service>
         </services>
-        <synchronization>
-            <schedule sec="00" min="00" hour="12" mday="*"  mon="*" wday="*" year="*" />
-            <lastHarvested>2010-06-07T23:55:10Z</lastHarvested>
-            <lastCompleteHarvest>2010-06-07T23:55:10Z</lastCompleteHarvest>
-        </synchronization>
+        <subject>cn=test,dc=dataone,dc=org</subject>
+        <subject>cn=test2,dc=dataone,dc=org</subject>
+        <contactSubject>cn=test,dc=dataone,dc=org</contactSubject>
+        <contactSubject>cn=test2,dc=dataone,dc=org</contactSubject>
     </node>
--->
-    <!-- CN-DEV -->
-    <node type="member" synchronize="true" replicate="true">
-        <identifier>1</identifier>
-        <name>knb-mn</name>
-        <baseURL>http://cn-dev.dataone.org/knb/</baseURL>  
-        <services>
-            <service api="mn_crud" method="get" rest="object/${GUID}" available="true"    datechecked="2010-06-07T23:55:10Z" />
-            <service api="mn_crud" method="getSystemMetadata" rest="meta/${GUID}" available="true"     datechecked="2010-06-07T23:55:10Z" />
-            <service api="mn_replicate" method="listObjects" rest="object" available="true"    datechecked="2010-06-07T23:55:10Z" />
-        </services>
-        <synchronization>
-            <schedule sec="00" min="00" hour="12" mday="*"  mon="*" wday="*" year="*" />
-            <lastHarvested>2010-06-07T23:55:10Z</lastHarvested>
-            <lastCompleteHarvest>2010-06-07T23:55:10Z</lastCompleteHarvest>
-        </synchronization>
-        <contactSubject>cn=me,dc=here,dc=there</contactSubject>
-    </node> 
 
-    <!-- KNB MN -->
-    <node type="member" synchronize="true" replicate="true">
-        <identifier>2</identifier>
-        <name>knb-mn</name>
-        <baseURL>http://knb-mn.ecoinformatics.org/knb/</baseURL>  
+    <node replicate="true" synchronize="true" type="mn" state="up">
+        <identifier>test</identifier>
+        <name>localhost-test-1</name>
+        <description>Nowhere Test Member node</description>
+        <baseURL>https://nowhere.com/mn</baseURL>
         <services>
-            <service api="mn_crud" method="get" rest="object/${GUID}" available="true"    datechecked="2010-06-07T23:55:10Z" />
-            <service api="mn_crud" method="getSystemMetadata" rest="meta/${GUID}" available="true"     datechecked="2010-06-07T23:55:10Z" />
-            <service api="mn_replicate" method="listObjects" rest="object" available="true"    datechecked="2010-06-07T23:55:10Z" />
+            <service name="MNCore" version="v1" available="true"/>
+            <service name="MNRead" version="v1" available="true"/>
+            <service name="MNAuthorization" version="v1" available="true"/>
+            <service name="MNStorage" version="v1" available="true"/>
+            <service name="MNReplication" version="v1" available="false">
+                <restriction methodName="replicate">
+                    <subject>cn=test,dc=dataone,dc=org</subject>
+                </restriction>
+            </service>
         </services>
         <synchronization>
-            <schedule sec="00" min="00" hour="12" mday="*"  mon="*" wday="*" year="*" />
-            <lastHarvested>2010-06-07T23:55:10Z</lastHarvested>
-            <lastCompleteHarvest>2010-06-07T23:55:10Z</lastCompleteHarvest>
+            <schedule hour="*" mday="*" min="0,5,10,15,20,25,30,35,40,45,50,55" mon="11" sec="30" wday="?" year="2001"/>
+            <lastHarvested>1900-01-01T00:00:00.000+00:00</lastHarvested>
+            <lastCompleteHarvest>1900-01-01T00:00:00.000+00:00</lastCompleteHarvest>
         </synchronization>
-        <contactSubject>cn=me,dc=here,dc=there</contactSubject>
-    </node> 
+        <subject>cn=test,dc=dataone,dc=org</subject>
+        <contactSubject>cn=test,dc=dataone,dc=org</contactSubject>
+    </node>
 </d1:nodeList>
