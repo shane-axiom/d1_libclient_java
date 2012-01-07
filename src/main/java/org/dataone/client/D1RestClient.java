@@ -49,7 +49,6 @@ import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.exceptions.SynchronizationFailed;
 import org.dataone.service.exceptions.UnsupportedMetadataType;
-import org.dataone.service.exceptions.UnsupportedQueryType;
 import org.dataone.service.exceptions.UnsupportedType;
 import org.dataone.service.exceptions.VersionMismatch;
 import org.dataone.service.types.v1.Session;
@@ -117,11 +116,11 @@ public class D1RestClient {
 	{		
 		SSLSocketFactory socketFactory = null;
 		try {
-			String subject = null;
+			String subjectString = null;
 			if (session != null && session.getSubject() != null) {
-				subject = session.getSubject().getValue();
+				subjectString = session.getSubject().getValue();
 			}
-			socketFactory = CertificateManager.getInstance().getSSLSocketFactory(subject);
+			socketFactory = CertificateManager.getInstance().getSSLSocketFactory(subjectString);
 		} catch (FileNotFoundException e) {
 			// these are somewhat expected for anonymous d1 client use
 			log.warn("Could not set up SSL connection for client - likely because the certificate could not be located: " + e.getMessage());
@@ -173,7 +172,7 @@ public class D1RestClient {
 	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
 	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
 	NotAuthorized, NotFound, NotImplemented, ServiceFailure, SynchronizationFailed,
-	UnsupportedMetadataType, UnsupportedQueryType, UnsupportedType,
+	UnsupportedMetadataType, UnsupportedType,
 	IllegalStateException, ClientProtocolException, IOException, HttpException, VersionMismatch 
 	{
 		rc.setHeader("Accept", "text/xml");
@@ -184,7 +183,7 @@ public class D1RestClient {
 	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
 	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
 	NotAuthorized, NotFound, NotImplemented, ServiceFailure, SynchronizationFailed,
-	UnsupportedMetadataType, UnsupportedQueryType, UnsupportedType,
+	UnsupportedMetadataType, UnsupportedType,
 	IllegalStateException, ClientProtocolException, IOException, HttpException, VersionMismatch 
 	{
 		rc.setHeader("Accept", "text/xml");
@@ -195,7 +194,7 @@ public class D1RestClient {
 	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
 	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
 	NotAuthorized, NotFound, NotImplemented, ServiceFailure, SynchronizationFailed,
-	UnsupportedMetadataType, UnsupportedQueryType, UnsupportedType,
+	UnsupportedMetadataType, UnsupportedType,
 	IllegalStateException, ClientProtocolException, IOException, HttpException, VersionMismatch 
 	{
 		rc.setHeader("Accept", "text/xml");
@@ -217,7 +216,7 @@ public class D1RestClient {
 	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
 	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
 	NotAuthorized, NotFound, NotImplemented, ServiceFailure, SynchronizationFailed,
-	UnsupportedMetadataType, UnsupportedQueryType, UnsupportedType,
+	UnsupportedMetadataType, UnsupportedType,
 	IllegalStateException, ClientProtocolException, IOException, HttpException, VersionMismatch 
 	{
 		rc.setHeader("Accept", "text/xml");
@@ -228,7 +227,7 @@ public class D1RestClient {
 	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
 	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
 	NotAuthorized, NotFound, NotImplemented, ServiceFailure, SynchronizationFailed,
-	UnsupportedMetadataType, UnsupportedQueryType, UnsupportedType,
+	UnsupportedMetadataType, UnsupportedType,
 	IllegalStateException, ClientProtocolException, IOException, HttpException, VersionMismatch 
 	{
 		rc.setHeader("Accept", "text/xml");
@@ -239,7 +238,7 @@ public class D1RestClient {
 	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
 	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
 	NotAuthorized, NotFound, NotImplemented, ServiceFailure, SynchronizationFailed,
-	UnsupportedMetadataType, UnsupportedQueryType, UnsupportedType,
+	UnsupportedMetadataType, UnsupportedType,
 	IllegalStateException, ClientProtocolException, IOException, HttpException, VersionMismatch 
 	{
 		rc.setHeader("Accept", "text/xml");

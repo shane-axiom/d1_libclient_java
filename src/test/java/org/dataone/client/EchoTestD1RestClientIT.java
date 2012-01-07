@@ -5,31 +5,16 @@ import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpException;
 import org.apache.http.client.ClientProtocolException;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
-import org.dataone.service.util.D1Url;
-import org.dataone.service.exceptions.AuthenticationTimeout;
 import org.dataone.service.exceptions.BaseException;
-import org.dataone.service.exceptions.IdentifierNotUnique;
-import org.dataone.service.exceptions.InsufficientResources;
-import org.dataone.service.exceptions.InvalidCredentials;
-import org.dataone.service.exceptions.InvalidRequest;
-import org.dataone.service.exceptions.InvalidSystemMetadata;
-import org.dataone.service.exceptions.InvalidToken;
-import org.dataone.service.exceptions.NotAuthorized;
 import org.dataone.service.exceptions.NotFound;
-import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
-import org.dataone.service.exceptions.SynchronizationFailed;
-import org.dataone.service.exceptions.UnsupportedMetadataType;
-import org.dataone.service.exceptions.UnsupportedQueryType;
-import org.dataone.service.exceptions.UnsupportedType;
-import org.dataone.service.exceptions.VersionMismatch;
+import org.dataone.service.util.D1Url;
 import org.junit.Ignore;
 import org.junit.Test;
 
