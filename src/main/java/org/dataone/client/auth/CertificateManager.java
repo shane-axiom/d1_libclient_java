@@ -15,7 +15,6 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.security.Principal;
 import java.security.PrivateKey;
 import java.security.SecureRandom;
 import java.security.Security;
@@ -54,7 +53,6 @@ import org.dataone.configuration.Settings;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1.Subject;
 import org.dataone.service.types.v1.SubjectInfo;
-import org.dataone.service.types.v1.SubjectList;
 import org.dataone.service.util.TypeMarshaller;
 import org.jibx.runtime.JiBXException;
 
@@ -181,9 +179,14 @@ public class CertificateManager {
         }
         return caCert;
     }
+
     
     /**
-     * Load configured certificate from the keystore
+     * Load the configured certificate into the keystore singleton
+     * Follows the logic of first searching the certificate at the setCertificateLocation()
+     * location, then using the default location.
+	 * 
+     * @return the loaded X.509 certificate
      */
     public X509Certificate loadCertificate() {
 
@@ -198,9 +201,10 @@ public class CertificateManager {
         }
         return cert;
     }
+
     
     /**
-     * Load configured private key from the keystore
+     * Load configured private key from the keystore 
      */
     public PrivateKey loadKey() {
 
@@ -284,7 +288,7 @@ public class CertificateManager {
     
     /**
      * Returns D1-wide consistent Subject DN string representations
-     * @param name the [resonable] DN representation
+     * @param name - the [reasonable] DN representation
      * @return the standard D1 representation
      */
     public String standardizeDN(String name) {
@@ -403,9 +407,15 @@ public class CertificateManager {
     }
     
     /**
-     * Get SSL socket factory for use when making SSL connection requests as a client
-     * @param session
-     * @return
+     * For use by clients making requests via SSL connection.
+     * Prepares and returns an SSL socket factory loaded with the certificate
+     * determined by the subjectString.  
+     * If the subjectString parameter is null, finds the certificate first using the 
+     * set certificate location, and then the default location.
+     * @param subjectString - used to determine which certificate to use for the connection
+     *                        if null, finds the certificate first using the set certificate location,
+     *                        and then the default location.
+     * @return an SSLSockectFactory object configured with the specified certificate
      * @throws NoSuchAlgorithmException
      * @throws UnrecoverableKeyException
      * @throws KeyStoreException
@@ -413,7 +423,7 @@ public class CertificateManager {
      * @throws CertificateException
      * @throws IOException
      */
-    public SSLSocketFactory getSSLSocketFactory(String subject) 
+    public SSLSocketFactory getSSLSocketFactory(String subjectString) 
     throws NoSuchAlgorithmException, UnrecoverableKeyException, KeyStoreException,
     KeyManagementException, CertificateException, IOException 
     {
@@ -426,7 +436,7 @@ public class CertificateManager {
     	// Catch the exception here so that the TLS connection scheme
     	// will still be setup if the client certificate is not found.
     	try {
-    		keyStore = getKeyStore(subject);
+    		keyStore = getKeyStore(subjectString);
 		} catch (FileNotFoundException e) {
 			// these are somewhat expected for anonymous d1 client use
 			log.warn("Could not set up client side authentication - likely because the certificate could not be located: " + e.getMessage());
@@ -451,10 +461,9 @@ public class CertificateManager {
         };
         
         // specify the client key manager
-        KeyManager[] keyManagers = null;
         KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
         keyManagerFactory.init(keyStore, keyStorePassword.toCharArray());
-        keyManagers = keyManagerFactory.getKeyManagers();
+        KeyManager[] keyManagers = keyManagerFactory.getKeyManagers();
         
         // initialize the context
         ctx.init(keyManagers, new TrustManager[]{tm}, new SecureRandom());
@@ -464,24 +473,33 @@ public class CertificateManager {
     }
     
     /**
-     * Load PEM file contents into in-memory keystore
+     * Loads the certificate and privateKey into the in-memory KeyStore singleton, 
+     * using the provided subjectString to search among the registered certificates.
+     * If the subjectString parameter is null, finds the certificate first using the 
+     * set certificate location, and then the default location. 
+     *  
+     * 
      * NOTE: this implementation uses Bouncy Castle security provider
-     * @return the keystore that will provide the material
+     * 
+     * @param subjectString - key for the registered certificate to load into the keystore
+     *                        an unregistered subjectString will lead to a KeyStoreException
+     *                        ("Cannot store non-PrivateKeys")
+     * @return the keystore singleton instance that will provide the material
      * @throws KeyStoreException 
      * @throws CertificateException 
      * @throws NoSuchAlgorithmException 
      * @throws IOException 
      */
-    private KeyStore getKeyStore(String subject) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
+    private KeyStore getKeyStore(String subjectString) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
     	
     	// the important items
     	X509Certificate certificate = null;
         PrivateKey privateKey = null;
         
     	// if we have a session subject, find the registered certificate and key
-    	if (subject != null) {
-    		certificate = certificates.get(subject);
-    		privateKey = keys.get(subject);
+    	if (subjectString != null) {
+    		certificate = certificates.get(subjectString);
+    		privateKey = keys.get(subjectString);
     	}
     	else {
 			// if the location has been set, use it
@@ -560,7 +578,8 @@ public class CertificateManager {
 		}
         return privateKey;
     }
-    
+
+
     /**
      * Load X509Certificate object from given file
      * @param fileName
@@ -641,21 +660,23 @@ public class CertificateManager {
         if (cert == null) {
             return;
         }
-        log.debug("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        if (log.isDebugEnabled()) {
+        	log.debug("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
-        log.debug(" Issuer: " + cert.getIssuerX500Principal().getName(X500Principal.RFC2253));
-        Date notBefore = cert.getNotBefore(); 
-        DateFormat fmt = SimpleDateFormat.getDateTimeInstance();
-        log.debug("   From: " + fmt.format(notBefore));
-        Date notAfter = cert.getNotAfter();
-        log.debug("     To: " + fmt.format(notAfter));
-        log.debug("Subject: " + getSubjectDN(cert));
-//        Principal subjectDN = cert.getSubjectDN();
-//        log.debug("Subject Name: " + subjectDN.getName());
-//        log.debug("Subject x500 Principal default: " + cert.getSubjectX500Principal().getName());
-//        log.debug("Subject x500 Principal CANONICAL: " + cert.getSubjectX500Principal().getName(X500Principal.CANONICAL));
-//        log.debug("Subject x500 Principal RFC1779: " + cert.getSubjectX500Principal().getName(X500Principal.RFC1779));
-//        log.debug("Subject x500 Principal RFC2253: " + cert.getSubjectX500Principal().getName(X500Principal.RFC2253));
-        log.debug("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        	log.debug(" Issuer: " + cert.getIssuerX500Principal().getName(X500Principal.RFC2253));
+        	Date notBefore = cert.getNotBefore(); 
+        	DateFormat fmt = SimpleDateFormat.getDateTimeInstance();
+        	log.debug("   From: " + fmt.format(notBefore));
+        	Date notAfter = cert.getNotAfter();
+        	log.debug("     To: " + fmt.format(notAfter));
+        	log.debug("Subject: " + getSubjectDN(cert));
+        	//        Principal subjectDN = cert.getSubjectDN();
+        	//        log.debug("Subject Name: " + subjectDN.getName());
+        	//        log.debug("Subject x500 Principal default: " + cert.getSubjectX500Principal().getName());
+        	//        log.debug("Subject x500 Principal CANONICAL: " + cert.getSubjectX500Principal().getName(X500Principal.CANONICAL));
+        	//        log.debug("Subject x500 Principal RFC1779: " + cert.getSubjectX500Principal().getName(X500Principal.RFC1779));
+        	//        log.debug("Subject x500 Principal RFC2253: " + cert.getSubjectX500Principal().getName(X500Principal.RFC2253));
+        	log.debug("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        }
     }
 }
