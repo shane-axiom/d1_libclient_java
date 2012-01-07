@@ -1634,7 +1634,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		SimpleMultipartEntity mpe = new SimpleMultipartEntity();
 
 		try {
-			mpe.addFilePart("replica", replicaMetadata);
+			mpe.addFilePart("replicaMetadata", replicaMetadata);
 			mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
 		} catch (IOException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
