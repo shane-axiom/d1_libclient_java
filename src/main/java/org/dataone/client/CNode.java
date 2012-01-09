@@ -1495,7 +1495,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		// TODO: create JavaDoc and fix doc reference
 
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_REPLICATION_NOTIFY);
-    	url.addNextPathElement(pid.getValue());
+		if (pid != null)
+			url.addNextPathElement(pid.getValue());
+		
     	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
         mpe.addParamPart("nodeRef", nodeRef.getValue());
@@ -1546,7 +1548,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		// TODO: create JavaDoc and fix doc reference
 
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_REPLICATION_POLICY);
-    	url.addNextPathElement(pid.getValue());
+		if (pid != null)
+			url.addNextPathElement(pid.getValue());
     	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
@@ -1593,9 +1596,11 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		// TODO: create JavaDoc and fix doc reference
 
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_REPLICATION_AUTHORIZED);
-        url.addNextPathElement(pid.getValue());
-        
-        url.addNonEmptyParamPair("targetNodeSubject", targetNodeSubject.getValue());
+        if (pid != null)
+        	url.addNextPathElement(pid.getValue());
+        if (targetNodeSubject != null)
+        	url.addNonEmptyParamPair("targetNodeSubject", targetNodeSubject.getValue());
+
         D1RestClient client = new D1RestClient(originatingNodeSession);
 
 		try {
@@ -1629,7 +1634,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		// TODO: create JavaDoc and fix doc reference
 
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_REPLICATION_META);
-		url.addNextPathElement(pid.getValue());
+		if (pid != null)
+			url.addNextPathElement(pid.getValue());
+		
 
 		SimpleMultipartEntity mpe = new SimpleMultipartEntity();
 
