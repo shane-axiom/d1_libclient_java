@@ -1407,8 +1407,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		// TODO: create JavaDoc and fix doc reference
 
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_NODE);
-    	url.addNextPathElement(nodeid.getValue());
-    	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
+		if (nodeid != null)
+			url.addNextPathElement(nodeid.getValue());
+    	
+		SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
     		mpe.addFilePart("node", node);
     	} catch (IOException e1) {

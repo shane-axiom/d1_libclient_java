@@ -276,7 +276,7 @@ public abstract class D1Node {
 
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_LOG);
         if (fromDate == null) {
-        	throw new InvalidRequest("","The 'fromDate' parameter cannot be null");
+        	throw new InvalidRequest("0000","The 'fromDate' parameter cannot be null");
         }
     	url.addDateParamPair("fromDate", fromDate);
     	url.addDateParamPair("toDate", toDate);
@@ -312,7 +312,7 @@ public abstract class D1Node {
     
     
 	/**
-     * Get the resource with the specified guid.  Used by both the CNode and 
+     * Get the resource with the specified pid.  Used by both the CNode and 
      * MNode subclasses. A LocalCache is used to cache objects in memory and in 
      * a local disk cache if the "D1Client.useLocalCache" configuration property
      * was set to true when the D1Node was created. Otherwise
@@ -336,6 +336,11 @@ public abstract class D1Node {
             }
         }
        	D1Url url = new D1Url(this.getNodeBaseServiceUrl(),Constants.RESOURCE_OBJECTS);
+       	
+       	// need to check for null or empty values, or else the call transposes
+    	// into a listObjects
+    	if(pid == null || pid.getValue().trim().equals(""))
+    		throw new NotFound("0000", "'pid' cannot be null nor empty");
     	url.addNextPathElement(pid.getValue());
 
 		D1RestClient client = new D1RestClient(session);
@@ -404,7 +409,8 @@ public abstract class D1Node {
             }
         }
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(),Constants.RESOURCE_META);
-    	url.addNextPathElement(pid.getValue());
+		if (pid != null)
+			url.addNextPathElement(pid.getValue());
 
 		D1RestClient client = new D1RestClient(session);
 		
@@ -443,8 +449,10 @@ public abstract class D1Node {
 
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
     	
+    	// need to check for null or empty values, or else the call transposes
+    	// into a listObjects
     	if(pid == null || pid.getValue().trim().equals(""))
-    		throw new NotFound("0000", "supplied PID was null, and cannot be");
+    		throw new NotFound("0000", "'pid' cannot be null nor empty");
     	url.addNextPathElement(pid.getValue());
     	
      	D1RestClient client = new D1RestClient(session);
@@ -542,14 +550,13 @@ public abstract class D1Node {
     {
 
         // TODO: create JavaDoc and fix doc reference
-    	
-    	if (pid == null || pid.getValue().trim().equals(""))
-            throw new InvalidRequest("1761", "PID cannot be null nor empty");
 
         // assemble the url
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_AUTHORIZATION);
-    	url.addNextPathElement(pid.getValue());
-    	url.addNonEmptyParamPair("action", action.xmlValue());
+        if (pid != null)
+        	url.addNextPathElement(pid.getValue());
+        if (action != null)
+        	url.addNonEmptyParamPair("action", action.xmlValue());
     	
         // send the request
         D1RestClient client = new D1RestClient(session);
