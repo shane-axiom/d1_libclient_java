@@ -227,12 +227,10 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
         // TODO: create JavaDoc and fix doc reference
     	
-    	if(pid == null || pid.getValue().trim().equals(""))
-            throw new InvalidRequest("1402", "GUID cannot be null nor empty");
-
         // assemble the url
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_CHECKSUM);
-    	url.addNextPathElement(pid.getValue());
+        if (pid != null)
+        	url.addNextPathElement(pid.getValue());
         
     	url.addNonEmptyParamPair("checksumAlgorithm", checksumAlgorithm);
 
@@ -423,10 +421,8 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         // TODO: create JavaDoc and fix doc reference
 
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
-    	
-    	if(pid == null || pid.getValue().trim().equals(""))
-    		throw new NotFound("0000", "GUID cannot be null.");
-    	url.addNextPathElement(pid.getValue());
+    	if (pid != null) 
+    		url.addNextPathElement(pid.getValue());
     	
      	D1RestClient client = new D1RestClient(session);
     	
@@ -463,7 +459,8 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_META_CHANGED);
 
 		SimpleMultipartEntity mpe = new SimpleMultipartEntity();
-        mpe.addParamPart("pid", pid.getValue());
+		if (pid != null)
+			mpe.addParamPart("pid", pid.getValue());
         mpe.addParamPart("dateSysMetaLastModified", 
                 DateTimeMarshaller.serializeDateToUTC(dateSystemMetadataLastModified));
         mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
@@ -494,18 +491,15 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         InsufficientResources, UnsupportedType
     {
         // TODO: create JavaDoc and fix doc reference
-
-    	if (sysmeta == null)
-    		throw new InvalidRequest("2153","'sysmeta' cannot be null");
-		if (sourceNode == null)
-    		throw new InvalidRequest("2153","'sourceNode' cannot be null");
 		
 		// assemble the url
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_REPLICATE);
     	
     	// assemble the context body
     	SimpleMultipartEntity smpe = new SimpleMultipartEntity();
-    	smpe.addParamPart("sourceNode", sourceNode.getValue());
+    	if (sourceNode != null)
+    		smpe.addParamPart("sourceNode", sourceNode.getValue());
+
     	try {
 			smpe.addFilePart("sysmeta", sysmeta);
 		} catch (IOException e) {
@@ -545,7 +539,8 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         // TODO: create JavaDoc and fix doc reference
 
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(),Constants.RESOURCE_REPLICAS);
-        url.addNextPathElement(pid.getValue());
+        if (pid != null)
+        	url.addNextPathElement(pid.getValue());
 
         // send the request
         D1RestClient client = new D1RestClient(session);
