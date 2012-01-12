@@ -1662,6 +1662,90 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof NotFound)               throw (NotFound) be;
 			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
+			if (be instanceof VersionMismatch)        throw (VersionMismatch) be;
+
+			throw recastDataONEExceptionToServiceFailure(be);
+		} 
+		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+
+		return true;
+	}
+
+	@Override
+	public boolean setObsoletedBy(Session session, Identifier pid,
+			Identifier obsoletedByPid, long serialVersion)
+			throws NotImplemented, NotFound, NotAuthorized, ServiceFailure,
+			InvalidRequest, InvalidToken, VersionMismatch {
+		
+		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_META_OBSOLETEDBY);
+		
+		if (pid == null) {
+			throw new InvalidRequest("0000","'pid' cannot be null");
+		}
+		
+		url.addNextPathElement(pid.getValue());
+		
+    	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
+		mpe.addParamPart("obsoletedByPid", obsoletedByPid.getValue());
+		mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
+
+		D1RestClient client = new D1RestClient(session);
+
+		try {
+			client.doPutRequest(url.getUrl(), mpe);
+		} catch (BaseException be) {
+			if (be instanceof InvalidToken)           throw (InvalidToken) be;
+			if (be instanceof NotFound)               throw (NotFound) be;
+			if (be instanceof NotImplemented)         throw (NotImplemented) be;
+			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
+			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
+			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
+			if (be instanceof VersionMismatch)        throw (VersionMismatch) be;
+
+			throw recastDataONEExceptionToServiceFailure(be);
+		} 
+		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+
+		return true;
+	}
+
+	@Override
+	public boolean deleteReplicationMetadata(Session session, Identifier pid,
+			NodeReference nodeId, long serialVersion) throws InvalidToken,
+			ServiceFailure, NotAuthorized, NotFound, NotImplemented,
+			VersionMismatch {
+		
+		// TODO: need the resource for delete
+		if (true) {
+			throw new NotImplemented("0000", "Need REST endpoint and method to be defined");
+		}
+		
+		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_REPLICATION_META);
+		if (pid != null) {
+			url.addNextPathElement(pid.getValue());
+		}
+		
+		SimpleMultipartEntity mpe = new SimpleMultipartEntity();
+
+		mpe.addParamPart("nodeId", nodeId.getValue());
+		mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
+
+		D1RestClient client = new D1RestClient(session);
+
+		try {
+			client.doPostRequest(url.getUrl(),mpe);
+		} catch (BaseException be) {
+			if (be instanceof NotImplemented)         throw (NotImplemented) be;
+			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
+			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
+			if (be instanceof NotFound)               throw (NotFound) be;
+			if (be instanceof InvalidToken)           throw (InvalidToken) be;
 			if (be instanceof VersionMismatch)         throw (VersionMismatch) be;
 
 			throw recastDataONEExceptionToServiceFailure(be);
