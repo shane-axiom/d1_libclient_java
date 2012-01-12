@@ -1721,12 +1721,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			ServiceFailure, NotAuthorized, NotFound, NotImplemented,
 			VersionMismatch {
 		
-		// TODO: need the resource for delete
-		if (true) {
-			throw new NotImplemented("0000", "Need REST endpoint and method to be defined");
-		}
-		
-		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_REPLICATION_META);
+		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_REPLICATION_DELETE_REPLICA);
 		if (pid != null) {
 			url.addNextPathElement(pid.getValue());
 		}
@@ -1739,7 +1734,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		D1RestClient client = new D1RestClient(session);
 
 		try {
-			client.doPostRequest(url.getUrl(),mpe);
+			client.doPutRequest(url.getUrl(),mpe);
 		} catch (BaseException be) {
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
