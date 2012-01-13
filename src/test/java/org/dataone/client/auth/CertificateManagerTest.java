@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.security.KeyStoreException;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 
@@ -175,6 +176,22 @@ public class CertificateManagerTest {
 		} 
         
        
+    }
+    /**
+     * tests that exception thrown when a bad subject value is passed in
+     */
+    @Test
+    public void testGetSSLSocketFactory_badSubjectValue() {
+    	try {
+    		CertificateManager.getInstance().getSSLSocketFactory("blah_blah");
+    	} catch (KeyStoreException e) {
+    		// this is what we expect
+    	} catch (Exception e) {
+    		e.printStackTrace();
+    		fail();
+	} 
+    
+    
     }
     
 }
