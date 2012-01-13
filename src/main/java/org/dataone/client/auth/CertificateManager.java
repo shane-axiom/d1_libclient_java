@@ -418,7 +418,7 @@ public class CertificateManager {
      * @return an SSLSockectFactory object configured with the specified certificate
      * @throws NoSuchAlgorithmException
      * @throws UnrecoverableKeyException
-     * @throws KeyStoreException
+     * @throws KeyStoreException - thrown if an unknown subject value provided
      * @throws KeyManagementException
      * @throws CertificateException
      * @throws IOException
