@@ -25,6 +25,7 @@ package org.dataone.client;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Date;
 import java.util.HashMap;
 
 import org.apache.commons.logging.Log;
@@ -114,6 +115,7 @@ public class D1RestClient {
 	 */
 	public void setupSSL(Session session) 
 	{		
+//		long startMS = new Date().getTime();
 		SSLSocketFactory socketFactory = null;
 		try {
 			String subjectString = null;
@@ -136,6 +138,8 @@ public class D1RestClient {
 			// this is likely more severe
 			log.error("Failed to set up SSL connection for client. Continuing. " + e.getClass() + ":: " + e.getMessage(), e);
 		}
+//		long deltaT = new Date().getTime() - startMS;
+//		log.warn("  SSLsetupTime: " + deltaT);
 	}
 	
 	
@@ -175,8 +179,18 @@ public class D1RestClient {
 	UnsupportedMetadataType, UnsupportedType,
 	IllegalStateException, ClientProtocolException, IOException, HttpException, VersionMismatch 
 	{
+		return doGetRequest(url,false);
+	}
+	
+	public InputStream doGetRequest(String url, boolean allowRedirect) 
+	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
+	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
+	NotAuthorized, NotFound, NotImplemented, ServiceFailure, SynchronizationFailed,
+	UnsupportedMetadataType, UnsupportedType,
+	IllegalStateException, ClientProtocolException, IOException, HttpException, VersionMismatch 
+	{
 		rc.setHeader("Accept", "text/xml");
-		return ExceptionHandler.filterErrors(rc.doGetRequest(url));
+		return ExceptionHandler.filterErrors(rc.doGetRequest(url), allowRedirect);
 	}
 
 	public Header[] doGetRequestForHeaders(String url) 

@@ -633,7 +633,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		InputStream is = null;
 
 		try {
-			is = client.doGetRequest(url.getUrl());
+			// set flag to true to allow redirects (http.SEE_OTHER) to represent success
+			is = client.doGetRequest(url.getUrl(),true);
 		} catch (BaseException be) {
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
@@ -1492,7 +1493,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	public boolean setReplicationStatus(Session session, Identifier pid, 
 			NodeReference nodeRef, ReplicationStatus status, BaseException failure) 
 					throws ServiceFailure, NotImplemented, InvalidToken, NotAuthorized, 
-					InvalidRequest, NotFound, VersionMismatch
+					InvalidRequest, NotFound
 	{
 		// TODO: create JavaDoc and fix doc reference
 
@@ -1526,7 +1527,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
 			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
 			if (be instanceof NotFound)               throw (NotFound) be;
-			if (be instanceof VersionMismatch)         throw (VersionMismatch) be;
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
