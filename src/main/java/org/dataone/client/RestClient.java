@@ -253,25 +253,31 @@ public class RestClient {
 	private HttpResponse doRequestMMBody(String url,String httpMethod, SimpleMultipartEntity mpe)
 	throws ClientProtocolException, IOException 
 	{
-		log.info("rest call: " + httpMethod + "  " + url);
-		
-		HttpEntityEnclosingRequestBase req = null;
-		if (httpMethod == Constants.PUT)
-			req = new HttpPut(url);
-		else if (httpMethod == Constants.POST)
-			req = new HttpPost(url);
-		else 
-			throw new ClientProtocolException("method requested not defined: " + httpMethod);
-	
-		if (mpe != null) {
-			req.setEntity(mpe);
-			log.info("entity: present, size = " + mpe.getContentLength());
-		} else {
-			log.info("entity: null");
+		HttpResponse response = null;
+		try {
+			log.info("rest call: " + httpMethod + "  " + url);
+
+			HttpEntityEnclosingRequestBase req = null;
+			if (httpMethod == Constants.PUT)
+				req = new HttpPut(url);
+			else if (httpMethod == Constants.POST)
+				req = new HttpPost(url);
+			else 
+				throw new ClientProtocolException("method requested not defined: " + httpMethod);
+
+			if (mpe != null) {
+				req.setEntity(mpe);
+				log.info("entity: present, size = " + mpe.getContentLength());
+			} else {
+				log.info("entity: null");
+			}
+			response = doRequest(req);
+		} finally { 
+			if (mpe != null)
+				if (! mpe.cleanupTempFiles() ) {
+					log.warn("failed to clean up temp files for: " + httpMethod + " " + url);
+				}
 		}
-		HttpResponse response = doRequest(req);
-		if (mpe != null)
-			mpe.cleanupTempFiles();
 		return response;
 	}
 
