@@ -2,6 +2,8 @@ package org.dataone.client;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
@@ -67,4 +69,78 @@ public class ConnectionManagementEchoAnalysis {
 		}
 	}
 	
+	
+	@Ignore("this is a long-long-running test!")
+	@Test
+	public void testConnectionClose_multiThread_CLOSE_WAIT() throws InterruptedException 
+	{
+		ExecutorService execService = Executors.newFixedThreadPool(16);
+		
+		int i = 0;
+		try {
+			for (i=0; i <= 10 * 1000; i++) {
+				execService.execute(new Runnable() 
+					{
+					final CNode echoNode = new CNode(echoNodeURL + "/echo");
+					
+					public void run() {
+						try {
+							NodeList nl = echoNode.listNodes();
+						} catch (ServiceFailure e) {
+							if (!e.getDescription().contains("request.META"))
+								throw new RuntimeException(e.getDescription());
+						} catch (NotImplemented e) {
+							// TODO Auto-generated catch block
+							throw new RuntimeException(e.getDescription());
+						}
+					}
+				});
+				
+				
+				if (i % 100 == 0) {
+					System.out.print(i + "\t");
+
+					
+					if (i % 1000 == 0) {
+						System.out.println();
+					}
+				}
+			}
+
+			
+	        // prevent other tasks from being added to the queue
+	        execService.shutdown();
+	        
+	        String[] cmd = {
+	        		"/bin/sh",
+	        		"-c",
+//	        		"netstat -a | grep CLOSE_WAIT"
+	        		"netstat -a"
+	        };
+			
+	        for (;;) {
+	        	
+	        	try {
+	        		// Run netstat
+	        		Process process = Runtime.getRuntime().exec(cmd);
+
+	        		
+	        		InputStream is = process.getInputStream();
+	        		System.out.println(IOUtils.toString(is));
+	        	} catch (Exception e) {
+	        		e.printStackTrace(System.err);
+	        	}
+	        	Thread.currentThread().sleep(15*1000);
+	        }
+			
+			
+		} catch (RuntimeException e) {
+			System.out.println("NotImplemented exception at call " + i + " : " + e.getMessage());
+		}
+	
+	
+	
+		
+	
+	}
 }
