@@ -22,13 +22,9 @@ package org.dataone.client;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigInteger;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.commons.logging.LogFactory;
-import org.apache.http.Header;
 import org.apache.http.HttpException;
 import org.apache.http.client.ClientProtocolException;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
@@ -61,7 +57,6 @@ import org.dataone.service.types.v1.ObjectList;
 import org.dataone.service.types.v1.Permission;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1.SystemMetadata;
-import org.dataone.service.util.BigIntegerMarshaller;
 import org.dataone.service.util.Constants;
 import org.dataone.service.util.D1Url;
 import org.dataone.service.util.DateTimeMarshaller;
@@ -280,8 +275,11 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         // send the request
         D1RestClient client = new D1RestClient(session);
 
+        InputStream is = null;
         try {
-        	client.doPostRequest(url.getUrl(),mpe);
+        	is = client.doPostRequest(url.getUrl(),mpe);
+        	if (is != null)
+				is.close();
         } catch (BaseException be) {
             if (be instanceof InvalidToken)           throw (InvalidToken) be;
             if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
@@ -466,8 +464,11 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
 		    	
 		D1RestClient client = new D1RestClient(session);
+		InputStream is = null;
 		try {
-			client.doPostRequest(url.getUrl(), mpe);
+			is = client.doPostRequest(url.getUrl(), mpe);
+			if (is != null)
+				is.close();
         } catch (BaseException be) {
             if (be instanceof InvalidToken)           throw (InvalidToken) be;
             if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
@@ -509,8 +510,11 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 		}
     	
     	D1RestClient client = new D1RestClient(session);
+    	InputStream is = null;
     	try {
-			client.doPostRequest(url.getUrl(),smpe);
+			is = client.doPostRequest(url.getUrl(),smpe);
+			if (is != null)
+				is.close();
         } catch (BaseException be) {
             if (be instanceof NotImplemented)         throw (NotImplemented) be;
             if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
