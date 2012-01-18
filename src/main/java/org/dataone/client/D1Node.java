@@ -560,9 +560,12 @@ public abstract class D1Node {
     	
         // send the request
         D1RestClient client = new D1RestClient(session);
-
+        
+        InputStream is = null;
         try {
-        	client.doGetRequest(url.getUrl());
+        	is = client.doGetRequest(url.getUrl());
+        	if (is != null)
+				is.close();
         } catch (BaseException be) {
             if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
             if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
