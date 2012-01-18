@@ -38,8 +38,8 @@ import org.junit.Test;
  */
 public class LocalCacheTest {
 
-    private int objects = 1000;
-    private static final int SIZE = 10000;
+    private int objects = 10;
+    private static final int SIZE = 100;
     private static final String PREFIX = "KEY";
     private static Log log = LogFactory.getLog(LocalCacheTest.class);
     LocalCache localCache = null;
