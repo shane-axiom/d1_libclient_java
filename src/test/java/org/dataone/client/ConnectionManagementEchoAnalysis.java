@@ -1,20 +1,17 @@
 package org.dataone.client;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.http.HttpException;
-import org.apache.http.client.ClientProtocolException;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
+import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.types.v1.NodeList;
-import org.dataone.service.util.D1Url;
+import org.dataone.service.types.v1.NodeReference;
+import org.dataone.service.types.v1.ReplicationStatus;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -80,17 +77,23 @@ public class ConnectionManagementEchoAnalysis {
 		try {
 			for (i=0; i <= 10 * 1000; i++) {
 				execService.execute(new Runnable() 
-					{
+				{
 					final CNode echoNode = new CNode(echoNodeURL + "/echo");
-					
+					final Identifier pid = new Identifier();
+					final NodeReference nodeRef = new NodeReference();
+			
 					public void run() {
 						try {
-							NodeList nl = echoNode.listNodes();
+							System.out.print(".");
+							pid.setValue("foobar");
+							nodeRef.setValue("foobar");
+							boolean x = echoNode.setReplicationStatus(null,
+									pid, nodeRef,
+									ReplicationStatus.COMPLETED,null);
 						} catch (ServiceFailure e) {
 							if (!e.getDescription().contains("request.META"))
 								throw new RuntimeException(e.getDescription());
-						} catch (NotImplemented e) {
-							// TODO Auto-generated catch block
+						} catch (BaseException e) {
 							throw new RuntimeException(e.getDescription());
 						}
 					}
@@ -111,36 +114,55 @@ public class ConnectionManagementEchoAnalysis {
 	        // prevent other tasks from being added to the queue
 	        execService.shutdown();
 	        
-	        String[] cmd = {
+	        String[] closeWaitCmd = {
 	        		"/bin/sh",
 	        		"-c",
-//	        		"netstat -a | grep CLOSE_WAIT"
-	        		"netstat -a"
+	        		"netstat -a | grep CLOSE_WAIT | wc -l"
+	        };
+	        
+	        String[] establishedCmd = {
+	        		"/bin/sh",
+	        		"-c",
+	        		"netstat -a | grep ESTABLISHED | wc -l"
 	        };
 			
+	        String[] streamCmd = {
+	        		"/bin/sh",
+	        		"-c",
+	        		"netstat -a | grep stream | wc -l"
+	        };
+	        
+	        String[] dgramCmd = {
+	        		"/bin/sh",
+	        		"-c",
+	        		"netstat -a | grep dgram | wc -l"
+	        };
 	        for (;;) {
 	        	
 	        	try {
 	        		// Run netstat
-	        		Process process = Runtime.getRuntime().exec(cmd);
-
-	        		
-	        		InputStream is = process.getInputStream();
-	        		System.out.println(IOUtils.toString(is));
+	        		System.out.printf("\ncw: %d est: %d stream:%d dgram:%d\n",
+	        				netStatLineCount(closeWaitCmd),
+	        				netStatLineCount(establishedCmd),
+	        				netStatLineCount(streamCmd),
+	        				netStatLineCount(dgramCmd));
 	        	} catch (Exception e) {
 	        		e.printStackTrace(System.err);
 	        	}
-	        	Thread.currentThread().sleep(15*1000);
+	        	Thread.currentThread().sleep(6*1000);
 	        }
 			
 			
 		} catch (RuntimeException e) {
 			System.out.println("NotImplemented exception at call " + i + " : " + e.getMessage());
 		}
-	
-	
-	
-		
-	
 	}
+	
+	private int netStatLineCount(String[] command) throws IOException {
+		Process process = Runtime.getRuntime().exec(command);
+		String wc = IOUtils.toString(process.getInputStream());
+		int lineCount = Integer.valueOf(wc.trim());
+		return lineCount;
+	}
+	
 }
