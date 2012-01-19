@@ -20,10 +20,12 @@
 
 package org.dataone.client;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpException;
 import org.apache.http.client.ClientProtocolException;
@@ -171,10 +173,11 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
         // send the request
         D1RestClient client = new D1RestClient();
-        InputStream is = null;
+        Node node = null;
 
         try {
-        	is = client.doGetRequest(url.getUrl());
+        	InputStream is = client.doGetRequest(url.getUrl());
+        	node = deserializeServiceType(Node.class, is);
         } catch (BaseException be) {
             if (be instanceof NotImplemented)    throw (NotImplemented) be;
             if (be instanceof ServiceFailure)    throw (ServiceFailure) be;
@@ -186,8 +189,9 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-        Node node = deserializeServiceType(Node.class, is);
-        client.closeIdleConnections();
+        finally {
+        	client.closeIdleConnections();
+        }
         return node;
     }
 
@@ -237,10 +241,11 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
         // send the request
         D1RestClient client = new D1RestClient(session);
-        InputStream is = null;
+        Checksum checksum = null;
 
         try {
-        	is = client.doGetRequest(url.getUrl());
+        	InputStream is = client.doGetRequest(url.getUrl());
+        	checksum = deserializeServiceType(Checksum.class, is);
         } catch (BaseException be) {
             if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
             if (be instanceof InvalidToken)           throw (InvalidToken) be;
@@ -256,8 +261,9 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-        Checksum checksum = deserializeServiceType(Checksum.class, is);
-        client.closeIdleConnections();
+        finally {
+        	client.closeIdleConnections();
+        }
         return checksum;
     }
 
@@ -297,9 +303,9 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
         
-        client.closeIdleConnections();
-
-        // no return
+        finally {
+        	client.closeIdleConnections();
+        }
     }
 
 
@@ -336,10 +342,11 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
     	
     	D1RestClient client = new D1RestClient(session);
-    	InputStream is = null;
+    	Identifier identifier = null;
 
     	try {
-    		is = client.doPostRequest(url.getUrl(),mpe);
+    		InputStream is = client.doPostRequest(url.getUrl(),mpe);
+    		 identifier = deserializeServiceType(Identifier.class, is);
         } catch (BaseException be) {
             if (be instanceof IdentifierNotUnique)    throw (IdentifierNotUnique) be;
             if (be instanceof InsufficientResources)  throw (InsufficientResources) be;
@@ -358,8 +365,9 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-        Identifier identifier = deserializeServiceType(Identifier.class, is);
-        client.closeIdleConnections();
+        finally {
+        	client.closeIdleConnections();
+        }
         return identifier;
     }
 
@@ -389,10 +397,11 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 		}
     	  	
     	D1RestClient client = new D1RestClient(session);
-    	InputStream is = null;
+    	Identifier identifier = null;
     	
     	try {
-    		is = client.doPutRequest(url.getUrl(),mpe);
+    		InputStream is = client.doPutRequest(url.getUrl(),mpe);
+    		identifier = deserializeServiceType(Identifier.class, is);
         } catch (BaseException be) {
             if (be instanceof IdentifierNotUnique)    throw (IdentifierNotUnique) be;
             if (be instanceof InsufficientResources)  throw (InsufficientResources) be;
@@ -412,8 +421,9 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-        Identifier identifier = deserializeServiceType(Identifier.class, is);
-        client.closeIdleConnections();
+        finally {
+        	client.closeIdleConnections();
+        }
         return identifier;
     }
 
@@ -430,9 +440,10 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	
      	D1RestClient client = new D1RestClient(session);
     	
-    	InputStream is = null;
+     	Identifier identifier = null;
     	try {
-    		is = client.doDeleteRequest(url.getUrl());
+    		InputStream is = client.doDeleteRequest(url.getUrl());
+    		identifier = deserializeServiceType(Identifier.class, is);
         } catch (BaseException be) {
             if (be instanceof InvalidToken)           throw (InvalidToken) be;
             if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
@@ -447,8 +458,9 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-        Identifier identifier =  deserializeServiceType(Identifier.class, is);
-        client.closeIdleConnections();
+        finally {
+        	client.closeIdleConnections();
+        }
         return identifier;
     }
 
@@ -489,7 +501,9 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); }  
 		
-		client.closeIdleConnections();
+		finally {			
+			client.closeIdleConnections();
+		}
     }
 
 
@@ -536,8 +550,10 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
         catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
-    	client.closeIdleConnections();
+    	
+    	finally {
+    		client.closeIdleConnections();
+    	}
         return true;
     }
 
@@ -555,9 +571,10 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
         // send the request
         D1RestClient client = new D1RestClient(session);
-        InputStream is = null;
+        ByteArrayInputStream bais = null;
         try {
-        	is = client.doGetRequest(url.getUrl());
+        	byte[] bytes = IOUtils.toByteArray(client.doGetRequest(url.getUrl()));
+        	bais = new ByteArrayInputStream(bytes);     	
         } catch (BaseException be) {
             if (be instanceof InvalidToken)           throw (InvalidToken) be;
             if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
@@ -572,7 +589,9 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
         catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
- 
-        return is;
+        finally {
+        	client.closeIdleConnections();
+        }
+        return bais;
     }
 }
