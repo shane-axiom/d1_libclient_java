@@ -184,7 +184,9 @@ public abstract class D1Node {
 		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-	
+	    finally {
+	    	client.closeIdleConnections();
+	    }
 		// if exception not thrown, and we got this far,
 		// then pull the date info from the headers
 		Date date = null;
@@ -196,7 +198,6 @@ public abstract class D1Node {
 			if (header.getName().equals("Date")) 
 				date = DateTimeMarshaller.deserializeDateToUTC(header.getValue());
 		}
-		client.closeIdleConnections();
 		if (date == null) 
 			throw new ServiceFailure("0000", "Could not get date information from response's 'Date' header.");
 		
@@ -268,10 +269,11 @@ public abstract class D1Node {
 		
         // send the request
         D1RestClient client = new D1RestClient(session);
-        InputStream is = null;
+        ObjectList objectList = null;
 
         try {
-        	is = client.doGetRequest(url.getUrl());
+        	InputStream is = client.doGetRequest(url.getUrl());
+        	objectList =  deserializeServiceType(ObjectList.class, is);
         } catch (BaseException be) {
             if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
             if (be instanceof InvalidToken)           throw (InvalidToken) be;
@@ -285,9 +287,10 @@ public abstract class D1Node {
         catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
         catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
-        ObjectList objectList =  deserializeServiceType(ObjectList.class, is);
-        client.closeIdleConnections();
+ 
+        finally {
+	    	client.closeIdleConnections();
+	    }
         return objectList;
     }
 
@@ -313,10 +316,11 @@ public abstract class D1Node {
     	
 		// send the request
 		D1RestClient client = new D1RestClient(session);
-		InputStream is = null;
+		Log log = null;
 
 		try {
-			is = client.doGetRequest(url.getUrl());
+			InputStream is = client.doGetRequest(url.getUrl());
+			log = deserializeServiceType(Log.class, is);
 		} catch (BaseException be) {
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
 			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
@@ -332,8 +336,9 @@ public abstract class D1Node {
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-		Log log = deserializeServiceType(Log.class, is);
-		client.closeIdleConnections();
+		finally {
+			client.closeIdleConnections();
+		}
 		return log;
 	}
     
@@ -372,13 +377,13 @@ public abstract class D1Node {
 
 		D1RestClient client = new D1RestClient(session);
 		
-		try {
-			is = client.doGetRequest(url.getUrl());
+        try {
+        	byte[] bytes = IOUtils.toByteArray(client.doGetRequest(url.getUrl()));
+        	is = new ByteArrayInputStream(bytes); 
+		
 			if (cacheMissed) {
 			    // Cache the result, and reset the stream mark
-			    byte[] data = IOUtils.toByteArray(is);
-			    LocalCache.instance().putData(pid, data);
-			    is = new ByteArrayInputStream(data);
+			    LocalCache.instance().putData(pid, bytes);
 			}
 		} catch (BaseException be) {
             if (be instanceof InvalidToken)      throw (InvalidToken) be;
@@ -394,7 +399,10 @@ public abstract class D1Node {
         catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
         catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
+        
+        finally {
+        	client.closeIdleConnections();
+        }
         return is;
     }
  
@@ -447,7 +455,6 @@ public abstract class D1Node {
 		try {
 			is = client.doGetRequest(url.getUrl());
 			sysmeta = deserializeServiceType(SystemMetadata.class,is);
-			client.closeIdleConnections();
 			if (cacheMissed) {
                 // Cache the result in the system metadata cache
                 LocalCache.instance().putSystemMetadata(pid, sysmeta);
@@ -466,6 +473,9 @@ public abstract class D1Node {
         catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 	
+		finally {
+			client.closeIdleConnections();
+		}
         return sysmeta;
 	}
 
@@ -489,7 +499,6 @@ public abstract class D1Node {
     	Map<String, String> headersMap = new HashMap<String,String>();
     	try {
     		headers = client.doHeadRequest(url.getUrl());
-    		client.closeIdleConnections();
     		for (Header header: headers) {
     			if (log.isDebugEnabled())
     				log.debug(String.format("header: %s = %s", 
@@ -511,6 +520,10 @@ public abstract class D1Node {
         catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
+    	finally {
+    		client.closeIdleConnections();
+    	}
+    	
  //   	DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
         String objectFormatIdStr = headersMap.get("DataONE-ObjectFormat");//.get(0);
         String last_modifiedStr = headersMap.get("Last-Modified");//.get(0);
@@ -595,7 +608,6 @@ public abstract class D1Node {
         	is = client.doGetRequest(url.getUrl());
         	if (is != null)
 				is.close();
-        	client.closeIdleConnections();
         } catch (BaseException be) {
             if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
             if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
@@ -611,6 +623,9 @@ public abstract class D1Node {
         catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
+        finally {
+        	client.closeIdleConnections();
+        }
         return true;
     }
    
