@@ -153,7 +153,7 @@ public abstract class D1Node {
     }   
 
     /**
-     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_core.ping 
+     * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_core.ping">see DataONE API Reference</a> } 
      * @return a Ping object
      * @throws NotImplemented
      * @throws ServiceFailure
@@ -208,7 +208,7 @@ public abstract class D1Node {
     /**
      * A convenience method for listObjects using no filtering parameters
      * 
-     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.listObjects
+     * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.listObjects">see DataONE API Reference</a> }
      * 
      * @return
      * @throws InvalidRequest
@@ -226,7 +226,7 @@ public abstract class D1Node {
 
 
     /**
-     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.listObjects
+     * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.listObjects">see DataONE API Reference</a> }
      * 
      * @param session
      * @param fromDate
@@ -349,7 +349,7 @@ public abstract class D1Node {
      * a local disk cache if the "D1Client.useLocalCache" configuration property
      * was set to true when the D1Node was created. Otherwise
      * InputStream is the Java native version of D1's OctetStream
-     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.listObjects
+     * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.listObjects">see DataONE API Reference</a> }
      */
     public InputStream get(Session session, Identifier pid)
     throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, 
@@ -414,7 +414,7 @@ public abstract class D1Node {
      * SystemMetadata is mutable and so cacheing can lead to issues.  In specific
      * cases where a client wants to utilize the same system metadata in rapid succession,
      * it may make sense to temporarily use the local cache by calling @see #getSystemMetadata(Session, Identifier, boolean).
-     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.getSystemMetadata
+     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.getSystemMetadata"> DataONE API Reference</a> 
      */
     public SystemMetadata getSystemMetadata(Session session, Identifier pid)
     throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented 
@@ -428,7 +428,7 @@ public abstract class D1Node {
      * Because SystemMetadata is mutable, cacheing can lead to currency issues.  In specific
      * cases where a client wants to utilize the same system metadata in rapid succession,
      * it may make sense to temporarily use the local cache by setting useSystemMetadadataCache to true.
-     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.getSystemMetadata
+     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.getSystemMetadata">see DataONE API Reference</a> 
      */
 	public SystemMetadata getSystemMetadata(Session session, Identifier pid, boolean useSystemMetadataCache)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented 
