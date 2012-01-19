@@ -21,6 +21,7 @@ import org.junit.Test;
  * 
  * see: http://stackoverflow.com/questions/4724193/how-can-i-ensure-that-my-httpclient-4-1-does-not-leak-sockets
  * see:  https://issues.apache.org/jira/browse/SOLR-861
+ * see: https://forums.aws.amazon.com/thread.jspa?threadID=67603
  * see: http://stackoverflow.com/questions/4728683/workaround-to-not-shutdown-defaulthttpclient-each-time-after-usage
  * 
  * @author rnahf
