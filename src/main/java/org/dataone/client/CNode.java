@@ -321,8 +321,12 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		if (pid == null) {
 			throw new InvalidRequest("0000","PID cannot be null");
 		}
-		smpe.addParamPart("pid", pid.getValue());
-
+		try {
+			smpe.addFilePart("pid", pid);
+		} catch (Exception e1) {
+			throw recastClientSideExceptionToServiceFailure(e1);
+		}
+		
 		// send the request
 		D1RestClient client = new D1RestClient(session);
 		InputStream is = null;
