@@ -112,11 +112,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     
 
     /**
-     * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_core.ping">see DataONE API Reference</a> } 
-     * @return a Ping object
-     * @throws NotImplemented
-     * @throws ServiceFailure
-     * @throws InsufficientResources
+     * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNCore.ping">see DataONE API Reference</a> } 
      */
     public Date ping() throws NotImplemented, ServiceFailure, InsufficientResources
     {
@@ -125,7 +121,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
 
     /**
-     * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_core.getLogRecords">see DataONE API Reference</a> }
+     * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNCore.getLogRecords">see DataONE API Reference</a> }
      * 
      */
     public Log getLogRecords(Session session, Date fromDate, Date toDate, 
@@ -141,7 +137,11 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	return theLog;
     }
 
-    
+    /**
+     * A convenience method for listObjects using no filtering parameters
+     * 
+     * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.listObjects">see DataONE API Reference</a> }
+     */
 	@Override
 	public ObjectList listObjects(Session session) 
 			throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented,
@@ -150,7 +150,9 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 		return super.listObjects(session);
 	}
 
-		
+    /**
+     * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.listObjects">see DataONE API Reference</a> }
+     */	
 	@Override
 	public ObjectList listObjects(Session session, Date fromDate,
 			Date toDate, ObjectFormatIdentifier formatid,
@@ -163,7 +165,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
 	
 	/**
-	 * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_core.getCapabilities">see DataONE API Reference</a> }
+	 * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNCore.getCapabilities">see DataONE API Reference</a> }
 	 */
     public Node getCapabilities() 
     throws NotImplemented, ServiceFailure
@@ -196,9 +198,6 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     }
 
 
-    /**
-     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.get">see DataONE API Reference</a> } 
-     */
     public InputStream get(Session session, Identifier pid)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound, InsufficientResources
     {
@@ -206,9 +205,6 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     }
 
 
-    /**
-     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.getSystemMetadata">see DataONE API Reference</a> } 
-     */
     public SystemMetadata getSystemMetadata(Session session, Identifier pid)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound
     {
@@ -217,7 +213,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
 
     /**
-     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.describe">see DataONE API Reference</a> } 
+     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.describe">see DataONE API Reference</a> } 
      */
     public DescribeResponse describe(Session session, Identifier pid)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound
@@ -227,7 +223,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
 
     /**
-     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.getChecksum">see DataONE API Reference</a> } 
+     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.getChecksum">see DataONE API Reference</a> } 
      */
     public Checksum getChecksum(Session session, Identifier pid, String checksumAlgorithm)
     throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound
@@ -269,7 +265,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
     
     /**
-     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.synchronizationFailed">see DataONE API Reference</a> } 
+     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.synchronizationFailed">see DataONE API Reference</a> } 
      */
     public void synchronizationFailed(Session session, SynchronizationFailed message)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
@@ -310,7 +306,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
 
     /**
-     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_authorization.isAuthorized">see DataONE API Reference</a> } 
+     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNAuthorization.isAuthorized">see DataONE API Reference</a> } 
      */
     public boolean isAuthorized(Session session, Identifier pid, Permission action)
     throws ServiceFailure, InvalidRequest, InvalidToken, NotFound, NotAuthorized, NotImplemented
@@ -320,7 +316,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
 
     /**
-     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_storage.create">see DataONE API Reference</a> } 
+     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNStorage.create">see DataONE API Reference</a> } 
      */
     public  Identifier create(Session session, Identifier pid, InputStream object, 
             SystemMetadata sysmeta) 
@@ -373,7 +369,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
 
     /**
-     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_storage.update">see DataONE API Reference</a> } 
+     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNStorage.update">see DataONE API Reference</a> } 
      */
     public  Identifier update(Session session, Identifier pid, InputStream object, 
             Identifier newPid, SystemMetadata sysmeta) 
@@ -429,7 +425,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
 
     /**
-     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_storage.delete">see DataONE API Reference</a> } 
+     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNStorage.delete">see DataONE API Reference</a> } 
      */
     public  Identifier delete(Session session, Identifier pid)
         throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
@@ -466,7 +462,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
 
     /**
-     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_storage.systemMetadataChanged">see DataONE API Reference</a> } 
+     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNStorage.systemMetadataChanged">see DataONE API Reference</a> } 
      */
     public  void systemMetadataChanged(Session session, Identifier pid, long serialVersion,
         	Date dateSystemMetadataLastModified)
@@ -508,7 +504,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
 
     /**
-     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_replication.replicate">see DataONE API Reference</a> } 
+     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNReplication.replicate">see DataONE API Reference</a> } 
      */
     public boolean replicate(Session session, SystemMetadata sysmeta, NodeReference sourceNode) 
     throws NotImplemented, ServiceFailure, NotAuthorized, InvalidRequest, 
@@ -559,7 +555,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
 
     /**
-     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_replication.getReplica">see DataONE API Reference</a> } 
+     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNReplication.getReplica">see DataONE API Reference</a> } 
      */
     public InputStream getReplica(Session session, Identifier pid)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound,

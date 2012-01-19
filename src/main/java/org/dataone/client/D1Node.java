@@ -152,13 +152,7 @@ public abstract class D1Node {
     	return session;
     }   
 
-    /**
-     * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_core.ping">see DataONE API Reference</a> } 
-     * @return a Ping object
-     * @throws NotImplemented
-     * @throws ServiceFailure
-     * @throws InsufficientResources
-     */
+    
 	public Date ping() throws NotImplemented, ServiceFailure, InsufficientResources 
 	{
 		
@@ -205,18 +199,6 @@ public abstract class D1Node {
 	}
 	
 	
-    /**
-     * A convenience method for listObjects using no filtering parameters
-     * 
-     * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.listObjects">see DataONE API Reference</a> }
-     * 
-     * @return
-     * @throws InvalidRequest
-     * @throws InvalidToken
-     * @throws NotAuthorized
-     * @throws NotImplemented
-     * @throws ServiceFailure
-     */
     public ObjectList listObjects(Session session) 
     throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
     {
@@ -224,24 +206,6 @@ public abstract class D1Node {
     }
 
 
-
-    /**
-     * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.listObjects">see DataONE API Reference</a> }
-     * 
-     * @param session
-     * @param fromDate
-     * @param toDate
-     * @param formatid
-     * @param replicaStatus
-     * @param start
-     * @param count
-     * @return
-     * @throws InvalidRequest
-     * @throws InvalidToken
-     * @throws NotAuthorized
-     * @throws NotImplemented
-     * @throws ServiceFailure
-     */
     public ObjectList listObjects(Session session, Date fromDate, Date toDate, 
       ObjectFormatIdentifier formatid, Boolean replicaStatus, Integer start, Integer count) 
     throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
@@ -349,7 +313,9 @@ public abstract class D1Node {
      * a local disk cache if the "D1Client.useLocalCache" configuration property
      * was set to true when the D1Node was created. Otherwise
      * InputStream is the Java native version of D1's OctetStream
-     * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.listObjects">see DataONE API Reference</a> }
+     * 
+     * @see <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.get">see DataONE API Reference (MemberNode API)</a>
+     * @see <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.get">see DataONE API Reference (CoordinatingNode API)</a>
      */
     public InputStream get(Session session, Identifier pid)
     throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, 
@@ -414,7 +380,8 @@ public abstract class D1Node {
      * SystemMetadata is mutable and so cacheing can lead to issues.  In specific
      * cases where a client wants to utilize the same system metadata in rapid succession,
      * it may make sense to temporarily use the local cache by calling @see #getSystemMetadata(Session, Identifier, boolean).
-     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.getSystemMetadata"> DataONE API Reference</a> 
+     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.getSystemMetadata"> DataONE API Reference (MemberNode API)</a> 
+     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.getSystemMetadata"> DataONE API Reference (CoordinatingNode API)</a> 
      */
     public SystemMetadata getSystemMetadata(Session session, Identifier pid)
     throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented 
@@ -428,7 +395,8 @@ public abstract class D1Node {
      * Because SystemMetadata is mutable, cacheing can lead to currency issues.  In specific
      * cases where a client wants to utilize the same system metadata in rapid succession,
      * it may make sense to temporarily use the local cache by setting useSystemMetadadataCache to true.
-     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.getSystemMetadata">see DataONE API Reference</a> 
+     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.getSystemMetadata"> DataONE API Reference (MemberNode API)</a> 
+     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.getSystemMetadata"> DataONE API Reference (CoordinatingNode API)</a> 
      */
 	public SystemMetadata getSystemMetadata(Session session, Identifier pid, boolean useSystemMetadataCache)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented 
