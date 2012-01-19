@@ -108,22 +108,28 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	return url.getUrl();
     }
     
-    /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_core.ping */
 
+    /**
+     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_core.ping 
+     * @return a Ping object
+     * @throws NotImplemented
+     * @throws ServiceFailure
+     * @throws InsufficientResources
+     */
     public Date ping() throws NotImplemented, ServiceFailure, InsufficientResources
     {
     	return super.ping();
     }
 
 
-    /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_core.getLogRecords */
-
+    /**
+     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_core.getLogRecords
+     * 
+     */
     public Log getLogRecords(Session session, Date fromDate, Date toDate, 
                Event event, Integer start, Integer count) 
     throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
     {
-        // TODO: create JavaDoc and fix doc reference
-
     	Log theLog = null;
 		try {
 			theLog = super.getLogRecords(session, fromDate, toDate, event, start, count);
@@ -141,7 +147,8 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 	{
 		return super.listObjects(session);
 	}
-	
+
+		
 	@Override
 	public ObjectList listObjects(Session session, Date fromDate,
 			Date toDate, ObjectFormatIdentifier formatid,
@@ -152,13 +159,13 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 		return super.listObjects(session,fromDate,toDate,formatid,replicaStatus,start,count);
 	}
 
-    /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_core.getCapabilities */
-
+	
+	/**
+	 * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_core.getCapabilities
+	 */
     public Node getCapabilities() 
     throws NotImplemented, ServiceFailure
     {
-        // TODO: create JavaDoc and fix doc reference
-
     	// assemble the url
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_NODE);
 
@@ -179,49 +186,48 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-        return deserializeServiceType(Node.class, is);
+        Node node = deserializeServiceType(Node.class, is);
+        client.closeIdleConnections();
+        return node;
     }
 
 
-    /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.get */
-
+    /**
+     *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.get 
+     */
     public InputStream get(Session session, Identifier pid)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound, InsufficientResources
     {
-        // TODO: create JavaDoc and fix doc reference
     	return super.get(session, pid);
     }
 
 
-    /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.getSystemMetadata */
-
+    /**
+     *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.getSystemMetadata 
+     */
     public SystemMetadata getSystemMetadata(Session session, Identifier pid)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound
     {
-        // TODO: create JavaDoc and fix doc reference
     	return super.getSystemMetadata(session,pid);
     }
 
 
-    /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.describe */
-
+    /**
+     *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.describe 
+     */
     public DescribeResponse describe(Session session, Identifier pid)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound
     {
-        // TODO: create JavaDoc and fix doc reference
     	return super.describe(session,pid);
     }
 
 
-
-    /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.getChecksum */
-
+    /**
+     *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.getChecksum 
+     */
     public Checksum getChecksum(Session session, Identifier pid, String checksumAlgorithm)
     throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound
-    {
-
-        // TODO: create JavaDoc and fix doc reference
-    	
+    {    	
         // assemble the url
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_CHECKSUM);
         if (pid != null)
@@ -250,20 +256,18 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-        return deserializeServiceType(Checksum.class, is);
+        Checksum checksum = deserializeServiceType(Checksum.class, is);
+        client.closeIdleConnections();
+        return checksum;
     }
 
     
-
-
-    /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.synchronizationFailed */
-
+    /**
+     *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.synchronizationFailed 
+     */
     public void synchronizationFailed(Session session, SynchronizationFailed message)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
-    {
-
-        // TODO: create JavaDoc and fix doc reference
-    	
+    {   	
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ERROR);
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
@@ -293,30 +297,30 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
         
+        client.closeIdleConnections();
+
         // no return
     }
 
 
-    /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_authorization.isAuthorized */
-
+    /**
+     *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_authorization.isAuthorized 
+     */
     public boolean isAuthorized(Session session, Identifier pid, Permission action)
     throws ServiceFailure, InvalidRequest, InvalidToken, NotFound, NotAuthorized, NotImplemented
     {
-    	// TODO: create JavaDoc and fix doc reference
     	return super.isAuthorized(session, pid, action);
     }
 
 
-    /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_storage.create */
-
+    /**
+     *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_storage.create 
+     */
     public  Identifier create(Session session, Identifier pid, InputStream object, 
             SystemMetadata sysmeta) 
     throws IdentifierNotUnique, InsufficientResources, InvalidRequest, InvalidSystemMetadata, 
         	InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, UnsupportedType
     {
-
-        // TODO: create JavaDoc and fix doc reference
-
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
     	url.addNextPathElement(pid.getValue());
 
@@ -354,19 +358,21 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-        return deserializeServiceType(Identifier.class, is);
+        Identifier identifier = deserializeServiceType(Identifier.class, is);
+        client.closeIdleConnections();
+        return identifier;
     }
 
 
-    /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_storage.update */
-
+    /**
+     *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_storage.update 
+     */
     public  Identifier update(Session session, Identifier pid, InputStream object, 
             Identifier newPid, SystemMetadata sysmeta) 
         throws IdentifierNotUnique, InsufficientResources, InvalidRequest, InvalidSystemMetadata, 
             InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, UnsupportedType,
             NotFound
     {
-        // TODO: create JavaDoc and fix doc reference
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
     	url.addNextPathElement(pid.getValue());
 
@@ -406,18 +412,18 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-        return deserializeServiceType(Identifier.class, is);
+        Identifier identifier = deserializeServiceType(Identifier.class, is);
+        client.closeIdleConnections();
+        return identifier;
     }
 
 
-    /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_storage.delete */
-
+    /**
+     *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_storage.delete 
+     */
     public  Identifier delete(Session session, Identifier pid)
         throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
     {
-
-        // TODO: create JavaDoc and fix doc reference
-
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
     	if (pid != null) 
     		url.addNextPathElement(pid.getValue());
@@ -441,19 +447,19 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-        return deserializeServiceType(Identifier.class, is);
+        Identifier identifier =  deserializeServiceType(Identifier.class, is);
+        client.closeIdleConnections();
+        return identifier;
     }
 
 
-    /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_storage.systemMetadataChanged */
-
+    /**
+     *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_storage.systemMetadataChanged 
+     */
     public  void systemMetadataChanged(Session session, Identifier pid, long serialVersion,
         	Date dateSystemMetadataLastModified)
         throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented, InvalidRequest
     {
-
-        // TODO: create JavaDoc and fix doc reference
-
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_META_CHANGED);
 
 		SimpleMultipartEntity mpe = new SimpleMultipartEntity();
@@ -481,18 +487,19 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
         catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
         catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); }        
+        catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); }  
+		
+		client.closeIdleConnections();
     }
 
 
-    /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_replication.replicate */
-
+    /**
+     *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_replication.replicate 
+     */
     public boolean replicate(Session session, SystemMetadata sysmeta, NodeReference sourceNode) 
     throws NotImplemented, ServiceFailure, NotAuthorized, InvalidRequest, 
         InsufficientResources, UnsupportedType
     {
-        // TODO: create JavaDoc and fix doc reference
-		
 		// assemble the url
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_REPLICATE);
     	
@@ -530,18 +537,18 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
+    	client.closeIdleConnections();
         return true;
     }
 
 
-    /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_replication.getReplica */
-
+    /**
+     *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_replication.getReplica 
+     */
     public InputStream getReplica(Session session, Identifier pid)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound,
     InsufficientResources
     {
-        // TODO: create JavaDoc and fix doc reference
-
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(),Constants.RESOURCE_REPLICAS);
         if (pid != null)
         	url.addNextPathElement(pid.getValue());
@@ -565,7 +572,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
         catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
+ 
         return is;
     }
 }

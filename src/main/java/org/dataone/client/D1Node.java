@@ -73,7 +73,6 @@ public abstract class D1Node {
 
 	protected static org.apache.commons.logging.Log log = LogFactory.getLog(CNode.class);
 	
-	// TODO: This class should implement the MemberNodeAuthorization interface as well
     /** The URL string for the node REST API */
     private String nodeBaseServiceUrl;
     private String nodeId;
@@ -153,12 +152,16 @@ public abstract class D1Node {
     	return session;
     }   
 
-    
-	public Date ping() throws NotImplemented, ServiceFailure,
-	InsufficientResources {
-	
-		// TODO: create JavaDoc and fix doc reference
-	
+    /**
+     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_core.ping 
+     * @return a Ping object
+     * @throws NotImplemented
+     * @throws ServiceFailure
+     * @throws InsufficientResources
+     */
+	public Date ping() throws NotImplemented, ServiceFailure, InsufficientResources 
+	{
+		
 		// assemble the url
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_MONITOR_PING);
 		
@@ -193,13 +196,19 @@ public abstract class D1Node {
 			if (header.getName().equals("Date")) 
 				date = DateTimeMarshaller.deserializeDateToUTC(header.getValue());
 		}
+		client.closeIdleConnections();
 		if (date == null) 
 			throw new ServiceFailure("0000", "Could not get date information from response's 'Date' header.");
 		
 	    return date;
 	}
+	
+	
     /**
      * A convenience method for listObjects using no filtering parameters
+     * 
+     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.listObjects
+     * 
      * @return
      * @throws InvalidRequest
      * @throws InvalidToken
@@ -214,14 +223,28 @@ public abstract class D1Node {
     }
 
 
-    /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.listObjects */
 
+    /**
+     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MN_read.listObjects
+     * 
+     * @param session
+     * @param fromDate
+     * @param toDate
+     * @param formatid
+     * @param replicaStatus
+     * @param start
+     * @param count
+     * @return
+     * @throws InvalidRequest
+     * @throws InvalidToken
+     * @throws NotAuthorized
+     * @throws NotImplemented
+     * @throws ServiceFailure
+     */
     public ObjectList listObjects(Session session, Date fromDate, Date toDate, 
       ObjectFormatIdentifier formatid, Boolean replicaStatus, Integer start, Integer count) 
     throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
     {
-
-        // TODO: create JavaDoc and fix doc reference
     	
     	if (toDate != null && fromDate != null && !toDate.after(fromDate))
 			throw new InvalidRequest("1000", "fromDate must be before toDate in listObjects() call. "
@@ -263,7 +286,9 @@ public abstract class D1Node {
         catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-        return deserializeServiceType(ObjectList.class, is);
+        ObjectList objectList =  deserializeServiceType(ObjectList.class, is);
+        client.closeIdleConnections();
+        return objectList;
     }
 
     
@@ -307,7 +332,9 @@ public abstract class D1Node {
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-		return deserializeServiceType(Log.class, is);
+		Log log = deserializeServiceType(Log.class, is);
+		client.closeIdleConnections();
+		return log;
 	}
     
     
@@ -420,6 +447,7 @@ public abstract class D1Node {
 		try {
 			is = client.doGetRequest(url.getUrl());
 			sysmeta = deserializeServiceType(SystemMetadata.class,is);
+			client.closeIdleConnections();
 			if (cacheMissed) {
                 // Cache the result in the system metadata cache
                 LocalCache.instance().putSystemMetadata(pid, sysmeta);
@@ -461,6 +489,7 @@ public abstract class D1Node {
     	Map<String, String> headersMap = new HashMap<String,String>();
     	try {
     		headers = client.doHeadRequest(url.getUrl());
+    		client.closeIdleConnections();
     		for (Header header: headers) {
     			if (log.isDebugEnabled())
     				log.debug(String.format("header: %s = %s", 
@@ -566,6 +595,7 @@ public abstract class D1Node {
         	is = client.doGetRequest(url.getUrl());
         	if (is != null)
 				is.close();
+        	client.closeIdleConnections();
         } catch (BaseException be) {
             if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
             if (be instanceof InvalidRequest)         throw (InvalidRequest) be;

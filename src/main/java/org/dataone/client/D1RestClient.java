@@ -27,14 +27,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.Header;
 import org.apache.http.HttpException;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.apache.http.impl.client.AbstractHttpClient;
 import org.dataone.client.auth.CertificateManager;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.exceptions.AuthenticationTimeout;
@@ -77,6 +80,13 @@ public class D1RestClient {
 		setupSSL(null);
 	}
 	
+	
+	public D1RestClient(AbstractHttpClient httpClient) {
+		this.rc = new RestClient(httpClient);
+		setupSSL(null);
+	}
+	
+	
 	/**
 	 * Constructor to create a new instance with given session/subject.
 	 * The session's subject is used to find the registered certificate and key
@@ -87,6 +97,30 @@ public class D1RestClient {
 		setupSSL(session);
 	}
 
+	
+	public D1RestClient(AbstractHttpClient httpClient, Session session) {
+		this.rc = new RestClient(httpClient);
+		setupSSL(session);
+	}
+
+	/**
+	 * Gets the AbstractHttpClient instance used to make the connection
+	 * @return
+	 */
+	public HttpClient getHttpClient() 
+	{
+		return this.rc.getHttpClient();
+	}
+	
+	
+	/**
+	 * Calls closeIdleConnections on the underlying connection manager. This will
+	 * effectively close all released connections managed by the connection manager.
+	 */
+	public void closeIdleConnections()
+	{
+		getHttpClient().getConnectionManager().closeIdleConnections(0,TimeUnit.MILLISECONDS);
+	}
 	/**
 	 * Sets the CONNECTION_TIMEOUT and SO_TIMEOUT values for the underlying httpClient.
 	 * (max delay in initial response, max delay between tcp packets, respectively).  

@@ -76,6 +76,12 @@ public class RestClient {
 	    setTimeouts(30 * 1000);
 	}
 	
+	public RestClient(AbstractHttpClient client)
+	{
+		httpClient = client;
+		setTimeouts(30 * 1000);
+	}
+	
 	
 	/**
 	 * Gets the DefaultHttpClient instance used to make the connection
