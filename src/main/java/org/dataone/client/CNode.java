@@ -166,7 +166,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 
     /**
-     *  {@link <a href="http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.ping">see DataONE API Reference</a> }
+     *  {@link <a href="http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNCore.ping">see DataONE API Reference</a> }
      */
     public Date ping() throws NotImplemented, ServiceFailure, InsufficientResources
     {
@@ -174,7 +174,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     }
     
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.listFormats">see DataONE API Reference</a> } 
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNCore.listFormats">see DataONE API Reference</a> } 
 	 */
 	public  ObjectFormatList listFormats()
 	throws ServiceFailure, NotImplemented
@@ -208,7 +208,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.getFormat">see DataONE API Reference</a> } 
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNCore.getFormat">see DataONE API Reference</a> } 
 	 */
 	public  ObjectFormat getFormat(ObjectFormatIdentifier formatid)
 	throws ServiceFailure, NotFound, NotImplemented
@@ -243,7 +243,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 	
     /**
-     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.getChecksumAlgorithms">see DataONE API Reference</a> } 
+     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNCore.getChecksumAlgorithms">see DataONE API Reference</a> } 
      */
 	public ChecksumAlgorithmList listChecksumAlgorithms() throws ServiceFailure, NotImplemented 
 	{
@@ -274,7 +274,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.getLogRecords">see DataONE API Reference</a> } 
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNCore.getLogRecords">see DataONE API Reference</a> } 
 	 */
 	public  Log getLogRecords(Session session, Date fromDate, Date toDate,
 			Event event, Integer start, Integer count) 
@@ -288,7 +288,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 	
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.listNodes">see DataONE API Reference</a> } 
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNCore.listNodes">see DataONE API Reference</a> } 
 	 */
     public NodeList listNodes() throws NotImplemented, ServiceFailure
     {
@@ -321,7 +321,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.reserveIdentifier">see DataONE API Reference</a> } 
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNCore.reserveIdentifier">see DataONE API Reference</a> } 
 	 */
 	public Identifier reserveIdentifier(Session session, Identifier pid)
 	throws InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, 
@@ -368,7 +368,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.generateIdentifier">see DataONE API Reference</a> } 
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNCore.generateIdentifier">see DataONE API Reference</a> } 
 	 */
 	public  Identifier generateIdentifier(Session session, String scheme, String fragment)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented, InvalidRequest
@@ -412,7 +412,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.hasReservation">see DataONE API Reference</a> } 
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNCore.hasReservation">see DataONE API Reference</a> } 
 	 */
 	public boolean hasReservation(Session session, Identifier pid)
 	throws InvalidToken, ServiceFailure,  NotFound, NotAuthorized, 
@@ -455,7 +455,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.create">see DataONE API Reference</a> } 
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNCore.create">see DataONE API Reference</a> } 
 	 */
 	public Identifier create(Session session, Identifier pid, InputStream object,
 			SystemMetadata sysmeta) 
@@ -524,7 +524,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.registerSystemMetadata">see DataONE API Reference</a> } 
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNCore.registerSystemMetadata">see DataONE API Reference</a> } 
 	 */
 	public Identifier registerSystemMetadata(Session session, Identifier pid,
 		SystemMetadata sysmeta) 
@@ -573,7 +573,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 	
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.setObsoletedBy">see DataONE API Reference</a> } 
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNCore.setObsoletedBy">see DataONE API Reference</a> } 
 	 */
 	@Override
 	public boolean setObsoletedBy(Session session, Identifier pid,
@@ -624,6 +624,11 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 	////////////////   CN READ API  //////////////
 
+	/**
+     * A convenience method for listObjects using no filtering parameters
+     * 
+     * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.listObjects">see DataONE API Reference</a> }
+     */
 	@Override
 	public ObjectList listObjects(Session session) 
 			throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented,
@@ -632,6 +637,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		return super.listObjects(session);
 	}
 	
+	
+    /**
+     * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.listObjects">see DataONE API Reference</a> }
+     */
 	@Override
 	public ObjectList listObjects(Session session, Date fromDate,
 			Date toDate, ObjectFormatIdentifier formatid,
@@ -643,9 +652,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 	
 	
-	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_read.get">see DataONE API Reference</a> } 
-	 */
 	public InputStream get(Session session, Identifier pid)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
 	{
@@ -657,9 +663,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 
 
-	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_read.getSystemMetadata">see DataONE API Reference</a> } 
-	 */
 	public SystemMetadata getSystemMetadata(Session session, Identifier pid)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
 	{
@@ -668,7 +671,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
     /**
-     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_read.describe">see DataONE API Reference</a> } 
+     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.describe">see DataONE API Reference</a> } 
      */
     public DescribeResponse describe(Session session, Identifier pid)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound
@@ -678,7 +681,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_read.resolve">see DataONE API Reference</a> } 
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.resolve">see DataONE API Reference</a> } 
 	 */
 	public ObjectLocationList resolve(Session session, Identifier pid)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
@@ -720,7 +723,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_read.getChecksum">see DataONE API Reference</a> } 
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.getChecksum">see DataONE API Reference</a> } 
 	 */
 	public Checksum getChecksum(Session session, Identifier pid)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
@@ -766,7 +769,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
      * This is the same method but accepts a D1Url containing the query elements
      * that will be used for the query.
      * 
-     * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_read.search">see DataONE API Reference</a> }
+     * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.search">see DataONE API Reference</a> }
      * 
      * @param session
      * @param queryType  
@@ -796,10 +799,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
      * encode and assemble the query string.
      * <p>
      *  For SOLR queries, a list of query terms can be found at:
-     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/design/SearchMetadata.html
-     *  and query syntax description can be found at:
-     *  {@link <a href=" http://lucene.apache.org/java/2_4_0/queryparsersyntax.html and
-     *  {@link <a href=" http://wiki.apache.org/solr/SolrQuerySyntax
+     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/design/SearchMetadata.html"> DataONE API Reference</a> }
+     *  and query syntax description can be found for both 
+     *  {@link <a href=" http://lucene.apache.org/java/2_4_0/queryparsersyntax.html"> Lucene </a>  and
+     *  {@link <a href=" http://wiki.apache.org/solr/SolrQuerySyntax"> Solr </a>
      *  for example:  query = "q=replica_verified:[* TO NOW]&start=0&rows=10&fl=id%2Cscore
      *       replica_verified%3A%5B*+TO+NOW%5D
      * <p>
@@ -807,7 +810,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
      * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.listObjects">see DataONE API Reference</a> }
      * for example:  query = "objectFormt=text/csv&start=0&count=25"
      *  
-     * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_read.search">see DataONE API Reference</a> } 
+     * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.search">see DataONE API Reference</a> } 
      * 
      *  @param session - the session object.  If null, will default to 'public'
      *  @param queryType - the type of query passed in on the query parameter.
@@ -875,7 +878,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	////////// CN Authorization API //////////////
 	
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_authorization.setRightsHolder">see DataONE API Reference</a> }
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNAuthorization.setRightsHolder">see DataONE API Reference</a> }
 	 */
 	public  Identifier setRightsHolder(Session session, Identifier pid, Subject userId, 
 			long serialVersion)
@@ -925,7 +928,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_authorization.isAuthorized">see DataONE API Reference</a> } 
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNAuthorization.isAuthorized">see DataONE API Reference</a> } 
 	 */
 	public boolean isAuthorized(Session session, Identifier pid, Permission permission)
 	throws ServiceFailure, InvalidToken, NotFound, NotAuthorized, 
@@ -936,7 +939,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_authorization.setAccessPolicy">see DataONE API Reference</a> } 
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNAuthorization.setAccessPolicy">see DataONE API Reference</a> } 
 	 */
 	public  boolean setAccessPolicy(Session session, Identifier pid, 
 			AccessPolicy accessPolicy, long serialVersion) 
@@ -993,7 +996,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 	
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.registerAccount">see DataONE API Reference</a> } 
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNIdentity.registerAccount">see DataONE API Reference</a> } 
 	 */
 	public  Subject registerAccount(Session session, Person person) 
 			throws ServiceFailure, NotAuthorized, IdentifierNotUnique, InvalidCredentials, 
@@ -1040,7 +1043,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.updateAccount">see DataONE API Reference</a> } 
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNIdentity.updateAccount">see DataONE API Reference</a> } 
 	 */
 	public  Subject updateAccount(Session session, Person person) 
 			throws ServiceFailure, NotAuthorized, InvalidCredentials, 
@@ -1087,7 +1090,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.verifyAccount">see DataONE API Reference</a> } 
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNIdentity.verifyAccount">see DataONE API Reference</a> } 
 	 */
 	public boolean verifyAccount(Session session, Subject subject) 
 			throws ServiceFailure, NotAuthorized, NotImplemented, InvalidToken, 
@@ -1128,7 +1131,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.getSubjectInfo">see DataONE API Reference</a> } 
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNIdentity.getSubjectInfo">see DataONE API Reference</a> } 
 	 */
 	public SubjectInfo getSubjectInfo(Session session, Subject subject)
 	throws ServiceFailure, NotAuthorized, NotImplemented, NotFound, InvalidToken
@@ -1167,7 +1170,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.listSubjects">see DataONE API Reference</a> } 
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNIdentity.listSubjects">see DataONE API Reference</a> } 
 	 */
 	public SubjectInfo listSubjects(Session session, String query, String status, Integer start, 
 			Integer count) throws InvalidRequest, ServiceFailure, InvalidToken, NotAuthorized, 
@@ -1208,7 +1211,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.mapIdentity">see DataONE API Reference</a> }
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNIdentity.mapIdentity">see DataONE API Reference</a> }
 	 */
 	public boolean mapIdentity(Session session, Subject primarySubject, Subject secondarySubject)
 	throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
@@ -1257,7 +1260,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.requestMapIdentity">see DataONE API Reference</a> } 
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNIdentity.requestMapIdentity">see DataONE API Reference</a> } 
 	 */
 	public boolean requestMapIdentity(Session session, Subject subject) 
 			throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
@@ -1332,7 +1335,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     }
     
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.confirmMapIdentity">see DataONE API Reference</a> } 
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNIdentity.confirmMapIdentity">see DataONE API Reference</a> } 
 	 */
 	public boolean confirmMapIdentity(Session session, Subject subject) 
 			throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
@@ -1370,7 +1373,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.denyMapIdentity">see DataONE API Reference</a> } 
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNIdentity.denyMapIdentity">see DataONE API Reference</a> } 
 	 */
 	public boolean denyMapIdentity(Session session, Subject subject) 
 	throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
@@ -1407,7 +1410,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.removeMapIdentity">see DataONE API Reference</a> } 
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNIdentity.removeMapIdentity">see DataONE API Reference</a> } 
 	 */
 	public  boolean removeMapIdentity(Session session, Subject subject) 
 			throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
@@ -1444,7 +1447,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.createGroup">see DataONE API Reference</a> } 
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNIdentity.createGroup">see DataONE API Reference</a> } 
 	 */
 	public Subject createGroup(Session session, Group group) 
 	throws ServiceFailure, InvalidToken, NotAuthorized, NotImplemented, IdentifierNotUnique
@@ -1490,7 +1493,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.addGroupMembers">see DataONE API Reference</a> } 
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNIdentity.addGroupMembers">see DataONE API Reference</a> } 
 	 */
 	public boolean updateGroup(Session session, Group group) 
 		throws ServiceFailure, InvalidToken, 
@@ -1538,7 +1541,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	///////////// CN REGISTER API   ////////////////
 
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_register.updateNodeCapabilities">see DataONE API Reference</a> } 
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRegister.updateNodeCapabilities">see DataONE API Reference</a> } 
 	 */
 	public boolean updateNodeCapabilities(Session session, NodeReference nodeid, Node node) 
 	throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, NotFound, InvalidToken
@@ -1586,7 +1589,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_register.register">see DataONE API Reference</a> }
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRegister.register">see DataONE API Reference</a> }
 	 */
 	public NodeReference register(Session session, Node node)
 	throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, 
@@ -1635,7 +1638,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 	
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_replication.setReplicationStatus">see DataONE API Reference</a> }
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNReplication.setReplicationStatus">see DataONE API Reference</a> }
 	  */
 	public boolean setReplicationStatus(Session session, Identifier pid, 
 			NodeReference nodeRef, ReplicationStatus status, BaseException failure) 
@@ -1691,7 +1694,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_replication.setReplicationPolicy">see DataONE API Reference</a> }
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNReplication.setReplicationPolicy">see DataONE API Reference</a> }
 	 */
 	public boolean setReplicationPolicy(Session session, Identifier pid, 
 			ReplicationPolicy policy, long serialVersion) 
@@ -1743,7 +1746,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_replication.isNodeAuthorized">see DataONE API Reference</a> }
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNReplication.isNodeAuthorized">see DataONE API Reference</a> }
 	 */
 	public  boolean isNodeAuthorized(Session originatingNodeSession, 
 			Subject targetNodeSubject, Identifier pid)
@@ -1786,7 +1789,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_replication.updateReplicationMetadata">see DataONE API Reference</a> }
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNReplication.updateReplicationMetadata">see DataONE API Reference</a> }
 	 */
 	public boolean updateReplicationMetadata(Session targetNodeSession, 
 			Identifier pid, Replica replicaMetadata, long serialVersion)
@@ -1841,7 +1844,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_replication.deleteReplicationMetadata">see DataONE API Reference</a> }
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNReplication.deleteReplicationMetadata">see DataONE API Reference</a> }
 	 */
 	@Override
 	public boolean deleteReplicationMetadata(Session session, Identifier pid,
