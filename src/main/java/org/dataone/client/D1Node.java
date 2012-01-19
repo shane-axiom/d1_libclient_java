@@ -264,7 +264,6 @@ public abstract class D1Node {
 	throws InvalidToken, InvalidRequest, ServiceFailure,
 	NotAuthorized, NotImplemented, InsufficientResources
 	{
-		// TODO: create JavaDoc and fix doc reference
 
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_LOG);
         if (fromDate == null) {
@@ -451,8 +450,6 @@ public abstract class D1Node {
     public DescribeResponse describe(Session session, Identifier pid)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound
     {
-        // TODO: create JavaDoc and fix doc reference
-
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
     	
     	// need to check for null or empty values, or else the call transposes
@@ -558,9 +555,6 @@ public abstract class D1Node {
     public boolean isAuthorized(Session session, Identifier pid, Permission action)
     throws ServiceFailure, InvalidRequest, InvalidToken, NotFound, NotAuthorized, NotImplemented
     {
-
-        // TODO: create JavaDoc and fix doc reference
-
         // assemble the url
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_AUTHORIZATION);
         if (pid != null)

@@ -798,17 +798,20 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
      * One option for encoding is to use the org.dataone.service.util.D1Url class to 
      * encode and assemble the query string.
      * <p>
-     *  For SOLR queries, a list of query terms can be found at:
+     *  For SOLR queries, a list of query terms employed can be found at the 
      *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/design/SearchMetadata.html"> DataONE API Reference</a> }
      *  and query syntax description can be found for both 
-     *  {@link <a href=" http://lucene.apache.org/java/2_4_0/queryparsersyntax.html"> Lucene </a>  and
-     *  {@link <a href=" http://wiki.apache.org/solr/SolrQuerySyntax"> Solr </a>
-     *  for example:  query = "q=replica_verified:[* TO NOW]&start=0&rows=10&fl=id%2Cscore
-     *       replica_verified%3A%5B*+TO+NOW%5D
+     *  {@link <a href=" http://lucene.apache.org/java/2_4_0/queryparsersyntax.html"> Lucene </a> }  and
+     *  {@link <a href=" http://wiki.apache.org/solr/SolrQuerySyntax"> Solr </a> }
+     *  <p>
+     *  for example:  
+     *  <pre>query = "q=replica_verified:[* TO NOW]&start=0&rows=10&fl=id%2Cscore
+     *       query = "q=replica_verified%3A%5B*+TO+NOW%5D&start=0&rows=10&fl=id%2Cscore
      * <p>
-     * For DataONE type queries, the same parameters are available as are for mn.listObjects():
-     * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.listObjects">see DataONE API Reference</a> }
-     * for example:  query = "objectFormt=text/csv&start=0&count=25"
+     * For DataONE type queries, the same parameters are available as are for 
+     * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.listObjects">mn.listObjects()</a> }
+     * for example:  
+     * <pre>query = "objectFormat=text/csv&start=0&count=25"</pre>
      *  
      * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.search">see DataONE API Reference</a> } 
      * 
