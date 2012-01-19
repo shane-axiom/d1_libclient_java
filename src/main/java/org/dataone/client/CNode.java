@@ -160,36 +160,25 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
      * @throws NotImplemented 
      */
     private void initializeNodeMap() throws ServiceFailure, NotImplemented
-    {
-    	try {
-			InputStream inputStream = fetchNodeList();   		
-    		nodeId2URLMap = NodelistUtil.mapNodeList(inputStream);
-		} catch (IOException e) {
-			recastClientSideExceptionToServiceFailure(e);
-		} catch (InstantiationException e) {
-			recastClientSideExceptionToServiceFailure(e);
-		} catch (IllegalAccessException e) {
-			recastClientSideExceptionToServiceFailure(e);
-		} catch (JiBXException e) {
-			recastClientSideExceptionToServiceFailure(e);
-		}
+    { 		
+    	nodeId2URLMap = NodelistUtil.mapNodeList(listNodes());
     }
 	
 
-    /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.ping */
-
+    /**
+     *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.ping 
+     */
     public Date ping() throws NotImplemented, ServiceFailure, InsufficientResources
     {
     	return super.ping();
     }
     
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.listFormats */
-
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.listFormats 
+	 */
 	public  ObjectFormatList listFormats()
 	throws ServiceFailure, NotImplemented
 	{
-		// TODO: create JavaDoc and fix doc reference
-
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_FORMATS);
 
 		// send the request
@@ -213,13 +202,12 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 
 
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.getFormat */
-
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.getFormat 
+	 */
 	public  ObjectFormat getFormat(ObjectFormatIdentifier formatid)
 	throws ServiceFailure, NotFound, NotImplemented
 	{
-		// TODO: create JavaDoc and fix doc reference
-
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_FORMATS);   	
     	url.addNextPathElement(formatid.getValue());
     	
@@ -232,7 +220,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		} catch (BaseException be) {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof NotFound)               throw (NotFound) be;
-//			if (be instanceof InsufficientResources)  throw (InsufficientResources) be;
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 
 			throw recastDataONEExceptionToServiceFailure(be);
@@ -242,16 +229,17 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-		return deserializeServiceType(ObjectFormat.class, is);
+		ObjectFormat objectFormat = deserializeServiceType(ObjectFormat.class, is);
+		client.closeIdleConnections();
+		return objectFormat;
 	}
 	
 	
-  /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.getChecksumAlgorithms */
-	
+    /**
+     *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.getChecksumAlgorithms 
+     */
 	public ChecksumAlgorithmList listChecksumAlgorithms() throws ServiceFailure, NotImplemented 
 	{
-		// TODO: create JavaDoc and fix doc reference
-
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_CHECKSUM);
 
 		D1RestClient client = new D1RestClient();
@@ -270,13 +258,15 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 		
-		// TODO Auto-generated method stub
-		return deserializeServiceType(ChecksumAlgorithmList.class, is);
+		ChecksumAlgorithmList caList = deserializeServiceType(ChecksumAlgorithmList.class, is);
+		client.closeIdleConnections();
+		return caList;
 	}
 
 
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.getLogRecords */
-
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.getLogRecords 
+	 */
 	public  Log getLogRecords(Session session, Date fromDate, Date toDate,
 			Event event, Integer start, Integer count) 
 	throws InvalidToken, InvalidRequest, ServiceFailure,
@@ -288,29 +278,22 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.listNodes */
-	
-    public NodeList listNodes() throws NotImplemented, ServiceFailure {
-    	// the actual call is delegated to fetchNodeList, because the call is also used
-    	// in the context of initializeNodeMap(), which needs the input stream
-    	
-    	// TODO: create JavaDoc and fix doc reference
-    	
-    	InputStream is = fetchNodeList();
-    	return deserializeServiceType(NodeList.class, is);
-    }
-    
-    
-    private InputStream fetchNodeList() throws NotImplemented, ServiceFailure 
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.listNodes 
+	 */
+    public NodeList listNodes() throws NotImplemented, ServiceFailure
     {
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_NODE);
 
 		// send the request
 		D1RestClient client = new D1RestClient();
-		InputStream is = null;
+		NodeList nodelist = null;
 
 		try {
-			is = client.doGetRequest(url.getUrl());
+			InputStream is = client.doGetRequest(url.getUrl());
+			nodelist = deserializeServiceType(NodeList.class, is);
+			client.closeIdleConnections();
+			
 		} catch (BaseException be) {
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
@@ -321,19 +304,18 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
-		return is;
+	
+		return nodelist;
 	}
 
 
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.reserveIdentifier */
-
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.reserveIdentifier 
+	 */
 	public Identifier reserveIdentifier(Session session, Identifier pid)
 	throws InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, 
 	NotImplemented, InvalidRequest
 	{
-		// TODO: create JavaDoc and fix doc reference
-
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_RESERVE);
 		SimpleMultipartEntity smpe = new SimpleMultipartEntity();
 		if (pid == null) {
@@ -361,17 +343,18 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-		return deserializeServiceType(Identifier.class, is);
+ 		Identifier identifier = deserializeServiceType(Identifier.class, is);
+ 		client.closeIdleConnections();
+ 		return identifier;
 	}
 
 
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.generateIdentifier */
-
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.generateIdentifier 
+	 */
 	public  Identifier generateIdentifier(Session session, String scheme, String fragment)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented, InvalidRequest
 	{
-		// TODO: create JavaDoc and fix doc reference
-
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_GENERATE);
 		SimpleMultipartEntity smpe = new SimpleMultipartEntity();
 		if (scheme == null) {
@@ -401,18 +384,19 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-		return deserializeServiceType(Identifier.class, is);
+		Identifier identifier = deserializeServiceType(Identifier.class, is);
+ 		client.closeIdleConnections();
+ 		return identifier;
 	}
 
 
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.hasReservation */
-
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.hasReservation 
+	 */
 	public boolean hasReservation(Session session, Identifier pid)
 	throws InvalidToken, ServiceFailure,  NotFound, NotAuthorized, 
 	NotImplemented, IdentifierNotUnique
 	{
-		// TODO: create JavaDoc and fix doc reference
-		
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_RESERVE);
 		if (pid == null) {
 			throw new NotFound("0000", "'pid' cannot be null");
@@ -427,6 +411,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			is = client.doGetRequest(url.getUrl());
 			if (is != null)
 				is.close();
+				client.closeIdleConnections();
 		} catch (BaseException be) {
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
@@ -446,16 +431,14 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 
 
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.create */
-
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.create 
+	 */
 	public Identifier create(Session session, Identifier pid, InputStream object,
 			SystemMetadata sysmeta) 
 	throws InvalidToken, ServiceFailure,NotAuthorized, IdentifierNotUnique, UnsupportedType,
 	InsufficientResources, InvalidSystemMetadata, NotImplemented, InvalidRequest
 	{
-
-		// TODO: create JavaDoc and fix doc reference
-
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
 		if (pid == null) {
 			throw new InvalidRequest("0000", "PID cannot be null");
@@ -508,20 +491,19 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-
-		return deserializeServiceType(Identifier.class, is);
+        Identifier identifier = deserializeServiceType(Identifier.class, is);
+ 		client.closeIdleConnections();
+ 		return identifier;
 	}
 
 
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.registerSystemMetadata */
-
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_core.registerSystemMetadata 
+	 */
 	public Identifier registerSystemMetadata(Session session, Identifier pid,
 		SystemMetadata sysmeta) 
 	throws NotImplemented, NotAuthorized,ServiceFailure, InvalidRequest, InvalidSystemMetadata
 	{
-
-		// TODO: create JavaDoc and fix doc reference
-
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_META);
 		if (pid == null) {
 			throw new InvalidRequest("0000","'pid' cannot be null");
@@ -556,7 +538,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-		return deserializeServiceType(Identifier.class, is);
+		Identifier identifier = deserializeServiceType(Identifier.class, is);
+ 		client.closeIdleConnections();
+ 		return identifier;
 	}
 
 
@@ -581,8 +565,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 	
 	
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_read.get */
-
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_read.get 
+	 */
 	public InputStream get(Session session, Identifier pid)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
 	{
@@ -594,8 +579,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 
 
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_read.getSystemMetadata */
-
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_read.getSystemMetadata 
+	 */
 	public SystemMetadata getSystemMetadata(Session session, Identifier pid)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
 	{
@@ -603,32 +589,27 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 
 
-    /* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_read.describe */
-
+    /**
+     *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_read.describe 
+     */
     public DescribeResponse describe(Session session, Identifier pid)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound
     {
-        // TODO: create JavaDoc and fix doc reference
     	return super.describe(session,pid);
     }
 
 
-
-	
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_read.resolve */
-
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_read.resolve 
+	 */
 	public ObjectLocationList resolve(Session session, Identifier pid)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
 	{
-
-		// TODO: create JavaDoc and fix doc reference
-
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_RESOLVE);
 		if (pid == null) {
 			throw new NotFound("0000", "'pid' cannot be null");
 		}
         url.addNextPathElement(pid.getValue());
-
 
 		// send the request
 		D1RestClient client = new D1RestClient(session);
@@ -651,17 +632,18 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-		return deserializeServiceType(ObjectLocationList.class, is);
+		ObjectLocationList oll = deserializeServiceType(ObjectLocationList.class, is);
+ 		client.closeIdleConnections();
+ 		return oll;
 	}
 
 
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_read.getChecksum */
-
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_read.getChecksum 
+	 */
 	public Checksum getChecksum(Session session, Identifier pid)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
 	{
-		// TODO: create JavaDoc and fix doc reference
-
 		if (pid == null)
             throw new NotFound("0000", "PID cannot be null");
 
@@ -689,7 +671,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-		return deserializeServiceType(Checksum.class, is);
+		Checksum checksum = deserializeServiceType(Checksum.class, is);
+		client.closeIdleConnections();
+		return checksum;
 	}
 
 	
@@ -795,22 +779,22 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-		return deserializeServiceType(ObjectList.class, is);
+		ObjectList ol = deserializeServiceType(ObjectList.class, is);
+		client.closeIdleConnections();
+		return ol;
 	}
 
 	
 	////////// CN Authorization API //////////////
 	
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_authorization.setRightsHolder */
-
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_authorization.setRightsHolder
+	 */
 	public  Identifier setRightsHolder(Session session, Identifier pid, Subject userId, 
 			long serialVersion)
 	throws InvalidToken, ServiceFailure, NotFound, NotAuthorized, NotImplemented, 
 	InvalidRequest, VersionMismatch
 	{
-
-		// TODO: create JavaDoc and fix doc reference
-
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OWNER);
 		if (pid == null)
 			throw new InvalidRequest("0000","'pid' cannot be null");
@@ -844,31 +828,31 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-		return deserializeServiceType(Identifier.class, is);
+		Identifier identifier = deserializeServiceType(Identifier.class, is);
+		client.closeIdleConnections();
+		return identifier;
 	}
 
 
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_authorization.isAuthorized */
-
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_authorization.isAuthorized 
+	 */
 	public boolean isAuthorized(Session session, Identifier pid, Permission permission)
 	throws ServiceFailure, InvalidToken, NotFound, NotAuthorized, 
 	NotImplemented, InvalidRequest
 	{
-		// TODO: create JavaDoc and fix doc reference
 		return super.isAuthorized(session, pid, permission);
 	}
 
 
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_authorization.setAccessPolicy */
-
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_authorization.setAccessPolicy 
+	 */
 	public  boolean setAccessPolicy(Session session, Identifier pid, 
 			AccessPolicy accessPolicy, long serialVersion) 
 	throws InvalidToken, NotFound, NotImplemented, NotAuthorized, 
 		ServiceFailure, InvalidRequest, VersionMismatch
 	{
-
-		// TODO: create JavaDoc and fix doc reference
-
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCESS);
 		if (pid == null)
 			throw new InvalidRequest("0000","'pid' cannot be null");
@@ -892,6 +876,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			is = client.doPutRequest(url.getUrl(),mpe);
 			if (is != null)
 				is.close();
+			client.closeIdleConnections();
 		} catch (BaseException be) {
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
 			if (be instanceof NotFound)               throw (NotFound) be;
@@ -915,14 +900,13 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	//////////  CN IDENTITY API  ///////////////
 	
 	
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.registerAccount */
-
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.registerAccount 
+	 */
 	public  Subject registerAccount(Session session, Person person) 
 			throws ServiceFailure, NotAuthorized, IdentifierNotUnique, InvalidCredentials, 
 			NotImplemented, InvalidRequest
 	{
-		// TODO: create JavaDoc and fix doc reference
-
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNTS);
     	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
@@ -954,19 +938,19 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-
-		return deserializeServiceType(Subject.class, is);
+		Subject subject = deserializeServiceType(Subject.class, is);
+		client.closeIdleConnections();
+		return subject;
 	}
 
 
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.updateAccount */
-
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.updateAccount 
+	 */
 	public  Subject updateAccount(Session session, Person person) 
 			throws ServiceFailure, NotAuthorized, InvalidCredentials, 
 			NotImplemented, InvalidRequest, NotFound
 	{
-		// TODO: create JavaDoc and fix doc reference
-
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNTS);
     	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
@@ -998,18 +982,19 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-		return deserializeServiceType(Subject.class, is);
+		Subject subject = deserializeServiceType(Subject.class, is);
+		client.closeIdleConnections();
+		return subject;
 	}
 
 
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.verifyAccount */
-
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.verifyAccount 
+	 */
 	public boolean verifyAccount(Session session, Subject subject) 
 			throws ServiceFailure, NotAuthorized, NotImplemented, InvalidToken, 
 			InvalidRequest
 	{
-		// TODO: create JavaDoc and fix doc reference
-
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNTS);
 		if (subject == null)
 			throw new InvalidRequest("0000","'subject' cannot be null");
@@ -1024,6 +1009,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			is = client.doPostRequest(url.getUrl(),null);
 			if (is != null)
 				is.close();
+			client.closeIdleConnections();
 		} catch (BaseException be) {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
@@ -1042,13 +1028,12 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 
 
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.getSubjectInfo */
-
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.getSubjectInfo 
+	 */
 	public SubjectInfo getSubjectInfo(Session session, Subject subject)
 	throws ServiceFailure, NotAuthorized, NotImplemented, NotFound, InvalidToken
 	{
-		// TODO: create JavaDoc and fix doc reference
-
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNTS);
 		if (subject == null)
 			throw new NotFound("0000","'subject' cannot be null");
@@ -1073,18 +1058,19 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-		return deserializeServiceType(SubjectInfo.class, is);
+		SubjectInfo subjectInfo = deserializeServiceType(SubjectInfo.class, is);
+		client.closeIdleConnections();
+		return subjectInfo;
 	}
 
 
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.listSubjects */
-
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.listSubjects 
+	 */
 	public SubjectInfo listSubjects(Session session, String query, String status, Integer start, 
 			Integer count) throws InvalidRequest, ServiceFailure, InvalidToken, NotAuthorized, 
 			NotImplemented
 	{
-		// TODO: create JavaDoc and fix doc reference
-
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNTS);
     	url.addNonEmptyParamPair("query", query);
     	url.addNonEmptyParamPair("status", status);
@@ -1110,18 +1096,19 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 		
-		return deserializeServiceType(SubjectInfo.class, is);
+		SubjectInfo subjectInfo = deserializeServiceType(SubjectInfo.class, is);
+		client.closeIdleConnections();
+		return subjectInfo;
 	}
 
 
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.mapIdentity */
-
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.mapIdentity
+	 */
 	public boolean mapIdentity(Session session, Subject primarySubject, Subject secondarySubject)
 	throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
 			NotImplemented, InvalidRequest, IdentifierNotUnique
 	{
-		// TODO: create JavaDoc and fix doc reference
-
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING);
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
 
@@ -1141,6 +1128,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			is = client.doPostRequest(url.getUrl(),mpe);
 			if (is != null)
 				is.close();
+			client.closeIdleConnections();
 		} catch (BaseException be) {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
@@ -1161,14 +1149,13 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 
 
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.requestMapIdentity */
-
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.requestMapIdentity 
+	 */
 	public boolean requestMapIdentity(Session session, Subject subject) 
 			throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
 			NotImplemented, InvalidRequest, IdentifierNotUnique
 	{
-		// TODO: create JavaDoc and fix doc reference
-
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING_PENDING);
     	url.addNextPathElement(subject.getValue());
     	
@@ -1179,6 +1166,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			is = client.doPostRequest(url.getUrl(),null);
 			if (is != null)
 				is.close();
+			client.closeIdleConnections();
 		} catch (BaseException be) {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
@@ -1204,8 +1192,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
      */
     public SubjectInfo getPendingMapIdentity(Session session, Subject subject) 
         throws ServiceFailure, NotAuthorized, NotFound, NotImplemented 
-    {
-    	
+    {  	
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING_PENDING);
     	url.addNextPathElement(subject.getValue());
     	
@@ -1227,18 +1214,18 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-		return deserializeServiceType(SubjectInfo.class, is);
+		SubjectInfo subjectInfo = deserializeServiceType(SubjectInfo.class, is);
+		client.closeIdleConnections();
+		return subjectInfo;
     }
     
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.confirmMapIdentity */
-
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.confirmMapIdentity 
+	 */
 	public boolean confirmMapIdentity(Session session, Subject subject) 
 			throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
 			NotImplemented
 	{
-
-		// TODO: create JavaDoc and fix doc reference
-
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING_PENDING);
     	url.addNextPathElement(subject.getValue());
 
@@ -1249,6 +1236,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			is = client.doPutRequest(url.getUrl(), null);
 			if (is != null)
 				is.close();
+			client.closeIdleConnections();
 		} catch (BaseException be) {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
@@ -1267,14 +1255,13 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 
 
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.denyMapIdentity */
-
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.denyMapIdentity 
+	 */
 	public boolean denyMapIdentity(Session session, Subject subject) 
 	throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
 			NotImplemented
 	{
-		// TODO: create JavaDoc and fix doc reference
-
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING_PENDING);
     	url.addNextPathElement(subject.getValue());
 		D1RestClient client = new D1RestClient(session);
@@ -1284,6 +1271,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			is = client.doDeleteRequest(url.getUrl());
 			if (is != null)
 				is.close();
+			client.closeIdleConnections();
 		} catch (BaseException be) {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
@@ -1302,14 +1290,13 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 
 
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.removeMapIdentity */
-
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.removeMapIdentity 
+	 */
 	public  boolean removeMapIdentity(Session session, Subject subject) 
 			throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
 			NotImplemented
 	{
-		// TODO: create JavaDoc and fix doc reference
-
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING);
     	url.addNextPathElement(subject.getValue());
 		D1RestClient client = new D1RestClient(session);
@@ -1319,6 +1306,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			is = client.doDeleteRequest(url.getUrl());
 			if (is != null)
 				is.close();
+			client.closeIdleConnections();
 		} catch (BaseException be) {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
@@ -1338,13 +1326,12 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 
 
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.createGroup */
-
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.createGroup 
+	 */
 	public Subject createGroup(Session session, Group group) 
 	throws ServiceFailure, InvalidToken, NotAuthorized, NotImplemented, IdentifierNotUnique
 	{
-		// TODO: create JavaDoc and fix doc reference
-
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_GROUPS);
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
@@ -1376,18 +1363,19 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-		return deserializeServiceType(Subject.class, is);
+		Subject subject = deserializeServiceType(Subject.class, is);
+		client.closeIdleConnections();
+		return subject;
 	}
 
 
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.addGroupMembers */
-
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_identity.addGroupMembers 
+	 */
 	public boolean updateGroup(Session session, Group group) 
 		throws ServiceFailure, InvalidToken, 
 			NotAuthorized, NotFound, NotImplemented, InvalidRequest
 	{
-		// TODO: create JavaDoc and fix doc reference
-
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_GROUPS);
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
@@ -1406,6 +1394,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			is = client.doPutRequest(url.getUrl(),mpe);
 			if (is != null)
 				is.close();
+			client.closeIdleConnections();
 		} catch (BaseException be) {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
@@ -1426,14 +1415,12 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 	///////////// CN REGISTER API   ////////////////
 
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_register.updateNodeCapabilities */
-
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_register.updateNodeCapabilities 
+	 */
 	public boolean updateNodeCapabilities(Session session, NodeReference nodeid, Node node) 
 	throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, NotFound, InvalidToken
 	{
-
-		// TODO: create JavaDoc and fix doc reference
-
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_NODE);
 		if (nodeid != null)
 			url.addNextPathElement(nodeid.getValue());
@@ -1454,6 +1441,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			is = client.doPutRequest(url.getUrl(),mpe);
 			if (is != null)
 				is.close();
+			client.closeIdleConnections();
 		} catch (BaseException be) {
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
@@ -1473,14 +1461,13 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 
 
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_register.register */
-
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_register.register 
+	 */
 	public NodeReference register(Session session, Node node)
 	throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, 
 	IdentifierNotUnique
 	{
-		// TODO: create JavaDoc and fix doc reference
-
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_NODE);
     	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
@@ -1511,22 +1498,23 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-		return deserializeServiceType(NodeReference.class, is);
+		NodeReference nodeRef = deserializeServiceType(NodeReference.class, is);
+		client.closeIdleConnections();
+		return nodeRef;
 	}
 
 
 	////////////  CN REPLICATION API    ////////////////////
 	
 	
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_replication.setReplicationStatus */
-
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_replication.setReplicationStatus
+	  */
 	public boolean setReplicationStatus(Session session, Identifier pid, 
 			NodeReference nodeRef, ReplicationStatus status, BaseException failure) 
 					throws ServiceFailure, NotImplemented, InvalidToken, NotAuthorized, 
 					InvalidRequest, NotFound
 	{
-		// TODO: create JavaDoc and fix doc reference
-
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_REPLICATION_NOTIFY);
 		if (pid != null)
 			url.addNextPathElement(pid.getValue());
@@ -1553,6 +1541,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			is = client.doPutRequest(url.getUrl(),mpe);
 			if (is != null) 
 				is.close();
+			client.closeIdleConnections();
 		} catch (BaseException be) {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
@@ -1572,16 +1561,14 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 
 
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_replication.setReplicationPolicy */
-
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_replication.setReplicationPolicy 
+	 */
 	public boolean setReplicationPolicy(Session session, Identifier pid, 
 			ReplicationPolicy policy, long serialVersion) 
 					throws NotImplemented, NotFound, NotAuthorized, ServiceFailure, 
 					InvalidRequest, InvalidToken, VersionMismatch
 	{
-
-		// TODO: create JavaDoc and fix doc reference
-
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_REPLICATION_POLICY);
 		if (pid != null)
 			url.addNextPathElement(pid.getValue());
@@ -1603,6 +1590,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			is = client.doPutRequest(url.getUrl(),mpe);
 			if (is != null) 
 				is.close();
+			client.closeIdleConnections();
 		} catch (BaseException be) {
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 			if (be instanceof NotFound)               throw (NotFound) be;
@@ -1623,16 +1611,14 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 
 
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_replication.isNodeAuthorized */
-
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_replication.isNodeAuthorized 
+	 */
 	public  boolean isNodeAuthorized(Session originatingNodeSession, 
 			Subject targetNodeSubject, Identifier pid)
 	throws NotImplemented, NotAuthorized, InvalidToken, ServiceFailure, 
 	NotFound, InvalidRequest
 	{
-
-		// TODO: create JavaDoc and fix doc reference
-
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_REPLICATION_AUTHORIZED);
         if (pid != null)
         	url.addNextPathElement(pid.getValue());
@@ -1646,6 +1632,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			is = client.doGetRequest(url.getUrl());
 			if (is != null) 
 				is.close();
+			client.closeIdleConnections();
 		} catch (BaseException be) {
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
@@ -1665,15 +1652,14 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 
 
-	/* @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_replication.updateReplicationMetadata */
-
+	/**
+	 *  @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CN_replication.updateReplicationMetadata 
+	 */
 	public boolean updateReplicationMetadata(Session targetNodeSession, 
 			Identifier pid, Replica replicaMetadata, long serialVersion)
 	throws NotImplemented, NotAuthorized, ServiceFailure, NotFound, 
 	InvalidRequest, InvalidToken, VersionMismatch
 	{
-		// TODO: create JavaDoc and fix doc reference
-
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_REPLICATION_META);
 		if (pid != null)
 			url.addNextPathElement(pid.getValue());
@@ -1697,6 +1683,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			is = client.doPutRequest(url.getUrl(),mpe);
 			if (is != null)
 				is.close();
+			client.closeIdleConnections();
 		} catch (BaseException be) {
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
@@ -1741,6 +1728,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			is = client.doPutRequest(url.getUrl(), mpe);
 			if (is != null)
 				is.close();
+			client.closeIdleConnections();
 		} catch (BaseException be) {
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
 			if (be instanceof NotFound)               throw (NotFound) be;
@@ -1783,6 +1771,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			is = client.doPutRequest(url.getUrl(),mpe);
 			if (is != null)
 				is.close();
+			client.closeIdleConnections();
 		} catch (BaseException be) {
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
