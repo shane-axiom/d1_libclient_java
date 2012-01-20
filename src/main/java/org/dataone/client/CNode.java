@@ -418,18 +418,21 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	throws InvalidToken, ServiceFailure,  NotFound, NotAuthorized, 
 	NotImplemented, IdentifierNotUnique
 	{
-		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_RESERVE);
-		if (pid == null) {
-			throw new NotFound("0000", "'pid' cannot be null");
+		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_HAS_RESERVATION);
+		
+		SimpleMultipartEntity mpe = new SimpleMultipartEntity();
+    	try {
+			mpe.addFilePart("subjectInfo", subjectInfo);
+			mpe.addFilePart("pid", pid);
+		} catch (Exception e) {
+			throw recastClientSideExceptionToServiceFailure(e);
 		}
-		url.addNextPathElement(pid.getValue());
-
+    	
 		// send the request
 		D1RestClient client = new D1RestClient(session);
-
+		
 		try {
-			// TODO: include SubjectInfo, need to change method to POST
-			InputStream is = client.doGetRequest(url.getUrl());
+			InputStream is = client.doPostRequest(url.getUrl(), mpe);
 			if (is != null)
 				is.close();
 			
