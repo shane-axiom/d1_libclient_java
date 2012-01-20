@@ -414,7 +414,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	/**
 	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNCore.hasReservation">see DataONE API Reference</a> } 
 	 */
-	public boolean hasReservation(Session session, SubjectInfo subjectInfo, Identifier pid)
+	public boolean hasReservation(Session session, Subject subject, Identifier pid)
 	throws InvalidToken, ServiceFailure,  NotFound, NotAuthorized, 
 	NotImplemented, IdentifierNotUnique
 	{
@@ -422,7 +422,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		
 		SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
-			mpe.addFilePart("subjectInfo", subjectInfo);
+			mpe.addFilePart("subject", subject);
 			mpe.addFilePart("pid", pid);
 		} catch (Exception e) {
 			throw recastClientSideExceptionToServiceFailure(e);
