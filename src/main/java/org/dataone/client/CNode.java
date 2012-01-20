@@ -379,6 +379,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw new InvalidRequest("0000","'scheme' cannot be null");
 		}
 		smpe.addParamPart("scheme", scheme);
+		// omit fragment part if null because it is optional for user to include
+		// (the service should not rely on the empty parameter to be there)
 		if (fragment != null) {
 			smpe.addParamPart("fragment", fragment);
 		}
@@ -532,7 +534,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	 */
 	public Identifier registerSystemMetadata(Session session, Identifier pid,
 		SystemMetadata sysmeta) 
-	throws NotImplemented, NotAuthorized,ServiceFailure, InvalidRequest, InvalidSystemMetadata
+	throws NotImplemented, NotAuthorized,ServiceFailure, InvalidRequest, 
+	InvalidSystemMetadata, InvalidToken
 	{
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_META);
 		if (pid == null) {
@@ -561,6 +564,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
 			if (be instanceof InvalidSystemMetadata)  throw (InvalidSystemMetadata) be;
+			if (be instanceof InvalidToken)	          throw (InvalidToken) be;
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
@@ -1007,7 +1011,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	 */
 	public  Subject registerAccount(Session session, Person person) 
 			throws ServiceFailure, NotAuthorized, IdentifierNotUnique, InvalidCredentials, 
-			NotImplemented, InvalidRequest
+			NotImplemented, InvalidRequest, InvalidToken
 	{
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNTS);
     	
@@ -1034,6 +1038,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof InvalidCredentials)     throw (InvalidCredentials) be;
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
+			if (be instanceof InvalidToken)	          throw (InvalidToken) be;
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
@@ -1054,7 +1059,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	 */
 	public  Subject updateAccount(Session session, Person person) 
 			throws ServiceFailure, NotAuthorized, InvalidCredentials, 
-			NotImplemented, InvalidRequest, NotFound
+			NotImplemented, InvalidRequest, InvalidToken, NotFound
 	{
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNTS);
     	
@@ -1080,6 +1085,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof InvalidCredentials)     throw (InvalidCredentials) be;
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
+			if (be instanceof InvalidToken)	          throw (InvalidToken) be;
 			if (be instanceof NotFound)               throw (NotFound) be;
 
 			throw recastDataONEExceptionToServiceFailure(be);
@@ -1310,7 +1316,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
      * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNIdentity.getPendingMapIdentity">see DataONE API Reference</a> }
      */
     public SubjectInfo getPendingMapIdentity(Session session, Subject subject) 
-        throws ServiceFailure, NotAuthorized, NotFound, NotImplemented 
+        throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented 
     {  	
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING_PENDING);
     	url.addNextPathElement(subject.getValue());
@@ -1327,6 +1333,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 			if (be instanceof NotFound)               throw (NotFound) be;
+			if (be instanceof InvalidToken)	          throw (InvalidToken) be;
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
@@ -1600,7 +1607,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	 */
 	public NodeReference register(Session session, Node node)
 	throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, 
-	IdentifierNotUnique
+	IdentifierNotUnique, InvalidToken
 	{
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_NODE);
     	
@@ -1626,6 +1633,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
 			if (be instanceof IdentifierNotUnique)    throw (IdentifierNotUnique) be;
+			if (be instanceof InvalidToken)	          throw (InvalidToken) be;
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
@@ -1662,12 +1670,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         mpe.addParamPart("status", status.xmlValue());
         try {
             if ( failure != null ) {
-                mpe.addFilePart("failure", failure.serialize(0));
-                
+                mpe.addFilePart("failure", failure.serialize(BaseException.FMT_XML));
             }
             
         } catch (IOException e1) {
-            
             throw recastClientSideExceptionToServiceFailure(e1);        
         }
 

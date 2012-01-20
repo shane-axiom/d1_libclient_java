@@ -381,8 +381,8 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	url.addNextPathElement(pid.getValue());
 
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
-    	mpe.addParamPart("newPid", 
-                EncodingUtilities.encodeUrlQuerySegment(newPid.getValue()));
+//    	mpe.addParamPart("newPid", EncodingUtilities.encodeUrlQuerySegment(newPid.getValue()));
+    	mpe.addParamPart("newPid", newPid.getValue());
     	try {
 			mpe.addFilePart("object",object);
 			mpe.addFilePart("sysmeta", sysmeta);
@@ -507,7 +507,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
      *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNReplication.replicate">see DataONE API Reference</a> } 
      */
     public boolean replicate(Session session, SystemMetadata sysmeta, NodeReference sourceNode) 
-    throws NotImplemented, ServiceFailure, NotAuthorized, InvalidRequest, 
+    throws NotImplemented, ServiceFailure, NotAuthorized, InvalidRequest, InvalidToken,
         InsufficientResources, UnsupportedType
     {
 		// assemble the url
@@ -537,6 +537,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
             if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
             if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
             if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
+			if (be instanceof InvalidToken)	          throw (InvalidToken) be;
             if (be instanceof InsufficientResources)  throw (InsufficientResources) be;
             if (be instanceof UnsupportedType)        throw (UnsupportedType) be;
                     
