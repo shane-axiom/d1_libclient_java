@@ -16,17 +16,20 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
+
+    $Id$
 ====
 
-DataONE Java Service API
-------------------------
+DataONE Java Client Library
+---------------------------
 
-This service-api library encapsulates the DataONE service programming
-interface as a set of Java classes that can be implemented by both client
-and server systems wishing to implement the API.  The API includes interface
-definitions and class definitions for types and exceptions.
+d1-java is a client library for calling DataONE services. The library
+exposes the DataONE services as a set of Java classes and method calls, and
+forwards these requests to particular DataONE rest services.  The response
+and exceptions are handed back to the calling application.  The library
+makes it easy to utilize DataONE services without having to have a complete
+understanding of the REST API.
 
 See the test classes under src/test for example usage.
 
-See LICENSE.txt for the details of distributing this software.
-
+See LICENSE.txt for the details of distributing this software. 
