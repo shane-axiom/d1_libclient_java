@@ -1062,8 +1062,14 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throws ServiceFailure, NotAuthorized, InvalidCredentials, 
 			NotImplemented, InvalidRequest, InvalidToken, NotFound
 	{
+		if (person.getSubject() == null) {
+			throw new NotFound("0000","'person.subject' cannot be null");
+		}
+		
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNTS);
     	
+		url.addNextPathElement(person.getSubject().getValue());
+		
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
     		mpe.addFilePart("person", person);
@@ -1110,9 +1116,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throws ServiceFailure, NotAuthorized, NotImplemented, InvalidToken, 
 			InvalidRequest
 	{
-		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNTS);
-		if (subject == null)
+		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_VERIFICATION);
+		if (subject == null) {
 			throw new InvalidRequest("0000","'subject' cannot be null");
+		}
 		url.addNextPathElement(subject.getValue());
 		
 //    	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
@@ -1120,7 +1127,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         D1RestClient client = new D1RestClient(session);
 
 		try {
-			InputStream is = client.doPostRequest(url.getUrl(),null);
+			InputStream is = client.doPutRequest(url.getUrl(),null);
 			if (is != null)
 				is.close();
 		
