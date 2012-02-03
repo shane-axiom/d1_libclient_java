@@ -472,7 +472,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		if (pid == null) {
 			throw new InvalidRequest("0000", "PID cannot be null");
 		}
-        url.addNextPathElement(pid.getValue());
 
         SimpleMultipartEntity mpe = new SimpleMultipartEntity();
 
@@ -484,6 +483,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         // because if object is null on an MN, we should throw an exception
 
         try {
+        	// pid as param, not in URL
+        	mpe.addParamPart("pid", pid.getValue());
         	if (object == null) {
         		// object sent is an empty string
         		mpe.addFilePart("object", "");
@@ -541,10 +542,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		if (pid == null) {
 			throw new InvalidRequest("0000","'pid' cannot be null");
 		}
-    	url.addNextPathElement(pid.getValue());
     	
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
+    		mpe.addParamPart("pid", pid.getValue());
     		mpe.addFilePart("sysmeta", sysmeta);
     	} catch (IOException e1) {
 			throw recastClientSideExceptionToServiceFailure(e1);
@@ -1280,12 +1281,14 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			NotImplemented, InvalidRequest, IdentifierNotUnique
 	{
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING_PENDING);
-    	url.addNextPathElement(subject.getValue());
     	
+		SimpleMultipartEntity mpe = new SimpleMultipartEntity();
+		mpe.addParamPart("subject", subject.getValue());
+
 		D1RestClient client = new D1RestClient(session);
 
 		try {
-			InputStream is = client.doPostRequest(url.getUrl(),null);
+			InputStream is = client.doPostRequest(url.getUrl(), mpe);
 			if (is != null)
 				is.close();
 		
