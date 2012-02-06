@@ -213,32 +213,22 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	public  ObjectFormat getFormat(ObjectFormatIdentifier formatid)
 	throws ServiceFailure, NotFound, NotImplemented
 	{
-		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_FORMATS);   	
-    	url.addNextPathElement(formatid.getValue());
-    	
-		// send the request
-		D1RestClient client = new D1RestClient();
-		ObjectFormat objectFormat = null;
-
-		try {
-			InputStream is = client.doGetRequest(url.getUrl());
-			objectFormat = deserializeServiceType(ObjectFormat.class, is);
-		} catch (BaseException be) {
-			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
-			if (be instanceof NotFound)               throw (NotFound) be;
-			if (be instanceof NotImplemented)         throw (NotImplemented) be;
-
-			throw recastDataONEExceptionToServiceFailure(be);
-		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
-		finally {
-			client.closeIdleConnections();
-		}
-		return objectFormat;
+		  ObjectFormat objectFormat = null;
+      
+		  try {
+              objectFormat = ObjectFormatCache.getInstance().getFormat(formatid);
+              
+          } catch (BaseException be) {
+              if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
+              if (be instanceof InsufficientResources)  throw (ServiceFailure) be;
+              if (be instanceof InvalidRequest)         throw (ServiceFailure) be;
+              if (be instanceof NotFound)               throw (NotFound) be;
+              if (be instanceof NotImplemented)         throw (NotImplemented) be;
+              
+              throw recastDataONEExceptionToServiceFailure(be);
+      
+      }
+		  return objectFormat;
 	}
 	
 	
