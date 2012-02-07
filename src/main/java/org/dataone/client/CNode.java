@@ -27,6 +27,7 @@ import java.util.Map;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpException;
 import org.apache.http.client.ClientProtocolException;
+import org.dataone.configuration.Settings;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.cn.v1.CNAuthorization;
 import org.dataone.service.cn.v1.CNCore;
@@ -213,22 +214,55 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	public  ObjectFormat getFormat(ObjectFormatIdentifier formatid)
 	throws ServiceFailure, NotFound, NotImplemented
 	{
-		  ObjectFormat objectFormat = null;
-      
-		  try {
-              objectFormat = ObjectFormatCache.getInstance().getFormat(formatid);
-              
+	    ObjectFormat objectFormat = null;
+	    boolean useObjectFormatCache = false;
+	    
+	    useObjectFormatCache = 
+	        Settings.getConfiguration().getBoolean("D1Client.useObjectFormatCache");
+	    
+	    if ( useObjectFormatCache ) {
+	        try {
+                objectFormat = ObjectFormatCache.getInstance().getFormat(formatid);
+                
           } catch (BaseException be) {
-              if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
-              if (be instanceof InsufficientResources)  throw (ServiceFailure) be;
-              if (be instanceof InvalidRequest)         throw (ServiceFailure) be;
-              if (be instanceof NotFound)               throw (NotFound) be;
-              if (be instanceof NotImplemented)         throw (NotImplemented) be;
+              if (be instanceof ServiceFailure)        throw (ServiceFailure) be;
+              if (be instanceof NotFound)              throw (NotFound) be;
+              if (be instanceof NotImplemented)        throw (NotImplemented) be;
               
               throw recastDataONEExceptionToServiceFailure(be);
-      
-      }
+              
+          } 
+          
+	    } else {
+	        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_FORMATS);    
+	        url.addNextPathElement(formatid.getValue());
+	        
+	        // send the request
+	        D1RestClient client = new D1RestClient();
+
+	        try {
+	          InputStream is = client.doGetRequest(url.getUrl());
+	          objectFormat = deserializeServiceType(ObjectFormat.class, is);
+	          
+	        } catch (BaseException be) {
+	          if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
+	          if (be instanceof NotFound)               throw (NotFound) be;
+	          if (be instanceof NotImplemented)         throw (NotImplemented) be;
+	        
+	          throw recastDataONEExceptionToServiceFailure(be);
+	        } 
+	        catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+	        catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
+	        catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
+	        catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+	        
+	        finally {
+	          client.closeIdleConnections();
+	        }
+	        
+	    }
 		  return objectFormat;
+		  
 	}
 	
 	
