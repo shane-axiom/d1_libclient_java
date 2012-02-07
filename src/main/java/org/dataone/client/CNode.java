@@ -319,13 +319,11 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	{
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_RESERVE);
 		SimpleMultipartEntity smpe = new SimpleMultipartEntity();
-		if (pid == null) {
+
+		if (pid != null) {
+			smpe.addParamPart("pid", pid.getValue());
+		} else {
 			throw new InvalidRequest("0000","PID cannot be null");
-		}
-		try {
-			smpe.addFilePart("pid", pid);
-		} catch (Exception e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 		
 		// send the request
@@ -414,8 +412,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		
 		SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
-			mpe.addFilePart("subject", subject);
-			mpe.addFilePart("pid", pid);
+    		if (subject != null)
+    			mpe.addParamPart("subject", subject.getValue());
+			if (pid != null)
+				mpe.addParamPart("pid", pid.getValue());
 		} catch (Exception e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		}
@@ -589,7 +589,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		url.addNextPathElement(pid.getValue());
 		
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
-		mpe.addParamPart("obsoletedByPid", obsoletedByPid.getValue());
+    	if (obsoletedByPid != null)
+    		mpe.addParamPart("obsoletedByPid", obsoletedByPid.getValue());
 		mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
 
 		D1RestClient client = new D1RestClient(session);
@@ -955,7 +956,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
-//    		mpe.addFilePart("pid", pid);
     		mpe.addFilePart("accessPolicy", accessPolicy);
     		mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
     	} catch (IOException e1) {
@@ -1112,8 +1112,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		}
 		url.addNextPathElement(subject.getValue());
 		
-//    	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
-
         D1RestClient client = new D1RestClient(session);
 
 		try {
@@ -1231,14 +1229,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING);
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
 
-    	try {
-	    	mpe.addFilePart("primarySubject", primarySubject);
-	    	mpe.addFilePart("secondarySubject", secondarySubject);
-    	} catch (IOException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
-		} catch (JiBXException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
-		}
+    	if (primarySubject != null)
+    		mpe.addParamPart("primarySubject", primarySubject.getValue());
+    	if (secondarySubject != null)
+    		mpe.addParamPart("secondarySubject", secondarySubject.getValue());
 			
 		D1RestClient client = new D1RestClient(session);
 
@@ -1858,12 +1852,13 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 	/**
 	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNReplication.deleteReplicationMetadata">see DataONE API Reference</a> }
+	 * @throws InvalidRequest 
 	 */
 	@Override
 	public boolean deleteReplicationMetadata(Session session, Identifier pid,
 			NodeReference nodeId, long serialVersion) throws InvalidToken,
 			ServiceFailure, NotAuthorized, NotFound, NotImplemented,
-			VersionMismatch {
+			VersionMismatch, InvalidRequest {
 		
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_REPLICATION_DELETE_REPLICA);
 		if (pid != null) {
@@ -1871,8 +1866,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		}
 		
 		SimpleMultipartEntity mpe = new SimpleMultipartEntity();
-
-		mpe.addParamPart("nodeId", nodeId.getValue());
+		if (nodeId != null)
+			mpe.addParamPart("nodeId", nodeId.getValue());
 		mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
 
 		D1RestClient client = new D1RestClient(session);
@@ -1888,6 +1883,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof NotFound)               throw (NotFound) be;
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
+			if (be instanceof InvalidRequest)           throw (InvalidRequest) be;
 			if (be instanceof VersionMismatch)         throw (VersionMismatch) be;
 
 			throw recastDataONEExceptionToServiceFailure(be);

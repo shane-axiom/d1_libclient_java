@@ -62,7 +62,6 @@ import org.dataone.service.types.v1.SystemMetadata;
 import org.dataone.service.util.Constants;
 import org.dataone.service.util.D1Url;
 import org.dataone.service.util.DateTimeMarshaller;
-import org.dataone.service.util.EncodingUtilities;
 import org.jibx.runtime.JiBXException;
 
 /**
@@ -267,7 +266,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     /**
      *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.synchronizationFailed">see DataONE API Reference</a> } 
      */
-    public void synchronizationFailed(Session session, SynchronizationFailed message)
+    public boolean synchronizationFailed(Session session, SynchronizationFailed message)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
     {   	
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ERROR);
@@ -302,6 +301,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         finally {
         	client.closeIdleConnections();
         }
+        return true;
     }
 
 
@@ -324,10 +324,10 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         	InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, UnsupportedType
     {
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
-    	url.addNextPathElement(pid.getValue());
 
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
+    		mpe.addParamPart("pid", pid.getValue());
 			mpe.addFilePart("object",object);
 			mpe.addFilePart("sysmeta", sysmeta);
 		} catch (IOException e) {
@@ -464,7 +464,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     /**
      *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNStorage.systemMetadataChanged">see DataONE API Reference</a> } 
      */
-    public  void systemMetadataChanged(Session session, Identifier pid, long serialVersion,
+    public boolean systemMetadataChanged(Session session, Identifier pid, long serialVersion,
         	Date dateSystemMetadataLastModified)
         throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented, InvalidRequest
     {
@@ -500,6 +500,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 		finally {			
 			client.closeIdleConnections();
 		}
+		return true;
     }
 
 
