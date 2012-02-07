@@ -283,6 +283,8 @@ public class CertificateManager {
      * @return subject DN using RFC2253 format
      */
     public String getSubjectDN(X509Certificate certificate) {
+    	if (certificate == null)
+    		return null;
     	return certificate.getSubjectX500Principal().getName(X500Principal.RFC2253);
     }
     
