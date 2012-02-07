@@ -148,20 +148,20 @@ public class CertificateManagerTest {
     public void testStandardizeSubjectDN() {
     	try {
     		// different permutations on the same subject
-    		String dn1 = "cn=test,dc=dataone,dc=org";
-    		String dn2 = "CN=test,DC=dataone,DC=org";
+    		String dn1 = "CN=test,DC=dataone,DC=org";
+    		String dn2 = "cn=test,dc=dataone,dc=org";
     		String dn3 = "CN=test, DC=dataone, DC=org";
     		String dn4 = "DC=org, DC=dataone, CN=test";
     		
     		// d1 == d2
     		assertEquals(
-    				CertificateManager.getInstance().standardizeDN(dn1), 
+    				dn1, 
     				CertificateManager.getInstance().standardizeDN(dn2));
     		// d1 == d3
     		assertEquals(
-    				CertificateManager.getInstance().standardizeDN(dn1), 
+    				dn1, 
     				CertificateManager.getInstance().standardizeDN(dn3));
-    		// d1 == d4
+    		// d1 != d4
     		assertFalse(
     				CertificateManager.getInstance().standardizeDN(dn1).equals( 
     				CertificateManager.getInstance().standardizeDN(dn4)));
