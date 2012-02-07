@@ -214,55 +214,54 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	public  ObjectFormat getFormat(ObjectFormatIdentifier formatid)
 	throws ServiceFailure, NotFound, NotImplemented
 	{
-	    ObjectFormat objectFormat = null;
-	    boolean useObjectFormatCache = false;
-	    
-	    useObjectFormatCache = 
-	        Settings.getConfiguration().getBoolean("D1Client.useObjectFormatCache");
-	    
-	    if ( useObjectFormatCache ) {
-	        try {
-                objectFormat = ObjectFormatCache.getInstance().getFormat(formatid);
-                
-          } catch (BaseException be) {
-              if (be instanceof ServiceFailure)        throw (ServiceFailure) be;
-              if (be instanceof NotFound)              throw (NotFound) be;
-              if (be instanceof NotImplemented)        throw (NotImplemented) be;
-              
-              throw recastDataONEExceptionToServiceFailure(be);
-              
-          } 
-          
-	    } else {
-	        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_FORMATS);    
-	        url.addNextPathElement(formatid.getValue());
-	        
-	        // send the request
-	        D1RestClient client = new D1RestClient();
+		ObjectFormat objectFormat = null;
+		boolean useObjectFormatCache = false;
 
-	        try {
-	          InputStream is = client.doGetRequest(url.getUrl());
-	          objectFormat = deserializeServiceType(ObjectFormat.class, is);
-	          
-	        } catch (BaseException be) {
-	          if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
-	          if (be instanceof NotFound)               throw (NotFound) be;
-	          if (be instanceof NotImplemented)         throw (NotImplemented) be;
-	        
-	          throw recastDataONEExceptionToServiceFailure(be);
-	        } 
-	        catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-	        catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-	        catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-	        catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-	        
-	        finally {
-	          client.closeIdleConnections();
-	        }
-	        
-	    }
-		  return objectFormat;
-		  
+		useObjectFormatCache = 
+			Settings.getConfiguration().getBoolean("D1Client.useObjectFormatCache", useObjectFormatCache);
+
+		if ( useObjectFormatCache ) {
+			try {
+				objectFormat = ObjectFormatCache.getInstance().getFormat(formatid);
+
+			} catch (BaseException be) {
+				if (be instanceof ServiceFailure)        throw (ServiceFailure) be;
+				if (be instanceof NotFound)              throw (NotFound) be;
+				if (be instanceof NotImplemented)        throw (NotImplemented) be;
+
+				throw recastDataONEExceptionToServiceFailure(be);
+			} 
+
+		} else {
+			D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_FORMATS);    
+			url.addNextPathElement(formatid.getValue());
+
+			// send the request
+			D1RestClient client = new D1RestClient();
+
+			try {
+				InputStream is = client.doGetRequest(url.getUrl());
+				objectFormat = deserializeServiceType(ObjectFormat.class, is);
+
+			} catch (BaseException be) {
+				if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
+				if (be instanceof NotFound)               throw (NotFound) be;
+				if (be instanceof NotImplemented)         throw (NotImplemented) be;
+
+				throw recastDataONEExceptionToServiceFailure(be);
+			} 
+			catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+			catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
+			catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
+			catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+
+			finally {
+				client.closeIdleConnections();
+			}
+
+		}
+		return objectFormat;
+
 	}
 	
 	
@@ -799,90 +798,29 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 	
 	/**
-     * See cn.search(Session session, String queryType, String query)
-     * This is the same method but accepts a D1Url containing the query elements
-     * that will be used for the query.
-     * 
-     * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.search">see DataONE API Reference</a> }
-     * 
-     * @param session
-     * @param queryType  
-     * @param query - D1Url object containing the query elements
-     * @return - an ObjectList
-     * @throws InvalidToken
-     * @throws ServiceFailure
-     * @throws NotAuthorized
-     * @throws InvalidRequest
-     * @throws NotImplemented
-     * 
-     */
-    public ObjectList search(Session session, String queryType, D1Url query)
-    throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest,
-    NotImplemented
-	{
-    	return search(session,queryType,query.getAssembledQueryString());
-	}
-        
-    /**
-     * The CN implements two types of search: SOLR, and the DataONE native search
-     * against the underlying data store. In contrast to the default behavior of 
-     * other methods, character encoding is not performed on either the queryType
-     * or query parameters, so the caller needs to send in a url-safe-encoded string.
-     * <br>
-     * One option for encoding is to use the org.dataone.service.util.D1Url class to 
-     * encode and assemble the query string.
-     * <p>
-     *  For SOLR queries, a list of query terms employed can be found at the 
-     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/design/SearchMetadata.html"> DataONE API Reference</a> }
-     *  and query syntax description can be found for both 
-     *  {@link <a href=" http://lucene.apache.org/java/2_4_0/queryparsersyntax.html"> Lucene </a> }  and
-     *  {@link <a href=" http://wiki.apache.org/solr/SolrQuerySyntax"> Solr </a> }
-     *  <p>
-     *  for example:  
-     *  <pre>query = "q=replica_verified:[* TO NOW]&start=0&rows=10&fl=id%2Cscore
-     *       query = "q=replica_verified%3A%5B*+TO+NOW%5D&start=0&rows=10&fl=id%2Cscore
-     * <p>
-     * For DataONE type queries, the same parameters are available as are for 
-     * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.listObjects">mn.listObjects()</a> }
-     * for example:  
-     * <pre>query = "objectFormat=text/csv&start=0&count=25"</pre>
-     *  
-     * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.search">see DataONE API Reference</a> } 
-     * 
-     *  @param session - the session object.  If null, will default to 'public'
-     *  @param queryType - the type of query passed in on the query parameter.
-     *                    possible values: SOLR, null
-     *                    null will direct to the DataONE native search
-     *                    SOLR will redirect to the CN's SOLR index
-     *  @param query -  the query string passed used to form the specific query, following
-     *                  the syntax of the query type, and pre-encoded 
-     *                  
-     *  @return - an ObjectList
-     */
+	 * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.search">see DataONE API Reference</a> }
+	 * 
+	 * This implementation handles URL-escaping both the "queryType" & "query" parameters.
+	 * <p>
+	 * For example,
+	 * <pre>cn.search(session,"SOLR","q=replica_verified:[* TO NOW]&start=0&rows=10&fl=id score")</pre>
+	 * will yield:
+	 * <pre>GET /search/SOLR?query=q%3Dreplica_verified:%5B*%20TO%20NOW%5D%26start%3D0%26rows%3D10%26fl%3Did%20score</pre> 
+	 *  
+	 *  <i><b>Note</b></i> that the SOLR parameters "q", "start", "rows", and "fl" (each with their own values) are, through escaping, packaged into
+	 *  the value of the dataONE "query" parameter.
+	 *  
+	 *  For SOLR queries, a list of query terms employed can be found at the DataONE documentation on 
+     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/design/SearchMetadata.html"> Content Discovery</a> }
+	 */
 	public  ObjectList search(Session session, String queryType, String query)
 			throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest, 
 			NotImplemented
 			{
 
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_SEARCH);
-
-        url.addNonEmptyParamPair("qt", queryType);
-        url.addPreEncodedNonEmptyQueryParams(query);
-        
-//        // set default params, if need be
-//        String paramAdditions = "";
-//        if ((queryType != null) && !queryType.isEmpty()) {
-//          paramAdditions = "qt=" + queryType +"&";
-//        }
-//        if (query == null) query = "";
-// 
-//        String paramsComplete = paramAdditions + query;
-//        // clean up paramsComplete string
-//        if (paramsComplete.endsWith("&")) {
-//            paramsComplete = paramsComplete.substring(0, paramsComplete.length() - 1);
-//        }
-//
-//        url.addPreEncodedNonEmptyQueryParams(paramsComplete);
+        url.addNextPathElement(queryType);
+        url.addNonEmptyParamPair("query", query);
 
         D1RestClient client = new D1RestClient(session);
 
