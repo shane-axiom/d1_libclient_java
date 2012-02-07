@@ -288,12 +288,15 @@ public class CertificateManager {
     
     /**
      * Returns D1-wide consistent Subject DN string representations
+     * @see http://www.ietf.org/rfc/rfc2253.txt
      * @param name - the [reasonable] DN representation
      * @return the standard D1 representation
      */
     public String standardizeDN(String name) {
+		log.debug("name: " + name);
     	X500Principal principal = new X500Principal(name);
-		String standardizedName = principal.getName(X500Principal.RFC2253);
+    	String standardizedName = principal.getName(X500Principal.RFC2253);
+		log.debug("standardizedName: " + standardizedName);
 		return standardizedName;
     }
     
