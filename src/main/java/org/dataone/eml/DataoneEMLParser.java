@@ -23,6 +23,7 @@ package org.dataone.eml;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.TreeSet;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -35,9 +36,12 @@ import javax.xml.xpath.XPathFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.dataone.client.ObjectFormatCache;
+import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.NotFound;
+import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.types.v1.ObjectFormat;
+import org.dataone.service.types.v1.ObjectFormatIdentifier;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -54,14 +58,22 @@ public class DataoneEMLParser
     
     protected static Log log = LogFactory.getLog(DataoneEMLParser.class);
     
+    protected static TreeSet<String> supportedFormatIdentifiers;
+    protected static String supportedNamespaceSummary;
+    
     /**
      * private constructor.  To create a new parser, use getInstance().
      */
     private DataoneEMLParser()
     {
-        
+        supportedFormatIdentifiers = new TreeSet<String>();
+        supportedFormatIdentifiers.add("eml://ecoinformatics.org/eml-2.0.0");
+        supportedFormatIdentifiers.add("eml://ecoinformatics.org/eml-2.0.1");
+        supportedFormatIdentifiers.add("eml://ecoinformatics.org/eml-2.1.0");
+        supportedFormatIdentifiers.add("eml://ecoinformatics.org/eml-2.1.1");
+        supportedNamespaceSummary = "EML 2.0.0, 2.0.1, 2.1.0, and 2.1.1";
     }
-    
+
     /**
      * singleton accessor
      * @return a parser to parse EML documents
@@ -81,10 +93,11 @@ public class DataoneEMLParser
      * @throws XPathExpressionException 
      * @throws NotFound 
      * @throws ServiceFailure 
+     * @throws NotImplemented 
      */
     public EMLDocument parseDocument(InputStream is)
         throws ParserConfigurationException, IOException, SAXException, 
-        XPathExpressionException, NotFound, ServiceFailure
+        XPathExpressionException //, NotFound, ServiceFailure, NotImplemented
     {
         //info we need:
         //1) any distribution urls
@@ -100,39 +113,35 @@ public class DataoneEMLParser
         String namespace = d.getFirstChild().getNamespaceURI();
         log.debug("namespace: " + namespace);
         
-        //switch on the namespace
+
         if(namespace == null)
         {
             log.error("WARNING: No namespace is declared.  Cannot parse this document.");
             return null;
         }
-        else if(namespace.equals(
-        		ObjectFormatCache.getInstance().getFormat("eml://ecoinformatics.org/eml-2.0.0").getFormatId().getValue()))
-        {
-            return parseEML200Document(d);
-        }
-        else if(namespace.equals(
-        		ObjectFormatCache.getInstance().getFormat("eml://ecoinformatics.org/eml-2.0.1").getFormatId().getValue()))
-        {
-            return parseEML201Document(d);
-        }
-        else if(namespace.equals(
-        		ObjectFormatCache.getInstance().getFormat("eml://ecoinformatics.org/eml-2.1.0").getFormatId().getValue()))
-        {
-            return parseEML210Document(d);
-        }
-        else if(namespace.equals(
-        		ObjectFormatCache.getInstance().getFormat("eml://ecoinformatics.org/eml-2.1.1").getFormatId().getValue()))
-        {
-            return parseEML211Document(d);
-        }
-        else
-        {
-            throw new ParserConfigurationException(
-                    "This parser only parses EML 2.0.0, 2.0.1 and 2.1.0.  Namespace " + 
+
+        if (!supportedFormatIdentifiers.contains(namespace)) {
+        	throw new ParserConfigurationException(
+                    "This parser only parses " + supportedNamespaceSummary + ".  Namespace " + 
                     namespace + " is not supported.");
         }
+        	
+        ObjectFormatIdentifier namespaceFormatId = new ObjectFormatIdentifier();
+        namespaceFormatId.setValue(namespace);
+
+        EMLDocument emlDoc = null;
+        try {
+        	ObjectFormat format = ObjectFormatCache.getInstance().getFormat(namespaceFormatId);
+        	emlDoc = parseEMLDocument(d,format);
+        } 
+        catch (BaseException e) {
+        	throw new ParserConfigurationException(
+                    "Unexpected Error validating the format:: " + e.getClass().getSimpleName() 
+                    + "( " + e.getDetail_code() + " ): " + e.getDescription());
+        }
+        return emlDoc;
     }
+    
     
     private NodeList runXPath(String expression, Node n)
       throws XPathExpressionException
@@ -144,73 +153,17 @@ public class DataoneEMLParser
         return result;
     }
     
-    /**
-     * parse an EML 2.0.0 document
-     * @param d
-     * @return
-     * @throws XPathExpressionException 
-     * @throws NotFound 
-     * @throws ServiceFailure 
-     */
-    private EMLDocument parseEML200Document(Document d) throws XPathExpressionException, NotFound, ServiceFailure
-    {
-        log.debug("Parsing an EML 2.0.0 document.");
-        return parseEMLDocument(d, 
-          ObjectFormatCache.getInstance().getFormat("eml://ecoinformatics.org/eml-2.0.0"));
-    }
+
     
-    /**
-     * parse an EML 2.0.1 document
-     * @param d
-     * @return
-     * @throws NotFound 
-     * @throws ServiceFailure 
-     */
-    private EMLDocument parseEML201Document(Document d) 
-      throws XPathExpressionException, NotFound, ServiceFailure
+    private EMLDocument parseEMLDocument(Document doc, ObjectFormat docType) 
+      throws XPathExpressionException, NotFound, ServiceFailure, NotImplemented
     {
-        log.debug("Parsing an EML 2.0.1 document.");
-        return parseEMLDocument(d, 
-        	ObjectFormatCache.getInstance().getFormat("eml://ecoinformatics.org/eml-2.0.1"));
-    }
-    
-    /**
-     * parse and EML 2.1.0 document
-     * @param d
-     * @return
-     * @throws NotFound 
-     * @throws ServiceFailure 
-     */
-    private EMLDocument parseEML210Document(Document d) 
-      throws XPathExpressionException, NotFound, ServiceFailure
-    {
-        log.debug("Parsing an EML 2.1.0 document.");
-        return parseEMLDocument(d, 
-        		ObjectFormatCache.getInstance().getFormat("eml://ecoinformatics.org/eml-2.1.0"));
-    }
-    
-    /**
-     * parse and EML 2.1.1 document
-     * @param d
-     * @return
-     * @throws NotFound 
-     * @throws ServiceFailure 
-     */
-    private EMLDocument parseEML211Document(Document d) 
-      throws XPathExpressionException, NotFound, ServiceFailure
-    {
-        log.debug("Parsing an EML 2.1.1 document.");
-        return parseEMLDocument(d, 
-        		ObjectFormatCache.getInstance().getFormat("eml://ecoinformatics.org/eml-2.1.1"));
-    }
-    
-    private EMLDocument parseEMLDocument(Document d, ObjectFormat docType) 
-      throws XPathExpressionException, NotFound, ServiceFailure
-    {
-        log.debug("DataoneEMLParser.parseEMLDocument() called.");
+     	
+    	log.debug("DataoneEMLParser.parseEMLDocument() called.");
+    	log.debug("Parsing a document of format: " + docType.getFormatName());
         
-        EMLDocument emld = new EMLDocument();
-        NodeList result = runXPath("//distribution", d);        
+        EMLDocument emlDoc = new EMLDocument();
+        NodeList result = runXPath("//distribution", doc);        
         
         log.debug("result: " + result);
         if(result != null)
@@ -240,10 +193,15 @@ public class DataoneEMLParser
                 //TODO: this isn't entirely right, but it's a good start.  Need to 
                 //figure out how to property parse the EML to get a better idea
                 //of what the mime type is
+                
+                ObjectFormatIdentifier formatId = new ObjectFormatIdentifier();
+                
+                
                 if(nl1.getLength() > 0)
                 { //found a text format
                     log.debug("Found a text format");
-                    mimeType = ObjectFormatCache.getInstance().getFormat("text/plain").toString();
+                    formatId.setValue("text/plain");
+                    mimeType = ObjectFormatCache.getInstance().getFormat(formatId).getFormatId().getValue();
                     NodeList nl4 = runXPath("dataFormat/textFormat/simpleDelimited", 
                                             physicalNode);
                     
@@ -251,22 +209,24 @@ public class DataoneEMLParser
                     if ( nl4.getLength() > 0 )
                     {
                       log.debug("Found a csv format");
-                      mimeType = ObjectFormatCache.getInstance().getFormat("text/csv").toString();
+                      formatId.setValue("text/csv");
+                      mimeType = ObjectFormatCache.getInstance().getFormat(formatId).getFormatId().getValue();
                     }
                 }
                 else if(nl2.getLength() > 0)
                 {
                     //TODO: could do a bit more parsing and refine this type more
                     log.debug("Found a binary raster format");
-                    mimeType = ObjectFormatCache.getInstance().getFormat("application/octet-stream").toString();
-                    
+                    formatId.setValue("application/octet-stream");
+                    mimeType = ObjectFormatCache.getInstance().getFormat(formatId).getFormatId().getValue();              
                 }
                 else if(nl3.getLength() > 0)
                 {
                     // it's possible that the mime type is in this field.  
                     // Check for it and set the object format
                     log.debug("Found an externally defined format");
-                    mimeType = ObjectFormatCache.getInstance().getFormat("application/octet-stream").toString();
+                    formatId.setValue("application/octet-stream");
+                    mimeType = ObjectFormatCache.getInstance().getFormat(formatId).getFormatId().getValue();  
                     NodeList nl5 = runXPath("dataFormat/externallyDefinedFormat/formatName", 
                                              physicalNode);
                     if ( nl5.getLength() > 0 )
@@ -275,24 +235,21 @@ public class DataoneEMLParser
                       String formatName = childNode1.getNodeValue();
                       
                       // set the object format if it exists
-                      ObjectFormat format = ObjectFormatCache.getInstance().getFormat(formatName);
-                      if ( !(format == null) )
-                      {
-                        mimeType = format.toString();
-                      }
+                      formatId.setValue(formatName);
+                      mimeType = ObjectFormatCache.getInstance().getFormat(formatId).getFormatId().getValue();  
                     }
                     
                 }
 
                 log.debug("mime type: " + mimeType); 
                 log.debug("url:       " + url);
-                emld.addDistributionMetadata(url, mimeType);
+                emlDoc.addDistributionMetadata(url, mimeType);
             }
         }
         
-        emld.setObjectFormat(docType);
-        log.debug("EML document type: " + emld.format.toString());
+        emlDoc.setObjectFormat(docType);
+        log.debug("EML document type: " + emlDoc.format.toString());
         
-        return emld;
+        return emlDoc;
     }
 }

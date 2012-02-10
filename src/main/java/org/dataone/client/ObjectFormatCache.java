@@ -22,26 +22,26 @@
 
 package org.dataone.client;
 
-import java.util.HashMap;
+import java.util.Date;
 
 import org.apache.log4j.Logger;
-import org.dataone.service.exceptions.InsufficientResources;
-import org.dataone.service.exceptions.InvalidRequest;
+import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
-import org.dataone.service.types.v1.util.ObjectFormatServiceImpl;
 import org.dataone.service.types.v1.ObjectFormat;
 import org.dataone.service.types.v1.ObjectFormatIdentifier;
 import org.dataone.service.types.v1.ObjectFormatList;
+import org.dataone.service.types.v1.util.ObjectFormatServiceImpl;
 
 /**
  * The ObjectFormatCache is a wrapper class for the DataONE ObjectFormatList
  * type.  It loads the most current object format list from a Coordinating Node,
- * or loads an on-disk cache version as a fall back. It provides accessor
+ * and falls back to on-disk cache version.  It provides accessor
  * methods to query and manipulate the object format list.
  * 
  * @author cjones
+ * @author rnahf
  *
  */
 public class ObjectFormatCache extends ObjectFormatServiceImpl {
@@ -56,8 +56,10 @@ public class ObjectFormatCache extends ObjectFormatServiceImpl {
 	 * a boolean to indicate whether successfully reached the CN yet, or still in a
 	 *  bootstrap situation
 	 */
-	public static boolean isUpdatedFromCN = false;
+	public static boolean usingFallbackFormatList = true;
 
+	protected static int throttleIntervalSec = 20; 
+	protected Date lastRefreshDate;
 	/* The list of object formats */
 	//  private ObjectFormatList objectFormatList;
 
@@ -77,6 +79,12 @@ public class ObjectFormatCache extends ObjectFormatServiceImpl {
 
 		 super();  // populates the default cache shipped with super's jar.
 
+		 // set the last cache refresh date to a long time ago
+//		 lastRefreshDate = new Date(0);
+		 
+		 throttleIntervalSec = Settings.getConfiguration()
+		 	.getInt("ObjectFormatCache.minimum.refresh.interval.seconds",throttleIntervalSec);
+		 
 		 // update the cache with any new information from this class.
 		 try {
 			 refreshCache();
@@ -113,7 +121,7 @@ public class ObjectFormatCache extends ObjectFormatServiceImpl {
 	 * @return objectFormatList - the list of object formats
 	 */
 	public ObjectFormatList listFormats() {
-		if (isUpdatedFromCN) {
+		if (usingFallbackFormatList) {
 			try {
 				refreshCache();
 			} catch (ServiceFailure e) {
@@ -125,42 +133,66 @@ public class ObjectFormatCache extends ObjectFormatServiceImpl {
 		return objectFormatList;
 	}
 
-		
-//	/*
-//	 * Return the hash containing the formatId and format mapping
-//	 * 
-//	 * @return objectFormatMap - the hash of formatId/format pairs
-//	 */
-//	private HashMap<ObjectFormatIdentifier, ObjectFormat> getObjectFormatMap() {
-//
-//		if ( objectFormatMap == null ) {
-//			objectFormatMap = new HashMap<ObjectFormatIdentifier, ObjectFormat>();
-//
-//		}
-//		return objectFormatMap;
-//
-//	}
-
+	
 	/**
-	 * 
+	 * Returns the minimal refresh interval (seconds)
+	 */
+	public int getMinimalRefreshInterval() {
+		return throttleIntervalSec;
+	}
+	
+	
+	/**
+	 * Returns the date of the last refresh from the CN.
+	 * If null, no successful refresh has occurred. 
+	 */
+	public Date getLastRefreshDate() {
+		return lastRefreshDate;
+	}
+
+	
+	/**
+	 * Returns true if the cache has not been able to successfully
+	 * refresh from the CN
+	 */
+	public boolean isUsingFallbackFormatList() {
+		return usingFallbackFormatList;
+	}
+	
+	/**
+	 * refreshes the cache from the CN, provided that the minimal interval
+	 * has been reached or there has never been a successful refresh from 
+	 * the CN.
 	 * @return objectFormatList - the list of object formats
 	 * @throws ServiceFailure
 	 * @throws NotImplemented
 	 */
-	private synchronized ObjectFormatList refreshCache() throws ServiceFailure, NotImplemented {
+	private synchronized ObjectFormatList refreshCache() 
+	throws ServiceFailure, NotImplemented 
+	{
+		Date now = new Date();
 
-		// TODO: do we need/wish to make sure the returned list is longer, or "more complete"
-		// than the existing one before replacing?  (specifically the one on file in the jar)
-		// what would be the criteria?  
-		ObjectFormatList objectFormatList = D1Client.getCN().listFormats();
-
-		// index the object format list by the format identifier
-		for (ObjectFormat objectFormat : objectFormatList.getObjectFormatList())
+		// TODO: usingFallbackFormatList is probably redundant to lastRefreshDate == null
+		// consider refactoring
+		
+		if ( usingFallbackFormatList  ||
+				lastRefreshDate == null ||
+				now.getTime() - lastRefreshDate.getTime() > throttleIntervalSec * 1000)
 		{
-			getObjectFormatMap().put(objectFormat.getFormatId(), objectFormat);
-		}
-		this.isUpdatedFromCN = true;
 
+			// TODO: do we need/wish to make sure the returned list is longer, or "more complete"
+			// than the existing one before replacing?  (specifically the one on file in the jar)
+			// what would be the criteria? 
+			
+			ObjectFormatList objectFormatList = D1Client.getCN().listFormats();
+			lastRefreshDate = new Date();
+			// index the object format list by the format identifier
+			for (ObjectFormat objectFormat : objectFormatList.getObjectFormatList())
+			{
+				getObjectFormatMap().put(objectFormat.getFormatId(), objectFormat);
+			}
+			usingFallbackFormatList = false;
+		}
 		return objectFormatList;
 	}
 
@@ -170,11 +202,15 @@ public class ObjectFormatCache extends ObjectFormatServiceImpl {
 
 	/**
 	 * Get the object format based on the given identifier string.
+	 * <p>
+	 * This method is deprecated in favor of the type-safe getFormat(ObjectFormatIdentifier)
+	 * method
 	 * 
 	 * @param format - the object format identifier string
 	 * @return objectFormat - the ObjectFormat represented by the format identifier
 	 * @throws NotFound 
 	 */
+	@Deprecated
 	public ObjectFormat getFormat(String fmtidStr) 
 	throws NotFound {   
 		ObjectFormatIdentifier formatId = new ObjectFormatIdentifier();
@@ -206,7 +242,7 @@ public class ObjectFormatCache extends ObjectFormatServiceImpl {
 	throws NotFound, ServiceFailure, NotImplemented
 	{ 	
 		ObjectFormat objectFormat = 
-			isUpdatedFromCN ?  getObjectFormatMap().get(formatId)  :  null; 
+			usingFallbackFormatList ?  null : getObjectFormatMap().get(formatId); 
 
 		if ( objectFormat == null ) {
 			refreshCache();
