@@ -218,7 +218,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		boolean useObjectFormatCache = false;
 
 		useObjectFormatCache = 
-			Settings.getConfiguration().getBoolean("D1Client.useObjectFormatCache", useObjectFormatCache);
+			Settings.getConfiguration().getBoolean("CNode.useObjectFormatCache", useObjectFormatCache);
 
 		if ( useObjectFormatCache ) {
 			try {

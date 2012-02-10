@@ -3,12 +3,8 @@ package org.dataone.client.auth;
 import java.net.URL;
 import java.util.Date;
 
-import javax.security.cert.X509Certificate;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.dataone.configuration.Settings;
-import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1.Subject;
 import org.dataone.service.util.Constants;
 

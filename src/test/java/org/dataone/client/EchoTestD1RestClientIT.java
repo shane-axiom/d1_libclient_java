@@ -82,7 +82,7 @@ public class EchoTestD1RestClientIT {
 			String contentString = e.getDescription();
 			System.out.println(contentString);
 		}
-		String hString = null;
+		String hString = new String();
 		for (int j=0; j<headers.length; j++) {
 			hString += headers[j].getName() + " : " + headers[j].getValue() + "\n";
 		}
