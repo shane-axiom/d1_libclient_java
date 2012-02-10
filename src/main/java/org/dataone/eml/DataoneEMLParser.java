@@ -23,6 +23,7 @@ package org.dataone.eml;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Iterator;
 import java.util.TreeSet;
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -88,6 +89,15 @@ public class DataoneEMLParser
     }
     
     /**
+     * package level method to allow testing of embedded identifiers against
+     * the deployed objectFormatFile (and in-context integration tests)
+     * @return
+     */
+    Iterator<String> getSupportedFormatIdentifierIterator() {
+    	return supportedFormatIdentifiers.iterator();
+    }
+    
+    /**
      * parse an eml document and return any distribution urls
      * @param is
      * @throws XPathExpressionException 
@@ -103,7 +113,6 @@ public class DataoneEMLParser
         //1) any distribution urls
         //2) doctype (public_id)
         //3) mime type for each 1
-        EMLDocument doc = new EMLDocument();
         
         log.debug("parsing EML document for any distribution urls");
         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
