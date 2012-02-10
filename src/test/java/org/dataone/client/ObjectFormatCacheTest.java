@@ -31,6 +31,7 @@ import org.dataone.service.exceptions.InvalidRequest;
 import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
+import org.dataone.service.types.v1.ObjectFormatIdentifier;
 import org.dataone.service.types.v1.ObjectFormatList;
 
 import org.junit.Test;
@@ -62,50 +63,30 @@ public class ObjectFormatCacheTest {
 	    objectFormatList = ObjectFormatCache.getInstance().listFormats();
 	  	assertTrue(objectFormatList.getTotal() >= formatsCount);
 
-    } catch (InvalidRequest e) {
-	    // TODO Auto-generated catch block
-      fail("The request was invalid: " + e.getMessage());
-      
     } catch (ServiceFailure e) {
       fail("The service failed: " + e.getMessage());
  
-    } catch (NotFound e) {
-      fail("The list was not found: " + e.getMessage());
-
-    } catch (InsufficientResources e) {
-      fail("There were insufficient resources: " + e.getMessage());
-
-    } catch (NotImplemented e) {
-      fail("The service is not implemented: " + e.getMessage());
-
     }
-  	
   }
   
   /**
    * Test getting a single object format from the registered list
+ * @throws NotImplemented 
+ * @throws InsufficientResources 
+ * @throws NotFound 
+ * @throws ServiceFailure 
+ * @throws InvalidRequest 
    */
   @Test
-  public void testGetFormatFromString() {
+  public void testGetFormatFromString() throws InvalidRequest, ServiceFailure, NotFound, InsufficientResources, NotImplemented {
   	
-  	String knownFormat = "text/plain";
-    
-  	try {
-	    
-			  String result = 
-			  	ObjectFormatCache.getInstance().getFormat(knownFormat).getFormatId().getValue();
-		  	assertTrue(result.equals(knownFormat));
+	  String knownFormat = "text/plain";
+	  ObjectFormatIdentifier formatId = new ObjectFormatIdentifier();
+	  formatId.setValue(knownFormat);
 
-    } catch (NullPointerException npe) {
-	  
-	    fail("The returned format was null: " + npe.getMessage());
-    
-    } catch (NotFound nfe) {
-      
-    	fail("The format " + knownFormat + " was not found.");
-    	
-    }
-  	
+	  String result = 
+		  ObjectFormatCache.getInstance().getFormat(formatId).getFormatId().getValue();
+	  assertTrue(result.equals(knownFormat));
   }
   
   /**
@@ -113,19 +94,17 @@ public class ObjectFormatCacheTest {
    */
   @Test
   public void testObjectFormatNotFoundException() {
-  
-  	String badFormat = "text/bad-format";
-  	
-  	try {
-  		
-	    String result = 
-	    	ObjectFormatCache.getInstance().getFormat(badFormat).getFormatId().getValue();
-      
-  	} catch (Exception e) {
-	    
-  		assertTrue(e instanceof NotFound);
-  	}
-  	
+
+	  String badFormat = "text/bad-format";
+	  ObjectFormatIdentifier formatId = new ObjectFormatIdentifier();
+	  formatId.setValue(badFormat);
+	  try {
+
+		  String result = 
+			  ObjectFormatCache.getInstance().getFormat(formatId).getFormatId().getValue();
+
+	  } catch (Exception e) {
+		  assertTrue(e instanceof NotFound);
+	  }
   }
-  
 }
