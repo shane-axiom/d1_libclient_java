@@ -269,6 +269,7 @@ public class CertificateManager {
      */
     public SubjectInfo getSubjectInfo(X509Certificate certificate) throws IOException, InstantiationException, IllegalAccessException, JiBXException {
     	String subjectInfoValue = this.getExtensionValue(certificate, CILOGON_OID_SUBJECT_INFO);
+    	log.debug("Certificate subjectInfoValue: " + subjectInfoValue);
     	SubjectInfo subjectInfo = null;
     	if (subjectInfoValue != null) {
     		subjectInfo = TypeMarshaller.unmarshalTypeFromStream(SubjectInfo.class, new ByteArrayInputStream(subjectInfoValue.getBytes("UTF-8")));
