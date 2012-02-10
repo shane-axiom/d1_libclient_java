@@ -30,6 +30,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
+import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.IdentifierNotUnique;
 import org.dataone.service.exceptions.InsufficientResources;
 import org.dataone.service.exceptions.InvalidRequest;
@@ -102,7 +103,15 @@ public class D1Object {
     public D1Object(Identifier id, byte[] data, String format, String submitter, String nodeId) 
         throws NoSuchAlgorithmException, IOException, NotFound, InvalidRequest {
         this.data = data;
-        this.sysmeta = generateSystemMetadata(id, data, format, submitter, nodeId);
+        try {
+			this.sysmeta = generateSystemMetadata(id, data, format, submitter, nodeId);
+		} catch (ServiceFailure e) {
+			// TODO: revisit whether these should be exposed (thrown)
+			throw new NotFound("0","recast ServiceFailure: " + e.getDescription());
+		} catch (NotImplemented e) {
+			// TODO: revisit whether these should be exposed (thrown)
+			throw new NotFound("0","recast NotImplemented: " + e.getDescription());
+		}
     }
 
     /**
@@ -296,27 +305,35 @@ public class D1Object {
      * @throws IOException if the data bytes can not be read
      * @throws NotFound if the objectFormat string cannot be found in the formatCache
      * @throws InvalidRequest if the parameter content is not correctly specified
+     * @throws NotImplemented 
+     * @throws ServiceFailure 
      */
     private SystemMetadata generateSystemMetadata(Identifier id, byte[] data, 
     		String format, String submitter, String nodeId) 
-            throws NoSuchAlgorithmException, IOException, NotFound, InvalidRequest {
+            throws NoSuchAlgorithmException, IOException, NotFound, InvalidRequest, ServiceFailure, NotImplemented {
 
     	validateRequest(id, data, format, submitter, nodeId);
 
+    	ObjectFormatIdentifier formatId = new ObjectFormatIdentifier();
+    	formatId.setValue(format);
     	SystemMetadata sm = new SystemMetadata();
     	sm.setIdentifier(id);
     	ObjectFormat fmt;
-    	ObjectFormatCache ofc = ObjectFormatCache.getInstance();
     	try {
-    		fmt = ofc.getFormat(format);
+    		fmt = ObjectFormatCache.getInstance().getFormat(formatId);
     		sm.setFormatId(fmt.getFormatId());
     	}
-    	catch (NotFound nf) {
+    	catch (BaseException be) {
     		try {
-    			fmt = ofc.getFormat("application/octet-stream");
+    			formatId.setValue("application/octet-stream");
+    			fmt = ObjectFormatCache.getInstance().getFormat(formatId);
     		} catch (NotFound nfe) {
     			throw nfe;
-    		}
+//			} catch (ServiceFailure e) {
+//				throw e;
+//			} catch (NotImplemented e) {
+//				throw e;
+			}
     	}
 
     	//create the checksum

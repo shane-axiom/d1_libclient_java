@@ -36,6 +36,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.dataone.client.ObjectFormatCache;
 import org.dataone.service.exceptions.NotFound;
+import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.types.v1.ObjectFormat;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -79,10 +80,11 @@ public class DataoneEMLParser
      * @param is
      * @throws XPathExpressionException 
      * @throws NotFound 
+     * @throws ServiceFailure 
      */
     public EMLDocument parseDocument(InputStream is)
         throws ParserConfigurationException, IOException, SAXException, 
-        XPathExpressionException, NotFound
+        XPathExpressionException, NotFound, ServiceFailure
     {
         //info we need:
         //1) any distribution urls
@@ -148,8 +150,9 @@ public class DataoneEMLParser
      * @return
      * @throws XPathExpressionException 
      * @throws NotFound 
+     * @throws ServiceFailure 
      */
-    private EMLDocument parseEML200Document(Document d) throws XPathExpressionException, NotFound
+    private EMLDocument parseEML200Document(Document d) throws XPathExpressionException, NotFound, ServiceFailure
     {
         log.debug("Parsing an EML 2.0.0 document.");
         return parseEMLDocument(d, 
@@ -161,9 +164,10 @@ public class DataoneEMLParser
      * @param d
      * @return
      * @throws NotFound 
+     * @throws ServiceFailure 
      */
     private EMLDocument parseEML201Document(Document d) 
-      throws XPathExpressionException, NotFound
+      throws XPathExpressionException, NotFound, ServiceFailure
     {
         log.debug("Parsing an EML 2.0.1 document.");
         return parseEMLDocument(d, 
@@ -175,9 +179,10 @@ public class DataoneEMLParser
      * @param d
      * @return
      * @throws NotFound 
+     * @throws ServiceFailure 
      */
     private EMLDocument parseEML210Document(Document d) 
-      throws XPathExpressionException, NotFound
+      throws XPathExpressionException, NotFound, ServiceFailure
     {
         log.debug("Parsing an EML 2.1.0 document.");
         return parseEMLDocument(d, 
@@ -189,9 +194,10 @@ public class DataoneEMLParser
      * @param d
      * @return
      * @throws NotFound 
+     * @throws ServiceFailure 
      */
     private EMLDocument parseEML211Document(Document d) 
-      throws XPathExpressionException, NotFound
+      throws XPathExpressionException, NotFound, ServiceFailure
     {
         log.debug("Parsing an EML 2.1.1 document.");
         return parseEMLDocument(d, 
@@ -199,7 +205,7 @@ public class DataoneEMLParser
     }
     
     private EMLDocument parseEMLDocument(Document d, ObjectFormat docType) 
-      throws XPathExpressionException, NotFound
+      throws XPathExpressionException, NotFound, ServiceFailure
     {
         log.debug("DataoneEMLParser.parseEMLDocument() called.");
         

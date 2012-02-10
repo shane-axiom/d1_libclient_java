@@ -1727,7 +1727,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	/**
 	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNReplication.isNodeAuthorized">see DataONE API Reference</a> }
 	 */
-	public  boolean isNodeAuthorized(Session originatingNodeSession, 
+	public  boolean isNodeAuthorized(Session session, 
 			Subject targetNodeSubject, Identifier pid)
 	throws NotImplemented, NotAuthorized, InvalidToken, ServiceFailure, 
 	NotFound, InvalidRequest
@@ -1738,7 +1738,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         if (targetNodeSubject != null)
         	url.addNonEmptyParamPair("targetNodeSubject", targetNodeSubject.getValue());
 
-        D1RestClient client = new D1RestClient(originatingNodeSession);
+        D1RestClient client = new D1RestClient(session);
 
 		try {
 			InputStream is = client.doGetRequest(url.getUrl());
@@ -1770,7 +1770,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	/**
 	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNReplication.updateReplicationMetadata">see DataONE API Reference</a> }
 	 */
-	public boolean updateReplicationMetadata(Session targetNodeSession, 
+	public boolean updateReplicationMetadata(Session session, 
 			Identifier pid, Replica replicaMetadata, long serialVersion)
 	throws NotImplemented, NotAuthorized, ServiceFailure, NotFound, 
 	InvalidRequest, InvalidToken, VersionMismatch
@@ -1791,7 +1791,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient(targetNodeSession);
+		D1RestClient client = new D1RestClient(session);
 	
 		try {
 			InputStream is = client.doPutRequest(url.getUrl(),mpe);
