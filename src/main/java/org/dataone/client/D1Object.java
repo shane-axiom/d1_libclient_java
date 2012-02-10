@@ -41,6 +41,7 @@ import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.exceptions.UnsupportedType;
+import org.dataone.service.exceptions.VersionMismatch;
 import org.dataone.service.types.v1.AccessPolicy;
 import org.dataone.service.types.v1.AccessRule;
 import org.dataone.service.types.v1.Checksum;
@@ -55,6 +56,7 @@ import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1.Subject;
 import org.dataone.service.types.v1.SystemMetadata;
 import org.dataone.service.types.v1.util.ChecksumUtil;
+import org.dataone.service.util.Constants;
 
 /**
  * A representation of an object that can be stored in the DataONE system. Instances
@@ -196,7 +198,7 @@ public class D1Object {
     }
 
     /**
-     * Change the object to publicly readable on the MN
+     * Change the object to publicly readable
      * @param token the credentials to use to make the change
      * @throws ServiceFailure
      * @throws InvalidRequest 
@@ -204,20 +206,20 @@ public class D1Object {
      * @throws NotAuthorized 
      * @throws NotFound 
      * @throws InvalidToken 
+     * @throws VersionMismatch 
      */
     public void setPublicAccess(Session token) 
-    throws ServiceFailure, InvalidToken, NotFound, NotAuthorized, NotImplemented, InvalidRequest 
+    throws ServiceFailure, InvalidToken, NotFound, NotAuthorized, NotImplemented, InvalidRequest, VersionMismatch 
     {
-        String mn_url = D1Client.getCN().lookupNodeBaseUrl(sysmeta.getAuthoritativeMemberNode().getValue());
-        D1Node mn = D1Client.getMN(mn_url);
         AccessPolicy ap = new AccessPolicy();
         AccessRule ar = new AccessRule();
         Subject s = new Subject();
-        s.setValue("public");
+        s.setValue(Constants.SUBJECT_PUBLIC);
         ar.addSubject(s);
         ar.addPermission(Permission.READ);
         ap.addAllow(ar);
-//        mn.setAccessPolicy(token, sysmeta.getIdentifier(), ap);
+        SystemMetadata smd = D1Client.getCN().getSystemMetadata(token, getIdentifier());
+        D1Client.getCN().setAccessPolicy(token, sysmeta.getIdentifier(), ap, smd.getSerialVersion().longValue());
     }
     
     /**

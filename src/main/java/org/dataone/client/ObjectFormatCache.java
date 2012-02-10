@@ -94,9 +94,15 @@ public class ObjectFormatCache extends ObjectFormatServiceImpl {
 		  * the fallback cached objectFormatList
 		  */
 		 catch (ServiceFailure e) {
-			 // TODO: any secondary decisions to make regarding cache refresh frequency
+			// TODO: any secondary decisions to make regarding cache refresh frequency?
+			 logger.warn("Failed to get current ObjectFormatList from the CN, using fallback" +
+			 		"list provided with libclient. Cause = ServiceFailure::" + e.getDetail_code() + ": " +
+			 				e.getDescription());
 		} catch (NotImplemented e) {
-			 // TODO: any secondary decisions to make regarding cache refresh frequency
+			 // TODO: any secondary decisions to make regarding cache refresh frequency?
+			 logger.warn("Failed to get current ObjectFormatList from the CN, using fallback" +
+				 		"list provided with libclient. Cause = NotImplemented::" + e.getDetail_code() + ": " +
+				 				e.getDescription());
 		}
 	}
 
@@ -172,19 +178,17 @@ public class ObjectFormatCache extends ObjectFormatServiceImpl {
 	{
 		Date now = new Date();
 
-		// TODO: usingFallbackFormatList is probably redundant to lastRefreshDate == null
-		// consider refactoring
-		
 		if ( usingFallbackFormatList  ||
 				lastRefreshDate == null ||
 				now.getTime() - lastRefreshDate.getTime() > throttleIntervalSec * 1000)
 		{
-
+			CNode cn = D1Client.getCN();
+			logger.info("refreshing objectFormatCache from cn: " + cn.getNodeId());
 			// TODO: do we need/wish to make sure the returned list is longer, or "more complete"
 			// than the existing one before replacing?  (specifically the one on file in the jar)
 			// what would be the criteria? 
 			
-			ObjectFormatList objectFormatList = D1Client.getCN().listFormats();
+			ObjectFormatList objectFormatList = cn.listFormats();
 			lastRefreshDate = new Date();
 			// index the object format list by the format identifier
 			for (ObjectFormat objectFormat : objectFormatList.getObjectFormatList())
@@ -192,6 +196,7 @@ public class ObjectFormatCache extends ObjectFormatServiceImpl {
 				getObjectFormatMap().put(objectFormat.getFormatId(), objectFormat);
 			}
 			usingFallbackFormatList = false;
+			logger.info("successful cache refresh from cn.listFormats()");
 		}
 		return objectFormatList;
 	}
