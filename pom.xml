@@ -112,7 +112,7 @@
         <dependency>
             <groupId>org.dataone</groupId>
             <artifactId>d1_test_resources</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>1.0.0-RC1</version>
             <type>jar</type>
             <scope>test</scope>
         </dependency>
