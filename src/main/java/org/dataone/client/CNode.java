@@ -441,14 +441,13 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	throws InvalidToken, ServiceFailure,  NotFound, NotAuthorized, 
 	NotImplemented, IdentifierNotUnique
 	{
-		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_HAS_RESERVATION);
+		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_RESERVE);
 		
-		SimpleMultipartEntity mpe = new SimpleMultipartEntity();
     	try {
     		if (subject != null)
-    			mpe.addParamPart("subject", subject.getValue());
+    			url.addNonEmptyParamPair("subject", subject.getValue());
 			if (pid != null)
-				mpe.addParamPart("pid", pid.getValue());
+				url.addNextPathElement(pid.getValue());
 		} catch (Exception e) {
 			throw recastClientSideExceptionToServiceFailure(e);
 		}
@@ -457,7 +456,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		D1RestClient client = new D1RestClient(session);
 		
 		try {
-			InputStream is = client.doPostRequest(url.getUrl(), mpe);
+			InputStream is = client.doGetRequest(url.getUrl());
 			if (is != null)
 				is.close();
 			
