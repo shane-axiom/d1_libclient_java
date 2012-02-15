@@ -35,6 +35,7 @@ import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.types.v1.ObjectFormatIdentifier;
 import org.dataone.service.types.v1.ObjectFormatList;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -48,14 +49,29 @@ import org.junit.Test;
  */
 public class ObjectFormatCacheTest {
 	
+  private String startingD1clientCNurl;
+	
   @Test
   public void testHarnessCheck() {
       assertTrue(true);
   }
   
+  /**
+   * Need to set the D1Client.CN_URL setting to a bogus value to remove dependency on external
+   * resources.  Will save the starting value and restore it when done testing because
+   * other tests may be depending on it's value
+   */
   @Before
   public void setup() {
+	  if (startingD1clientCNurl == null) {
+		  startingD1clientCNurl = Settings.getConfiguration().getString("D1Client.CN_URL");
+	  }
 	  Settings.getConfiguration().setProperty("D1Client.CN_URL", "");
+  }
+  
+  @After
+  public void tearDown() {
+	  Settings.getConfiguration().setProperty("D1Client.CN_URL", startingD1clientCNurl);
   }
   
   /**
