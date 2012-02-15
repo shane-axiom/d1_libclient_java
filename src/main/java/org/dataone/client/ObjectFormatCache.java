@@ -217,16 +217,11 @@ public class ObjectFormatCache extends ObjectFormatServiceImpl {
 	 */
 	@Deprecated
 	public ObjectFormat getFormat(String fmtidStr) 
-	throws NotFound {   
+	throws NotFound 
+	{   
 		ObjectFormatIdentifier formatId = new ObjectFormatIdentifier();
 		formatId.setValue(fmtidStr);
-		try {
-			return getFormat(formatId);
-		} catch (ServiceFailure e) {
-			throw new NotFound(e.getDetail_code(),e.getMessage());
-		} catch (NotImplemented e) {
-			throw new NotFound(e.getDetail_code(),e.getMessage());
-		}
+		return getFormat(formatId);
 
 	}
 
@@ -244,13 +239,19 @@ public class ObjectFormatCache extends ObjectFormatServiceImpl {
 	 */
 	@Override
 	public ObjectFormat getFormat(ObjectFormatIdentifier formatId)
-	throws NotFound, ServiceFailure, NotImplemented
+	throws NotFound
 	{ 	
 		ObjectFormat objectFormat = 
 			usingFallbackFormatList ?  null : getObjectFormatMap().get(formatId); 
 
 		if ( objectFormat == null ) {
-			refreshCache();
+			try {
+				refreshCache();
+			} catch (ServiceFailure e) {
+				// let it fail, so it can use the fallback
+			} catch (NotImplemented e) {
+				// let it fail, so it can use the fallback
+			}
 			objectFormat = getObjectFormatMap().get(formatId);
 		}
 		
