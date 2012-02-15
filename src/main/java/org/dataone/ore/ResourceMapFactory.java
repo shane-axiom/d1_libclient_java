@@ -146,22 +146,22 @@ public class ResourceMapFactory {
 		
 	}
 	
-	public Map<Identifier, List<Identifier>> parseResourceMap(String resourceMapContents) 
+	public Map<Identifier, Map<Identifier, List<Identifier>>> parseResourceMap(String resourceMapContents) 
 	throws OREException, URISyntaxException, UnsupportedEncodingException, OREParserException {
 		InputStream is = new ByteArrayInputStream(resourceMapContents.getBytes("UTF-8"));
 		return parseResourceMap(is);
 	}
 	
-	public Map<Identifier, List<Identifier>> parseResourceMap(InputStream is) 
+	//public Map<Identifier, List<Identifier>> parseResourceMap(InputStream is) 
+	public Map<Identifier, Map<Identifier, List<Identifier>>> parseResourceMap(InputStream is) 
 		throws OREException, URISyntaxException, UnsupportedEncodingException, OREParserException {
-		Map<Identifier, List<Identifier>> idMap = new HashMap<Identifier, List<Identifier>>();
+		
+	    Map<Identifier, List<Identifier>> idMap = new HashMap<Identifier, List<Identifier>>();
 		
 		OREParser parser = OREParserFactory.getInstance(RESOURCE_MAP_SERIALIZATION_FORMAT);
 		ResourceMap resourceMap = parser.parse(is);
         
 		// get the identifier of the whole package ResourceMap
-		// TODO: check that this selection log is correct
-		// TODO: modify function return to include this packageId
 		Identifier packageId = new Identifier();
         TripleSelector packageIdSelector = new TripleSelector(resourceMap.getURI(), DC_TERMS_IDENTIFIER.getURI(), null);
         List<Triple> packageIdTriples = resourceMap.listTriples(packageIdSelector);
@@ -217,7 +217,11 @@ public class ResourceMapFactory {
 			
 		}
 		
-		return idMap;
+		// Now group the packageId with the Map of metadata/data Ids and return it
+		Map<Identifier, Map<Identifier, List<Identifier>>> packageMap = new HashMap<Identifier, Map<Identifier, List<Identifier>>>();
+		packageMap.put(packageId, idMap);
+		
+		return packageMap;
 		
 	}
 	

@@ -39,9 +39,33 @@ public class ResourceMapFactoryTest {
 			System.out.println(rdfXml);
 			
 			// now put it back in an object
-			Map<Identifier, List<Identifier>> retIdMap = ResourceMapFactory.getInstance().parseResourceMap(rdfXml);
+			Map<Identifier, Map<Identifier, List<Identifier>>> retPackageMap = ResourceMapFactory.getInstance().parseResourceMap(rdfXml);
+            Identifier retPackageId = retPackageMap.keySet().iterator().next();   
+            
+            // Package Identifiers should match
+            assertEquals(resourceMapId.getValue(), retPackageId.getValue());
+            System.out.println("PACKAGEID IS: " + retPackageId.getValue());
+
+            // Get the Map of metadata/data identifiers
+            Map<Identifier, List<Identifier>> retIdMap = retPackageMap.get(retPackageId);
+            			
 			// same size
 			assertEquals(idMap.keySet().size(), retIdMap.keySet().size());
+			for (Identifier key : idMap.keySet()) {
+			    System.out.println("  ORIGINAL: " + key.getValue());
+			    List<Identifier> contained = idMap.get(key);
+			    for (Identifier cKey : contained) {
+		             System.out.println("    CONTAINS: " + cKey.getValue());
+			    }
+			}
+            for (Identifier key : retIdMap.keySet()) {
+                System.out.println("  RETURNED: " + key.getValue());
+                List<Identifier> contained = idMap.get(key);
+                for (Identifier cKey : contained) {
+                     System.out.println("    CONTAINS: " + cKey.getValue());
+                }
+            }
+
 			// same value
 			assertEquals(idMap.keySet().iterator().next().getValue(), retIdMap.keySet().iterator().next().getValue());
 			
