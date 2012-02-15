@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import org.dataone.client.ObjectFormatCache;
+import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.InsufficientResources;
 import org.dataone.service.exceptions.InvalidRequest;
 import org.dataone.service.exceptions.NotFound;
@@ -34,11 +35,14 @@ import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.types.v1.ObjectFormatIdentifier;
 import org.dataone.service.types.v1.ObjectFormatList;
 
+import org.junit.Before;
 import org.junit.Test;
 
 /**
  * Test the ObjectFormatCache to retrieve the object format list, a single 
  * object format, and test a known bad format to handle the NotFound exception.
+ * Setup clears the value for the CN_URL so that the fallback objectFormatList is used.
+ * 
  * @author cjones
  *
  */
@@ -47,6 +51,11 @@ public class ObjectFormatCacheTest {
   @Test
   public void testHarnessCheck() {
       assertTrue(true);
+  }
+  
+  @Before
+  public void setup() {
+	  Settings.getConfiguration().setProperty("D1Client.CN_URL", "");
   }
   
   /**
@@ -78,7 +87,7 @@ public class ObjectFormatCacheTest {
  * @throws InvalidRequest 
    */
   @Test
-  public void testGetFormatFromString() throws InvalidRequest, ServiceFailure, NotFound, InsufficientResources, NotImplemented {
+  public void testGetFormat() throws ServiceFailure, NotFound {
   	
 	  String knownFormat = "text/plain";
 	  ObjectFormatIdentifier formatId = new ObjectFormatIdentifier();
