@@ -50,28 +50,20 @@ import org.dspace.foresite.ResourceMap;
 public class DataPackage {
     
     private Identifier packageId;
-    private D1Object scienceMetadata;
-    private HashMap<Identifier, D1Object> dataObjects;
+    private Map<Identifier, List<Identifier>> metadataMap;
+    private HashMap<Identifier, D1Object> objectStore;
     private ResourceMap map = null;
     
     private boolean validPackage = false; 
-    
-    /**
-     * Construct a data package, initializing member variables.
-     */
-    private DataPackage() {
-        super();
-        dataObjects = new HashMap<Identifier, D1Object>();
-        setValidPackage(true);
-    }
-    
+        
     /**
      * Construct a DataPackage using the given identifier to identify this package.  
      * The id is used as the identifier of the associated ORE map for this package.
      * @param id the Identifier of the package
      */
     public DataPackage(Identifier id) {
-        this();
+        objectStore = new HashMap<Identifier, D1Object>();
+        setValidPackage(true);
         setPackageId(id);
     }
     
@@ -80,11 +72,11 @@ public class DataPackage {
      * a D1Object to wrap the identified object after downloading it from DataONE.
      * @param id the identifier of the object to be added
      */
-    public void addData(Identifier id) {
+    public void addAndDownloadData(Identifier id) {
         if (!contains(id)) {
             D1Object o = D1Object.download(id);
             if (o != null) {
-                dataObjects.put(id, o);
+                objectStore.put(id, o);
             }
         }
     }
@@ -98,48 +90,35 @@ public class DataPackage {
         Identifier id = obj.getIdentifier();
         if (!contains(id)) {
             if (obj != null) {
-                dataObjects.put(id, obj);
+                objectStore.put(id, obj);
             }
         }
-    }    
-    
-    /**
-     * @return the scienceMetadata
-     */
-    public D1Object getScienceMetadata() {
-        return scienceMetadata;
     }
-
-    /**
-     * Register the science metadata object with the given Identifier to the package. 
-     * This creates a D1Object to wrap the identified science metadata object after 
-     * downloading it from DataONE.
-     * @param id the identifier of the object to be added
-     */
-    public void setScienceMetadata(Identifier id) {
-            D1Object o = D1Object.download(id);
-            if (o != null) {
-                scienceMetadata = o;
-            }
-    }
-    
-    /**
-     * Register an object as science metadata directly in the package without 
-     * downloading it from a node. 
-     * The identifier for this object is extracted from its system metadata.
-     * @param obj the D1Object to be added
-     */
-    public void setScienceMetadata(D1Object obj) {
-        if (obj != null) {
-            scienceMetadata = obj;
+        
+    public void insertRelationship(Identifier metadataID, List<Identifier> dataIDList) {
+        List<Identifier> associatedData = null;
+        
+        // Determine if the metadata object is already in the relations list
+        // Use it if so, if not then create a list for this metadata link
+        if (metadataMap.containsKey(metadataID)) {
+            associatedData = metadataMap.get(metadataID);
+        } else {
+            associatedData = new ArrayList<Identifier>();
         }
-    }   
+        
+        // For each data item, add the relationship if it doesn't exist
+        for (Identifier dataId : dataIDList) {
+            if (!associatedData.contains(dataId)) {
+                associatedData.add(dataId);
+            }
+        }
+    }
     
     /**
      * @return the number of objects in this package
      */
     public int size() {
-        return dataObjects.size();
+        return objectStore.size();
     }
     
     /**
@@ -148,7 +127,7 @@ public class DataPackage {
      * @return boolean true if the Identifier is in the package
      */
     public boolean contains(Identifier id) {
-        return dataObjects.containsKey(id);
+        return objectStore.containsKey(id);
     }
     
     /**
@@ -157,7 +136,7 @@ public class DataPackage {
      * @return the D1Object for that identifier, or null if not found
      */
     public D1Object get(Identifier id) {
-        return dataObjects.get(id);
+        return objectStore.get(id);
     }
     
     /**
@@ -165,7 +144,7 @@ public class DataPackage {
      * @param id the Identifier of the object to be removed.
      */
     public void remove(Identifier id) {
-        dataObjects.remove(id);
+        objectStore.remove(id);
     }
     
     /**
@@ -173,7 +152,7 @@ public class DataPackage {
      * @return a Set of Identifiers in the package
      */
     public Set<Identifier> identifiers() {
-        return dataObjects.keySet();
+        return objectStore.keySet();
     }
     
     /**
@@ -211,9 +190,7 @@ public class DataPackage {
      * @return the map
      */
     public ResourceMap getMap() {
-        if (null == map) {
-            updateResourceMap();
-        }
+        updateResourceMap();
         return map;
     }
     
@@ -233,20 +210,39 @@ public class DataPackage {
         return rdfXml;
     }
     
-    // TODO: create a deserializePackage() method
-    // INCOMPLETE METHOD IMPLEMENTATION!
+    /**
+     * Deserialize an ORE resourceMap by parsing it, extracting the associated package identifier,
+     * and the list of metadata and data objects aggregated in the ORE Map.  Create an instance
+     * of a DataPackage, and for each metadata and data object in the aggregation, add it to the
+     * package.
+     * @param resourceMap the string representation of an ORE map in XML format
+     * @return DataPackage constructed from the map
+     */
     public static DataPackage deserializePackage(String resourceMap) {
-        DataPackage dp = new DataPackage();
+        DataPackage dp = null;
         try {
-            Map<Identifier, List<Identifier>> rmData = ResourceMapFactory.getInstance().parseResourceMap(resourceMap);
-            // TODO: where is the packageId represented in the return from the map processing?
-            for (Identifier scienceMetadataId : rmData.keySet()) {
-                dp.setScienceMetadata(scienceMetadataId);
-                List<Identifier> dataIdentifiers = rmData.get(scienceMetadataId);
-                for (Identifier dataId : dataIdentifiers) {
-                    dp.addData(dataId);
+            Map<Identifier, Map<Identifier, List<Identifier>>> packageMap = ResourceMapFactory.getInstance().parseResourceMap(resourceMap);
+
+            if (packageMap != null && !packageMap.isEmpty()) {
+                
+                // Get and store the package Identifier in a new DataPackage
+                Identifier pid = packageMap.keySet().iterator().next();
+                dp = new DataPackage(pid);
+                
+                // Get the Map of metadata/data identifiers
+                Map<Identifier, List<Identifier>> mdMap = packageMap.get(pid);
+                dp.setMetadataMap(mdMap);
+                
+                // parse the metadata/data identifiers and store the associated objects if they are accessible
+                for (Identifier scienceMetadataId : mdMap.keySet()) {
+                    dp.addAndDownloadData(scienceMetadataId);
+                    List<Identifier> dataIdentifiers = mdMap.get(scienceMetadataId);
+                    for (Identifier dataId : dataIdentifiers) {
+                        dp.addAndDownloadData(dataId);
+                    }
                 }
             }
+            
             
         } catch (UnsupportedEncodingException e) {
             // TODO: these should probably be thrown as exceptions to avoid NPEs, but its not clear which would be appropriate
@@ -262,17 +258,31 @@ public class DataPackage {
     }
     
     /**
+     * @return the metadataMap
+     */
+    public Map<Identifier, List<Identifier>> getMetadataMap() {
+        return metadataMap;
+    }
+
+    /**
+     * @param metadataMap the metadataMap to set
+     */
+    public void setMetadataMap(Map<Identifier, List<Identifier>> metadataMap) {
+        this.metadataMap = metadataMap;
+    }
+
+    /**
      * Create a ResourceMap from the component D1Object instances in this DataPackage.
      * TODO: create a RM when science metadata is null
      * TODO: handle error conditions when data list is null
      */
     private void updateResourceMap() {
         
-        List<Identifier> dataIdentifiers = new ArrayList<Identifier>(dataObjects.keySet());
-        Map<Identifier, List<Identifier>> idMap = new HashMap<Identifier, List<Identifier>>();
-        idMap.put(scienceMetadata.getIdentifier(), dataIdentifiers);
+        //List<Identifier> dataIdentifiers = new ArrayList<Identifier>(objectStore.keySet());
+        //Map<Identifier, List<Identifier>> idMap = new HashMap<Identifier, List<Identifier>>();
+        //idMap.put(scienceMetadata.getIdentifier(), dataIdentifiers);
         try {
-            map = ResourceMapFactory.getInstance().createResourceMap(packageId, idMap);
+            map = ResourceMapFactory.getInstance().createResourceMap(packageId, metadataMap);
         } catch (OREException e) {
             // TODO: decide how to deal with packages cleanly that are missing information
             setValidPackage(false);
@@ -282,36 +292,5 @@ public class DataPackage {
             setValidPackage(false);
             map = null;
         }
-    }
-    
-    /**
-     * Bootstrap the package from a file, downloading all associated objects by 
-     * recursing through the describes and describedBy lists.
-     * @param id the identifier to be used in bootstrapping a package
-     */
-/*  
- * TODO: this method is obsolete and can probably be removed now 
-    private void buildPackage(Identifier id) {
-        
-        // TODO: refactor to use ORE map rather than describes/describedBy
-        // This current logic is obsolete
-        if (!contains(id)) {
-
-            // Add the object itself to the package
-            addData(id);
-
-            // Add all of the objects that this one describes
-//            List<Identifier> describes = get(id).getDescribeList();
-//            for (Identifier current_id : describes) {
-//                buildPackage(current_id);
-//            }
-//
-//            // Add all of the objects that this id is described by
-//            List<Identifier> describedBy = get(id).getDescribeByList();
-//            for (Identifier current_id : describes) {
-//                buildPackage(current_id);
-//            }
-        }
-    }
-*/
+    }    
 }
