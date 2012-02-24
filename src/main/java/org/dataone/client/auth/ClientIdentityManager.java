@@ -1,12 +1,15 @@
 package org.dataone.client.auth;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.Date;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1.Subject;
 import org.dataone.service.util.Constants;
+import org.jibx.runtime.JiBXException;
 
 
 /**
@@ -28,15 +31,48 @@ public class ClientIdentityManager {
 	 */
 	public static Subject getCurrentIdentity() 
 	{
+		CertificateManager cm = CertificateManager.getInstance();
+		java.security.cert.X509Certificate x509cert = cm.loadCertificate();
+		String subjectDN = cm.getSubjectDN(x509cert);
+		
 		Subject subject = new Subject();
-		java.security.cert.X509Certificate x509cert = CertificateManager.getInstance().loadCertificate();
-		String subjectDN = CertificateManager.getInstance().getSubjectDN(x509cert);
 		if (subjectDN != null) {
 			subject.setValue(subjectDN);
 		} else {
 			subject.setValue(Constants.SUBJECT_PUBLIC);
 		}
 		return subject;
+	}
+	
+	/**
+	 * a simple encapsulation to return a session object built from the 
+	 * CertificateManager
+	 * 
+	 * @return
+	 * @throws JiBXException 
+	 * @throws IllegalAccessException 
+	 * @throws InstantiationException 
+	 * @throws IOException 
+	 */
+	public static Session getCurrentSession() throws IOException, InstantiationException, IllegalAccessException, JiBXException 
+	{
+		CertificateManager cm = CertificateManager.getInstance();
+		java.security.cert.X509Certificate x509cert = cm.loadCertificate();
+		String subjectDN = cm.getSubjectDN(x509cert);
+		
+		Session session = new Session();
+		
+		Subject subject = new Subject();
+		if (subjectDN != null) {
+			subject.setValue(subjectDN);
+			session.setSubject(subject);
+			session.setSubjectInfo(cm.getSubjectInfo(x509cert));
+		} 
+		else {
+			subject.setValue(Constants.SUBJECT_PUBLIC);
+			session.setSubject(subject);	
+		}
+		return session;
 	}
 	
 	/**
