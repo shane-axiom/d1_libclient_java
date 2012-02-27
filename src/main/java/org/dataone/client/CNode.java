@@ -796,18 +796,44 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 
 	
+	
+	/**
+	 *  A convenience method for creating a search command utilizing the D1Url
+	 *  class for creating the resulting url. The D1Url object takes care of
+	 *  URL escaping.  
+	 *  
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.search">see DataONE API Reference</a> }
+	 * 
+	 * @param queryD1url - a D1Url object containing the path and/or query elements
+	 *                     that will be passed to the indicated queryType.  BaseUrl
+	 *                     and Resource segments will be removed/ignored.
+	 */
+	public  ObjectList search(Session session, String queryType, D1Url queryD1url)
+	throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest, 
+	NotImplemented
+	{
+		queryD1url.setBaseUrl("");
+		queryD1url.setResource("");
+		String pathAndQuery = queryD1url.getUrl();
+		if (pathAndQuery.startsWith("/")) {
+			pathAndQuery = pathAndQuery.substring(1);
+		}
+		return search(session, queryType, pathAndQuery);
+	}
+	
+	
 	/**
 	 * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.search">see DataONE API Reference</a> }
 	 * 
-	 * This implementation handles URL-escaping both the "queryType" & "query" parameters.
+	 * This implementation handles URL-escaping for only the "queryType" parameter,
+	 * and always places a slash ('/') character after it. 
 	 * <p>
-	 * For example,
-	 * <pre>cn.search(session,"SOLR","q=replica_verified:[* TO NOW]&start=0&rows=10&fl=id score")</pre>
-	 * will yield:
-	 * <pre>GET /search/SOLR?query=q%3Dreplica_verified:%5B*%20TO%20NOW%5D%26start%3D0%26rows%3D10%26fl%3Did%20score</pre> 
-	 *  
-	 *  <i><b>Note</b></i> that the SOLR parameters "q", "start", "rows", and "fl" (each with their own values) are, through escaping, packaged into
-	 *  the value of the dataONE "query" parameter.
+	 * For example, to invoke the following solr query:
+	 * <pre>"?q=replica_verified:[* TO NOW]&start=0&rows=10&fl=id score"</pre>
+	 * 
+	 * one has to first escape appropriate characters:
+	 * 
+	 * <pre>cn.search(session,"solr","?q=replica_verified:%5B*%20TO%20NOW%5D&start=0&rows=10&fl=id%20score")</pre> 
 	 *  
 	 *  For SOLR queries, a list of query terms employed can be found at the DataONE documentation on 
      *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/design/SearchMetadata.html"> Content Discovery</a> }
@@ -819,13 +845,14 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_SEARCH);
         url.addNextPathElement(queryType);
-        url.addNonEmptyParamPair("query", query);
-
+        
+        String finalUrl = url.getUrl() + "/" + query;
+        
         D1RestClient client = new D1RestClient(session);
 
         ObjectList objectList = null;
         try {
-            InputStream is = client.doGetRequest(url.getUrl());
+            InputStream is = client.doGetRequest(finalUrl);
             objectList = deserializeServiceType(ObjectList.class, is);
             
 		} catch (BaseException be) {
