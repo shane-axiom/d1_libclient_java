@@ -799,26 +799,26 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 	/**
 	 *  A convenience method for creating a search command utilizing the D1Url
-	 *  class for creating the resulting url. The D1Url object takes care of
-	 *  URL escaping.  
+	 *  class for building the value for the query parameter. The class D1Url 
+	 *  handles proper URL escaping of individual url elements.
+	 
 	 *  
 	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.search">see DataONE API Reference</a> }
 	 * 
 	 * @param queryD1url - a D1Url object containing the path and/or query elements
 	 *                     that will be passed to the indicated queryType.  BaseUrl
-	 *                     and Resource segments will be removed/ignored.
+	 *                     and Resource segments contained in this object will be
+	 *                     removed/ignored.
 	 */
 	public  ObjectList search(Session session, String queryType, D1Url queryD1url)
 	throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest, 
 	NotImplemented
 	{
-		queryD1url.setBaseUrl("");
-		queryD1url.setResource("");
-		String pathAndQuery = queryD1url.getUrl();
-		if (pathAndQuery.startsWith("/")) {
-			pathAndQuery = pathAndQuery.substring(1);
-		}
-		return search(session, queryType, pathAndQuery);
+		queryD1url.setBaseUrl("base");
+		queryD1url.setResource("resource");
+		String pathAndQueryString = queryD1url.getUrl().replaceAll("^base/resource/{0,1}", "");
+		
+		return search(session, queryType, pathAndQueryString);
 	}
 	
 	
