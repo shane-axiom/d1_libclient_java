@@ -1,5 +1,6 @@
 package org.dataone.client;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import org.dataone.configuration.Settings;
@@ -9,6 +10,7 @@ import org.dataone.service.types.v1.Group;
 import org.dataone.service.types.v1.Person;
 import org.dataone.service.types.v1.Subject;
 import org.dataone.service.types.v1.SubjectList;
+import org.dataone.service.util.D1Url;
 import org.junit.Test;
 
 public class CNodeTest {
@@ -16,6 +18,23 @@ public class CNodeTest {
 	@Test
 	public void testFoo() {
 		
+	}
+	
+	/**
+	 * this test is needed to validate the hack used in the cn.search() convenience
+	 * method that uses a D1Url object instead of string to build the 'query' parameter.
+	 */
+	@Test
+	public void testD1UrlHack() {
+		D1Url d1url = new D1Url("base","resource");
+		d1url.addNonEmptyParamPair("jumbo","shrimp");
+		String beyondResource = d1url.getUrl().replaceAll("^base/resource/{0,1}", "");
+		assertEquals("these should match", beyondResource, "?jumbo=shrimp");
+
+		d1url.addNextPathElement("path1");
+		d1url.addNextPathElement("path2");
+		beyondResource = d1url.getUrl().replaceAll("^base/resource/{0,1}", "");
+		assertEquals("these should match", beyondResource, "path1/path2?jumbo=shrimp");		
 	}
 	
 	//@Test
