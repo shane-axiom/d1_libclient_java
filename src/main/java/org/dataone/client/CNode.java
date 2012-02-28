@@ -800,10 +800,12 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	/**
 	 *  A convenience method for creating a search command utilizing the D1Url
 	 *  class for building the value for the query parameter. The class D1Url 
-	 *  handles proper URL escaping of individual url elements.
-	 
+	 *  handles general URL escaping of individual url elements, but different
+	 *  search implementations, such as solr, may have extra requirements.
 	 *  
 	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.search">see DataONE API Reference</a> }
+	 *  
+	 *  solr escaping: {@link <a href="http://www.google.com/search?q=solr+escapequerychars+api">find ClientUtils</a> }
 	 * 
 	 * @param queryD1url - a D1Url object containing the path and/or query elements
 	 *                     that will be passed to the indicated queryType.  BaseUrl
@@ -826,17 +828,25 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	 * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.search">see DataONE API Reference</a> }
 	 * 
 	 * This implementation handles URL-escaping for only the "queryType" parameter,
-	 * and always places a slash ('/') character after it. 
+	 * and always places a slash ('/') character after it.
 	 * <p>
 	 * For example, to invoke the following solr query:
-	 * <pre>"?q=replica_verified:[* TO NOW]&start=0&rows=10&fl=id score"</pre>
+	 * <pre>"?q=id:MyStuff:*&start=0&rows=10&fl=id score"</pre>
 	 * 
-	 * one has to first escape appropriate characters:
-	 * 
-	 * <pre>cn.search(session,"solr","?q=replica_verified:%5B*%20TO%20NOW%5D&start=0&rows=10&fl=id%20score")</pre> 
+	 * one has to (1) escape appropriate characters according to the rules of
+	 * the queryType employed (in this case solr):
+	 * <pre>  "?q=id\:MyStuff\:\*&start=0&rows=10&fl=id\ score"</pre>
 	 *  
-	 *  For SOLR queries, a list of query terms employed can be found at the DataONE documentation on 
+	 * then (2) escape according to general url rules:
+	 * 
+	 * <pre>  "?q=id%5C:MyStuff%5C:%5C*&start=0&rows=10&fl=id%5C%20score"</pre>
+	 *
+	 * resulting in: 
+	 * <pre>cn.search(session,"solr","?q=id%5C:MyStuff%5C:%5C*&start=0&rows=10&fl=id%5C%20score")</pre> 
+	 *  
+	 *  For solr queries, a list of query terms employed can be found at the DataONE documentation on 
      *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/design/SearchMetadata.html"> Content Discovery</a> }
+     *  solr escaping: {@link <a href="http://www.google.com/search?q=solr+escapequerychars+api">find ClientUtils</a> }
 	 */
 	public  ObjectList search(Session session, String queryType, String query)
 			throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest, 
