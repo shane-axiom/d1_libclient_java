@@ -7,6 +7,15 @@
   <version>1.0.1-RC3-SNAPSHOT</version>
   <name>DataONE Java Client Library</name>
   <url>http://dataone.org</url>
+    <properties>
+        <netbeans.hint.deploy.server>Tomcat60</netbeans.hint.deploy.server>
+
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <bouncycastle.version>1.46</bouncycastle.version>
+        <d1_common_java_version>1.0.1-RC3-SNAPSHOT</d1_common_java_version>
+        <d1_test_resources.version>1.0.0-RC2-SNAPSHOT</d1_test_resources.version>
+    </properties>
     <repositories>
         <repository>
             <id>sonatype.org</id>
@@ -91,28 +100,28 @@
         <artifactId>jibx-run</artifactId>
         <version>1.2.3</version>
     </dependency>
-    <dependency>
-		<groupId>bouncycastle</groupId>
-		<artifactId>bcprov-jdk16</artifactId>
-		<version>140</version>
-	</dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk16</artifactId>
+            <version>${bouncycastle.version}</version>
+        </dependency>
     <dependency>
     	<groupId>org.dataone</groupId>
     	<artifactId>d1_common_java</artifactId>
-    	<version>1.0.1-RC3-SNAPSHOT</version>
+    	<version>${d1_common_java_version}</version>
 		<type>jar</type>
     </dependency>
     <dependency>
     	<groupId>org.dataone</groupId>
     	<artifactId>d1_common_java</artifactId>
-    	<version>1.0.1-RC3-SNAPSHOT</version>
+    	<version>${d1_common_java_version}</version>
 		<type>test-jar</type>
 		<scope>test</scope>
     </dependency>
         <dependency>
             <groupId>org.dataone</groupId>
             <artifactId>d1_test_resources</artifactId>
-            <version>1.0.0-RC2-SNAPSHOT</version>
+            <version>${d1_test_resources.version}</version>
             <type>jar</type>
             <scope>test</scope>
         </dependency>
