@@ -50,6 +50,7 @@ import org.bouncycastle.openssl.PasswordFinder;
 import org.dataone.client.CNode;
 import org.dataone.client.D1Client;
 import org.dataone.configuration.Settings;
+import org.dataone.service.exceptions.InvalidToken;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1.Subject;
 import org.dataone.service.types.v1.SubjectInfo;
@@ -349,8 +350,9 @@ public class CertificateManager {
      *  
      * @param request
      * @return
+     * @throws InvalidToken 
      */
-    public Session getSession(HttpServletRequest request) 
+    public Session getSession(HttpServletRequest request) throws InvalidToken 
     {
     	return getSession(request,false);
     }
@@ -365,8 +367,9 @@ public class CertificateManager {
      * @param lookupSubject - set to true to fill out the subject list from the
      *                            CNIdentity service
      * @return
+     * @throws InvalidToken 
      */
-    public Session getSession(HttpServletRequest request, boolean lookupSubject) {
+    public Session getSession(HttpServletRequest request, boolean lookupSubject) throws InvalidToken {
     	Session session = null;
     	
 		X509Certificate x509Cert = getCertificate(request);
@@ -376,18 +379,32 @@ public class CertificateManager {
 			subject .setValue(subjectDN);
 			session = new Session();
 			session.setSubject(subject);
-
+			
+			
+			SubjectInfo subjectInfo = null;
     		// look up the subject information from the CNIdentity service
     		if (lookupSubject) {
 	    		try {
 		    		CNode cn = D1Client.getCN();
-					SubjectInfo subjectInfo = cn.getSubjectInfo(session, subject);
+					subjectInfo = cn.getSubjectInfo(session, subject);
 					session.setSubjectInfo(subjectInfo);
 				} catch (Exception e) {
 					// TODO: should we throw an exception/fail if this part fails?
-					log.error("Could not retrieve complete Subject info for: " + subject, e);
+					log.error("Could not lookup complete SubjectInfo for: " + subject.getValue(), e);
+				}
+    		} else {
+    			try {
+					subjectInfo = getSubjectInfo(x509Cert);
+				} catch (Exception e) {
+					// throw an InvalidToken
+					String msg = "Could not get SubjectInfo from certificate for: " + subject.getValue();
+					log.error(msg, e);
+					throw new InvalidToken("", msg);
 				}
     		}
+    		
+    		// set in the certificate
+			session.setSubjectInfo(subjectInfo);
     	}
     	return session;
     }
