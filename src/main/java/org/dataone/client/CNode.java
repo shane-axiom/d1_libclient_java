@@ -27,6 +27,7 @@ import java.util.Map;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpException;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.params.ClientPNames;
 import org.dataone.configuration.Settings;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.cn.v1.CNAuthorization;
@@ -726,6 +727,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		// send the request
 		D1RestClient client = new D1RestClient(session);
+		client.getHttpClient().getParams().setParameter(ClientPNames.HANDLE_REDIRECTS, false);
 		ObjectLocationList oll = null;
 
 		try {
