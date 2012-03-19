@@ -30,6 +30,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.IdentifierNotUnique;
 import org.dataone.service.exceptions.InsufficientResources;
@@ -88,6 +89,9 @@ public class D1Object {
 //    }
 
     /**
+     * Deprecated: in favor of the constructor that uses the ObjectFormatIdentifier, 
+     * Subject, and NodeReference objects instead of string value for them.
+     * 
      * Create an object that contains the given data bytes and with the given system metadata values. This 
      * constructor is used to build a D1Object locally in order to then call D1Object.create() to upload it 
      * to the proper Member Node.
@@ -102,11 +106,18 @@ public class D1Object {
      * @throws NotFound if the format specified is not found in the formatCache
      * @throws InvalidRequest if the content of parameters is not correct
      */
-    public D1Object(Identifier id, byte[] data, String format, String submitter, String nodeId) 
+    @Deprecated
+    public D1Object(Identifier id, byte[] data, String formatValue, String submitterValue, String nodeIdValue) 
         throws NoSuchAlgorithmException, IOException, NotFound, InvalidRequest {
         this.data = data;
+        ObjectFormatIdentifier formatId = new ObjectFormatIdentifier();
+        formatId.setValue(formatValue);
+        Subject submitter = new Subject();
+        submitter.setValue(submitterValue);
+        NodeReference nodeRef = new NodeReference();
+        nodeRef.setValue(nodeIdValue);
         try {
-			this.sysmeta = generateSystemMetadata(id, data, format, submitter, nodeId);
+			this.sysmeta = generateSystemMetadata(id, data, formatId, submitter, nodeRef);
 		} catch (ServiceFailure e) {
 			// TODO: revisit whether these should be exposed (thrown)
 			throw new NotFound("0","recast ServiceFailure: " + e.getDescription());
@@ -115,6 +126,20 @@ public class D1Object {
 			throw new NotFound("0","recast NotImplemented: " + e.getDescription());
 		}
     }
+    
+    public D1Object(Identifier id, byte[] data, ObjectFormatIdentifier formatId, Subject submitter, NodeReference nodeId) 
+    throws NoSuchAlgorithmException, IOException, NotFound, InvalidRequest {
+    this.data = data;
+    try {
+		this.sysmeta = generateSystemMetadata(id, data, formatId, submitter, nodeId);
+	} catch (ServiceFailure e) {
+		// TODO: revisit whether these should be exposed (thrown)
+		throw new NotFound("0","recast ServiceFailure: " + e.getDescription());
+	} catch (NotImplemented e) {
+		// TODO: revisit whether these should be exposed (thrown)
+		throw new NotFound("0","recast NotImplemented: " + e.getDescription());
+	}
+}
 
     /**
      * @return the identifier
@@ -124,9 +149,18 @@ public class D1Object {
     }
     
     /**
+     * Deprecated: use the method getFormatId() instead
      * @return the type
      */
+    @Deprecated
     public ObjectFormatIdentifier getFmtId() {
+        return sysmeta.getFormatId();
+    }
+    
+    /**
+     * @return the type
+     */
+    public ObjectFormatIdentifier getFormatId() {
         return sysmeta.getFormatId();
     }
 
@@ -299,7 +333,8 @@ public class D1Object {
      * Generate a new system metadata object using the given input parameters. 
      * @param id the identifier of the object
      * @param data the data bytes of the object
-     * @param format the format of the object
+     * @param formatId the format identifier for the object.  If not found in the cache,
+     *                   set the formatId to "application/octet-stream"
      * @param submitter the submitter for the object
      * @param nodeId the identifier of the node on which the object will be created
      * @return the generated SystemMetadata instance
@@ -311,32 +346,23 @@ public class D1Object {
      * @throws ServiceFailure 
      */
     private SystemMetadata generateSystemMetadata(Identifier id, byte[] data, 
-    		String format, String submitter, String nodeId) 
+    		ObjectFormatIdentifier formatId, Subject submitter, NodeReference nodeId) 
             throws NoSuchAlgorithmException, IOException, NotFound, InvalidRequest, ServiceFailure, NotImplemented {
 
-    	validateRequest(id, data, format, submitter, nodeId);
+    	    	
+    	validateRequest(id, data, formatId, submitter, nodeId);
 
-    	ObjectFormatIdentifier formatId = new ObjectFormatIdentifier();
-    	formatId.setValue(format);
     	SystemMetadata sm = new SystemMetadata();
     	sm.setIdentifier(id);
     	ObjectFormat fmt;
     	try {
     		fmt = ObjectFormatCache.getInstance().getFormat(formatId);
-    		sm.setFormatId(fmt.getFormatId());
     	}
     	catch (BaseException be) {
-    		try {
-    			formatId.setValue("application/octet-stream");
-    			fmt = ObjectFormatCache.getInstance().getFormat(formatId);
-    		} catch (NotFound nfe) {
-    			throw nfe;
-//			} catch (ServiceFailure e) {
-//				throw e;
-//			} catch (NotImplemented e) {
-//				throw e;
-			}
+    		formatId.setValue("application/octet-stream");
+    		fmt = ObjectFormatCache.getInstance().getFormat(formatId);
     	}
+    	sm.setFormatId(fmt.getFormatId());
 
     	//create the checksum
     	InputStream is = new ByteArrayInputStream(data);
@@ -352,10 +378,8 @@ public class D1Object {
     	sm.setSerialVersion(BigInteger.ONE);
     	
     	// set submitter and rightholder from the associated string
-    	Subject p = new Subject();
-    	p.setValue(submitter);
-    	sm.setSubmitter(p);
-    	sm.setRightsHolder(p);
+    	sm.setSubmitter(submitter);
+    	sm.setRightsHolder(submitter);
     	
     	Date dateCreated = new Date();
     	sm.setDateUploaded(dateCreated);
@@ -363,10 +387,8 @@ public class D1Object {
     	sm.setDateSysMetadataModified(dateUpdated);
 
     	// Node information
-    	NodeReference nr = new NodeReference();
-    	nr.setValue(nodeId);
-    	sm.setOriginMemberNode(nr);
-    	sm.setAuthoritativeMemberNode(nr);
+    	sm.setOriginMemberNode(nodeId);
+    	sm.setAuthoritativeMemberNode(nodeId);
 
     	return sm;
     }
@@ -374,7 +396,7 @@ public class D1Object {
     /**
      * 
      * Check the given set of input arguments that they are all valid and not null, 
-     * and that strings are of non-zero length. 
+     * and that string values are not null and of non-zero length. 
      * @param id
      * @param data
      * @param format
@@ -382,14 +404,31 @@ public class D1Object {
      * @param nodeId
      * @throws InvalidRequest
      */
-    protected static void validateRequest(Identifier id, byte[] data, String format, String submitter, 
-            String nodeId) throws InvalidRequest {
+    protected static void validateRequest(Identifier id, byte[] data, ObjectFormatIdentifier formatId, Subject submitter, 
+            NodeReference nodeId) throws InvalidRequest {
 
-        List<Object> objects = Arrays.asList((Object)id, (Object)data, (Object)format, (Object)submitter, 
+        List<Object> objects = Arrays.asList((Object)id, (Object)data, (Object)formatId, (Object)submitter, 
                 (Object)nodeId);
         D1Object.checkNotNull(objects);
-        List<String> strings = Arrays.asList(id.getValue(), format.toString(), submitter, nodeId);
-        D1Object.checkLength(strings);        
+        // checks that the values of these objects are not null or empty ("");
+        String invalidParams = "";
+        if ( StringUtils.isEmpty( id.getValue() ) ) 
+        	invalidParams += "'id' ";
+        
+        if ( StringUtils.isEmpty( formatId.getValue() ) ) 
+        	invalidParams += "'formatId' ";
+        
+        if ( StringUtils.isEmpty( submitter.getValue() ) ) 
+        	invalidParams += "'submitter' ";
+        
+        if ( StringUtils.isEmpty( nodeId.getValue() ) ) 
+        	invalidParams += "'nodeId' ";
+        
+        if ( StringUtils.isNotEmpty(invalidParams) ) {
+        	throw new InvalidRequest("0","values for " + invalidParams + "parameters were empty or null.");
+        }
+//        List<String> strings = Arrays.asList(id.getValue(), formatId.getValue(), submitter.getValue(), nodeId.getValue());
+//        D1Object.checkLength(strings);        
     }
     
     /**
