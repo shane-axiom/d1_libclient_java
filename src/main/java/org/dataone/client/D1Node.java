@@ -266,16 +266,20 @@ public abstract class D1Node {
 	{
 
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_LOG);
-        if (fromDate == null) {
+         // The specification for both MN and CN show the fromDate as optional...
+/*        if (fromDate == null) {
         	throw new InvalidRequest("0000","The 'fromDate' parameter cannot be null");
-        }
-    	url.addDateParamPair("fromDate", fromDate);
-    	url.addDateParamPair("toDate", toDate);
+        } */
+
+            url.addDateParamPair("fromDate", fromDate);
+            url.addDateParamPair("toDate", toDate);
+            
     	if (event != null)
-    		url.addNonEmptyParamPair("event", event.xmlValue());
-    	
-    	url.addNonEmptyParamPair("start", start);
-    	url.addNonEmptyParamPair("count", count);
+            url.addNonEmptyParamPair("event", event.xmlValue());
+    	if (start != null)
+            url.addNonEmptyParamPair("start", start);
+        if (count != null)
+            url.addNonEmptyParamPair("count", count);
     	
 		// send the request
 		D1RestClient client = new D1RestClient(session);
