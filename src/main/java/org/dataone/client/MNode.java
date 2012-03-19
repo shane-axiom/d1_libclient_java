@@ -425,43 +425,6 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
 
     /**
-     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNStorage.delete">see DataONE API Reference</a> } 
-     */
-    public  Identifier delete(Session session, Identifier pid)
-        throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
-    {
-    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
-    	if (pid != null) 
-    		url.addNextPathElement(pid.getValue());
-    	
-     	D1RestClient client = new D1RestClient(session);
-    	
-     	Identifier identifier = null;
-    	try {
-    		InputStream is = client.doDeleteRequest(url.getUrl());
-    		identifier = deserializeServiceType(Identifier.class, is);
-        } catch (BaseException be) {
-            if (be instanceof InvalidToken)           throw (InvalidToken) be;
-            if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
-            if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
-            if (be instanceof NotFound)               throw (NotFound) be;
-            if (be instanceof NotImplemented)         throw (NotImplemented) be;
-                    
-            throw recastDataONEExceptionToServiceFailure(be);
-        } 
-        catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
-        finally {
-        	client.closeIdleConnections();
-        }
-        return identifier;
-    }
-
-
-    /**
      *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNStorage.systemMetadataChanged">see DataONE API Reference</a> } 
      */
     public boolean systemMetadataChanged(Session session, Identifier pid, long serialVersion,
