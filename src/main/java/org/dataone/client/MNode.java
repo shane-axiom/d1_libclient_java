@@ -423,6 +423,21 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         return identifier;
     }
 
+    /**
+     * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNStorage.delete">see DataONE API Reference</a> }
+     */
+    public  Identifier delete(Session session, Identifier pid)
+        throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
+    {
+        Identifier identifier = null;
+    	try {
+            identifier = super.delete(session, pid);
+        } catch (InvalidRequest be) {
+            //MN should not return this, but if it does recast as ServiceFailure
+            throw new ServiceFailure("1350", be.getMessage());
+        }
+        return identifier;
+    }
 
     /**
      *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNStorage.systemMetadataChanged">see DataONE API Reference</a> } 

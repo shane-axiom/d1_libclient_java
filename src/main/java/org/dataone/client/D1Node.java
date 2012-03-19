@@ -592,10 +592,19 @@ public abstract class D1Node {
     }
    
     /**
-     *  
+     *  sets the archived flag to true on an MN or CN
+     * @param session
+     * @param pid
+     * @return Identifier
+     * @throws InvalidToken
+     * @throws ServiceFailure
+     * @throws NotAuthorized
+     * @throws NotFound
+     * @throws NotImplemented
+     * @throws InvalidRequest 
      */
     public  Identifier delete(Session session, Identifier pid)
-        throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
+        throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented, InvalidRequest
     {
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
     	if (pid != null)
@@ -613,7 +622,7 @@ public abstract class D1Node {
             if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
             if (be instanceof NotFound)               throw (NotFound) be;
             if (be instanceof NotImplemented)         throw (NotImplemented) be;
-
+            if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
             throw recastDataONEExceptionToServiceFailure(be);
         }
         catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
