@@ -21,6 +21,7 @@ package org.dataone.client;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.DateFormat;
 import java.util.Date;
 import java.util.Map;
 
@@ -82,6 +83,11 @@ import org.jibx.runtime.JiBXException;
 /**
  * CNode represents a DataONE Coordinating Node, and allows calling classes to
  * execute CN services.
+ * 
+ * The additional methods lookupNodeBaseUrl(..) and lookupNodeId(..) cache nodelist 
+ * information for performing baseUrl lookups and the reverse. The cache expiration
+ * is controlled by the property "CNode.nodemap.cache.refresh.interval.seconds" and
+ * is configured to 1 hour
  */
 public class CNode extends D1Node 
 implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplication 
@@ -89,7 +95,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	protected static org.apache.commons.logging.Log log = LogFactory.getLog(CNode.class);
 
 	private Map<String, String> nodeId2URLMap;
-
+	private long lastNodeListRefreshTimeMS = 0;
+    private Integer nodelistRefreshIntervalSeconds = 2 * 60;
+	
+	
 	/**
 	 * Construct a Coordinating Node, passing in the base url for node services. The CN
 	 * first retrieves a list of other nodes that can be used to look up node
@@ -99,8 +108,12 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	 */
 	public CNode(String nodeBaseServiceUrl) {
 		super(nodeBaseServiceUrl);
+		nodelistRefreshIntervalSeconds = Settings.getConfiguration()
+			.getInteger("CNode.nodemap.cache.refresh.interval.seconds", 
+						nodelistRefreshIntervalSeconds);
 	}
 
+	
 	public String getNodeBaseServiceUrl() {
 		D1Url url = new D1Url(super.getNodeBaseServiceUrl());
 		url.addNextPathElement(CNCore.SERVICE_VERSION);
@@ -108,9 +121,11 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 
 	/**
-     * Find the base URL for a Node based on the Node's identifier as it was registered with the
-     * Coordinating Node. 
-     * @param nodeId the identifier of the node to look up
+     * Find the base URL for a Node based on the Node's identifier as it was 
+     * registered with the Coordinating Node.  This method does the lookup on
+     * cached NodeList information.  The cache is refreshed periodically.
+     *  
+     * @param nodeId the identifier value of the node to look up
      * @return the base URL of the node's service endpoints
      * @throws ServiceFailure 
      * @throws NotImplemented 
@@ -122,14 +137,46 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     		nodeId = "";
     	}
     	String url = null;
-    	if (nodeId2URLMap == null) {
-    		initializeNodeMap();           
+    	if (isNodeMapStale()) {
+    		refreshNodeMap();           
     		url = nodeId2URLMap.get(nodeId);
     	} else {
     		url = nodeId2URLMap.get(nodeId);
     		if (url == null) {
     			// refresh the nodeMap, maybe that will help.
-    			initializeNodeMap();
+    			refreshNodeMap();
+    			url = nodeId2URLMap.get(nodeId);
+    		}
+    	}
+        return url;
+    }
+    
+    /**
+     * Find the base URL for a Node based on the Node's identifier as it was 
+     * registered with the Coordinating Node.  This method does the lookup on
+     * cached NodeList information.
+     *  
+     * @param nodeRef a NodeReference for the node to look up
+     * @return the base URL of the node's service endpoints
+     * @throws ServiceFailure 
+     * @throws NotImplemented 
+     */
+    public String lookupNodeBaseUrl(NodeReference nodeRef) throws ServiceFailure, NotImplemented {
+    	
+    	// prevents null pointer exception from being thrown at the map get(nodeId) call
+    	String nodeId = (nodeRef == null) ? "" : nodeRef.getValue();
+    	if (nodeId == null)
+    		nodeId = "";
+    		
+    	String url = null;
+    	if (isNodeMapStale()) {
+    		refreshNodeMap();           
+    		url = nodeId2URLMap.get(nodeId);
+    	} else {
+    		url = nodeId2URLMap.get(nodeId);
+    		if (url == null) {
+    			// refresh the nodeMap, maybe that will help.
+    			refreshNodeMap();
     			url = nodeId2URLMap.get(nodeId);
     		}
     	}
@@ -137,13 +184,20 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     }
 	
     /**
-     * Find the node identifier for a Node based on the base URL that is used to access its services
-     * by looking up the registration for the node at the Coordinating Node.
+     * Find the node identifier for a Node based on the base URL that is used to
+     * access its services by looking up the registration for the node at the 
+     * Coordinating Node.  This method does the lookup on
+     * cached NodeList information.
      * @param nodeBaseUrl the base url for Node service access
      * @return the identifier of the Node
+     * @throws NotImplemented 
+     * @throws ServiceFailure 
      */
-    public String lookupNodeId(String nodeBaseUrl) {
+    public String lookupNodeId(String nodeBaseUrl) throws ServiceFailure, NotImplemented {
         String nodeId = "";
+        if (isNodeMapStale()) {
+    		refreshNodeMap();
+        }
         for (String key : nodeId2URLMap.keySet()) {
             if (nodeBaseUrl.equals(nodeId2URLMap.get(key))) {
                 // We have a match, so record it and break
@@ -161,11 +215,33 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
      * @throws ServiceFailure 
      * @throws NotImplemented 
      */
-    private void initializeNodeMap() throws ServiceFailure, NotImplemented
+    private void refreshNodeMap() throws ServiceFailure, NotImplemented
     { 		
     	nodeId2URLMap = NodelistUtil.mapNodeList(listNodes());
     }
 	
+    
+    private boolean isNodeMapStale()
+    {
+    	if (nodeId2URLMap == null) 
+    		return true;
+    	
+    	Date now = new Date();
+    	long nowMS = now.getTime();
+        DateFormat df = DateFormat.getDateTimeInstance();
+        df.format(now);
+
+        // convert seconds to milliseconds
+        long refreshIntervalMS = this.nodelistRefreshIntervalSeconds * 1000L;
+        if (nowMS - this.lastNodeListRefreshTimeMS > refreshIntervalMS) {
+            this.lastNodeListRefreshTimeMS = nowMS;
+            log.info("  CNode nodelist refresh: new cached time: " + df.format(now));
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
 
     /**
      *  {@link <a href="http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNCore.ping">see DataONE API Reference</a> }
@@ -210,6 +286,12 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/**
+	 *  Return the ObjectFormat for the given ObjectFormatIdentifier, obtained 
+	 *  either from a client-cached ObjectFormatList from the ObjectFormatCache,
+	 *  or from a call to the CN.
+	 *  Caching is enabled by default in production via the property 
+	 *  "CNode.useObjectFormatCache" accessed via org.dataone.configuration.Settings
+	 *  
 	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNCore.getFormat">see DataONE API Reference</a> } 
 	 */
 	public  ObjectFormat getFormat(ObjectFormatIdentifier formatid)

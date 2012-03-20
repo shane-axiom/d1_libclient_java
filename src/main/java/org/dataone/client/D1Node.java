@@ -375,7 +375,7 @@ public abstract class D1Node {
      * Get the system metadata from a resource with the specified guid. Used
      * by both the CNode and MNode implementations. Note that this method defaults
      * to not using the local system metadata cache provided by the client, as
-     * SystemMetadata is mutable and so cacheing can lead to issues.  In specific
+     * SystemMetadata is mutable and so caching can lead to issues.  In specific
      * cases where a client wants to utilize the same system metadata in rapid succession,
      * it may make sense to temporarily use the local cache by calling @see #getSystemMetadata(Session, Identifier, boolean).
      * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.getSystemMetadata"> DataONE API Reference (MemberNode API)</a> 
@@ -390,7 +390,7 @@ public abstract class D1Node {
     /**
      * Get the system metadata from a resource with the specified guid, potentially using the local
      * system metadata cache if specified to do so. Used by both the CNode and MNode implementations. 
-     * Because SystemMetadata is mutable, cacheing can lead to currency issues.  In specific
+     * Because SystemMetadata is mutable, caching can lead to currency issues.  In specific
      * cases where a client wants to utilize the same system metadata in rapid succession,
      * it may make sense to temporarily use the local cache by setting useSystemMetadadataCache to true.
      * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.getSystemMetadata"> DataONE API Reference (MemberNode API)</a> 
