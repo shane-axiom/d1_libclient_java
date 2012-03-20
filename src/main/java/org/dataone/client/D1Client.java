@@ -31,7 +31,7 @@ import org.dataone.service.types.v1.NodeReference;
  * The D1Client class represents a client-side implementation of the DataONE
  * Service API. The class exposes the DataONE APIs as client methods, dispatches
  * the calls to the correct DataONE node, and then returns the results or throws
- * the appropriate exceptions.
+ * the appropriate exceptions.  
  */
 public class D1Client {
 
@@ -39,9 +39,10 @@ public class D1Client {
     
 	/**
 	 * Get the client instance of the Coordinating Node object for calling Coordinating Node services.
-	 * By default returns the production context CN.  Instantiate a D1Client with different CN url to
-	 * use different contexts.  
-	 * 
+	 * By default returns the production context CN, defined via the property "D1Client.CN_URL".
+	 * Use of D1Client in other contexts (non-production) requires overriding or changing this 
+	 * property name.  See org.dataone.configuration.Settings class for details.
+	 *  
      * @return the cn
 	 * @throws ServiceFailure 
      */

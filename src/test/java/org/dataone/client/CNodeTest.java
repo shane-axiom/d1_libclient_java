@@ -41,7 +41,7 @@ public class CNodeTest {
 	public void testLookupNodeBehavior_Null() throws ServiceFailure, NotImplemented 
 	{
 		CNode cn = new CNode("");
-		String returnedUrl = cn.lookupNodeBaseUrl(null);
+		String returnedUrl = cn.lookupNodeBaseUrl((String) null);
 		assertTrue("null string as parameter returns null string",returnedUrl == null);
 	}
 	
