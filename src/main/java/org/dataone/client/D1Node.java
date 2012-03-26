@@ -39,6 +39,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.dataone.client.cache.LocalCache;
 import org.dataone.client.exception.NotCached;
 import org.dataone.configuration.Settings;
+import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.InsufficientResources;
 import org.dataone.service.exceptions.InvalidRequest;
@@ -259,8 +260,17 @@ public abstract class D1Node {
     }
 
     
+    
+    public  Log getLogRecords(Session session) 
+	throws InvalidToken, InvalidRequest, ServiceFailure,
+	NotAuthorized, NotImplemented, InsufficientResources
+	{
+    	return getLogRecords(session, null, null, null, null, null, null);
+	}
+    
+    
 	public  Log getLogRecords(Session session, Date fromDate, Date toDate,
-			Event event, Integer start, Integer count) 
+			Event event, Integer start, Integer count, String pidFilter) 
 	throws InvalidToken, InvalidRequest, ServiceFailure,
 	NotAuthorized, NotImplemented, InsufficientResources
 	{
@@ -275,6 +285,7 @@ public abstract class D1Node {
     	
     	url.addNonEmptyParamPair("start", start);  
     	url.addNonEmptyParamPair("count", count);
+    	url.addNonEmptyParamPair("pidFilter", pidFilter);
     	
 		// send the request
 		D1RestClient client = new D1RestClient(session);
@@ -589,7 +600,51 @@ public abstract class D1Node {
         }
         return true;
     }
-   
+
+    
+	public  Identifier generateIdentifier(Session session, String scheme, String fragment)
+	throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented, InvalidRequest
+	{
+		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_GENERATE);
+		SimpleMultipartEntity smpe = new SimpleMultipartEntity();
+		if (scheme == null) {
+			throw new InvalidRequest("0000","'scheme' cannot be null");
+		}
+		smpe.addParamPart("scheme", scheme);
+		// omit fragment part if null because it is optional for user to include
+		// (the service should not rely on the empty parameter to be there)
+		if (fragment != null) {
+			smpe.addParamPart("fragment", fragment);
+		}
+		// send the request
+		D1RestClient client = new D1RestClient(session);
+		Identifier identifier = null;
+
+		try {
+			InputStream is = client.doPostRequest(url.getUrl(),smpe);
+			identifier = deserializeServiceType(Identifier.class, is);
+			
+		} catch (BaseException be) {
+			if (be instanceof InvalidToken)           throw (InvalidToken) be;
+			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
+			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
+			if (be instanceof NotImplemented)         throw (NotImplemented) be;
+			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
+
+			throw recastDataONEExceptionToServiceFailure(be);
+		} 
+		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+
+		finally {
+			client.closeIdleConnections();
+		}
+ 		return identifier;
+	}
+    
+    
     /**
      *  sets the archived flag to true on an MN or CN
      * @param session

@@ -380,17 +380,29 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/**
+	 *  A convenience method for getLogRecords using no filtering parameters
+	 *  
 	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNCore.getLogRecords">see DataONE API Reference</a> } 
 	 */
-	public  Log getLogRecords(Session session, Date fromDate, Date toDate,
-			Event event, Integer start, Integer count) 
+	public  Log getLogRecords(Session session) 
 	throws InvalidToken, InvalidRequest, ServiceFailure,
 	NotAuthorized, NotImplemented, InsufficientResources
 	{
-		return super.getLogRecords(session, fromDate, toDate, event, start, count);
+		return super.getLogRecords(session);
+	}
+	
+	
+	/**
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNCore.getLogRecords">see DataONE API Reference</a> } 
+	 */
+	public  Log getLogRecords(Session session, Date fromDate, Date toDate,
+			Event event, Integer start, Integer count, String pidFilter) 
+	throws InvalidToken, InvalidRequest, ServiceFailure,
+	NotAuthorized, NotImplemented, InsufficientResources
+	{
+		return super.getLogRecords(session, fromDate, toDate, event, start, count, pidFilter);
 	}
 		
-
 
 	
 	/**
@@ -477,43 +489,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	public  Identifier generateIdentifier(Session session, String scheme, String fragment)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented, InvalidRequest
 	{
-		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_GENERATE);
-		SimpleMultipartEntity smpe = new SimpleMultipartEntity();
-		if (scheme == null) {
-			throw new InvalidRequest("0000","'scheme' cannot be null");
-		}
-		smpe.addParamPart("scheme", scheme);
-		// omit fragment part if null because it is optional for user to include
-		// (the service should not rely on the empty parameter to be there)
-		if (fragment != null) {
-			smpe.addParamPart("fragment", fragment);
-		}
-		// send the request
-		D1RestClient client = new D1RestClient(session);
-		Identifier identifier = null;
-
-		try {
-			InputStream is = client.doPostRequest(url.getUrl(),smpe);
-			identifier = deserializeServiceType(Identifier.class, is);
-			
-		} catch (BaseException be) {
-			if (be instanceof InvalidToken)           throw (InvalidToken) be;
-			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
-			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
-			if (be instanceof NotImplemented)         throw (NotImplemented) be;
-			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
-
-			throw recastDataONEExceptionToServiceFailure(be);
-		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
-		finally {
-			client.closeIdleConnections();
-		}
- 		return identifier;
+		return super.generateIdentifier(session, scheme, fragment);
 	}
 
 

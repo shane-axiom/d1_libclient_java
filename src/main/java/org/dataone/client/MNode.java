@@ -120,16 +120,35 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
 
     /**
+     * A convenience method for getLogRecords using no filtering parameters
+     * 
+     * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNCore.getLogRecords">see DataONE API Reference</a> }
+     */
+	@Override
+	public Log getLogRecords(Session session) 
+			throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented,
+			ServiceFailure 
+	{
+		Log theLog = null;
+		try {
+			theLog = super.getLogRecords(session);
+		} catch (InsufficientResources e) {
+			throw recastDataONEExceptionToServiceFailure(e);
+		}
+    	return theLog;
+	}
+    
+    /**
      * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNCore.getLogRecords">see DataONE API Reference</a> }
      * 
      */
     public Log getLogRecords(Session session, Date fromDate, Date toDate, 
-               Event event, Integer start, Integer count) 
+               Event event, Integer start, Integer count, String pidFilter) 
     throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
     {
     	Log theLog = null;
 		try {
-			theLog = super.getLogRecords(session, fromDate, toDate, event, start, count);
+			theLog = super.getLogRecords(session, fromDate, toDate, event, start, count, pidFilter);
 		} catch (InsufficientResources e) {
 			throw recastDataONEExceptionToServiceFailure(e);
 		}
@@ -314,7 +333,17 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	return super.isAuthorized(session, pid, action);
     }
 
+    
+	/**
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNStorage.generateIdentifier">see DataONE API Reference</a> } 
+	 */
+	public  Identifier generateIdentifier(Session session, String scheme, String fragment)
+	throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented, InvalidRequest
+	{
+		return super.generateIdentifier(session, scheme, fragment);
+	}
 
+	
     /**
      *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNStorage.create">see DataONE API Reference</a> } 
      */
