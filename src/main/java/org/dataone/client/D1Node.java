@@ -270,7 +270,7 @@ public abstract class D1Node {
     
     
 	public  Log getLogRecords(Session session, Date fromDate, Date toDate,
-			Event event, Integer start, Integer count, String pidFilter) 
+			Event event, String pidFilter, Integer start, Integer count) 
 	throws InvalidToken, InvalidRequest, ServiceFailure,
 	NotAuthorized, NotImplemented, InsufficientResources
 	{

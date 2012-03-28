@@ -86,7 +86,7 @@ public class D1TypeBuilder {
 			throw new IllegalArgumentException("null or empty string values for parameters: " + badParam);
 
 		//	} catch (AddressException e) {
-		//		// thrown by IndernetAddress constructor
+		//		// thrown by InternetAddress constructor
 		//	}
 
 		person.addEmail(emailString);

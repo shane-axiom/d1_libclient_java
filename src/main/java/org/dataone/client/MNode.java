@@ -143,12 +143,12 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
      * 
      */
     public Log getLogRecords(Session session, Date fromDate, Date toDate, 
-               Event event, Integer start, Integer count, String pidFilter) 
+               Event event, String pidFilter, Integer start, Integer count) 
     throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
     {
     	Log theLog = null;
 		try {
-			theLog = super.getLogRecords(session, fromDate, toDate, event, start, count, pidFilter);
+			theLog = super.getLogRecords(session, fromDate, toDate, event, pidFilter, start, count);
 		} catch (InsufficientResources e) {
 			throw recastDataONEExceptionToServiceFailure(e);
 		}
