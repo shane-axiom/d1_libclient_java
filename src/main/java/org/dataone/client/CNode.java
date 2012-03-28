@@ -396,11 +396,11 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNCore.getLogRecords">see DataONE API Reference</a> } 
 	 */
 	public  Log getLogRecords(Session session, Date fromDate, Date toDate,
-			Event event, Integer start, Integer count, String pidFilter) 
+			Event event, String pidFilter, Integer start, Integer count) 
 	throws InvalidToken, InvalidRequest, ServiceFailure,
 	NotAuthorized, NotImplemented, InsufficientResources
 	{
-		return super.getLogRecords(session, fromDate, toDate, event, start, count, pidFilter);
+		return super.getLogRecords(session, fromDate, toDate, event, pidFilter, start, count);
 	}
 		
 
