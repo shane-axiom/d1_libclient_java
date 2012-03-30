@@ -71,6 +71,9 @@ public class D1Object {
     // TODO: this should also be able to be a reference to data, rather than a value, with late binding to allow efficient implementations
     private byte[] data;
     
+    // Flag indicating whether the object already exists in a MN; set when the D1Object is created
+    private boolean alreadyCreated = false;
+    
     /**
      * Construct a new D1Object, which is then populated with data and system metadata
      * during the download process.
@@ -109,6 +112,7 @@ public class D1Object {
     @Deprecated
     public D1Object(Identifier id, byte[] data, String formatValue, String submitterValue, String nodeIdValue) 
         throws NoSuchAlgorithmException, IOException, NotFound, InvalidRequest {
+        alreadyCreated = false;
         this.data = data;
         ObjectFormatIdentifier formatId = new ObjectFormatIdentifier();
         formatId.setValue(formatValue);
@@ -127,19 +131,20 @@ public class D1Object {
 		}
     }
     
-    public D1Object(Identifier id, byte[] data, ObjectFormatIdentifier formatId, Subject submitter, NodeReference nodeId) 
-    throws NoSuchAlgorithmException, IOException, NotFound, InvalidRequest {
-    this.data = data;
-    try {
-		this.sysmeta = generateSystemMetadata(id, data, formatId, submitter, nodeId);
-	} catch (ServiceFailure e) {
-		// TODO: revisit whether these should be exposed (thrown)
-		throw new NotFound("0","recast ServiceFailure: " + e.getDescription());
-	} catch (NotImplemented e) {
-		// TODO: revisit whether these should be exposed (thrown)
-		throw new NotFound("0","recast NotImplemented: " + e.getDescription());
-	}
-}
+    public D1Object(Identifier id, byte[] data, ObjectFormatIdentifier formatId, Subject submitter, NodeReference nodeId) throws NoSuchAlgorithmException,
+            IOException, NotFound, InvalidRequest {
+        alreadyCreated = false;
+        this.data = data;
+        try {
+            this.sysmeta = generateSystemMetadata(id, data, formatId, submitter, nodeId);
+        } catch (ServiceFailure e) {
+            // TODO: revisit whether these should be exposed (thrown)
+            throw new NotFound("0", "recast ServiceFailure: " + e.getDescription());
+        } catch (NotImplemented e) {
+            // TODO: revisit whether these should be exposed (thrown)
+            throw new NotFound("0", "recast NotImplemented: " + e.getDescription());
+        }
+    }
 
     /**
      * @return the identifier
@@ -213,6 +218,10 @@ public class D1Object {
     public void create(Session token) throws InvalidToken, ServiceFailure, NotAuthorized, 
         IdentifierNotUnique, UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented, InvalidRequest {
         
+        if (alreadyCreated) {
+            throw new InvalidRequest("1102", "Object already exists on a Member Node, so create() can not be called.");
+        }
+        
         // Check first that the identifier is not already in use
         CNode cn = D1Client.getCN();
         try {
@@ -229,6 +238,7 @@ public class D1Object {
         MNode mn = D1Client.getMN(mn_url);
         ByteArrayInputStream bis = new ByteArrayInputStream(data);
         Identifier rGuid = mn.create(token, sysmeta.getIdentifier(), bis, sysmeta);
+        alreadyCreated = true;
     }
 
     /**
@@ -252,8 +262,15 @@ public class D1Object {
         ar.addSubject(s);
         ar.addPermission(Permission.READ);
         ap.addAllow(ar);
-        SystemMetadata smd = D1Client.getCN().getSystemMetadata(token, getIdentifier());
-        D1Client.getCN().setAccessPolicy(token, sysmeta.getIdentifier(), ap, smd.getSerialVersion().longValue());
+        
+        if (alreadyCreated) {
+            // The object was already created on a MN, so we must set access policies on the CN
+            SystemMetadata smd = D1Client.getCN().getSystemMetadata(token, getIdentifier());
+            D1Client.getCN().setAccessPolicy(token, sysmeta.getIdentifier(), ap, smd.getSerialVersion().longValue());
+        } else {
+            // The object only exists locally, so we can set the access policy locally and it will be uploaded on create()
+            sysmeta.setAccessPolicy(ap);
+        }
     }
     
     /**
@@ -263,6 +280,7 @@ public class D1Object {
     public static D1Object download(Identifier id) {
         
         D1Object o = null;
+        boolean gotData = false;
         try {	    
 	        CNode cn = D1Client.getCN();
 	        Session token = new Session();
@@ -277,7 +295,6 @@ public class D1Object {
             
             // Resolve the MNs that contain the object
             oll = cn.resolve(token, id);
-            boolean gotData = false;
             // Try each of the locations until we find the object
             for (ObjectLocation ol : oll.getObjectLocationList()) {
                 System.out.println("   === Trying Location: "
@@ -311,9 +328,6 @@ public class D1Object {
 					e.printStackTrace();
 				}
             }
-            if (!gotData) {
-                System.out.println("Never found the data on MN.");
-            }
         } catch (InvalidToken e) {
             e.printStackTrace();
         } catch (ServiceFailure e) {
@@ -326,6 +340,12 @@ public class D1Object {
             e.printStackTrace();
         }
         
+        if (!gotData) {
+            System.out.println("Never found the data on MN.");
+        } else {
+            o.alreadyCreated = true;
+        }
+
         return o;
     }
 
