@@ -469,7 +469,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     }
 
     /**
-     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNStorage.systemMetadataChanged">see DataONE API Reference</a> } 
+     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNAuthorization.systemMetadataChanged">see DataONE API Reference</a> } 
      */
     public boolean systemMetadataChanged(Session session, Identifier pid, long serialVersion,
         	Date dateSystemMetadataLastModified)
