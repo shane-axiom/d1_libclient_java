@@ -110,6 +110,16 @@ public class D1RestClient {
 	{
 		return this.rc.getHttpClient();
 	}
+
+	/**
+	 * Gets the string representation of the latest http call made by the 
+	 * underlying RestClient
+	 * @return
+	 */
+	public String getLatestRequestUrl() 
+	{
+		return rc.getLatestRequestUrl();
+	}
 	
 	
 	/**
