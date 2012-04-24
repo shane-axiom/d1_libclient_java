@@ -67,6 +67,8 @@ public class RestClient {
     private AbstractHttpClient httpClient;
     private HashMap<String, String> headers = new HashMap<String, String>();
     
+    private String latestRequestUrl = null;
+    
 	/**
 	 * Default constructor to create a new instance.
 	 */
@@ -82,6 +84,13 @@ public class RestClient {
 		setTimeouts(30 * 1000);
 	}
 	
+	public String getLatestRequestUrl() {
+		return latestRequestUrl;
+	}
+	
+	private void setLatestRequestUrl(String value) {
+		latestRequestUrl = value;
+	}
 	
 	/**
 	 * Gets the DefaultHttpClient instance used to make the connection
@@ -234,51 +243,67 @@ public class RestClient {
 	/*
 	 * assembles the request for GETs, HEADs and DELETEs - assumes no message body
 	 */
-	private HttpResponse doRequestNoBody(String url,String httpMethod) 
+	private synchronized HttpResponse doRequestNoBody(String url,String httpMethod) 
 	throws ClientProtocolException, IOException
 	{
-		log.info("rest call: " + httpMethod + "  " + url);
+		String latestCall = httpMethod + " " + url;
+	
+		HttpResponse response = null;
+		try {
+			HttpUriRequest req = null;
+			if (httpMethod == Constants.GET) 
+				req = new HttpGet(url);
 
-		HttpUriRequest req = null;
-		if (httpMethod == Constants.GET) 
-			req = new HttpGet(url);        	
-		else if (httpMethod == Constants.HEAD) 
-			req = new HttpHead(url);       
-		else if (httpMethod == Constants.DELETE)
-			req = new HttpDelete(url);       
-		else 
-			throw new ClientProtocolException("method requested not defined: " + httpMethod);
-		
-		return doRequest(req);
+			else if (httpMethod == Constants.HEAD) 
+				req = new HttpHead(url);
+
+			else if (httpMethod == Constants.DELETE) 
+				req = new HttpDelete(url);
+
+			else
+				throw new ClientProtocolException("method requested not defined: " + httpMethod);
+			
+			response = doRequest(req);
+		}
+		finally {
+			setLatestRequestUrl(latestCall);
+			log.info("rest call info: " + latestCall);
+		}
+		return response;
 	}
 	
 
 	/*
 	 * assembles the request for POSTs and PUTs (uses a different base class for these entity-enclosing methods)
 	 */
-	private HttpResponse doRequestMMBody(String url,String httpMethod, SimpleMultipartEntity mpe)
+	private synchronized HttpResponse doRequestMMBody(String url,String httpMethod, SimpleMultipartEntity mpe)
 	throws ClientProtocolException, IOException 
 	{
+		String latestCall = httpMethod + " " + url;
+		
 		HttpResponse response = null;
 		try {
-			log.info("rest call: " + httpMethod + "  " + url);
-
 			HttpEntityEnclosingRequestBase req = null;
-			if (httpMethod == Constants.PUT)
+			if (httpMethod == Constants.PUT) 
 				req = new HttpPut(url);
-			else if (httpMethod == Constants.POST)
+					
+			else if (httpMethod == Constants.POST) 
 				req = new HttpPost(url);
+
 			else 
 				throw new ClientProtocolException("method requested not defined: " + httpMethod);
 
 			if (mpe != null) {
 				req.setEntity(mpe);
-				log.info("entity: present, size = " + mpe.getContentLength());
+				latestCall += "; entity present, size = " + mpe.getContentLength();
 			} else {
-				log.info("entity: null");
+				latestCall += "; entity is null";
 			}
 			response = doRequest(req);
-		} finally { 
+		} 
+		finally { 
+			setLatestRequestUrl(latestCall);
+			log.info("rest call info: " + latestCall);
 			if (mpe != null)
 				if (! mpe.cleanupTempFiles() ) {
 					log.warn("failed to clean up temp files for: " + httpMethod + " " + url);

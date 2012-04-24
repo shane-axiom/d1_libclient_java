@@ -80,6 +80,20 @@ public abstract class D1Node {
     
     private boolean useLocalCache = false;
 
+	private String lastRequestUrl = null;
+    
+	/**
+     * Useful for debugging to see what the last call was
+     * @return
+     */
+    public String getLatestRequestUrl() {
+    	return lastRequestUrl;
+    }
+    
+    protected void setLatestRequestUrl(String url) {
+    	lastRequestUrl = url;
+    }
+    
 	/**
 	 * Constructor to create a new instance.
 	 */
@@ -180,6 +194,7 @@ public abstract class D1Node {
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 	    finally {
+	    	setLatestRequestUrl(client.getLatestRequestUrl());
 	    	client.closeIdleConnections();
 	    }
 		// if exception not thrown, and we got this far,
@@ -254,6 +269,7 @@ public abstract class D1Node {
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
  
         finally {
+        	setLatestRequestUrl(client.getLatestRequestUrl());
 	    	client.closeIdleConnections();
 	    }
         return objectList;
@@ -310,6 +326,7 @@ public abstract class D1Node {
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
 		finally {
+			setLatestRequestUrl(client.getLatestRequestUrl());
 			client.closeIdleConnections();
 		}
 		return log;
@@ -376,6 +393,7 @@ public abstract class D1Node {
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
         
         finally {
+        	setLatestRequestUrl(client.getLatestRequestUrl());
         	client.closeIdleConnections();
         }
         return is;
@@ -451,6 +469,7 @@ public abstract class D1Node {
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 	
 		finally {
+			setLatestRequestUrl(client.getLatestRequestUrl());
 			client.closeIdleConnections();
 		}
         return sysmeta;
@@ -496,6 +515,7 @@ public abstract class D1Node {
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
     	finally {
+    		setLatestRequestUrl(client.getLatestRequestUrl());
     		client.closeIdleConnections();
     	}
     	
@@ -596,6 +616,7 @@ public abstract class D1Node {
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
         finally {
+        	setLatestRequestUrl(client.getLatestRequestUrl());
         	client.closeIdleConnections();
         }
         return true;
@@ -639,6 +660,7 @@ public abstract class D1Node {
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
 		finally {
+			setLatestRequestUrl(client.getLatestRequestUrl());
 			client.closeIdleConnections();
 		}
  		return identifier;
@@ -685,6 +707,7 @@ public abstract class D1Node {
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); }
 
         finally {
+        	setLatestRequestUrl(client.getLatestRequestUrl());
         	client.closeIdleConnections();
         }
         return identifier;
