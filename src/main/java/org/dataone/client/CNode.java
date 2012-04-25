@@ -2467,4 +2467,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		}
 		return true;
 	}
+
+    @Override
+    public Identifier delete(Identifier pid) throws InvalidToken, ServiceFailure, InvalidRequest, NotAuthorized, NotFound, NotImplemented {
+        return this.delete(null, pid);
+    }
 }
