@@ -252,6 +252,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
         finally {
+        	setLatestRequestUrl(client.getLatestRequestUrl());
         	client.closeIdleConnections();
         }
         return node;
@@ -353,6 +354,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
         finally {
+        	setLatestRequestUrl(client.getLatestRequestUrl());
         	client.closeIdleConnections();
         }
         return checksum;
@@ -406,6 +408,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
         
         finally {
+        	setLatestRequestUrl(client.getLatestRequestUrl());
         	client.closeIdleConnections();
         }
         return true;
@@ -511,6 +514,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
         finally {
+        	setLatestRequestUrl(client.getLatestRequestUrl());
         	client.closeIdleConnections();
         }
         return identifier;
@@ -580,6 +584,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
         finally {
+        	setLatestRequestUrl(client.getLatestRequestUrl());
         	client.closeIdleConnections();
         }
         return identifier;
@@ -660,7 +665,8 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); }  
 		
-		finally {			
+		finally {	
+			setLatestRequestUrl(client.getLatestRequestUrl());
 			client.closeIdleConnections();
 		}
 		return true;
@@ -725,6 +731,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
     	
     	finally {
+    		setLatestRequestUrl(client.getLatestRequestUrl());
     		client.closeIdleConnections();
     	}
         return true;
@@ -773,7 +780,9 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
         catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
         catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+        
         finally {
+        	setLatestRequestUrl(client.getLatestRequestUrl());
         	client.closeIdleConnections();
         }
         return bais;

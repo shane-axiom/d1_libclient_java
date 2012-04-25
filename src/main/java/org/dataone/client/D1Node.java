@@ -193,6 +193,7 @@ public abstract class D1Node {
 		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
 		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+
 	    finally {
 	    	setLatestRequestUrl(client.getLatestRequestUrl());
 	    	client.closeIdleConnections();
