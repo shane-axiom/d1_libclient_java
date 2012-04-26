@@ -102,6 +102,19 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     }
    
     
+    /**
+     * Construct a new client-side MNode (Member Node) object, 
+     * passing in the base url of the member node for calling its services,
+     * and the Session to use for connections to that node. 
+     * @param nodeBaseServiceUrl base url for constructing service endpoints.
+     * @param session - the Session object passed to the CertificateManager
+     *                  to be used for establishing connections
+     */
+    public MNode(String nodeBaseServiceUrl, Session session) {
+        super(nodeBaseServiceUrl, session); 
+    }
+    
+    
     public String getNodeBaseServiceUrl() {
     	D1Url url = new D1Url(super.getNodeBaseServiceUrl());
     	url.addNextPathElement(MNCore.SERVICE_VERSION);
@@ -156,7 +169,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
                Integer start, Integer count) 
     throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
     {
-        return getLogRecords(null, fromDate, toDate, event, pidFilter, start, count);
+        return getLogRecords(D1Node.sessionFromConstructor(), fromDate, toDate, event, pidFilter, start, count);
     }
     
     
@@ -207,7 +220,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 			Boolean replicaStatus, Integer start, Integer count)
 	throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure 
 	{
-		return super.listObjects(null,fromDate,toDate,formatid,replicaStatus,start,count);
+		return super.listObjects(D1Node.sessionFromConstructor(),fromDate,toDate,formatid,replicaStatus,start,count);
 	}
 	
     /**
@@ -264,7 +277,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     public InputStream get(Identifier pid)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound, InsufficientResources
     {
-    	return super.get(null, pid);
+    	return super.get(D1Node.sessionFromConstructor(), pid);
     }  
 
     
@@ -278,7 +291,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     public SystemMetadata getSystemMetadata(Identifier pid)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound
     {
-    	return super.getSystemMetadata(null, pid);
+    	return super.getSystemMetadata(D1Node.sessionFromConstructor(), pid);
     }   
     
     public SystemMetadata getSystemMetadata(Session session, Identifier pid)
@@ -295,7 +308,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     public DescribeResponse describe(Identifier pid)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound
     {
-    	return super.describe(null,pid);
+    	return super.describe(D1Node.sessionFromConstructor(),pid);
     }
     
     /**
@@ -314,7 +327,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     public Checksum getChecksum(Identifier pid, String checksumAlgorithm)
     throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound
     { 
-    	return getChecksum(null, pid, checksumAlgorithm);
+    	return getChecksum(D1Node.sessionFromConstructor(), pid, checksumAlgorithm);
     }
     
     
@@ -332,7 +345,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     	url.addNonEmptyParamPair("checksumAlgorithm", checksumAlgorithm);
 
         // send the request
-        D1RestClient client = new D1RestClient(session);
+        D1RestClient client = new D1RestClient(determineSession(session));
         Checksum checksum = null;
 
         try {
@@ -368,7 +381,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     public boolean synchronizationFailed(SynchronizationFailed message)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
     { 
-        return synchronizationFailed(null, message);
+        return synchronizationFailed(D1Node.sessionFromConstructor(), message);
     }
     
     
@@ -387,7 +400,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 		}
     	
         // send the request
-        D1RestClient client = new D1RestClient(session);
+        D1RestClient client = new D1RestClient(determineSession(session));
 
         InputStream is = null;
         try {
@@ -421,7 +434,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     public boolean isAuthorized(Identifier pid, Permission action)
     throws ServiceFailure, InvalidRequest, InvalidToken, NotFound, NotAuthorized, NotImplemented
     {
-    	return super.isAuthorized(null, pid, action);
+    	return super.isAuthorized(D1Node.sessionFromConstructor(), pid, action);
     }
     
     
@@ -441,7 +454,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 	public  Identifier generateIdentifier(String scheme, String fragment)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented, InvalidRequest
 	{
-		return super.generateIdentifier(null, scheme, fragment);
+		return super.generateIdentifier(D1Node.sessionFromConstructor(), scheme, fragment);
 	}
 	
 	/**
@@ -463,7 +476,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     throws IdentifierNotUnique, InsufficientResources, InvalidRequest, InvalidSystemMetadata, 
         	InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, UnsupportedType
     {
-        return create(null, pid, object,  sysmeta);
+        return create(D1Node.sessionFromConstructor(), pid, object,  sysmeta);
     }
      
 		
@@ -489,7 +502,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 		}
 
     	
-    	D1RestClient client = new D1RestClient(session);
+    	D1RestClient client = new D1RestClient(determineSession(session));
     	Identifier identifier = null;
 
     	try {
@@ -530,7 +543,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
             InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, UnsupportedType,
             NotFound
     {
-        return update(null, pid, object, newPid, sysmeta);
+        return update(D1Node.sessionFromConstructor(), pid, object, newPid, sysmeta);
     }
     
     
@@ -558,7 +571,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 			throw recastClientSideExceptionToServiceFailure(e);	
 		}
     	  	
-    	D1RestClient client = new D1RestClient(session);
+    	D1RestClient client = new D1RestClient(determineSession(session));
     	Identifier identifier = null;
     	
     	try {
@@ -597,7 +610,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     public  Identifier delete( Identifier pid)
         throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
     {
-        return  delete(null,  pid);
+        return  delete(D1Node.sessionFromConstructor(),  pid);
     }
    
     
@@ -625,7 +638,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         	Date dateSystemMetadataLastModified)
         throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented, InvalidRequest
     {
-        return systemMetadataChanged(null, pid, serialVersion, dateSystemMetadataLastModified);
+        return systemMetadataChanged(D1Node.sessionFromConstructor(), pid, serialVersion, dateSystemMetadataLastModified);
     }
     
     
@@ -645,7 +658,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
                 DateTimeMarshaller.serializeDateToUTC(dateSystemMetadataLastModified));
         mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
 		    	
-		D1RestClient client = new D1RestClient(session);
+		D1RestClient client = new D1RestClient(determineSession(session));
 		InputStream is = null;
 		try {
 			is = client.doPostRequest(url.getUrl(), mpe);
@@ -681,7 +694,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     throws NotImplemented, ServiceFailure, NotAuthorized, InvalidRequest, InvalidToken,
         InsufficientResources, UnsupportedType
     {
-        return replicate(null, sysmeta, sourceNode);
+        return replicate(D1Node.sessionFromConstructor(), sysmeta, sourceNode);
     }
     
     
@@ -708,7 +721,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 			throw recastClientSideExceptionToServiceFailure(e);
 		}
     	
-    	D1RestClient client = new D1RestClient(session);
+    	D1RestClient client = new D1RestClient(determineSession(session));
     	InputStream is = null;
     	try {
 			is = client.doPostRequest(url.getUrl(),smpe);
@@ -745,7 +758,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound,
     InsufficientResources
     {
-       return getReplica(null, pid);
+       return getReplica(D1Node.sessionFromConstructor(), pid);
     }
     
     
@@ -761,7 +774,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         	url.addNextPathElement(pid.getValue());
 
         // send the request
-        D1RestClient client = new D1RestClient(session);
+        D1RestClient client = new D1RestClient(determineSession(session));
         ByteArrayInputStream bais = null;
         try {
         	byte[] bytes = IOUtils.toByteArray(client.doGetRequest(url.getUrl()));
