@@ -295,9 +295,9 @@ public class RestClient {
 
 			if (mpe != null) {
 				req.setEntity(mpe);
-				latestCall += "; entity present, size = " + mpe.getContentLength();
+				latestCall += "; MMP message has: " + mpe.getDescription();
 			} else {
-				latestCall += "; entity is null";
+				latestCall += "; MMP entity is null";
 			}
 			response = doRequest(req);
 		} 
