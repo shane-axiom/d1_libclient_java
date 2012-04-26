@@ -78,6 +78,9 @@ public abstract class D1Node {
     private String nodeBaseServiceUrl;
     private String nodeId;
     
+    /** this represents the session to be used for establishing the SSL connection */
+    protected Session session;
+    
     private boolean useLocalCache = false;
 
 	private String lastRequestUrl = null;
@@ -94,11 +97,24 @@ public abstract class D1Node {
     	lastRequestUrl = url;
     }
     
+    /**
+	 * Constructor to create a new instance.
+	 */
+	public D1Node(String nodeBaseServiceUrl, Session session) {
+	    setNodeBaseServiceUrl(nodeBaseServiceUrl);
+	    this.session = session;
+	    // (second parameter is a default value)
+	    useLocalCache = Settings.getConfiguration().getBoolean("D1Client.useLocalCache",useLocalCache);
+	}
+    
+    
+    
 	/**
 	 * Constructor to create a new instance.
 	 */
 	public D1Node(String nodeBaseServiceUrl) {
 	    setNodeBaseServiceUrl(nodeBaseServiceUrl);
+	    this.session = null;
 	    // (second parameter is a default value)
 	    useLocalCache = Settings.getConfiguration().getBoolean("D1Client.useLocalCache",useLocalCache);
 	}
@@ -154,18 +170,39 @@ public abstract class D1Node {
 
     
     /**
-     * creates a public session object that can be used as a default
-     * session object if null is passed into a service api method. 
-     * @return 
+     * creates a symbolic Session that indicates that the api method should use
+     * the session object belonging to the D1Node instance. 
      */
-    protected static Session createPublicSession() {
+    public static Session sessionFromConstructor() {
 
     	Session session = new Session();
     	Subject sub = new Subject();
-    	sub.setValue("public");
+    	sub.setValue("sessionFromConstructor");
     	session.setSubject(sub);
     	return session;
-    }   
+    }
+    
+    /**
+     * A null value passed into the method needs to be passed on to D1RestClient
+     * if the sessionFromConstructor is passed in, then use the instance's 
+     * session property
+     * @param ses
+     * @return
+     */
+    protected Session determineSession(Session ses)
+    {
+    	// this will preserve backwards compatibility when folks use the 
+    	// the deprecated methods
+    	if (session == null)
+    		return null;
+    	
+    	// this is mainly for redirecting the new methods to use the session
+    	// set at D1Node construction.
+    	if (session.getSubject().equals(sessionFromConstructor())) 
+    		return this.session;
+    	
+    	return ses;
+    }
 
     
 	public Date ping() throws NotImplemented, ServiceFailure, InsufficientResources 
@@ -249,7 +286,7 @@ public abstract class D1Node {
 		url.addNonEmptyParamPair("count",count);
 		
         // send the request
-        D1RestClient client = new D1RestClient(session);
+        D1RestClient client = new D1RestClient(determineSession(session));
         ObjectList objectList = null;
 
         try {
@@ -305,7 +342,7 @@ public abstract class D1Node {
     	url.addNonEmptyParamPair("pidFilter", pidFilter);
     	
 		// send the request
-		D1RestClient client = new D1RestClient(session);
+		D1RestClient client = new D1RestClient(determineSession(session));
 		Log log = null;
 
 		try {
@@ -368,7 +405,7 @@ public abstract class D1Node {
     		throw new NotFound("0000", "'pid' cannot be null nor empty");
     	url.addNextPathElement(pid.getValue());
 
-		D1RestClient client = new D1RestClient(session);
+		D1RestClient client = new D1RestClient(determineSession(session));
 		
         try {
         	byte[] bytes = IOUtils.toByteArray(client.doGetRequest(url.getUrl()));
@@ -443,7 +480,7 @@ public abstract class D1Node {
 		if (pid != null)
 			url.addNextPathElement(pid.getValue());
 
-		D1RestClient client = new D1RestClient(session);
+		D1RestClient client = new D1RestClient(determineSession(session));
 		
 		InputStream is = null;
 		SystemMetadata sysmeta = null;
@@ -488,7 +525,7 @@ public abstract class D1Node {
     		throw new NotFound("0000", "'pid' cannot be null nor empty");
     	url.addNextPathElement(pid.getValue());
     	
-     	D1RestClient client = new D1RestClient(session);
+     	D1RestClient client = new D1RestClient(determineSession(session));
     	
     	Header[] headers = null;
     	Map<String, String> headersMap = new HashMap<String,String>();
@@ -594,7 +631,7 @@ public abstract class D1Node {
         	url.addNonEmptyParamPair("action", action.xmlValue());
     	
         // send the request
-        D1RestClient client = new D1RestClient(session);
+        D1RestClient client = new D1RestClient(determineSession(session));
         
         InputStream is = null;
         try {
@@ -639,7 +676,7 @@ public abstract class D1Node {
 			smpe.addParamPart("fragment", fragment);
 		}
 		// send the request
-		D1RestClient client = new D1RestClient(session);
+		D1RestClient client = new D1RestClient(determineSession(session));
 		Identifier identifier = null;
 
 		try {
@@ -687,7 +724,7 @@ public abstract class D1Node {
     	if (pid != null)
     		url.addNextPathElement(pid.getValue());
 
-     	D1RestClient client = new D1RestClient(session);
+     	D1RestClient client = new D1RestClient(determineSession(session));
 
      	Identifier identifier = null;
     	try {
