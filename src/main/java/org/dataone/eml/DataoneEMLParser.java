@@ -165,7 +165,7 @@ public class DataoneEMLParser
 
     
     private EMLDocument parseEMLDocument(Document doc, ObjectFormat docType) 
-      throws XPathExpressionException, NotFound, ServiceFailure, NotImplemented
+      throws XPathExpressionException, ServiceFailure, NotImplemented
     {
      	
     	log.debug("DataoneEMLParser.parseEMLDocument() called.");
@@ -205,50 +205,44 @@ public class DataoneEMLParser
                 
                 ObjectFormatIdentifier formatId = new ObjectFormatIdentifier();
                 
-                
-                if(nl1.getLength() > 0)
-                { //found a text format
+                if (nl1.getLength() > 0) { //found a text format
                     log.debug("Found a text format");
                     formatId.setValue("text/plain");
-                    mimeType = ObjectFormatCache.getInstance().getFormat(formatId).getFormatId().getValue();
-                    NodeList nl4 = runXPath("dataFormat/textFormat/simpleDelimited", 
-                                            physicalNode);
+                    NodeList nl4 = runXPath("dataFormat/textFormat/simpleDelimited", physicalNode);
                     
                     // look for CSV files
-                    if ( nl4.getLength() > 0 )
-                    {
+                    if ( nl4.getLength() > 0 ) {
                       log.debug("Found a csv format");
                       formatId.setValue("text/csv");
-                      mimeType = ObjectFormatCache.getInstance().getFormat(formatId).getFormatId().getValue();
                     }
                 }
-                else if(nl2.getLength() > 0)
-                {
+                else if (nl2.getLength() > 0) {
                     //TODO: could do a bit more parsing and refine this type more
                     log.debug("Found a binary raster format");
                     formatId.setValue("application/octet-stream");
-                    mimeType = ObjectFormatCache.getInstance().getFormat(formatId).getFormatId().getValue();              
                 }
-                else if(nl3.getLength() > 0)
-                {
+                else if (nl3.getLength() > 0) {
                     // it's possible that the mime type is in this field.  
                     // Check for it and set the object format
                     log.debug("Found an externally defined format");
                     formatId.setValue("application/octet-stream");
-                    mimeType = ObjectFormatCache.getInstance().getFormat(formatId).getFormatId().getValue();  
-                    NodeList nl5 = runXPath("dataFormat/externallyDefinedFormat/formatName", 
-                                             physicalNode);
-                    if ( nl5.getLength() > 0 )
-                    {
+                    NodeList nl5 = runXPath("dataFormat/externallyDefinedFormat/formatName", physicalNode);
+                    if ( nl5.getLength() > 0 ) {
                       Node childNode1 = nl5.item(0).getFirstChild();
                       String formatName = childNode1.getNodeValue();
                       
                       // set the object format if it exists
                       formatId.setValue(formatName);
-                      mimeType = ObjectFormatCache.getInstance().getFormat(formatId).getFormatId().getValue();  
                     }
                     
                 }
+                
+                try {
+                	mimeType = ObjectFormatCache.getInstance().getFormat(formatId).getFormatId().getValue();
+                } catch (NotFound nfe) {
+                	// we need to continue in this case, we just won't know what the "official" D1 objectformat is
+					log.error("Could not find object format for: " + formatId);
+				}
 
                 log.debug("mime type: " + mimeType); 
                 log.debug("url:       " + url);
