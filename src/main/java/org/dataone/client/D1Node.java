@@ -717,6 +717,53 @@ public abstract class D1Node {
      * @throws NotImplemented
      * @throws InvalidRequest 
      */
+    public  Identifier archive(Session session, Identifier pid)
+        throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented, InvalidRequest
+    {
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ARCHIVE);
+    	if (pid != null)
+    		url.addNextPathElement(pid.getValue());
+
+     	D1RestClient client = new D1RestClient(determineSession(session));
+
+     	Identifier identifier = null;
+    	try {
+    		InputStream is = client.doPutRequest(url.getUrl(), null);
+    		identifier = deserializeServiceType(Identifier.class, is);
+        } catch (BaseException be) {
+            if (be instanceof InvalidToken)           throw (InvalidToken) be;
+            if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
+            if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
+            if (be instanceof NotFound)               throw (NotFound) be;
+            if (be instanceof NotImplemented)         throw (NotImplemented) be;
+            if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
+            throw recastDataONEExceptionToServiceFailure(be);
+        }
+        catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+        catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
+        catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
+        catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); }
+
+        finally {
+        	setLatestRequestUrl(client.getLatestRequestUrl());
+        	client.closeIdleConnections();
+        }
+        return identifier;
+    }
+    
+    
+    /**
+     *  sets the archived flag to true on an MN or CN
+     * @param session
+     * @param pid
+     * @return Identifier
+     * @throws InvalidToken
+     * @throws ServiceFailure
+     * @throws NotAuthorized
+     * @throws NotFound
+     * @throws NotImplemented
+     * @throws InvalidRequest 
+     */
     public  Identifier delete(Session session, Identifier pid)
         throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented, InvalidRequest
     {
@@ -750,6 +797,7 @@ public abstract class D1Node {
         }
         return identifier;
     }
+
 
     /**
      * A helper function to preserve the stackTrace when catching one error and throwing a new one.
