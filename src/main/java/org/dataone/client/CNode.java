@@ -2486,6 +2486,37 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		return true;
 	}
 
+	
+    /**
+     * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#CNCore.archive">see DataONE API Reference</a> }
+     */
+    public  Identifier archive( Identifier pid)
+        throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
+    {
+        return  this.archive(D1Node.sessionFromConstructor(),  pid);
+    }
+   
+    
+    /**
+     * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#CNCore.archive.archive">see DataONE API Reference</a> }
+     */
+    public  Identifier archive(Session session, Identifier pid)
+        throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
+    {
+        Identifier identifier = null;
+    	try {
+            identifier = super.archive(session, pid);
+        } catch (InvalidRequest be) {
+            //MN should not return this, but if it does recast as ServiceFailure
+            throw new ServiceFailure("1350", be.getMessage());
+        }
+        return identifier;
+    }
+    
+    
+ 
+	
+	
     @Override
     public Identifier delete(Identifier pid) throws InvalidToken, ServiceFailure, InvalidRequest, NotAuthorized, NotFound, NotImplemented {
         return this.delete(D1Node.sessionFromConstructor(), pid);
