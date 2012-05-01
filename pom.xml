@@ -12,8 +12,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <bouncycastle.version>1.46</bouncycastle.version>
-        <d1_common_java_version>1.0.1-RC6</d1_common_java_version>
-        <d1_test_resources.version>1.0.0-RC3</d1_test_resources.version>
+        <d1_common_java_version>1.0.1-RC8-SNAPSHOT</d1_common_java_version>
+        <d1_test_resources.version>1.0.0-RC4-SNAPSHOT</d1_test_resources.version>
     </properties>
     <repositories>
         <repository>
