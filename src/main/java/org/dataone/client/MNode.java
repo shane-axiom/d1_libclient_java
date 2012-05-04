@@ -779,7 +779,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
 
     /**
-     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNReplication.getReplica">see DataONE API Reference</a> } 
+     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.getReplica">see DataONE API Reference</a> } 
      */
     public InputStream getReplica(Identifier pid)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound,
@@ -790,7 +790,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     
     
     /**
-     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNReplication.getReplica">see DataONE API Reference</a> } 
+     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.getReplica">see DataONE API Reference</a> } 
      */
     public InputStream getReplica(Session session, Identifier pid)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound,
