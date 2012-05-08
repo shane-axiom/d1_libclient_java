@@ -2518,7 +2518,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 	
     @Override
-    public Identifier delete(Identifier pid) throws InvalidToken, ServiceFailure, InvalidRequest, NotAuthorized, NotFound, NotImplemented {
-        return this.delete(D1Node.sessionFromConstructor(), pid);
+    public Identifier delete(Identifier pid) throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented {
+        return super.delete(D1Node.sessionFromConstructor(), pid);
     }
 }

@@ -765,7 +765,7 @@ public abstract class D1Node {
      * @throws InvalidRequest 
      */
     public  Identifier delete(Session session, Identifier pid)
-        throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented, InvalidRequest
+        throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
     {
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
     	if (pid != null)
@@ -783,7 +783,6 @@ public abstract class D1Node {
             if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
             if (be instanceof NotFound)               throw (NotFound) be;
             if (be instanceof NotImplemented)         throw (NotImplemented) be;
-            if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
             throw recastDataONEExceptionToServiceFailure(be);
         }
         catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
