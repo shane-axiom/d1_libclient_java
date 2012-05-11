@@ -26,6 +26,7 @@ import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.types.v1.NodeReference;
+import org.dataone.service.types.v1.Session;
 
 /**
  * The D1Client class represents a client-side implementation of the DataONE
@@ -42,11 +43,12 @@ public class D1Client {
 	 * By default returns the production context CN, defined via the property "D1Client.CN_URL".
 	 * Use of D1Client in other contexts (non-production) requires overriding or changing this 
 	 * property name.  See org.dataone.configuration.Settings class for details.
-	 *  
+	 * 
+	 * @param session - the client session to be used in connections, null uses default behavior. 
      * @return the cn
 	 * @throws ServiceFailure 
      */
-    public static CNode getCN() throws ServiceFailure {
+    public static CNode getCN(Session session) throws ServiceFailure {
         if (cn == null) {
         	// get the CN URL
             String cnUrl = Settings.getConfiguration().getString("D1Client.CN_URL");
@@ -65,11 +67,28 @@ public class D1Client {
             	cn.setNodeBaseServiceUrl(cnUrl);
         	} else {
         		// default
-                cn = new CNode(cnUrl);
+                cn = new CNode(cnUrl, session);
         	}
         }
         return cn;
     }
+    
+    
+    /**
+	 * Get the client instance of the Coordinating Node object for calling Coordinating Node services.
+	 * By default returns the production context CN, defined via the property "D1Client.CN_URL".
+	 * Use of D1Client in other contexts (non-production) requires overriding or changing this 
+	 * property name.  See org.dataone.configuration.Settings class for details.
+	 * 
+	 * Connects using the default session / certificate 
+     * @return the cn
+	 * @throws ServiceFailure 
+     */
+    public static CNode getCN() throws ServiceFailure {
+        return getCN(null);
+    }
+    
+    
     
     /**
      * Construct and return a Member Node using the base service URL for the node.
