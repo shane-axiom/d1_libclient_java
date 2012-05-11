@@ -434,7 +434,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	throws InvalidToken, InvalidRequest, ServiceFailure,
 	NotAuthorized, NotImplemented, InsufficientResources
 	{
-		return super.getLogRecords(D1Node.sessionFromConstructor(), fromDate, toDate, event, pidFilter, start, count);
+		return super.getLogRecords(this.session, fromDate, toDate, event, pidFilter, start, count);
 	}
 	
 	
@@ -492,7 +492,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	throws InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, 
 	NotImplemented, InvalidRequest
 	{
-		return reserveIdentifier(D1Node.sessionFromConstructor(), pid);
+		return reserveIdentifier(this.session, pid);
 	}
     
 	/**
@@ -512,7 +512,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		}
 		
 		// send the request
-		D1RestClient client = new D1RestClient(determineSession(session));
+		D1RestClient client = new D1RestClient(session);
 		Identifier identifier = null;
  		try {
  			InputStream is = client.doPostRequest(url.getUrl(),smpe);
@@ -548,7 +548,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	public  Identifier generateIdentifier(String scheme, String fragment)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented, InvalidRequest
 	{
-		return super.generateIdentifier(D1Node.sessionFromConstructor(), scheme, fragment);
+		return super.generateIdentifier(this.session, scheme, fragment);
 	}
 	
 	
@@ -569,7 +569,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	throws InvalidToken, ServiceFailure,  NotFound, NotAuthorized, 
 	NotImplemented, IdentifierNotUnique
 	{
-		return hasReservation(D1Node.sessionFromConstructor(), subject, pid);
+		return hasReservation(this.session, subject, pid);
 	}
 	/**
 	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNCore.hasReservation">see DataONE API Reference</a> } 
@@ -590,7 +590,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		}
     	
 		// send the request
-		D1RestClient client = new D1RestClient(determineSession(session));
+		D1RestClient client = new D1RestClient(session);
 		
 		try {
 			InputStream is = client.doGetRequest(url.getUrl());
@@ -628,7 +628,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	throws InvalidToken, ServiceFailure,NotAuthorized, IdentifierNotUnique, UnsupportedType,
 	InsufficientResources, InvalidSystemMetadata, NotImplemented, InvalidRequest
 	{
-		return create(D1Node.sessionFromConstructor(), pid, object, sysmeta);
+		return create(this.session, pid, object, sysmeta);
 	}
 	
 	/**
@@ -669,7 +669,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e);	
 		}
 
-        D1RestClient client = new D1RestClient(determineSession(session));
+        D1RestClient client = new D1RestClient(session);
         Identifier identifier = null;
 
         try {
@@ -710,7 +710,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	throws NotImplemented, NotAuthorized,ServiceFailure, InvalidRequest, 
 	InvalidSystemMetadata, InvalidToken
 	{
-		return registerSystemMetadata(D1Node.sessionFromConstructor(), pid,sysmeta);
+		return registerSystemMetadata(this.session, pid,sysmeta);
 	}
 	
 	
@@ -737,7 +737,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient(determineSession(session));
+		D1RestClient client = new D1RestClient(session);
 
 		Identifier identifier = null;
 		try {
@@ -775,7 +775,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throws NotImplemented, NotFound, NotAuthorized, ServiceFailure,
 			InvalidRequest, InvalidToken, VersionMismatch 
 			{
-		return setObsoletedBy(D1Node.sessionFromConstructor(), pid, obsoletedByPid, serialVersion);
+		return setObsoletedBy(this.session, pid, obsoletedByPid, serialVersion);
 	}
 
 	
@@ -801,7 +801,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     		mpe.addParamPart("obsoletedByPid", obsoletedByPid.getValue());
 		mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
 
-		D1RestClient client = new D1RestClient(determineSession(session));
+		D1RestClient client = new D1RestClient(session);
 
 		try {
 			InputStream is = client.doPutRequest(url.getUrl(), mpe);
@@ -866,7 +866,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented,
 			ServiceFailure 
 	{
-		return super.listObjects(D1Node.sessionFromConstructor(),fromDate,toDate,formatid,replicaStatus,start,count);
+		return super.listObjects(this.session,fromDate,toDate,formatid,replicaStatus,start,count);
 	}
 
 	
@@ -887,7 +887,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	public InputStream get(Identifier pid)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
 	{
-			return get(D1Node.sessionFromConstructor(), pid);
+			return get(this.session, pid);
 	}
 	
 	public InputStream get(Session session, Identifier pid)
@@ -905,7 +905,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	public SystemMetadata getSystemMetadata(Identifier pid)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
 	{
-		return super.getSystemMetadata(D1Node.sessionFromConstructor(), pid);
+		return super.getSystemMetadata(this.session, pid);
 	}
 	
 	public SystemMetadata getSystemMetadata(Session session, Identifier pid)
@@ -922,7 +922,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     public DescribeResponse describe(Identifier pid)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound
     {
-    	return super.describe(D1Node.sessionFromConstructor(),pid);
+    	return super.describe(this.session,pid);
     }
     
     /**
@@ -941,7 +941,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	public ObjectLocationList resolve(Identifier pid)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
 	{
-		return resolve(D1Node.sessionFromConstructor(), pid);
+		return resolve(this.session, pid);
 	}
     
     /**
@@ -957,7 +957,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         url.addNextPathElement(pid.getValue());
 
 		// send the request
-		D1RestClient client = new D1RestClient(determineSession(session));
+		D1RestClient client = new D1RestClient(session);
 		client.getHttpClient().getParams().setParameter(ClientPNames.HANDLE_REDIRECTS, false);
 		ObjectLocationList oll = null;
 
@@ -994,7 +994,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	public Checksum getChecksum(Identifier pid)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
 	{
-		return getChecksum(D1Node.sessionFromConstructor(), pid);
+		return getChecksum(this.session, pid);
 	}
 	/**
 	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.getChecksum">see DataONE API Reference</a> } 
@@ -1010,7 +1010,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	url.addNextPathElement(pid.getValue());
 
 		// send the request
-		D1RestClient client = new D1RestClient(determineSession(session));
+		D1RestClient client = new D1RestClient(session);
 		Checksum checksum = null;
 
 		try {
@@ -1058,7 +1058,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest, 
 	NotImplemented
 	{
-		return search(D1Node.sessionFromConstructor(), queryType, queryD1url);
+		return search(this.session, queryType, queryD1url);
 	}
 	
 	
@@ -1117,7 +1117,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest, 
 			NotImplemented
 	{
-		return search(D1Node.sessionFromConstructor(), queryType, query);
+		return search(this.session, queryType, query);
 	}
 	
 	/**
@@ -1154,7 +1154,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         
         String finalUrl = url.getUrl() + "/" + query;
         
-        D1RestClient client = new D1RestClient(determineSession(session));
+        D1RestClient client = new D1RestClient(session);
 
         ObjectList objectList = null;
         try {
@@ -1193,7 +1193,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	throws InvalidToken, ServiceFailure, NotFound, NotAuthorized, NotImplemented, 
 	InvalidRequest, VersionMismatch
 	{
-		return setRightsHolder(D1Node.sessionFromConstructor(), pid, userId, serialVersion);
+		return setRightsHolder(this.session, pid, userId, serialVersion);
 	}
 	
 	
@@ -1217,7 +1217,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
 
 		// send the request
-		D1RestClient client = new D1RestClient(determineSession(session));
+		D1RestClient client = new D1RestClient(session);
 		Identifier identifier = null;
 
 		try {
@@ -1255,7 +1255,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	throws ServiceFailure, InvalidToken, NotFound, NotAuthorized, 
 	NotImplemented, InvalidRequest
 	{
-		return super.isAuthorized(D1Node.sessionFromConstructor(), pid, permission);
+		return super.isAuthorized(this.session, pid, permission);
 	}
 	
 	/**
@@ -1277,7 +1277,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	throws InvalidToken, NotFound, NotImplemented, NotAuthorized, 
 		ServiceFailure, InvalidRequest, VersionMismatch
 	{
-		return setAccessPolicy(D1Node.sessionFromConstructor(), pid, accessPolicy, serialVersion);
+		return setAccessPolicy(this.session, pid, accessPolicy, serialVersion);
 	}
 	
 	
@@ -1304,7 +1304,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient(determineSession(session));
+		D1RestClient client = new D1RestClient(session);
 
 		try {
 			InputStream is = client.doPutRequest(url.getUrl(),mpe);
@@ -1344,7 +1344,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throws ServiceFailure, NotAuthorized, IdentifierNotUnique, InvalidCredentials, 
 			NotImplemented, InvalidRequest, InvalidToken
 	{
-		return registerAccount(D1Node.sessionFromConstructor(), person); 
+		return registerAccount(this.session, person); 
 	}
 	
 	
@@ -1366,7 +1366,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient(determineSession(session));
+		D1RestClient client = new D1RestClient(session);
 
 		Subject subject = null;
 		try {
@@ -1405,7 +1405,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throws ServiceFailure, NotAuthorized, InvalidCredentials, 
 			NotImplemented, InvalidRequest, InvalidToken, NotFound
 	{
-		return updateAccount(D1Node.sessionFromConstructor(), person);
+		return updateAccount(this.session, person);
 	}
 	
 	
@@ -1433,7 +1433,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient(determineSession(session));
+		D1RestClient client = new D1RestClient(session);
 
 		Subject subject = null;
 		try {
@@ -1472,7 +1472,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throws ServiceFailure, NotAuthorized, NotImplemented, InvalidToken, 
 			InvalidRequest
 	{
-		return verifyAccount(D1Node.sessionFromConstructor(), subject);
+		return verifyAccount(this.session, subject);
 	}
 	
 	/**
@@ -1488,7 +1488,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		}
 		url.addNextPathElement(subject.getValue());
 		
-        D1RestClient client = new D1RestClient(determineSession(session));
+        D1RestClient client = new D1RestClient(session);
 
 		try {
 			InputStream is = client.doPutRequest(url.getUrl(),null);
@@ -1523,7 +1523,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	public SubjectInfo getSubjectInfo(Subject subject)
 	throws ServiceFailure, NotAuthorized, NotImplemented, NotFound, InvalidToken
 	{
-		return getSubjectInfo(D1Node.sessionFromConstructor(), subject);
+		return getSubjectInfo(this.session, subject);
 	}
 	
 	/**
@@ -1537,7 +1537,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw new NotFound("0000","'subject' cannot be null");
 		url.addNextPathElement(subject.getValue());
 
-		D1RestClient client = new D1RestClient(determineSession(session));
+		D1RestClient client = new D1RestClient(session);
 		SubjectInfo subjectInfo = null;
 
 		try {
@@ -1573,7 +1573,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			Integer count) throws InvalidRequest, ServiceFailure, InvalidToken, NotAuthorized, 
 			NotImplemented
 	{
-		return listSubjects(D1Node.sessionFromConstructor(), query, status, start, count);
+		return listSubjects(this.session, query, status, start, count);
 	}
 	
 	
@@ -1590,7 +1590,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	url.addNonEmptyParamPair("start", start);
     	url.addNonEmptyParamPair("count", count);
     	
-		D1RestClient client = new D1RestClient(determineSession(session));
+		D1RestClient client = new D1RestClient(session);
 		SubjectInfo subjectInfo = null;
 
 		try {
@@ -1627,7 +1627,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
 			NotImplemented, InvalidRequest, IdentifierNotUnique
 	{
-		return mapIdentity(D1Node.sessionFromConstructor(), primarySubject, secondarySubject);
+		return mapIdentity(this.session, primarySubject, secondarySubject);
 	}
 	
 	
@@ -1646,7 +1646,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	if (secondarySubject != null)
     		mpe.addParamPart("secondarySubject", secondarySubject.getValue());
 			
-		D1RestClient client = new D1RestClient(determineSession(session));
+		D1RestClient client = new D1RestClient(session);
 
 		try {
 			InputStream is = client.doPostRequest(url.getUrl(),mpe);
@@ -1684,7 +1684,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
 			NotImplemented, InvalidRequest, IdentifierNotUnique
 	{
-		return requestMapIdentity(D1Node.sessionFromConstructor(), subject);
+		return requestMapIdentity(this.session, subject);
 	}
 	
 	
@@ -1700,7 +1700,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		SimpleMultipartEntity mpe = new SimpleMultipartEntity();
 		mpe.addParamPart("subject", subject.getValue());
 
-		D1RestClient client = new D1RestClient(determineSession(session));
+		D1RestClient client = new D1RestClient(session);
 
 		try {
 			InputStream is = client.doPostRequest(url.getUrl(), mpe);
@@ -1738,7 +1738,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     public SubjectInfo getPendingMapIdentity(Subject subject) 
         throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented 
     {  	
-    	return getPendingMapIdentity(D1Node.sessionFromConstructor(), subject);
+    	return getPendingMapIdentity(this.session, subject);
     }
     
     
@@ -1751,7 +1751,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING_PENDING);
     	url.addNextPathElement(subject.getValue());
     	
-		D1RestClient client = new D1RestClient(determineSession(session));
+		D1RestClient client = new D1RestClient(session);
 		SubjectInfo subjectInfo = null;
 
 		try {
@@ -1788,7 +1788,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
 			NotImplemented
 	{
-		return confirmMapIdentity(D1Node.sessionFromConstructor(), subject) ;
+		return confirmMapIdentity(this.session, subject) ;
 	}
 	
 	
@@ -1802,7 +1802,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING_PENDING);
     	url.addNextPathElement(subject.getValue());
 
-		D1RestClient client = new D1RestClient(determineSession(session));
+		D1RestClient client = new D1RestClient(session);
 
 		try {
 			InputStream is = client.doPutRequest(url.getUrl(), null);
@@ -1839,7 +1839,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
 			NotImplemented
 	{
-		return denyMapIdentity(D1Node.sessionFromConstructor(), subject);
+		return denyMapIdentity(this.session, subject);
 	}
 	
 	
@@ -1852,7 +1852,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	{
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING_PENDING);
     	url.addNextPathElement(subject.getValue());
-		D1RestClient client = new D1RestClient(determineSession(session));
+		D1RestClient client = new D1RestClient(session);
 		
 		try {
 			InputStream is = client.doDeleteRequest(url.getUrl());
@@ -1889,7 +1889,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
 			NotImplemented
 	{
-		return removeMapIdentity(D1Node.sessionFromConstructor(), subject);
+		return removeMapIdentity(this.session, subject);
 	}
 	
 	
@@ -1902,7 +1902,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	{
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING);
     	url.addNextPathElement(subject.getValue());
-		D1RestClient client = new D1RestClient(determineSession(session));
+		D1RestClient client = new D1RestClient(session);
 
 		try {
 			InputStream is = client.doDeleteRequest(url.getUrl());
@@ -1937,7 +1937,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	public Subject createGroup(Group group) 
 	throws ServiceFailure, InvalidToken, NotAuthorized, NotImplemented, IdentifierNotUnique
 	{
-		return createGroup(D1Node.sessionFromConstructor(), group);
+		return createGroup(this.session, group);
 	}
 	
 	/**
@@ -1958,7 +1958,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		}
 
 		// send the request
-		D1RestClient client = new D1RestClient(determineSession(session));
+		D1RestClient client = new D1RestClient(session);
 		Subject subject = null;
 
 		try {
@@ -1995,7 +1995,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		throws ServiceFailure, InvalidToken, 
 			NotAuthorized, NotFound, NotImplemented, InvalidRequest
 	{
-		return updateGroup(D1Node.sessionFromConstructor(), group);
+		return updateGroup(this.session, group);
 	}
 	
 	
@@ -2017,7 +2017,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient(determineSession(session));
+		D1RestClient client = new D1RestClient(session);
 
 		try {
 			InputStream is = client.doPutRequest(url.getUrl(),mpe);
@@ -2055,7 +2055,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	public boolean updateNodeCapabilities(NodeReference nodeid, Node node) 
 	throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, NotFound, InvalidToken
 	{
-		return updateNodeCapabilities(D1Node.sessionFromConstructor(), nodeid, node);
+		return updateNodeCapabilities(this.session, nodeid, node);
 	}
 	
 	
@@ -2078,7 +2078,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient(determineSession(session));
+		D1RestClient client = new D1RestClient(session);
 
 		try {
 			InputStream is = client.doPutRequest(url.getUrl(),mpe);
@@ -2115,7 +2115,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, 
 	IdentifierNotUnique, InvalidToken
 	{
-		return register(D1Node.sessionFromConstructor(), node);
+		return register(this.session, node);
 	}
 	
 	/**
@@ -2136,7 +2136,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient(determineSession(session));
+		D1RestClient client = new D1RestClient(session);
 
 		NodeReference nodeRef = null;
 		try {
@@ -2177,7 +2177,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 					throws ServiceFailure, NotImplemented, InvalidToken, NotAuthorized, 
 					InvalidRequest, NotFound
 	{
-		return setReplicationStatus(D1Node.sessionFromConstructor(), pid, nodeRef, status, failure);
+		return setReplicationStatus(this.session, pid, nodeRef, status, failure);
 	}
 	
 	
@@ -2206,7 +2206,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
             throw recastClientSideExceptionToServiceFailure(e1);        
         }
 
-		D1RestClient client = new D1RestClient(determineSession(session));
+		D1RestClient client = new D1RestClient(session);
 
 		try {
 			InputStream is = client.doPutRequest(url.getUrl(),mpe);
@@ -2244,7 +2244,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		throws NotImplemented, NotFound, NotAuthorized, ServiceFailure, 
 		InvalidRequest, InvalidToken, VersionMismatch
 	{
-		return setReplicationPolicy(D1Node.sessionFromConstructor(), pid, policy, serialVersion);
+		return setReplicationPolicy(this.session, pid, policy, serialVersion);
 	}
 	
 	
@@ -2270,7 +2270,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient(determineSession(session));
+		D1RestClient client = new D1RestClient(session);
 
 		try {
 			InputStream is = client.doPutRequest(url.getUrl(),mpe);
@@ -2309,7 +2309,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	throws NotImplemented, NotAuthorized, InvalidToken, ServiceFailure, 
 		NotFound, InvalidRequest
 	{
-		return isNodeAuthorized(D1Node.sessionFromConstructor(), targetNodeSubject, pid);
+		return isNodeAuthorized(this.session, targetNodeSubject, pid);
 	}
 	
 	
@@ -2327,7 +2327,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         if (targetNodeSubject != null)
         	url.addNonEmptyParamPair("targetNodeSubject", targetNodeSubject.getValue());
 
-        D1RestClient client = new D1RestClient(determineSession(session));
+        D1RestClient client = new D1RestClient(session);
 
 		try {
 			InputStream is = client.doGetRequest(url.getUrl());
@@ -2365,7 +2365,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	throws NotImplemented, NotAuthorized, ServiceFailure, NotFound, 
 		InvalidRequest, InvalidToken, VersionMismatch
 	{
-		return updateReplicationMetadata(D1Node.sessionFromConstructor(), pid, replicaMetadata, serialVersion);
+		return updateReplicationMetadata(this.session, pid, replicaMetadata, serialVersion);
 	}
 
 	
@@ -2393,7 +2393,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient(determineSession(session));
+		D1RestClient client = new D1RestClient(session);
 	
 		try {
 			InputStream is = client.doPutRequest(url.getUrl(),mpe);
@@ -2432,7 +2432,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented,
 			VersionMismatch, InvalidRequest 
 	{
-		return deleteReplicationMetadata(D1Node.sessionFromConstructor(), pid,nodeId, serialVersion);
+		return deleteReplicationMetadata(this.session, pid,nodeId, serialVersion);
 	}
 	
 	
@@ -2456,7 +2456,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			mpe.addParamPart("nodeId", nodeId.getValue());
 		mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
 
-		D1RestClient client = new D1RestClient(determineSession(session));
+		D1RestClient client = new D1RestClient(session);
 
 		try {
 			InputStream is = client.doPutRequest(url.getUrl(),mpe);
@@ -2493,7 +2493,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     public  Identifier archive( Identifier pid)
         throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
     {
-        return  super.archive(D1Node.sessionFromConstructor(),  pid);
+        return  super.archive(this.session,  pid);
     }
    
     
@@ -2511,6 +2511,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
     @Override
     public Identifier delete(Identifier pid) throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented {
-        return super.delete(D1Node.sessionFromConstructor(), pid);
+        return super.delete(this.session, pid);
     }
 }
