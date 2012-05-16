@@ -55,6 +55,7 @@ import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 import javax.security.auth.x500.X500Principal;
 import javax.servlet.http.HttpServletRequest;
@@ -108,6 +109,8 @@ public class CertificateManager {
     private Map<String, X509Certificate> certificates;
     
     private Map<String, PrivateKey> keys;
+
+	private boolean useDefaultTruststore = true;;
     
     /*
      * Some useful links to background info:
@@ -129,6 +132,7 @@ public class CertificateManager {
     	try {
 	    	keyStorePassword = Settings.getConfiguration().getString("certificate.keystore.password");
 	    	keyStoreType = Settings.getConfiguration().getString("certificate.keystore.type", KeyStore.getDefaultType());
+	    	useDefaultTruststore = Settings.getConfiguration().getBoolean("certificate.truststore.useDefault", true);
 	    	certificates = new HashMap<String, X509Certificate>();
 	    	keys = new HashMap<String, PrivateKey>();
 	    	
@@ -490,20 +494,8 @@ public class CertificateManager {
         // create SSL context
         SSLContext ctx = SSLContext.getInstance("TLS");
         
-        // use a very liberal trust manager for trusting the server
-        // TODO: check server trust policy
-        X509TrustManager tm = new X509TrustManager() {
-            public void checkClientTrusted(X509Certificate[] xcs, String string) throws CertificateException {
-            	log.debug("checkClientTrusted - " + string);
-            }
-            public void checkServerTrusted(X509Certificate[] xcs, String string) throws CertificateException {
-            	log.debug("checkServerTrusted - " + string);
-            }
-            public X509Certificate[] getAcceptedIssuers() {
-            	log.debug("getAcceptedIssuers");
-            	return null;
-            }
-        };
+        // based on config options, we get an appropriate truststore
+        X509TrustManager tm = getTrustManager();
         
         // specify the client key manager
         KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
@@ -512,9 +504,62 @@ public class CertificateManager {
         
         // initialize the context
         ctx.init(keyManagers, new TrustManager[]{tm}, new SecureRandom());
-        socketFactory = new SSLSocketFactory(ctx, SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+        if (useDefaultTruststore) {
+        	socketFactory = new SSLSocketFactory(ctx);
+        } else {
+	        //socketFactory = new SSLSocketFactory(ctx, SSLSocketFactory.STRICT_HOSTNAME_VERIFIER);
+	        //socketFactory = new SSLSocketFactory(ctx, SSLSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
+	        socketFactory = new SSLSocketFactory(ctx, SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+        }
         
         return socketFactory;
+    }
+    
+    /**
+     * Based on configuration option, 'certificate.truststore.useDefault', returns either the 
+     * default Java truststore or the allow-all implementation.
+     * @return X509TrustManager for verifying server identity
+     * @throws NoSuchAlgorithmException
+     * @throws KeyStoreException
+     */
+    private X509TrustManager getTrustManager() throws NoSuchAlgorithmException, KeyStoreException {
+    	
+    	if (useDefaultTruststore) {
+    		// this is the Java truststore and is administered outside of the code
+	    	TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());  
+		    trustManagerFactory.init((KeyStore) null);  
+		      
+		    log.debug("JVM Default Trust Managers:");  
+		    for (TrustManager trustManager : trustManagerFactory.getTrustManagers()) {  
+		        log.debug(trustManager);  
+		        if (trustManager instanceof X509TrustManager) {  
+		            X509TrustManager x509TrustManager = (X509TrustManager) trustManager;  
+		            log.debug("Accepted issuers count : " + x509TrustManager.getAcceptedIssuers().length);
+		            //for (X509Certificate issuer: x509TrustManager.getAcceptedIssuers()) {
+		            //	log.debug("trusted issuer: " + issuer.getSubjectDN().toString());
+		            //}
+		            return x509TrustManager;
+		        }  
+		    }
+		    return null;
+    	} else {
+	    
+		    // otherwise we return a very liberal one
+	        X509TrustManager tm = new X509TrustManager() {
+	            public void checkClientTrusted(X509Certificate[] xcs, String string) throws CertificateException {
+	            	log.debug("checkClientTrusted - " + string);
+	            }
+	            public void checkServerTrusted(X509Certificate[] xcs, String string) throws CertificateException {
+	            	log.debug("checkServerTrusted - " + string);
+	            }
+	            public X509Certificate[] getAcceptedIssuers() {
+	            	log.debug("getAcceptedIssuers");
+	            	return null;
+	            }
+	        };
+	    
+	        return tm;
+    	}
     }
     
     /**
