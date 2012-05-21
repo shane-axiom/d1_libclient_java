@@ -237,12 +237,15 @@ public class DataoneEMLParser
                     
                 }
                 
-                try {
-                	mimeType = ObjectFormatCache.getInstance().getFormat(formatId).getFormatId().getValue();
-                } catch (NotFound nfe) {
-                	// we need to continue in this case, we just won't know what the "official" D1 objectformat is
-					log.error("Could not find object format for: " + formatId);
-				}
+                // make sure we have a possible format to look up
+                if (formatId != null && formatId.getValue() != null) {
+	                try {
+	                	mimeType = ObjectFormatCache.getInstance().getFormat(formatId).getFormatId().getValue();
+	                } catch (NotFound nfe) {
+	                	// we need to continue in this case, we just won't know what the "official" D1 objectformat is
+						log.error("Could not find object format for: " + formatId);
+					}
+                }
 
                 log.debug("mime type: " + mimeType); 
                 log.debug("url:       " + url);
