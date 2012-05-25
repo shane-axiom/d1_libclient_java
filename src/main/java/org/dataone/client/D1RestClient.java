@@ -166,12 +166,10 @@ public class D1RestClient {
 				subjectString = session.getSubject().getValue();
 			}
 			socketFactory = CertificateManager.getInstance().getSSLSocketFactory(subjectString);
-		} catch (FileNotFoundException e) {
-			// these are somewhat expected for anonymous d1 client use
-			log.warn("Could not set up SSL connection for client - likely because the certificate could not be located: " + e.getMessage());
 		} catch (Exception e) {
 			// this is likely more severe
-			log.warn("Funky SSL going on: " + e.getClass() + ":: " + e.getMessage());
+			log.warn("Exception from CertificateManager at SSL setup - client will be anonymous: " + 
+					e.getClass() + ":: " + e.getMessage());
 		}
 		try {
 			//443 is the default port, this value is overridden if explicitly set in the URL
