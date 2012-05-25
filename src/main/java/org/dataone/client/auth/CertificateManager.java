@@ -488,7 +488,7 @@ public class CertificateManager {
     		keyStore = getKeyStore(subjectString);
 		} catch (FileNotFoundException e) {
 			// these are somewhat expected for anonymous d1 client use
-			log.warn("Could not set up client side authentication - likely because the certificate could not be located: " + e.getMessage());
+			log.warn("Client certificate could not be located. Setting up SocketFactory without it." + e.getMessage());
 		}
        
         // create SSL context
