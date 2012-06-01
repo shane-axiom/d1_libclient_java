@@ -69,6 +69,17 @@ import org.jibx.runtime.JiBXException;
 /**
  * An abstract node class that contains base functionality shared between 
  * Coordinating Node and Member Node implementations. 
+ * 
+ * Various methods may set their own timeouts by use of Settings.Configuration properties
+ * or by calling setDefaultSoTimeout.  Settings.Configuration properties override
+ * any value of the DefaultSoTimeout.  Timeouts are always represented in milliseconds
+ * 
+ * timeout properties recognized:
+ * D1Client.D1Node.listObjects.timeout
+ * D1Client.D1Node.getLogRecords.timeout
+ * D1Client.D1Node.get.timeout
+ * D1Client.D1Node.getSystemMetadata.timeout
+ * 
  */
 public abstract class D1Node {
 
@@ -85,6 +96,8 @@ public abstract class D1Node {
 
 	private String lastRequestUrl = null;
     
+    /** default Socket timeout in milliseconds **/
+    private Integer defaultSoTimeout = 30000;
 	/**
      * Useful for debugging to see what the last call was
      * @return
@@ -251,6 +264,8 @@ public abstract class D1Node {
 		
         // send the request
         D1RestClient client = new D1RestClient(session);
+        client.setTimeouts(Settings.getConfiguration()
+			.getInteger("D1Client.D1Node.listObjects.timeout", getDefaultSoTimeout()));
         ObjectList objectList = null;
 
         try {
@@ -307,6 +322,8 @@ public abstract class D1Node {
     	
 		// send the request
 		D1RestClient client = new D1RestClient(session);
+                client.setTimeouts(Settings.getConfiguration()
+			.getInteger("D1Client.D1Node.getLogRecords.timeout", getDefaultSoTimeout()));
 		Log log = null;
 
 		try {
@@ -370,7 +387,8 @@ public abstract class D1Node {
     	url.addNextPathElement(pid.getValue());
 
 		D1RestClient client = new D1RestClient(session);
-		
+                client.setTimeouts(Settings.getConfiguration()
+                .getInteger("D1Client.D1Node.get.timeout", getDefaultSoTimeout()));
         try {
         	byte[] bytes = IOUtils.toByteArray(client.doGetRequest(url.getUrl()));
         	is = new ByteArrayInputStream(bytes); 
@@ -445,7 +463,8 @@ public abstract class D1Node {
 			url.addNextPathElement(pid.getValue());
 
 		D1RestClient client = new D1RestClient(session);
-		
+		client.setTimeouts(Settings.getConfiguration()
+                    .getInteger("D1Client.D1Node.getSystemMetadata.timeout", getDefaultSoTimeout()));
 		InputStream is = null;
 		SystemMetadata sysmeta = null;
 		
@@ -826,4 +845,13 @@ public abstract class D1Node {
                     "Could not deserialize the " + domainClass.getCanonicalName() + ": " + e.getMessage());
 		}
 	}
+
+    public Integer getDefaultSoTimeout() {
+        return defaultSoTimeout;
+    }
+
+    public void setDefaultSoTimeout(Integer defaultSoTimeout) {
+        this.defaultSoTimeout = defaultSoTimeout;
+    }
+        
 }
