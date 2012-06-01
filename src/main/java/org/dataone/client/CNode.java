@@ -113,6 +113,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	private long lastNodeListRefreshTimeMS = 0;
     private Integer nodelistRefreshIntervalSeconds = 2 * 60;
 	
+    private static final String REPLICATION_TIMEOUT_PROPERTY = "D1Client.CNode.replication.timeout";
 	
 	/**
 	 * Construct a Coordinating Node, passing in the base url for node services. The CN
@@ -2227,7 +2228,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         }
 
 		D1RestClient client = new D1RestClient(session);
-
+        client.setTimeouts(Settings.getConfiguration().getInteger(
+                REPLICATION_TIMEOUT_PROPERTY, getDefaultSoTimeout()));
 		try {
 			InputStream is = client.doPutRequest(url.getUrl(),mpe);
 			if (is != null) 
@@ -2291,7 +2293,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		}
 
 		D1RestClient client = new D1RestClient(session);
-
+        client.setTimeouts(Settings.getConfiguration().getInteger(
+                REPLICATION_TIMEOUT_PROPERTY, getDefaultSoTimeout()));
 		try {
 			InputStream is = client.doPutRequest(url.getUrl(),mpe);
 			if (is != null) 
@@ -2414,7 +2417,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		}
 
 		D1RestClient client = new D1RestClient(session);
-	
+        client.setTimeouts(Settings.getConfiguration().getInteger(
+                REPLICATION_TIMEOUT_PROPERTY,
+                getDefaultSoTimeout()));
 		try {
 			InputStream is = client.doPutRequest(url.getUrl(),mpe);
 			if (is != null)
@@ -2477,7 +2482,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
 
 		D1RestClient client = new D1RestClient(session);
-
+        client.setTimeouts(Settings.getConfiguration().getInteger(
+                REPLICATION_TIMEOUT_PROPERTY, getDefaultSoTimeout()));
 		try {
 			InputStream is = client.doPutRequest(url.getUrl(),mpe);
 			if (is != null)
