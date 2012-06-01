@@ -29,6 +29,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpException;
 import org.apache.http.client.ClientProtocolException;
+import org.dataone.configuration.Settings;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.IdentifierNotUnique;
@@ -82,6 +83,20 @@ import org.jibx.runtime.JiBXException;
  * Types.OctectStream - java.io.InputStream
  * unsignedlong - we use long to keep to a native type, although only half capacity of unsigned
  * Types.DateTime - java.util.Date
+ * 
+ * Various methods may set their own timeouts by use of Settings.Configuration properties
+ * or by calling setDefaultSoTimeout.  Settings.Configuration properties override
+ * any value of the DefaultSoTimeout.  Timeouts are always represented in milliseconds
+ * 
+ * timeout properties recognized:
+ * D1Client.MNode.create.timeout
+ * D1Client.MNode.update.timeout
+ * D1Client.MNode.replicate.timeout
+ * D1Client.MNode.getReplica.timeout
+ * D1Client.D1Node.listObjects.timeout
+ * D1Client.D1Node.getLogRecords.timeout
+ * D1Client.D1Node.get.timeout
+ * D1Client.D1Node.getSystemMetadata.timeout
  * 
  *  @author Rob Nahf
  */
@@ -503,6 +518,8 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
     	
     	D1RestClient client = new D1RestClient(session);
+        client.setTimeouts(Settings.getConfiguration()
+			.getInteger("D1Client.MNode.create.timeout", getDefaultSoTimeout()));
     	Identifier identifier = null;
 
     	try {
@@ -572,6 +589,8 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 		}
     	  	
     	D1RestClient client = new D1RestClient(session);
+        client.setTimeouts(Settings.getConfiguration()
+			.getInteger("D1Client.MNode.update.timeout", getDefaultSoTimeout()));
     	Identifier identifier = null;
     	
     	try {
@@ -735,6 +754,8 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 		}
     	
     	D1RestClient client = new D1RestClient(session);
+        client.setTimeouts(Settings.getConfiguration()
+			.getInteger("D1Client.MNode.replicate.timeout", getDefaultSoTimeout()));
     	InputStream is = null;
     	try {
 			is = client.doPostRequest(url.getUrl(),smpe);
@@ -788,6 +809,8 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 
         // send the request
         D1RestClient client = new D1RestClient(session);
+                client.setTimeouts(Settings.getConfiguration()
+			.getInteger("D1Client.MNode.getReplica.timeout", getDefaultSoTimeout()));
         ByteArrayInputStream bais = null;
         try {
         	byte[] bytes = IOUtils.toByteArray(client.doGetRequest(url.getUrl()));
