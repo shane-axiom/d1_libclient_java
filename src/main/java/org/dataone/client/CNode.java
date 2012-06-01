@@ -88,6 +88,21 @@ import org.jibx.runtime.JiBXException;
  * information for performing baseUrl lookups and the reverse. The cache expiration
  * is controlled by the property "CNode.nodemap.cache.refresh.interval.seconds" and
  * is configured to 1 hour
+ * 
+ * 
+ * Various methods may set their own timeouts by use of Settings.Configuration properties
+ * or by calling setDefaultSoTimeout.  Settings.Configuration properties override
+ * any value of the DefaultSoTimeout.  Timeouts are always represented in milliseconds
+ * 
+ * timeout properties recognized:
+ * D1Client.CNode.create.timeout
+ * D1Client.CNode.registerSystemMetadata.timeout
+ * D1Client.CNode.search.timeout
+ * D1Client.D1Node.listObjects.timeout
+ * D1Client.D1Node.getLogRecords.timeout
+ * D1Client.D1Node.get.timeout
+ * D1Client.D1Node.getSystemMetadata.timeout
+ * 
  */
 public class CNode extends D1Node 
 implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplication 
@@ -279,6 +294,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		// send the request
 		D1RestClient client = new D1RestClient();
+                
 		ObjectFormatList formatList = null;
 		
 		try {			
@@ -670,6 +686,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		}
 
         D1RestClient client = new D1RestClient(session);
+        client.setTimeouts(Settings.getConfiguration()
+			.getInteger("D1Client.CNode.create.timeout", getDefaultSoTimeout()));
         Identifier identifier = null;
 
         try {
@@ -738,7 +756,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		}
 
 		D1RestClient client = new D1RestClient(session);
-
+                client.setTimeouts(Settings.getConfiguration()
+			.getInteger("D1Client.CNode.registerSystemMetadata.timeout", getDefaultSoTimeout()));
 		Identifier identifier = null;
 		try {
 			InputStream is = client.doPostRequest(url.getUrl(),mpe);
@@ -1155,7 +1174,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         String finalUrl = url.getUrl() + "/" + query;
         
         D1RestClient client = new D1RestClient(session);
-
+        client.setTimeouts(Settings.getConfiguration()
+			.getInteger("D1Client.CNode.search.timeout", getDefaultSoTimeout()));
         ObjectList objectList = null;
         try {
             InputStream is = client.doGetRequest(finalUrl);
