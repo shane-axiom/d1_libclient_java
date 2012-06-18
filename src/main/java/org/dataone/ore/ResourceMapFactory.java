@@ -113,8 +113,8 @@ public class ResourceMapFactory {
 		throws OREException, URISyntaxException {
 		
 		// create the resource map and the aggregation
-		// FIXME: more appropriate aggregation id
-		Aggregation aggregation = OREFactory.createAggregation(new URI("ore://d1.aggregation"));
+		// NOTE: use distinct, but related URI for the aggregation
+		Aggregation aggregation = OREFactory.createAggregation(new URI(D1_URI_PREFIX + resourceMapId.getValue() + "#aggregation"));
 		ResourceMap resourceMap = aggregation.createResourceMap(new URI(D1_URI_PREFIX + resourceMapId.getValue()));
 		
 		Agent creator = OREFactory.createAgent();
