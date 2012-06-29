@@ -42,14 +42,14 @@ public class ResourceMapFactoryTest {
 		
 		try {
 			Identifier resourceMapId = new Identifier();
-			resourceMapId.setValue("map.1.1");
+			resourceMapId.setValue("doi://1234/AA/map.1.1");
 			Identifier metadataId = new Identifier();
-			metadataId.setValue("meta.1.1");
+			metadataId.setValue("doi://1234/AA/meta.1.1");
 			List<Identifier> dataIds = new ArrayList<Identifier>();
 			Identifier dataId = new Identifier();
-			dataId.setValue("data.1.1");
+			dataId.setValue("doi://1234/AA/data.1.1");
 			Identifier dataId2 = new Identifier();
-			dataId2.setValue("data.2.1");
+			dataId2.setValue("doi://1234/AA/data.2.1");
 			dataIds.add(dataId);
 			dataIds.add(dataId2);
 			Map<Identifier, List<Identifier>> idMap = new HashMap<Identifier, List<Identifier>>();
