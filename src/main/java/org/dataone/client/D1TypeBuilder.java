@@ -53,6 +53,23 @@ public class D1TypeBuilder {
 		return id;
 	}
 	
+	/**
+	 * Validates the identifier checking for any invalid characters
+	 * The only rule currently is no whitespace.
+	 * @param identifier
+	 * @return true if the identifier is valid
+	 */
+	public static boolean isIdentifierValid(Identifier identifier)
+	{
+		
+		String whiteSpaceRegex = "\\s";
+		if (identifier.getValue().matches(whiteSpaceRegex)) {
+			return false;
+		}
+		
+		return true;
+	}
+	
 	
 	public static Subject buildSubject(String value) 
 	{
