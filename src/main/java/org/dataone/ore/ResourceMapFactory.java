@@ -124,7 +124,7 @@ public class ResourceMapFactory {
 		// add the resource map identifier
 		Triple resourceMapIdentifier = new TripleJena();
 		resourceMapIdentifier.initialise(resourceMap);
-		resourceMapIdentifier.relate(DC_TERMS_IDENTIFIER, EncodingUtilities.encodeUrlPathSegment(resourceMapId.getValue()));
+		resourceMapIdentifier.relate(DC_TERMS_IDENTIFIER, resourceMapId.getValue());
 		resourceMap.addTriple(resourceMapIdentifier);
 		
 		//aggregation.addCreator(creator);
@@ -137,7 +137,7 @@ public class ResourceMapFactory {
 			AggregatedResource metadataResource = aggregation.createAggregatedResource(new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(metadataId.getValue())));
 			Triple metadataIdentifier = new TripleJena();
 			metadataIdentifier.initialise(metadataResource);
-			metadataIdentifier.relate(DC_TERMS_IDENTIFIER, EncodingUtilities.encodeUrlPathSegment(metadataId.getValue()));
+			metadataIdentifier.relate(DC_TERMS_IDENTIFIER, metadataId.getValue());
 			resourceMap.addTriple(metadataIdentifier);
 			aggregation.addAggregatedResource(metadataResource);
 	
@@ -148,7 +148,7 @@ public class ResourceMapFactory {
 				// dcterms:identifier
 				Triple identifier = new TripleJena();
 				identifier.initialise(dataResource);
-				identifier.relate(DC_TERMS_IDENTIFIER, EncodingUtilities.encodeUrlPathSegment(dataId.getValue()));
+				identifier.relate(DC_TERMS_IDENTIFIER, dataId.getValue());
 				resourceMap.addTriple(identifier);
 				// cito:isDocumentedBy
 				Triple isDocumentedBy = new TripleJena();
