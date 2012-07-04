@@ -34,6 +34,7 @@ import java.util.Map;
 
 import org.dataone.configuration.Settings;
 import org.dataone.service.types.v1.Identifier;
+import org.dataone.service.util.EncodingUtilities;
 import org.dspace.foresite.Agent;
 import org.dspace.foresite.AggregatedResource;
 import org.dspace.foresite.Aggregation;
@@ -114,8 +115,8 @@ public class ResourceMapFactory {
 		
 		// create the resource map and the aggregation
 		// NOTE: use distinct, but related URI for the aggregation
-		Aggregation aggregation = OREFactory.createAggregation(new URI(D1_URI_PREFIX + resourceMapId.getValue() + "#aggregation"));
-		ResourceMap resourceMap = aggregation.createResourceMap(new URI(D1_URI_PREFIX + resourceMapId.getValue()));
+		Aggregation aggregation = OREFactory.createAggregation(new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(resourceMapId.getValue()) + "#aggregation"));
+		ResourceMap resourceMap = aggregation.createResourceMap(new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(resourceMapId.getValue())));
 		
 		Agent creator = OREFactory.createAgent();
 		creator.addName("Java libclient");
@@ -133,7 +134,7 @@ public class ResourceMapFactory {
 		for (Identifier metadataId: idMap.keySet()) {
 		
 			// add the science metadata
-			AggregatedResource metadataResource = aggregation.createAggregatedResource(new URI(D1_URI_PREFIX + metadataId.getValue()));
+			AggregatedResource metadataResource = aggregation.createAggregatedResource(new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(metadataId.getValue())));
 			Triple metadataIdentifier = new TripleJena();
 			metadataIdentifier.initialise(metadataResource);
 			metadataIdentifier.relate(DC_TERMS_IDENTIFIER, metadataId.getValue());
@@ -143,7 +144,7 @@ public class ResourceMapFactory {
 			// iterate through data items
 			List<Identifier> dataIds = idMap.get(metadataId);
 			for (Identifier dataId: dataIds) {
-				AggregatedResource dataResource = aggregation.createAggregatedResource(new URI(D1_URI_PREFIX + dataId.getValue()));
+				AggregatedResource dataResource = aggregation.createAggregatedResource(new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(dataId.getValue())));
 				// dcterms:identifier
 				Triple identifier = new TripleJena();
 				identifier.initialise(dataResource);
@@ -189,7 +190,7 @@ public class ResourceMapFactory {
         List<Triple> packageIdTriples = resourceMap.listTriples(packageIdSelector);
         if (!packageIdTriples.isEmpty()) {
             String packageIdValue = packageIdTriples.get(0).getObjectLiteral();
-            packageId.setValue(packageIdValue);
+            packageId.setValue(EncodingUtilities.decodeString(packageIdValue));
         }
 		
         // Now process the aggregation
@@ -211,7 +212,7 @@ public class ResourceMapFactory {
 			List<Triple> identifierTriples = entry.listTriples(identifierSelector);
 			if (!identifierTriples.isEmpty()) {
 				String metadataIdValue = identifierTriples.get(0).getObjectLiteral();
-				metadataId.setValue(metadataIdValue);
+				metadataId.setValue(EncodingUtilities.decodeString(metadataIdValue));
 			}
 			
 			// iterate through the data entries to find dcterms:identifier
@@ -230,7 +231,7 @@ public class ResourceMapFactory {
 				
 				// add it to our list
 				Identifier dataId = new Identifier();
-				dataId.setValue(dataIdValue);
+				dataId.setValue(EncodingUtilities.decodeString(dataIdValue));
 				dataIds.add(dataId);
 			}
 			
