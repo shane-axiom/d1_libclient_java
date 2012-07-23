@@ -40,6 +40,10 @@ import org.dataone.service.types.v1.util.ObjectFormatServiceImpl;
  * and falls back to on-disk cache version.  It provides accessor
  * methods to query and manipulate the object format list.
  * 
+ * To load an object format list other than the one configured for your environment,
+ * set the property "ObjectFormatCache.overriding.CN_URL" in your application's 
+ * configuration.  This is mainly used for integration and pre-registration testing.
+ * 
  * @author cjones
  * @author rnahf
  *
@@ -182,7 +186,13 @@ public class ObjectFormatCache extends ObjectFormatServiceImpl {
 				lastRefreshDate == null ||
 				now.getTime() - lastRefreshDate.getTime() > throttleIntervalSec * 1000)
 		{
-			CNode cn = D1Client.getCN();
+			CNode cn = null;
+			String overridingCN = Settings.getConfiguration().getString("ObjectFormatCache.overriding.CN_URL");
+			if (overridingCN != null) {
+				cn = new CNode(overridingCN);
+			} else {
+				cn = D1Client.getCN();
+			}
 			logger.info("refreshing objectFormatCache from cn: " + cn.getNodeId());
 			// TODO: do we need/wish to make sure the returned list is longer, or "more complete"
 			// than the existing one before replacing?  (specifically the one on file in the jar)
