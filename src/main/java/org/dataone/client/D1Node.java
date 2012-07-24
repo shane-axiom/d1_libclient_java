@@ -229,12 +229,31 @@ public abstract class D1Node {
 	    return date;
 	}
 	
+	/**
+     * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.listObjects">see DataONE API Reference</a> }
+     */
+	public ObjectList listObjects() 
+			throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented,
+			ServiceFailure 
+	{
+		return listObjects(this.session);
+	}
+	
 	
     public ObjectList listObjects(Session session) 
     throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
     {
     	return listObjects(session,null,null,null,null,null,null);
     }
+
+	public ObjectList listObjects(Date fromDate,
+			Date toDate, ObjectFormatIdentifier formatid,
+			Boolean replicaStatus, Integer start, Integer count)
+			throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented,
+			ServiceFailure 
+	{
+		return listObjects(this.session,fromDate,toDate,formatid,replicaStatus,start,count);
+	}
 
 
     public ObjectList listObjects(Session session, Date fromDate, Date toDate, 
@@ -293,16 +312,32 @@ public abstract class D1Node {
     }
 
     
+    public Log getLogRecords() 
+	throws InvalidToken, InvalidRequest, ServiceFailure,
+	NotAuthorized, NotImplemented, InsufficientResources
+	{
+    	return getLogRecords(null, null, null, null, null, null);
+	}   
     
-    public  Log getLogRecords(Session session) 
+    
+    public Log getLogRecords(Session session) 
 	throws InvalidToken, InvalidRequest, ServiceFailure,
 	NotAuthorized, NotImplemented, InsufficientResources
 	{
     	return getLogRecords(session, null, null, null, null, null, null);
 	}
     
-    
-	public  Log getLogRecords(Session session, Date fromDate, Date toDate,
+	
+	public Log getLogRecords(Date fromDate, Date toDate,
+			Event event, String pidFilter, Integer start, Integer count) 
+	throws InvalidToken, InvalidRequest, ServiceFailure,
+	NotAuthorized, NotImplemented, InsufficientResources
+	{
+		return getLogRecords(this.session, fromDate, toDate, event, pidFilter, start, count);
+	}
+  
+	
+	public Log getLogRecords(Session session, Date fromDate, Date toDate,
 			Event event, String pidFilter, Integer start, Integer count) 
 	throws InvalidToken, InvalidRequest, ServiceFailure,
 	NotAuthorized, NotImplemented, InsufficientResources
@@ -351,7 +386,25 @@ public abstract class D1Node {
 		return log;
 	}
     
-    
+	
+	/**
+     * Get the resource with the specified pid.  Used by both the CNode and 
+     * MNode subclasses. A LocalCache is used to cache objects in memory and in 
+     * a local disk cache if the "D1Client.useLocalCache" configuration property
+     * was set to true when the D1Node was created. Otherwise
+     * InputStream is the Java native version of D1's OctetStream
+     * 
+     * @see <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.get">see DataONE API Reference (MemberNode API)</a>
+     * @see <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.get">see DataONE API Reference (CoordinatingNode API)</a>
+     */
+	public InputStream get(Identifier pid)
+    throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, 
+      NotImplemented, InsufficientResources
+    {
+		return get(this.session, pid);
+    }
+	
+	
 	/**
      * Get the resource with the specified pid.  Used by both the CNode and 
      * MNode subclasses. A LocalCache is used to cache objects in memory and in 
@@ -419,6 +472,40 @@ public abstract class D1Node {
         return is;
     }
  
+    
+    
+    /**
+     * Get the system metadata from a resource with the specified guid. Used
+     * by both the CNode and MNode implementations. Note that this method defaults
+     * to not using the local system metadata cache provided by the client, as
+     * SystemMetadata is mutable and so caching can lead to issues.  In specific
+     * cases where a client wants to utilize the same system metadata in rapid succession,
+     * it may make sense to temporarily use the local cache by calling @see #getSystemMetadata(Session, Identifier, boolean).
+     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.getSystemMetadata"> DataONE API Reference (MemberNode API)</a> 
+     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.getSystemMetadata"> DataONE API Reference (CoordinatingNode API)</a> 
+     */
+    public SystemMetadata getSystemMetadata(Identifier pid)
+    throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented 
+    {
+        return getSystemMetadata(this.session, pid, false);
+    }
+
+    /**
+     * Get the system metadata from a resource with the specified guid, potentially using the local
+     * system metadata cache if specified to do so. Used by both the CNode and MNode implementations. 
+     * Because SystemMetadata is mutable, caching can lead to currency issues.  In specific
+     * cases where a client wants to utilize the same system metadata in rapid succession,
+     * it may make sense to temporarily use the local cache by setting useSystemMetadadataCache to true.
+     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.getSystemMetadata"> DataONE API Reference (MemberNode API)</a> 
+     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.getSystemMetadata"> DataONE API Reference (CoordinatingNode API)</a> 
+     */
+	public SystemMetadata getSystemMetadata(Identifier pid, boolean useSystemMetadataCache)
+	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented 
+	{
+		return getSystemMetadata(this.session, pid, useSystemMetadataCache);
+	}
+    
+    
     
     /**
      * Get the system metadata from a resource with the specified guid. Used
@@ -496,6 +583,13 @@ public abstract class D1Node {
         return sysmeta;
 	}
 
+	
+	public DescribeResponse describe(Identifier pid)
+    throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound
+    {
+		return describe(this.session, pid);
+    }
+	
 	
     public DescribeResponse describe(Session session, Identifier pid)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound
@@ -600,8 +694,79 @@ public abstract class D1Node {
 
         return new DescribeResponse(formatId, content_length, last_modified, checksum, serialVersion);
     }
+        
+
+
+    public Checksum getChecksum(Identifier pid, String checksumAlgorithm)
+    throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound
+    { 
+    	return getChecksum(this.session, pid, checksumAlgorithm);
+    }
+    
+    
+    /**
+     * This method can handle both the MN and CN method, although the CN overriding method
+     * will need to recast the InvalidRequest exception and use 'null' for the checksumAlgorithm param
+     * @param session
+     * @param pid
+     * @param checksumAlgorithm - for MN implementations only
+     * @return
+     * @throws InvalidRequest - for MN implementations only
+     * @throws InvalidToken
+     * @throws NotAuthorized
+     * @throws NotImplemented
+     * @throws ServiceFailure
+     * @throws NotFound
+     */
+    public Checksum getChecksum(Session session, Identifier pid, String checksumAlgorithm)
+    throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound
+    {    	
+    	if (pid == null)
+            throw new NotFound("0000", "PID cannot be null");
+    	
+    	// assemble the url
+        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_CHECKSUM);
+        url.addNextPathElement(pid.getValue());
+        
+    	url.addNonEmptyParamPair("checksumAlgorithm", checksumAlgorithm);
+
+        // send the request
+        D1RestClient client = new D1RestClient(session);
+        Checksum checksum = null;
+
+        try {
+        	InputStream is = client.doGetRequest(url.getUrl());
+        	checksum = deserializeServiceType(Checksum.class, is);
+        } catch (BaseException be) {
+            if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
+            if (be instanceof InvalidToken)           throw (InvalidToken) be;
+            if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
+            if (be instanceof NotImplemented)         throw (NotImplemented) be;
+            if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
+            if (be instanceof NotFound)               throw (NotFound) be;
+                    
+            throw recastDataONEExceptionToServiceFailure(be);
+        } 
+        catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+        catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
+        catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
+        catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+
+        finally {
+        	setLatestRequestUrl(client.getLatestRequestUrl());
+        	client.closeIdleConnections();
+        }
+        return checksum;
+    }
+    
 	
 	
+    public boolean isAuthorized(Identifier pid, Permission action)
+    throws ServiceFailure, InvalidRequest, InvalidToken, NotFound, NotAuthorized, NotImplemented
+    {
+    	return isAuthorized(this.session, pid, action);
+    }
+    
 	
     public boolean isAuthorized(Session session, Identifier pid, Permission action)
     throws ServiceFailure, InvalidRequest, InvalidToken, NotFound, NotAuthorized, NotImplemented
@@ -643,6 +808,13 @@ public abstract class D1Node {
         return true;
     }
 
+    
+	public  Identifier generateIdentifier(String scheme, String fragment)
+	throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented, InvalidRequest
+	{
+		return generateIdentifier(this.session, scheme, fragment);
+	}
+	
     
 	public  Identifier generateIdentifier(Session session, String scheme, String fragment)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented, InvalidRequest
@@ -687,7 +859,14 @@ public abstract class D1Node {
  		return identifier;
 	}
     
-    
+  
+    public  Identifier archive(Identifier pid)
+    throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
+    {
+    	return archive(this.session, pid);
+    }
+	
+	
     /**
      *  sets the archived flag to true on an MN or CN
      * @param session
@@ -733,19 +912,14 @@ public abstract class D1Node {
         return identifier;
     }
     
+ 
+    public  Identifier delete(Identifier pid)
+        throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
+    {
+    	return delete(this.session, pid);
+    }
     
-    /**
-     *  sets the archived flag to true on an MN or CN
-     * @param session
-     * @param pid
-     * @return Identifier
-     * @throws InvalidToken
-     * @throws ServiceFailure
-     * @throws NotAuthorized
-     * @throws NotFound
-     * @throws NotImplemented
-     * @throws InvalidRequest 
-     */
+    
     public  Identifier delete(Session session, Identifier pid)
         throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
     {

@@ -426,7 +426,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	throws InvalidToken, InvalidRequest, ServiceFailure,
 	NotAuthorized, NotImplemented, InsufficientResources
 	{
-		return super.getLogRecords(null);
+		return super.getLogRecords();
 	}
 	
 	/**
@@ -451,7 +451,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	throws InvalidToken, InvalidRequest, ServiceFailure,
 	NotAuthorized, NotImplemented, InsufficientResources
 	{
-		return super.getLogRecords(this.session, fromDate, toDate, event, pidFilter, start, count);
+		return super.getLogRecords(fromDate, toDate, event, pidFilter, start, count);
 	}
 	
 	
@@ -565,7 +565,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	public  Identifier generateIdentifier(String scheme, String fragment)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented, InvalidRequest
 	{
-		return super.generateIdentifier(this.session, scheme, fragment);
+		return super.generateIdentifier(scheme, fragment);
 	}
 	
 	
@@ -860,7 +860,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented,
 			ServiceFailure 
 	{
-		return super.listObjects(null);
+		return super.listObjects();
 	}
 	
 	
@@ -886,7 +886,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented,
 			ServiceFailure 
 	{
-		return super.listObjects(this.session,fromDate,toDate,formatid,replicaStatus,start,count);
+		return super.listObjects(fromDate,toDate,formatid,replicaStatus,start,count);
 	}
 
 	
@@ -907,7 +907,11 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	public InputStream get(Identifier pid)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
 	{
-			return get(this.session, pid);
+		try {
+			return super.get(pid);
+		} catch (InsufficientResources e) {
+			throw recastDataONEExceptionToServiceFailure(e);
+		}
 	}
 	
 	public InputStream get(Session session, Identifier pid)
@@ -925,7 +929,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	public SystemMetadata getSystemMetadata(Identifier pid)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
 	{
-		return super.getSystemMetadata(this.session, pid);
+		return super.getSystemMetadata(pid);
 	}
 	
 	public SystemMetadata getSystemMetadata(Session session, Identifier pid)
@@ -942,7 +946,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     public DescribeResponse describe(Identifier pid)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound
     {
-    	return super.describe(this.session,pid);
+    	return super.describe(pid);
     }
     
     /**
@@ -1014,48 +1018,29 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	public Checksum getChecksum(Identifier pid)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
 	{
-		return getChecksum(this.session, pid);
+		Checksum cs = null;
+		try {
+			cs = super.getChecksum(pid, null);
+		} catch (InvalidRequest e) {
+			throw recastDataONEExceptionToServiceFailure(e);
+		}
+    	return cs;
 	}
+	
+	
 	/**
 	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.getChecksum">see DataONE API Reference</a> } 
 	 */
 	public Checksum getChecksum(Session session, Identifier pid)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
 	{
-		if (pid == null)
-            throw new NotFound("0000", "PID cannot be null");
-
-        // assemble the url
-        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_CHECKSUM);
-    	url.addNextPathElement(pid.getValue());
-
-		// send the request
-		D1RestClient client = new D1RestClient(session);
-		Checksum checksum = null;
-
+		Checksum cs = null;
 		try {
-			InputStream is = client.doGetRequest(url.getUrl());
-			checksum = deserializeServiceType(Checksum.class, is);
-			
-		} catch (BaseException be) {
-			if (be instanceof InvalidToken)           throw (InvalidToken) be;
-			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
-			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
-			if (be instanceof NotFound)               throw (NotFound) be;
-			if (be instanceof NotImplemented)         throw (NotImplemented) be;
-
-			throw recastDataONEExceptionToServiceFailure(be);
-		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-	
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
+			cs = super.getChecksum(session, pid, null);
+		} catch (InvalidRequest e) {
+			throw recastDataONEExceptionToServiceFailure(e);
 		}
-		return checksum;
+    	return cs;
 	}
 
 	
@@ -1276,7 +1261,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	throws ServiceFailure, InvalidToken, NotFound, NotAuthorized, 
 	NotImplemented, InvalidRequest
 	{
-		return super.isAuthorized(this.session, pid, permission);
+		return super.isAuthorized(pid, permission);
 	}
 	
 	/**
@@ -2516,14 +2501,13 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     /**
      * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#CNCore.archive">see DataONE API Reference</a> }
      */
-    public  Identifier archive( Identifier pid)
+    public  Identifier archive(Identifier pid)
         throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
     {
-        return  super.archive(this.session,  pid);
+        return  super.archive(pid);
     }
    
-    
-    
+      
     /**
      * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#CNCore.archive.archive">see DataONE API Reference</a> }
      */
@@ -2537,6 +2521,11 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
     @Override
     public Identifier delete(Identifier pid) throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented {
-        return super.delete(this.session, pid);
+        return super.delete(pid);
+    }
+    
+    @Override
+    public Identifier delete(Session session, Identifier pid) throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented {
+        return super.delete(session, pid);
     }
 }
