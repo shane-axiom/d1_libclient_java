@@ -151,17 +151,21 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
      * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNCore.getLogRecords">see DataONE API Reference</a> }
      */
 	public Log getLogRecords() 
-			throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented,
-			ServiceFailure 
+	throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure 
 	{
-		return getLogRecords(null);
+		Log theLog = null;
+		try {
+			theLog = super.getLogRecords();
+		} catch (InsufficientResources e) {
+			throw recastDataONEExceptionToServiceFailure(e);
+		}
+    	return theLog;
 	}
 	
 	
     /**
      * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNCore.getLogRecords">see DataONE API Reference</a> }
      */
-	@Override
 	public Log getLogRecords(Session session) 
 	throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure 
 	{
@@ -184,7 +188,13 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
                Integer start, Integer count) 
     throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
     {
-        return getLogRecords(this.session, fromDate, toDate, event, pidFilter, start, count);
+		Log theLog = null;
+		try {
+			theLog = super.getLogRecords(fromDate, toDate, event, pidFilter, start, count);
+		} catch (InsufficientResources e) {
+			throw recastDataONEExceptionToServiceFailure(e);
+		}
+    	return theLog;
     }
     
     
@@ -213,7 +223,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 			throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented,
 			ServiceFailure 
 	{
-		return listObjects(this.session);
+		return super.listObjects();
 	}
     
     /**
@@ -235,7 +245,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 			Boolean replicaStatus, Integer start, Integer count)
 	throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure 
 	{
-		return super.listObjects(this.session,fromDate,toDate,formatid,replicaStatus,start,count);
+		return super.listObjects(fromDate,toDate,formatid,replicaStatus,start,count);
 	}
 	
     /**
@@ -292,7 +302,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     public InputStream get(Identifier pid)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound, InsufficientResources
     {
-    	return super.get(this.session, pid);
+    	return super.get(pid);
     }  
 
     
@@ -306,7 +316,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     public SystemMetadata getSystemMetadata(Identifier pid)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound
     {
-    	return super.getSystemMetadata(this.session, pid);
+    	return super.getSystemMetadata(pid);
     }   
     
     public SystemMetadata getSystemMetadata(Session session, Identifier pid)
@@ -316,14 +326,13 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     }
 
 
-
     /**
      *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.describe">see DataONE API Reference</a> } 
      */
     public DescribeResponse describe(Identifier pid)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound
     {
-    	return super.describe(this.session,pid);
+    	return super.describe(pid);
     }
     
     /**
@@ -342,7 +351,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     public Checksum getChecksum(Identifier pid, String checksumAlgorithm)
     throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound
     { 
-    	return getChecksum(this.session, pid, checksumAlgorithm);
+    	return super.getChecksum(pid, checksumAlgorithm);
     }
     
     
@@ -352,42 +361,9 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     public Checksum getChecksum(Session session, Identifier pid, String checksumAlgorithm)
     throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound
     {    	
-        // assemble the url
-        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_CHECKSUM);
-        if (pid != null)
-        	url.addNextPathElement(pid.getValue());
-        
-    	url.addNonEmptyParamPair("checksumAlgorithm", checksumAlgorithm);
-
-        // send the request
-        D1RestClient client = new D1RestClient(session);
-        Checksum checksum = null;
-
-        try {
-        	InputStream is = client.doGetRequest(url.getUrl());
-        	checksum = deserializeServiceType(Checksum.class, is);
-        } catch (BaseException be) {
-            if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
-            if (be instanceof InvalidToken)           throw (InvalidToken) be;
-            if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
-            if (be instanceof NotImplemented)         throw (NotImplemented) be;
-            if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
-            if (be instanceof NotFound)               throw (NotFound) be;
-                    
-            throw recastDataONEExceptionToServiceFailure(be);
-        } 
-        catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
-        finally {
-        	setLatestRequestUrl(client.getLatestRequestUrl());
-        	client.closeIdleConnections();
-        }
-        return checksum;
+        return super.getChecksum(session, pid, checksumAlgorithm);
     }
-
+    
     
     
     /**
@@ -449,7 +425,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     public boolean isAuthorized(Identifier pid, Permission action)
     throws ServiceFailure, InvalidRequest, InvalidToken, NotFound, NotAuthorized, NotImplemented
     {
-    	return super.isAuthorized(this.session, pid, action);
+    	return super.isAuthorized(pid, action);
     }
     
     
@@ -469,7 +445,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
 	public  Identifier generateIdentifier(String scheme, String fragment)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented, InvalidRequest
 	{
-		return super.generateIdentifier(this.session, scheme, fragment);
+		return super.generateIdentifier(scheme, fragment);
 	}
 	
 	/**
@@ -629,7 +605,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     public  Identifier archive(Identifier pid)
         throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
     {
-        return  super.archive(this.session,  pid);
+        return  super.archive(pid);
     }
    
     
@@ -649,7 +625,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
     public  Identifier delete(Identifier pid)
         throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
     {
-        return  delete(this.session,  pid);
+        return  super.delete(pid);
     }
    
     
