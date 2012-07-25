@@ -327,6 +327,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	 *  or from a call to the CN.
 	 *  Caching is enabled by default in production via the property 
 	 *  "CNode.useObjectFormatCache" accessed via org.dataone.configuration.Settings
+	 *  and the cn baseURL found in D1Client.CN_URL is used for the connection, 
+	 *  not the one held by this instance of CNode.
 	 *  
 	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNCore.getFormat">see DataONE API Reference</a> } 
 	 */

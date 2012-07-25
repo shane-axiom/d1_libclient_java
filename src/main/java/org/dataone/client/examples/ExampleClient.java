@@ -55,9 +55,12 @@ public class ExampleClient {
     /**
      * Demonstrate the execution of the MNRead.create() service on the given
      * Member Node.  This method creates a data object on the node with an
-     * identifier based on the current date in milliseconds, so it probably 
+     * identifier based on the current date in milliseconds, so it  
      * should only be run against test servers, not production servers, to
      * avoid polluting production servers with test data.
+     * For simplicity, this example skips the best-practice of reserving the
+     * identifier prior to creating the object. 
+     * 
      * @param mn the MNode member node on which to create the object
      */
     private static void runExampleCreate(MNode mn) {
