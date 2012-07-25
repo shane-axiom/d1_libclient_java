@@ -120,6 +120,8 @@ public class D1Client {
     	String mnBaseUrl = null;
 		try {
 			mnBaseUrl = cn.lookupNodeBaseUrl(nodeRef.getValue());
+			if (mnBaseUrl == null) 
+				throw new ServiceFailure("0000","Failed to find baseUrl for node " + nodeRef.getValue() + " in the NodeList");
 		} catch (NotImplemented e) {
 			throw D1Node.recastClientSideExceptionToServiceFailure(e);
 		}
