@@ -44,7 +44,7 @@ public class ExampleClient {
      */
     public static void main(String[] args) {
         // By default, use development.
-        String cnUrl = System.getProperty("CN_URL", "https://cn-dev.test.dataone.org");
+        String cnUrl = System.getProperty("CN_URL", "https://cn-dev.test.dataone.org/cn");
         Settings.getConfiguration().setProperty("D1Client.CN_URL", cnUrl);
         
         String currentUrl = "https://demo1.test.dataone.org:443/knb/d1/mn";
