@@ -56,6 +56,8 @@ import org.dataone.service.types.v1.Log;
 import org.dataone.service.types.v1.ObjectFormatIdentifier;
 import org.dataone.service.types.v1.ObjectList;
 import org.dataone.service.types.v1.Permission;
+import org.dataone.service.types.v1.QueryEngineDescription;
+import org.dataone.service.types.v1.QueryEngineList;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1.Subject;
 import org.dataone.service.types.v1.SystemMetadata;
@@ -433,11 +435,12 @@ public abstract class D1Node {
         }
        	D1Url url = new D1Url(this.getNodeBaseServiceUrl(),Constants.RESOURCE_OBJECTS);
        	
-       	// need to check for null or empty values, or else the call transposes
-    	// into a listObjects
-    	if(pid == null || pid.getValue().trim().equals(""))
-    		throw new NotFound("0000", "'pid' cannot be null nor empty");
-    	url.addNextPathElement(pid.getValue());
+       	try {
+       		url.addNextPathElement(pid.getValue());
+       	} catch (IllegalArgumentException e) {
+       		throw new NotFound("0000", "'pid' cannot be null nor empty");
+       	}
+       	
 
 		D1RestClient client = new D1RestClient(session);
                 client.setTimeouts(Settings.getConfiguration()
@@ -952,6 +955,121 @@ public abstract class D1Node {
         }
         return identifier;
     }
+    
+    
+	public InputStream query(String queryEngine, String query)
+			throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest,
+			NotImplemented, NotFound 
+	{
+		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_QUERY);
+        try {
+        	url.addNextPathElement(queryEngine);
+        	url.addNextPathElement(query);
+        } catch (IllegalArgumentException e) {
+       		throw new NotFound("0000", "Neither 'queryEngine' nor 'query' can be null or empty");
+       	}
+
+        D1RestClient client = new D1RestClient(session);
+        InputStream is = null;
+        try {
+        	is = client.doGetRequest(url.getUrl());
+		}
+        catch (BaseException be) {
+			if (be instanceof NotImplemented)         throw (NotImplemented) be;
+			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
+			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
+			if (be instanceof InvalidToken)           throw (InvalidToken) be;
+			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
+			if (be instanceof NotFound)               throw (NotFound) be;
+
+			throw recastDataONEExceptionToServiceFailure(be);
+		} 
+		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+
+		finally {
+			setLatestRequestUrl(client.getLatestRequestUrl());
+			client.closeIdleConnections();
+		}
+		return is;
+	}
+
+
+
+	public QueryEngineDescription getQueryEngineDescription(String queryEngine)
+			throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented,
+			NotFound 
+	{
+		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_QUERY);
+        try {
+        	url.addNextPathElement(queryEngine);
+        } catch (IllegalArgumentException e) {
+       		throw new NotFound("0000", "'queryEngine' cannot be null nor empty");
+       	}
+
+        D1RestClient client = new D1RestClient(session);
+        QueryEngineDescription description = null;
+        try {
+        	InputStream is = client.doGetRequest(url.getUrl());
+             description = deserializeServiceType(QueryEngineDescription.class, is);
+		}
+        catch (BaseException be) {
+			if (be instanceof NotImplemented)         throw (NotImplemented) be;
+			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
+			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
+			if (be instanceof InvalidToken)           throw (InvalidToken) be;
+			if (be instanceof NotFound)               throw (NotFound) be;
+
+			throw recastDataONEExceptionToServiceFailure(be);
+		} 
+		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+
+		finally {
+			setLatestRequestUrl(client.getLatestRequestUrl());
+			client.closeIdleConnections();
+		}
+		return description;
+	}
+
+
+
+	public QueryEngineList listQueryEngines() throws InvalidToken, ServiceFailure,
+			NotAuthorized, NotImplemented {
+		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_QUERY);
+        
+		InputStream is = null;
+        D1RestClient client = new D1RestClient(session);
+        QueryEngineList engines = null;
+        try {
+             is = client.doGetRequest(url.getUrl());
+             engines = deserializeServiceType(QueryEngineList.class, is);
+		}
+        catch (BaseException be) {
+			if (be instanceof NotImplemented)         throw (NotImplemented) be;
+			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
+			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
+			if (be instanceof InvalidToken)           throw (InvalidToken) be;
+
+			throw recastDataONEExceptionToServiceFailure(be);
+		} 
+		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+
+		finally {
+			setLatestRequestUrl(client.getLatestRequestUrl());
+			client.closeIdleConnections();
+		}
+		return engines;
+	}
+    
+    
 
 
     /**
