@@ -100,6 +100,9 @@ public class DataPackage {
         
         // Determine if the metadata object is already in the relations list
         // Use it if so, if not then create a list for this metadata link
+        if (metadataMap == null)
+        	metadataMap = new HashMap<Identifier, List<Identifier>>();
+        
         if (metadataMap.containsKey(metadataID)) {
             associatedData = metadataMap.get(metadataID);
         } else {
