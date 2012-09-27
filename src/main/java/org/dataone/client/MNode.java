@@ -48,6 +48,7 @@ import org.dataone.service.mn.tier1.v1.MNRead;
 import org.dataone.service.mn.tier2.v1.MNAuthorization;
 import org.dataone.service.mn.tier3.v1.MNStorage;
 import org.dataone.service.mn.tier4.v1.MNReplication;
+import org.dataone.service.mn.v1.MNQuery;
 import org.dataone.service.types.v1.Checksum;
 import org.dataone.service.types.v1.DescribeResponse;
 import org.dataone.service.types.v1.Event;
@@ -58,6 +59,8 @@ import org.dataone.service.types.v1.NodeReference;
 import org.dataone.service.types.v1.ObjectFormatIdentifier;
 import org.dataone.service.types.v1.ObjectList;
 import org.dataone.service.types.v1.Permission;
+import org.dataone.service.types.v1.QueryEngineDescription;
+import org.dataone.service.types.v1.QueryEngineList;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1.SystemMetadata;
 import org.dataone.service.util.Constants;
@@ -102,7 +105,7 @@ import org.jibx.runtime.JiBXException;
  */
 
 public class MNode extends D1Node 
-implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication 
+implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery 
 {
   
 	protected static org.apache.commons.logging.Log log = LogFactory.getLog(MNode.class);
@@ -812,4 +815,36 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication
         }
         return bais;
     }
+    
+    /**
+     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNQuery.query">see DataONE API Reference</a> } 
+     */
+	@Override
+	public InputStream query(String queryEngine, String query)
+	throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest,
+	NotImplemented, NotFound 
+	{
+		return super.query(queryEngine, query);
+	}
+
+    /**
+     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNQuery.getQueryEngineDescription">see DataONE API Reference</a> } 
+     */
+	@Override
+	public QueryEngineDescription getQueryEngineDescription(String queryEngine)
+    throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented, NotFound 
+	{
+		return super.getQueryEngineDescription(queryEngine);
+	}
+
+    /**
+     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNQuery.listQueryEngines">see DataONE API Reference</a> } 
+     */
+	@Override
+	public QueryEngineList listQueryEngines() 
+	throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented 
+	{
+		return super.listQueryEngines();
+	}
+
 }

@@ -68,6 +68,8 @@ import org.dataone.service.types.v1.ObjectList;
 import org.dataone.service.types.v1.ObjectLocationList;
 import org.dataone.service.types.v1.Permission;
 import org.dataone.service.types.v1.Person;
+import org.dataone.service.types.v1.QueryEngineDescription;
+import org.dataone.service.types.v1.QueryEngineList;
 import org.dataone.service.types.v1.Replica;
 import org.dataone.service.types.v1.ReplicationPolicy;
 import org.dataone.service.types.v1.ReplicationStatus;
@@ -2530,4 +2532,37 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     public Identifier delete(Session session, Identifier pid) throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented {
         return super.delete(session, pid);
     }
+
+    /**
+     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.query">see DataONE API Reference</a> } 
+     */   
+	@Override
+	public InputStream query(String queryEngine, String query)
+	throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest,
+	NotImplemented, NotFound 
+	{
+		return super.query(queryEngine, query);
+	}
+
+	/**
+     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.getQueryEngineDescription">see DataONE API Reference</a> } 
+     */
+	@Override
+	public QueryEngineDescription getQueryEngineDescription(String queryEngine)
+    throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented, NotFound 
+	{
+		return super.getQueryEngineDescription(queryEngine);
+	}
+
+	/**
+     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.listQueryEngines">see DataONE API Reference</a> } 
+     */
+	@Override
+	public QueryEngineList listQueryEngines() 
+	throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented 
+	{
+		return super.listQueryEngines();
+	}
+
+
 }
