@@ -100,6 +100,7 @@ import org.jibx.runtime.JiBXException;
  * D1Client.CNode.create.timeout
  * D1Client.CNode.registerSystemMetadata.timeout
  * D1Client.CNode.search.timeout
+ * D1Client.CNode.replication.timeout
  * D1Client.D1Node.listObjects.timeout
  * D1Client.D1Node.getLogRecords.timeout
  * D1Client.D1Node.get.timeout
