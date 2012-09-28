@@ -29,6 +29,11 @@ import java.util.Map;
 import java.util.Set;
 
 import org.dataone.ore.ResourceMapFactory;
+import org.dataone.service.exceptions.InvalidToken;
+import org.dataone.service.exceptions.NotAuthorized;
+import org.dataone.service.exceptions.NotFound;
+import org.dataone.service.exceptions.NotImplemented;
+import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.types.v1.Identifier;
 import org.dspace.foresite.OREException;
 import org.dspace.foresite.OREParserException;
@@ -74,7 +79,26 @@ public class DataPackage {
      */
     public void addAndDownloadData(Identifier id) {
         if (!contains(id)) {
-            D1Object o = D1Object.download(id);
+        	D1Object o = D1Object.download(id);
+//            D1Object o = null;
+//			try {
+//				o = D1Object.download(id);
+//			} catch (InvalidToken e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (NotAuthorized e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (NotFound e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (ServiceFailure e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (NotImplemented e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
             if (o != null) {
                 objectStore.put(id, o);
             }
@@ -115,6 +139,8 @@ public class DataPackage {
                 associatedData.add(dataId);
             }
         }
+        if (!metadataMap.containsKey(metadataID))
+        	metadataMap.put(metadataID, associatedData);
     }
     
     /**
