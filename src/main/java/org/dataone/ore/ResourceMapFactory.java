@@ -57,7 +57,8 @@ import org.dspace.foresite.jena.TripleJena;
 public class ResourceMapFactory {
 	
 	// TODO: will this always resolve?
-	private static final String D1_URI_PREFIX = Settings.getConfiguration().getString("D1Client.CN_URL") + "/v1/resolve/";
+	private static final String D1_URI_PREFIX = Settings.getConfiguration()
+			.getString("D1Client.CN_URL","howdy") + "/v1/resolve/";
 
 	private static final String RESOURCE_MAP_SERIALIZATION_FORMAT = "RDF/XML";
 
@@ -75,21 +76,24 @@ public class ResourceMapFactory {
 		DC_TERMS_IDENTIFIER.setNamespace(Vocab.dcterms_Agent.ns().toString());
 		DC_TERMS_IDENTIFIER.setPrefix(Vocab.dcterms_Agent.schema());
 		DC_TERMS_IDENTIFIER.setName("identifier");
-		DC_TERMS_IDENTIFIER.setURI(new URI(DC_TERMS_IDENTIFIER.getNamespace() + DC_TERMS_IDENTIFIER.getName()));
+		DC_TERMS_IDENTIFIER.setURI(new URI(DC_TERMS_IDENTIFIER.getNamespace() 
+				+ DC_TERMS_IDENTIFIER.getName()));
 		
 		// create the CITO:isDocumentedBy predicate
 		CITO_IS_DOCUMENTED_BY = new Predicate();
 		CITO_IS_DOCUMENTED_BY.setNamespace("http://purl.org/spar/cito/");
 		CITO_IS_DOCUMENTED_BY.setPrefix("cito");
 		CITO_IS_DOCUMENTED_BY.setName("isDocumentedBy");
-		CITO_IS_DOCUMENTED_BY.setURI(new URI(CITO_IS_DOCUMENTED_BY.getNamespace() + CITO_IS_DOCUMENTED_BY.getName()));
+		CITO_IS_DOCUMENTED_BY.setURI(new URI(CITO_IS_DOCUMENTED_BY.getNamespace() 
+				+ CITO_IS_DOCUMENTED_BY.getName()));
 		
 		// create the CITO:documents predicate
 		CITO_DOCUMENTS = new Predicate();
 		CITO_DOCUMENTS.setNamespace(CITO_IS_DOCUMENTED_BY.getNamespace());
 		CITO_DOCUMENTS.setPrefix(CITO_IS_DOCUMENTED_BY.getPrefix());
 		CITO_DOCUMENTS.setName("documents");
-		CITO_DOCUMENTS.setURI(new URI(CITO_DOCUMENTS.getNamespace() + CITO_DOCUMENTS.getName()));
+		CITO_DOCUMENTS.setURI(new URI(CITO_DOCUMENTS.getNamespace() 
+				+ CITO_DOCUMENTS.getName()));
 	}
 	
 	private ResourceMapFactory() {
@@ -115,8 +119,11 @@ public class ResourceMapFactory {
 		
 		// create the resource map and the aggregation
 		// NOTE: use distinct, but related URI for the aggregation
-		Aggregation aggregation = OREFactory.createAggregation(new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(resourceMapId.getValue()) + "#aggregation"));
-		ResourceMap resourceMap = aggregation.createResourceMap(new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(resourceMapId.getValue())));
+		Aggregation aggregation = OREFactory.createAggregation(new URI(D1_URI_PREFIX 
+				+ EncodingUtilities.encodeUrlPathSegment(resourceMapId.getValue()) 
+				+ "#aggregation"));
+		ResourceMap resourceMap = aggregation.createResourceMap(new URI(D1_URI_PREFIX 
+				+ EncodingUtilities.encodeUrlPathSegment(resourceMapId.getValue())));
 		
 		Agent creator = OREFactory.createAgent();
 		creator.addName("Java libclient");
@@ -134,7 +141,8 @@ public class ResourceMapFactory {
 		for (Identifier metadataId: idMap.keySet()) {
 		
 			// add the science metadata
-			AggregatedResource metadataResource = aggregation.createAggregatedResource(new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(metadataId.getValue())));
+			AggregatedResource metadataResource = aggregation.createAggregatedResource(new URI(D1_URI_PREFIX 
+					+ EncodingUtilities.encodeUrlPathSegment(metadataId.getValue())));
 			Triple metadataIdentifier = new TripleJena();
 			metadataIdentifier.initialise(metadataResource);
 			metadataIdentifier.relate(DC_TERMS_IDENTIFIER, metadataId.getValue());
@@ -144,7 +152,8 @@ public class ResourceMapFactory {
 			// iterate through data items
 			List<Identifier> dataIds = idMap.get(metadataId);
 			for (Identifier dataId: dataIds) {
-				AggregatedResource dataResource = aggregation.createAggregatedResource(new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(dataId.getValue())));
+				AggregatedResource dataResource = aggregation.createAggregatedResource(new URI(D1_URI_PREFIX 
+						+ EncodingUtilities.encodeUrlPathSegment(dataId.getValue())));
 				// dcterms:identifier
 				Triple identifier = new TripleJena();
 				identifier.initialise(dataResource);
@@ -186,7 +195,8 @@ public class ResourceMapFactory {
         
 		// get the identifier of the whole package ResourceMap
 		Identifier packageId = new Identifier();
-        TripleSelector packageIdSelector = new TripleSelector(resourceMap.getURI(), DC_TERMS_IDENTIFIER.getURI(), null);
+        TripleSelector packageIdSelector = 
+        		new TripleSelector(resourceMap.getURI(), DC_TERMS_IDENTIFIER.getURI(), null);
         List<Triple> packageIdTriples = resourceMap.listTriples(packageIdSelector);
         if (!packageIdTriples.isEmpty()) {
             String packageIdValue = packageIdTriples.get(0).getObjectLiteral();
@@ -222,7 +232,8 @@ public class ResourceMapFactory {
 				// get the dataId reference we are documenting
 				URI dataResourceURI = triple.getObjectURI();
 				// look up the data object resource triple to find the dcterms:identifier for it
-				TripleSelector dataIdentifierSelector = new TripleSelector(dataResourceURI, DC_TERMS_IDENTIFIER.getURI(), null);
+				TripleSelector dataIdentifierSelector = 
+						new TripleSelector(dataResourceURI, DC_TERMS_IDENTIFIER.getURI(), null);
 				List<Triple> dataIdentifierTriples = resourceMap.listAllTriples(dataIdentifierSelector);
 				if (!dataIdentifierTriples.isEmpty()) {
 					// get the value of the identifier
@@ -241,7 +252,8 @@ public class ResourceMapFactory {
 		}
 		
 		// Now group the packageId with the Map of metadata/data Ids and return it
-		Map<Identifier, Map<Identifier, List<Identifier>>> packageMap = new HashMap<Identifier, Map<Identifier, List<Identifier>>>();
+		Map<Identifier, Map<Identifier, List<Identifier>>> packageMap = 
+				new HashMap<Identifier, Map<Identifier, List<Identifier>>>();
 		packageMap.put(packageId, idMap);
 		
 		return packageMap;
