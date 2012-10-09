@@ -32,6 +32,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.Header;
 import org.apache.http.HttpException;
@@ -957,18 +958,63 @@ public abstract class D1Node {
     }
     
     
-	public InputStream query(String queryEngine, String query)
+    /**
+     * A convenience method for building the query going to the queryEngine.  A D1Url
+     * will build the portion of the url needed and properly url-encode any unsafe
+     * characters.  The caller is responsible for encoding/escaping any special 
+     * characters required by the queryEngine, but not for providing any url reserved
+     * characters ('/' or '?') that join path or query elements.
+     * 
+     * As with the sister query() method that takes an encoded string, the contents
+     * will be joined to the url with as follows: /{queryEngine}/{queryUrlElements}
+	 *
+     * @param queryEngine
+     * @param queryUrlElements a D1Url object that contains the necessary query bits
+     * @return
+     * @throws InvalidToken
+     * @throws ServiceFailure
+     * @throws NotAuthorized
+     * @throws InvalidRequest
+     * @throws NotImplemented
+     * @throws NotFound
+     */
+    public InputStream query(String queryEngine, D1Url queryUrlElements)
+    throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest,
+	NotImplemented, NotFound 
+	{
+    	return query(queryEngine, queryUrlElements.getUrl());
+	}
+    
+    
+    
+    /**
+     * As with the sister query() method that takes a D1Url, the contents of 
+     * encodedQuery will be joined to the url with as follows:
+     * /{queryEngine}/{encodedQuery}
+     * @param queryEngine
+     * @param encodedQuery
+     * @return
+     * @throws InvalidToken
+     * @throws ServiceFailure
+     * @throws NotAuthorized
+     * @throws InvalidRequest
+     * @throws NotImplemented
+     * @throws NotFound
+     */
+	public InputStream query(String queryEngine, String encodedQuery)
 			throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest,
 			NotImplemented, NotFound 
 	{
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_QUERY);
         try {
         	url.addNextPathElement(queryEngine);
-//        	url.addNextPathElement(query);
         } catch (IllegalArgumentException e) {
-       		throw new NotFound("0000", "Neither 'queryEngine' nor 'query' can be null or empty");
+        	throw new InvalidRequest("0000", "'queryEngine' parameter cannot be null or empty");
        	}
-        String finalUrl = url.getUrl() + "/" + query;
+        if (StringUtils.isEmpty(encodedQuery)) {
+        	throw new InvalidRequest("0000", "'encodedQuery' parameter cannot be null or empty");
+        }
+    	String finalUrl = url.getUrl() + "/" + encodedQuery;
         D1RestClient client = new D1RestClient(session);
         InputStream is = null;
         try {
