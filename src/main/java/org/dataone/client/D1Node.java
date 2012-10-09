@@ -964,15 +964,15 @@ public abstract class D1Node {
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_QUERY);
         try {
         	url.addNextPathElement(queryEngine);
-        	url.addNextPathElement(query);
+//        	url.addNextPathElement(query);
         } catch (IllegalArgumentException e) {
        		throw new NotFound("0000", "Neither 'queryEngine' nor 'query' can be null or empty");
        	}
-
+        String finalUrl = url.getUrl() + "/" + query;
         D1RestClient client = new D1RestClient(session);
         InputStream is = null;
         try {
-        	is = client.doGetRequest(url.getUrl());
+        	is = client.doGetRequest(finalUrl);
 		}
         catch (BaseException be) {
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
