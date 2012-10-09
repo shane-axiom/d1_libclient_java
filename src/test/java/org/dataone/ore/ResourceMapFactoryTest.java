@@ -54,7 +54,8 @@ public class ResourceMapFactoryTest {
 			dataIds.add(dataId2);
 			Map<Identifier, List<Identifier>> idMap = new HashMap<Identifier, List<Identifier>>();
 			idMap.put(metadataId, dataIds);
-			ResourceMap resourceMap = ResourceMapFactory.getInstance().createResourceMap(resourceMapId, idMap);
+			ResourceMapFactory rmf = ResourceMapFactory.getInstance();
+			ResourceMap resourceMap = rmf.createResourceMap(resourceMapId, idMap);
 			assertNotNull(resourceMap);
 			String rdfXml = ResourceMapFactory.getInstance().serializeResourceMap(resourceMap);
 			assertNotNull(rdfXml);
