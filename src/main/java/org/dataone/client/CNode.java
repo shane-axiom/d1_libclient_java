@@ -1083,18 +1083,13 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	 *  solr escaping: {@link <a href="http://www.google.com/search?q=solr+escapequerychars+api">find ClientUtils</a> }
 	 * 
 	 * @param queryD1url - a D1Url object containing the path and/or query elements
-	 *                     that will be passed to the indicated queryType.  BaseUrl
-	 *                     and Resource segments contained in this object will be
-	 *                     removed/ignored.
+	 *                     that will be passed to the indicated queryType.  
 	 */
 	public  ObjectList search(Session session, String queryType, D1Url queryD1url)
 	throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest, 
 	NotImplemented
 	{
-		queryD1url.setBaseUrl("base");
-		queryD1url.setResource("resource");
-		String pathAndQueryString = queryD1url.getUrl().replaceAll("^base/resource/{0,1}", "");
-		
+		String pathAndQueryString = queryD1url.getUrl();
 		return search(session, queryType, pathAndQueryString);
 	}
 	
@@ -2545,6 +2540,17 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		return super.query(queryEngine, query);
 	}
 
+    /**
+     *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.query">see DataONE API Reference</a> } 
+     */   
+	@Override
+	public InputStream query(String queryEngine, D1Url queryD1Url)
+	throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest,
+	NotImplemented, NotFound 
+	{
+		return super.query(queryEngine, queryD1Url.getUrl());
+	}
+	
 	/**
      *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.getQueryEngineDescription">see DataONE API Reference</a> } 
      */
