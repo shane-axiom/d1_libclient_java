@@ -23,20 +23,13 @@
 package org.dataone.client;
 
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.dataone.service.exceptions.InvalidRequest;
-import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.types.v1.Identifier;
-import org.dataone.service.types.v1.NodeReference;
-import org.dataone.service.types.v1.ObjectFormatIdentifier;
-import org.dataone.service.types.v1.Subject;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -49,19 +42,33 @@ public class DataPackageTest {
 	@Test
 	public void testSerializePackage()
 	{
-		Identifier packageId = D1TypeBuilder.buildIdentifier("myPackageID");
-		DataPackage dataPackage = new DataPackage(packageId);
-		Identifier metadataId = D1TypeBuilder.buildIdentifier("myMetadataID");
-		List<Identifier> dataIds = new ArrayList<Identifier>();
-		dataIds.add(D1TypeBuilder.buildIdentifier("myDataID"));
-		dataPackage.insertRelationship(metadataId, dataIds);
-		String resourceMapText = dataPackage.serializePackage();
-//		assertNotNull(resourceMapText);
-		System.out.println("the resource map is: " + resourceMapText);
-		
-		
-		
-		
+	    Identifier packageId = D1TypeBuilder.buildIdentifier("myPackageID");
+	    DataPackage dataPackage = new DataPackage(packageId);
+	    Identifier metadataId = D1TypeBuilder.buildIdentifier("myMetadataID");
+	    List<Identifier> dataIds = new ArrayList<Identifier>();
+	    dataIds.add(D1TypeBuilder.buildIdentifier("myDataID1"));
+	    dataIds.add(D1TypeBuilder.buildIdentifier("myDataID2"));
+	    dataIds.add(D1TypeBuilder.buildIdentifier("myDataID3"));
+	    dataIds.add(D1TypeBuilder.buildIdentifier("myDataID4"));
+	    
+	    dataPackage.insertRelationship(metadataId, dataIds);
+	    
+	    Identifier metadataIDa = D1TypeBuilder.buildIdentifier("myMetadataIDa");
+	    List<Identifier> dataIdsa = new ArrayList<Identifier>();
+	    dataIdsa.add(D1TypeBuilder.buildIdentifier("myDataID1a"));
+	    dataIdsa.add(D1TypeBuilder.buildIdentifier("myDataID2a"));
+	    dataIdsa.add(D1TypeBuilder.buildIdentifier("myDataID3a"));
+	    dataIdsa.add(D1TypeBuilder.buildIdentifier("myDataID4a"));
+
+	    dataPackage.insertRelationship(metadataIDa, dataIdsa);
+	    String resourceMapText = dataPackage.serializePackage();
+	    assertNotNull(resourceMapText);
+	    System.out.println("the resource map is:\n\n " + resourceMapText);
+	    
+	    DataPackage dp2 = dataPackage.deserializePackage(resourceMapText);
+	    assertTrue("deserialized dataPackage should have the original packageId",
+		       dp2.getPackageId().equals(packageId));
+
 	}
 	
 }
