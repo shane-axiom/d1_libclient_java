@@ -47,8 +47,12 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.net.ssl.KeyManager;
@@ -205,6 +209,37 @@ public class CertificateManager {
         	log.error(e.getMessage(), e);
         }
         return caCert;
+    }
+    
+    /**
+     * Find the all CA certificates to be used to validate user certificates.
+     * @return List<X509Certificate> of CAs
+     */
+    private List<X509Certificate> getCACertificates() {
+    	List<X509Certificate> caCerts = null;
+        try {
+            KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            InputStream caStream = this.getClass().getResourceAsStream(caTrustStore);
+            trustStore.load(caStream, caTrustStorePass.toCharArray());
+            Enumeration<String> aliases = trustStore.aliases();
+        	caCerts = new ArrayList<X509Certificate>();
+            while (aliases.hasMoreElements()) {
+            	String caAlias = aliases.nextElement();
+                X509Certificate caCert = (X509Certificate) trustStore.getCertificate(caAlias);
+                caCerts.add(caCert);
+            }
+        } catch (KeyStoreException e) {
+            log.error(e.getMessage(), e);
+        } catch (NoSuchAlgorithmException e) {
+        	log.error(e.getMessage(), e);
+        } catch (CertificateException e) {
+        	log.error(e.getMessage(), e);
+        } catch (FileNotFoundException e) {
+        	log.error(e.getMessage(), e);
+        } catch (IOException e) {
+        	log.error(e.getMessage(), e);
+        }
+        return caCerts;
     }
 
     
@@ -524,42 +559,92 @@ public class CertificateManager {
      */
     private X509TrustManager getTrustManager() throws NoSuchAlgorithmException, KeyStoreException {
     	
-    	if (useDefaultTruststore) {
-    		// this is the Java truststore and is administered outside of the code
-	    	TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());  
-		    trustManagerFactory.init((KeyStore) null);  
-		      
-		    log.debug("JVM Default Trust Managers:");  
-		    for (TrustManager trustManager : trustManagerFactory.getTrustManagers()) {  
-		        log.debug(trustManager);  
-		        if (trustManager instanceof X509TrustManager) {  
-		            X509TrustManager x509TrustManager = (X509TrustManager) trustManager;  
-		            log.debug("Accepted issuers count : " + x509TrustManager.getAcceptedIssuers().length);
-		            //for (X509Certificate issuer: x509TrustManager.getAcceptedIssuers()) {
-		            //	log.debug("trusted issuer: " + issuer.getSubjectDN().toString());
-		            //}
-		            return x509TrustManager;
-		        }  
-		    }
-		    return null;
-    	} else {
+    	X509TrustManager tm = null;
+    	
+    	X509TrustManager jvmTrustManager = null;
+    	
+		// this is the Java truststore and is administered outside of the code
+    	TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());  
+	    trustManagerFactory.init((KeyStore) null);  
+	      
+	    log.debug("JVM Default Trust Managers:");  
+	    for (TrustManager trustManager : trustManagerFactory.getTrustManagers()) {  
+	        log.debug(trustManager);  
+	        if (trustManager instanceof X509TrustManager) {  
+	        	jvmTrustManager = (X509TrustManager) trustManager;  
+	            log.debug("Accepted issuers count : " + jvmTrustManager.getAcceptedIssuers().length);
+	            //for (X509Certificate issuer: x509TrustManager.getAcceptedIssuers()) {
+	            //	log.debug("trusted issuer: " + issuer.getSubjectDN().toString());
+	            //}
+	            
+	            // we will use the default
+	            break;
+	        }  
+	    }
 	    
-		    // otherwise we return a very liberal one
-	        X509TrustManager tm = new X509TrustManager() {
-	            public void checkClientTrusted(X509Certificate[] xcs, String string) throws CertificateException {
-	            	log.debug("checkClientTrusted - " + string);
+	    // choose to use the default as is, or make an augmented trust manager with additional entries
+	    if (useDefaultTruststore) {
+	    	tm = jvmTrustManager;
+	    } else {
+		    // create a trustmanager from the default that is augmented with DataONE-trusted CAs
+			final X509TrustManager defaultTrustManager = jvmTrustManager;
+			tm = new X509TrustManager() {
+				
+				private List<X509Certificate> d1CaCertificates = getCACertificates();
+	
+	            public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+	            	log.debug("checkClientTrusted - " + authType);
+	            	
+	            	// check DataONE-trusted CAs in addition to the default
+	        		boolean trusted = false;
+	        		List<X509Certificate> combinedIssuers = Arrays.asList(getAcceptedIssuers());
+	        		for (X509Certificate cert: chain) {
+	        			if (combinedIssuers.contains(cert)) {
+	        				trusted = true;
+	        				break;
+	        			}
+	        		}
+	        		if (!trusted) {
+	        			//throw new CertificateException("Certificate issuer not found in trusted CAs");
+	        			// try the default which will succeed or throw an exception
+	        			defaultTrustManager.checkClientTrusted(chain, authType);
+	        		}	
 	            }
-	            public void checkServerTrusted(X509Certificate[] xcs, String string) throws CertificateException {
-	            	log.debug("checkServerTrusted - " + string);
+	            
+	            public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+	            	log.debug("checkServerTrusted - " + authType);
+	            		
+	            	// check DataONE-trusted CAs in addition to the default
+	        		boolean trusted = false;
+	        		List<X509Certificate> combinedIssuers = Arrays.asList(getAcceptedIssuers());
+	        		for (X509Certificate cert: chain) {
+	        			if (combinedIssuers.contains(cert)) {
+	        				trusted = true;
+	        				break;
+	        			}
+	        		}
+	        		if (!trusted) {
+	        			//throw new CertificateException("Certificate issuer not found in trusted CAs");
+	        			// try the default, which will either succeed, in which case we are good, or will throw exception
+	        			defaultTrustManager.checkServerTrusted(chain, authType);
+	        		}
 	            }
+	            
 	            public X509Certificate[] getAcceptedIssuers() {
 	            	log.debug("getAcceptedIssuers");
-	            	return null;
+	            	List<X509Certificate> combinedIssuers = new ArrayList<X509Certificate>();
+	            	// add DataONE-trusted CAs as accepted issuers, no matter what
+	            	combinedIssuers.addAll(d1CaCertificates);
+	            	// include the entries from the default
+	            	combinedIssuers.addAll(Arrays.asList(defaultTrustManager.getAcceptedIssuers()));
+	            	
+	            	return combinedIssuers.toArray(new X509Certificate[0]);
 	            }
 	        };
-	    
-	        return tm;
-    	}
+	    }
+
+        return tm;
+
     }
     
     /**
