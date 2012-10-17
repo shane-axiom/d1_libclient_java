@@ -64,6 +64,7 @@ import javax.net.ssl.X509TrustManager;
 import javax.security.auth.x500.X500Principal;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.conn.ssl.SSLSocketFactory;
@@ -102,8 +103,14 @@ public class CertificateManager {
 	private String keyStoreType = null;
 
     // this is packaged with the library
-    private static final String caTrustStore = "cilogon-trusted-certs";
+    private static final String caTrustStore ;
     private static final String caTrustStorePass = "cilogon";
+    
+    static {
+    	caTrustStore = "cilogon-trusted-certs";
+    	
+    }
+    
     
     private static String CILOGON_OID_SUBJECT_INFO = null;
 
@@ -315,9 +322,17 @@ public class CertificateManager {
      * @throws IOException
      */
     private DERObject toDERObject(byte[] data) throws IOException {
-        ByteArrayInputStream inStream = new ByteArrayInputStream(data);
-        ASN1InputStream asnInputStream = new ASN1InputStream(inStream);
-        return asnInputStream.readObject();
+        
+    	DERObject dero = null;
+    	ASN1InputStream asnInputStream = null;
+    	try {
+        	ByteArrayInputStream inStream = new ByteArrayInputStream(data);
+        	asnInputStream = new ASN1InputStream(inStream);
+        	dero = asnInputStream.readObject();
+    	} finally {
+    		IOUtils.closeQuietly(asnInputStream);
+    	}
+        return dero;
     }
     
     /**
@@ -685,21 +700,26 @@ public class CertificateManager {
 	        // get the private key and certificate from the PEM
 	        // TODO: find a way to do this with default Java provider (not Bouncy Castle)?
 	    	Security.addProvider(new BouncyCastleProvider());
-	        PEMReader pemReader = new PEMReader(new FileReader(certLoc));
-	        Object pemObject = null;
+	    	PEMReader pemReader = null;
+	    	try {
+	    		pemReader = new PEMReader(new FileReader(certLoc));
+	    		Object pemObject = null;
 	        
-	        KeyPair keyPair = null;
-	        while ((pemObject = pemReader.readObject()) != null) {
-				if (pemObject instanceof PrivateKey) {
-					privateKey = (PrivateKey) pemObject;
-				}
-				else if (pemObject instanceof KeyPair) {
-					keyPair = (KeyPair) pemObject;
-					privateKey = keyPair.getPrivate();
-				} else if (pemObject instanceof X509Certificate) {
-					certificate = (X509Certificate) pemObject;
-				}
-			}
+	    		KeyPair keyPair = null;
+	    		while ((pemObject = pemReader.readObject()) != null) {
+	    			if (pemObject instanceof PrivateKey) {
+	    				privateKey = (PrivateKey) pemObject;
+	    			}
+	    			else if (pemObject instanceof KeyPair) {
+	    				keyPair = (KeyPair) pemObject;
+	    				privateKey = keyPair.getPrivate();
+	    			} else if (pemObject instanceof X509Certificate) {
+	    				certificate = (X509Certificate) pemObject;
+	    			}
+	    		}
+	    	} finally {
+	    		IOUtils.closeQuietly(pemReader);
+	    	}
     	}
     	
     	KeyStore keyStore  = KeyStore.getInstance(keyStoreType);
@@ -727,30 +747,34 @@ public class CertificateManager {
         
         // is there a password for the key?
         PEMReader pemReader = null;
-        if (password != null && password.length() > 0) {
-        	PasswordFinder passwordFinder = new PasswordFinder() {
-				@Override
-				public char[] getPassword() {
-					return password.toCharArray();
-				}
-        	};
-			pemReader = new PEMReader(new FileReader(fileName), passwordFinder );
-        } else {
-        	pemReader = new PEMReader(new FileReader(fileName));
+        try {
+        	if (password != null && password.length() > 0) {
+        		PasswordFinder passwordFinder = new PasswordFinder() {
+        			@Override
+        			public char[] getPassword() {
+        				return password.toCharArray();
+        			}
+        		};
+        		pemReader = new PEMReader(new FileReader(fileName), passwordFinder );
+        	} else {
+        		pemReader = new PEMReader(new FileReader(fileName));
+        	}
+
+        	KeyPair keyPair = null;
+        	while ((pemObject = pemReader.readObject()) != null) {
+        		if (pemObject instanceof PrivateKey) {
+        			privateKey = (PrivateKey) pemObject;
+        			break;
+        		}
+        		else if (pemObject instanceof KeyPair) {
+        			keyPair = (KeyPair) pemObject;
+        			privateKey = keyPair.getPrivate();
+        			break;
+        		}
+        	}
+        } finally {
+        	IOUtils.closeQuietly(pemReader);
         }
-        
-        KeyPair keyPair = null;
-        while ((pemObject = pemReader.readObject()) != null) {
-			if (pemObject instanceof PrivateKey) {
-				privateKey = (PrivateKey) pemObject;
-				break;
-			}
-			else if (pemObject instanceof KeyPair) {
-				keyPair = (KeyPair) pemObject;
-				privateKey = keyPair.getPrivate();
-				break;
-			}
-		}
         return privateKey;
     }
 
@@ -766,15 +790,20 @@ public class CertificateManager {
 		
     	// get the private key and certificate from the PEM
     	Security.addProvider(new BouncyCastleProvider());
-        PEMReader pemReader = new PEMReader(new FileReader(fileName));
-        Object pemObject = null;
-        
-        while ((pemObject = pemReader.readObject()) != null) {
-			if (pemObject instanceof X509Certificate) {
-				certificate = (X509Certificate) pemObject;
-				break;
-			}
-		}
+        PEMReader pemReader = null;
+        try {
+        	pemReader = new PEMReader(new FileReader(fileName));
+        	Object pemObject = null;
+
+        	while ((pemObject = pemReader.readObject()) != null) {
+        		if (pemObject instanceof X509Certificate) {
+        			certificate = (X509Certificate) pemObject;
+        			break;
+        		}
+        	}
+        } finally {
+        	IOUtils.closeQuietly(pemReader);
+        }
         return certificate;
     }
     
