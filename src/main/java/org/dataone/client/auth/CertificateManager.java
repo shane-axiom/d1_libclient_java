@@ -108,7 +108,7 @@ public class CertificateManager {
 	// getResourceAsStream in loadTrustStore.  Otherwise it won't be read.
     private static final String caTrustStore = "/org/dataone/client/auth/d1-trusted-certs.crt";
     private static final String caTrustStorePass = "cilogon";
-    
+    private static KeyStore d1TrustStore;
    
     
     private static String CILOGON_OID_SUBJECT_INFO = null;
@@ -203,43 +203,45 @@ public class CertificateManager {
 	// to be replaced
 	private KeyStore loadTrustStore()
 	{
-		KeyStore trustStore = null;
-        InputStream caStream = null;
-        try {
-            trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
-            String auxLocation = System.getProperty("user.home") + System.getProperty("file.separator") +
-            		Settings.getConfiguration().getString("certificate.truststore.aux.location");
+		if (d1TrustStore == null ) {
+			this.d1TrustStore = null;
+			InputStream caStream = null;
+			try {
+				this.d1TrustStore = KeyStore.getInstance(KeyStore.getDefaultType());
+				String auxLocation = System.getProperty("user.home") + System.getProperty("file.separator") +
+						Settings.getConfiguration().getString("certificate.truststore.aux.location");
 
-            if (auxLocation != null) {
-            	File f = new File(auxLocation);
-            	if (f.exists()) 
-            		try {
-            			caStream = new FileInputStream(f);
-            		} catch (Exception e) {
-            			// if we got here, the file was there but there was a problem
-            			// we will continue anyway
-            			log.error(e.getMessage(), e);
-            		}
-            }
-            if (caStream == null)
-            	System.out.println("caTrustStore: " + caTrustStore);
-            	caStream = this.getClass().getResourceAsStream(caTrustStore);
+				if (auxLocation != null) {
+					File f = new File(auxLocation);
+					if (f.exists()) 
+						try {
+							caStream = new FileInputStream(f);
+						} catch (Exception e) {
+							// if we got here, the file was there but there was a problem
+							// we will continue anyway
+							log.error(e.getMessage(), e);
+						}
+				}
+				if (caStream == null)
+					System.out.println("caTrustStore: " + caTrustStore);
+				caStream = this.getClass().getResourceAsStream(caTrustStore);
 
-            trustStore.load(caStream, caTrustStorePass.toCharArray());
-        } catch (KeyStoreException e) {
-            log.error(e.getMessage(), e);
-        } catch (NoSuchAlgorithmException e) {
-        	log.error(e.getMessage(), e);
-        } catch (CertificateException e) {
-        	log.error(e.getMessage(), e);
-        } catch (FileNotFoundException e) {
-        	log.error(e.getMessage(), e);
-        } catch (IOException e) {
-        	log.error(e.getMessage(), e);
-        } finally {
-        	IOUtils.closeQuietly(caStream);
-        }
-        return trustStore;
+				this.d1TrustStore.load(caStream, caTrustStorePass.toCharArray());
+			} catch (KeyStoreException e) {
+				log.error(e.getMessage(), e);
+			} catch (NoSuchAlgorithmException e) {
+				log.error(e.getMessage(), e);
+			} catch (CertificateException e) {
+				log.error(e.getMessage(), e);
+			} catch (FileNotFoundException e) {
+				log.error(e.getMessage(), e);
+			} catch (IOException e) {
+				log.error(e.getMessage(), e);
+			} finally {
+				IOUtils.closeQuietly(caStream);
+			}
+		}
+        return this.d1TrustStore;
 	}
 	
 	/**
