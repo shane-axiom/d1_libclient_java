@@ -1,3 +1,8 @@
+Regarding d1-trusted-certs.crt file
+-----------------------------------
+This file must have a file extension on it (that matches what's in CertificateManager too, of course)
+for it to be found by getResourceAsStream()
+
 On the client side
 -------------------
 -Get a CILogon certificate using the DataONE skin:

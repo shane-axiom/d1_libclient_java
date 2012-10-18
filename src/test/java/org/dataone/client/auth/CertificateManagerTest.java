@@ -60,6 +60,25 @@ public class CertificateManagerTest {
         assertTrue(true);
     }
     
+    
+    @Test
+    public void testTrustManager() {
+    	
+        // Load the manager itself
+        CertificateManager cm = CertificateManager.getInstance();
+        assertNotNull(cm);
+        
+        // Get a certificate for the Root CA
+        X509Certificate caCert = cm.getCACert(CA_INVALID);
+        assertNotNull(caCert);
+        System.out.println(caCert.getSubjectDN());
+        //cm.displayCertificate(caCert);
+    	
+    	
+    }
+    
+    
+    
     @Ignore("will not pass until certificates installed on Hudson")
     @Test
     public void testCertificateManager() {
@@ -69,7 +88,7 @@ public class CertificateManagerTest {
         assertNotNull(cm);
         
         // Get a certificate for the Root CA
-        X509Certificate caCert = cm.getCACert(CA_VALID);
+        X509Certificate caCert = cm.getCACert(CA_INVALID);
         assertNotNull(caCert);
         cm.displayCertificate(caCert);
 
