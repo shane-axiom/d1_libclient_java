@@ -25,6 +25,7 @@ package org.dataone.client.auth;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -103,14 +104,12 @@ public class CertificateManager {
 	private String keyStoreType = null;
 
     // this is packaged with the library
-    private static final String caTrustStore ;
+	// note: the caTrustStore file needs to have a file extension to be found by 
+	// getResourceAsStream in loadTrustStore.  Otherwise it won't be read.
+    private static final String caTrustStore = "/org/dataone/client/auth/d1-trusted-certs.crt";
     private static final String caTrustStorePass = "cilogon";
     
-    static {
-    	caTrustStore = "cilogon-trusted-certs";
-    	
-    }
-    
+   
     
     private static String CILOGON_OID_SUBJECT_INFO = null;
 
@@ -191,19 +190,42 @@ public class CertificateManager {
 		certificates.put(subject, certificate);
 		keys.put(subject, key);
 	}
+
 	
-	/**
-     * Find the CA certificate to be used to validate user certificates.
-     * @return X509Certificate for the root CA
-     */
-    public X509Certificate getCACert(String caAlias) {
-        X509Certificate caCert = null;
-        KeyStore trustStore = null;
+	
+	/*
+	 * this method builds the truststore from the proper file, first looking
+	 * for the one at the auxiliary location, then defaulting to the one shipped
+	 * with libclient_java.  The idea that updates to the dataone-trusted lists
+	 * should be used first, if they exist.
+	 */
+	// TODO: the mechanism for deciding the aux.location is a hack that needs
+	// to be replaced
+	private KeyStore loadTrustStore()
+	{
+		KeyStore trustStore = null;
+        InputStream caStream = null;
         try {
             trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
-            InputStream caStream = this.getClass().getResourceAsStream(caTrustStore);
+            String auxLocation = System.getProperty("user.home") + System.getProperty("file.separator") +
+            		Settings.getConfiguration().getString("certificate.truststore.aux.location");
+
+            if (auxLocation != null) {
+            	File f = new File(auxLocation);
+            	if (f.exists()) 
+            		try {
+            			caStream = new FileInputStream(f);
+            		} catch (Exception e) {
+            			// if we got here, the file was there but there was a problem
+            			// we will continue anyway
+            			log.error(e.getMessage(), e);
+            		}
+            }
+            if (caStream == null)
+            	System.out.println("caTrustStore: " + caTrustStore);
+            	caStream = this.getClass().getResourceAsStream(caTrustStore);
+
             trustStore.load(caStream, caTrustStorePass.toCharArray());
-            caCert = (X509Certificate) trustStore.getCertificate(caAlias);
         } catch (KeyStoreException e) {
             log.error(e.getMessage(), e);
         } catch (NoSuchAlgorithmException e) {
@@ -214,7 +236,25 @@ public class CertificateManager {
         	log.error(e.getMessage(), e);
         } catch (IOException e) {
         	log.error(e.getMessage(), e);
+        } finally {
+        	IOUtils.closeQuietly(caStream);
         }
+        return trustStore;
+	}
+	
+	/**
+     * Find the CA certificate to be used to validate user certificates.
+     * @return X509Certificate for the root CA
+     */
+    public X509Certificate getCACert(String caAlias) 
+    {
+        X509Certificate caCert = null;
+        KeyStore trustStore = loadTrustStore();   
+        try {
+			caCert = (X509Certificate) trustStore.getCertificate(caAlias);
+        } catch (KeyStoreException e) {
+            log.error(e.getMessage(), e);
+		}
         return caCert;
     }
     
@@ -224,10 +264,9 @@ public class CertificateManager {
      */
     private List<X509Certificate> getCACertificates() {
     	List<X509Certificate> caCerts = null;
+    	InputStream caStream = null;
         try {
-            KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
-            InputStream caStream = this.getClass().getResourceAsStream(caTrustStore);
-            trustStore.load(caStream, caTrustStorePass.toCharArray());
+            KeyStore trustStore = loadTrustStore();
             Enumeration<String> aliases = trustStore.aliases();
         	caCerts = new ArrayList<X509Certificate>();
             while (aliases.hasMoreElements()) {
@@ -237,14 +276,8 @@ public class CertificateManager {
             }
         } catch (KeyStoreException e) {
             log.error(e.getMessage(), e);
-        } catch (NoSuchAlgorithmException e) {
-        	log.error(e.getMessage(), e);
-        } catch (CertificateException e) {
-        	log.error(e.getMessage(), e);
-        } catch (FileNotFoundException e) {
-        	log.error(e.getMessage(), e);
-        } catch (IOException e) {
-        	log.error(e.getMessage(), e);
+        } finally {
+        	IOUtils.closeQuietly(caStream);
         }
         return caCerts;
     }
@@ -824,13 +857,14 @@ public class CertificateManager {
 
     	// UID
     	String uid = null;
+    	BufferedReader reader = null;
     	try {
     		// get the user id from *nix systems
     		Process process = Runtime.getRuntime().exec("id -u");
     		int ret = process.waitFor();
     		if (ret == 0) {
     			InputStream stream = process.getInputStream();
-    			BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+    			reader = new BufferedReader(new InputStreamReader(stream));
     			String result = reader.readLine();
     			// verify it is a number
     			int testUid = Integer.parseInt(result);
@@ -838,6 +872,8 @@ public class CertificateManager {
     		}
     	} catch (Exception e) {
 			log.warn("No UID found, using user.name");
+		} finally {
+			IOUtils.closeQuietly(reader);
 		}
     	if (uid == null) {
     		uid = System.getProperty("user.name");
