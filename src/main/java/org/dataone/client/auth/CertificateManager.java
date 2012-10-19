@@ -88,7 +88,13 @@ import org.jibx.runtime.JiBXException;
 
 /**
  * Import and manage certificates to be used for authentication against DataONE
- * service providers.  This class is a singleton, as in any given application there 
+ * service providers.  Also sets up the TrustManager used by clients for authenticating
+ * certificates coming from DataONE services.  It knows how to find CILogon certificates,
+ * and uses the list of dataONE trusted CAs shipped with d1_libclient_java package.
+ * (see getTrustManager() method for details)
+ * 
+ * 
+ * This class is a singleton, as in any given application there 
  * need only be one collection of certificates.  
  * @author Matt Jones, Ben Leinfelder
  */
@@ -105,7 +111,7 @@ public class CertificateManager {
 
     // this is packaged with the library
     private static final String shippedCAcerts = "/org/dataone/client/auth/d1-trusted-certs.crt";
-    private static final char[] caTrustStorePass = "dataOnE".toCharArray();
+    private static final char[] caTrustStorePass = "dataONE".toCharArray();
     private KeyStore d1TrustStore;
    
     // BouncyCastle added to be able to get the private key and certificate from the PEM
@@ -123,7 +129,7 @@ public class CertificateManager {
     
     private Map<String, PrivateKey> keys;
 
-	private boolean useDefaultTruststore = true;;
+	private boolean trustStoreIncludesD1CAs = true;
     
     /*
      * Some useful links to background info:
@@ -145,7 +151,7 @@ public class CertificateManager {
     	try {
 	    	keyStorePassword = Settings.getConfiguration().getString("certificate.keystore.password");
 	    	keyStoreType = Settings.getConfiguration().getString("certificate.keystore.type", KeyStore.getDefaultType());
-	    	useDefaultTruststore = Settings.getConfiguration().getBoolean("certificate.truststore.useDefault", true);
+	    	trustStoreIncludesD1CAs = Settings.getConfiguration().getBoolean("certificate.truststore.includeD1CAs", true);
 	    	certificates = new HashMap<String, X509Certificate>();
 	    	keys = new HashMap<String, PrivateKey>();
 	    	
@@ -184,7 +190,8 @@ public class CertificateManager {
 
 
 	/**
-	 * Track certificates and keys by subject 
+	 * Register certificates to be used by getSSLSocjetFactory(subject) for setting
+	 * up connections, using the subject as the lookup key
 	 * @param subject
 	 * @param certificate
 	 * @param key
@@ -287,7 +294,7 @@ public class CertificateManager {
 	}
 	
 	/**
-     * Find the CA certificate to be used to validate user certificates.
+     * Find the supplemental CA certificate to be used to validate user (peer) <
      * @return X509Certificate for the root CA
      */
     public X509Certificate getCACert(String caAlias) 
@@ -303,10 +310,10 @@ public class CertificateManager {
     }
     
     /**
-     * Find the all CA certificates to be used to validate user certificates.
+     * Find all supplemental CA certificates to be used to validate peer certificates.
      * @return List<X509Certificate> of CAs
      */
-    private List<X509Certificate> getCACertificates() {
+    private List<X509Certificate> getSupplementalCACertificates() {
     	List<X509Certificate> caCerts = null;
     	InputStream caStream = null;
         try {
@@ -421,12 +428,15 @@ public class CertificateManager {
      * @throws IllegalAccessException
      * @throws JiBXException
      */
-    public SubjectInfo getSubjectInfo(X509Certificate certificate) throws IOException, InstantiationException, IllegalAccessException, JiBXException {
+    public SubjectInfo getSubjectInfo(X509Certificate certificate) 
+    throws IOException, InstantiationException, IllegalAccessException, JiBXException 
+    {
     	String subjectInfoValue = this.getExtensionValue(certificate, CILOGON_OID_SUBJECT_INFO);
     	log.debug("Certificate subjectInfoValue: " + subjectInfoValue);
     	SubjectInfo subjectInfo = null;
     	if (subjectInfoValue != null) {
-    		subjectInfo = TypeMarshaller.unmarshalTypeFromStream(SubjectInfo.class, new ByteArrayInputStream(subjectInfoValue.getBytes("UTF-8")));
+    		subjectInfo = TypeMarshaller.unmarshalTypeFromStream(SubjectInfo.class, 
+    				new ByteArrayInputStream(subjectInfoValue.getBytes("UTF-8")));
     	}
     	return subjectInfo;
     }
@@ -584,13 +594,21 @@ public class CertificateManager {
     
     /**
      * For use by clients making requests via SSL connection.
-     * Prepares and returns an SSL socket factory loaded with the certificate
-     * determined by the subjectString.  
-     * If the subjectString parameter is null, finds the certificate first using the 
-     * set certificate location, and then the default location.
-     * @param subjectString - used to determine which certificate to use for the connection
-     *                        if null, finds the certificate first using the set certificate location,
-     *                        and then the default location.
+     * It prepares and returns an SSL socket factory loaded with the certificate
+     * determined by the subjectString (see parameter details).
+     * <br>
+     * It also configures a TrustManager that uses a supplemental trust-store
+     * of DataONE trusted CAs in addition to the default set of CAs registered
+     * to the local system (exposed via Java Security).
+     * <br>
+     * One can turn off the supplemental DataONE trusted CAs by setting the property
+     * 'certificate.truststore.includeD1CAs=false'
+     * 
+     * @param subjectString - used to determine which certificate to use for the connection.
+     *                        If null, it auto-discovers the certificate, using the setCertificate()
+     *                        location, (if not set, uses the default location)
+     *                        Otherwise, looks up the certificate from among those registered
+     *                        with registerCertificate().
      * @return an SSLSockectFactory object configured with the specified certificate
      * @throws NoSuchAlgorithmException
      * @throws UnrecoverableKeyException
@@ -604,7 +622,7 @@ public class CertificateManager {
     KeyManagementException, CertificateException, IOException 
     {
     	// our return object
-    	log.debug("Enter getSSLSocketFactory");
+    	log.debug("Entering getSSLSocketFactory");
     	SSLSocketFactory socketFactory = null;
     	KeyStore keyStore = null;
     	
@@ -631,12 +649,12 @@ public class CertificateManager {
         
         // initialize the context
         ctx.init(keyManagers, new TrustManager[]{tm}, new SecureRandom());
-        if (useDefaultTruststore) {
-        	socketFactory = new SSLSocketFactory(ctx);
-        } else {
+        if (trustStoreIncludesD1CAs) {
 	        //socketFactory = new SSLSocketFactory(ctx, SSLSocketFactory.STRICT_HOSTNAME_VERIFIER);
 	        //socketFactory = new SSLSocketFactory(ctx, SSLSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
 	        socketFactory = new SSLSocketFactory(ctx, SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+        } else {
+	        socketFactory = new SSLSocketFactory(ctx);
         }
         
         return socketFactory;
@@ -675,14 +693,13 @@ public class CertificateManager {
 	    }
 	    
 	    // choose to use the default as is, or make an augmented trust manager with additional entries
-	    if (useDefaultTruststore) {
-	    	tm = jvmTrustManager;
-	    } else {
+	    if (trustStoreIncludesD1CAs) {
+
 		    // create a trustmanager from the default that is augmented with DataONE-trusted CAs
 			final X509TrustManager defaultTrustManager = jvmTrustManager;
 			tm = new X509TrustManager() {
 				
-				private List<X509Certificate> d1CaCertificates = getCACertificates();
+				private List<X509Certificate> d1CaCertificates = getSupplementalCACertificates();
 	
 	            public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
 	            	log.debug("checkClientTrusted - " + authType);
@@ -734,6 +751,9 @@ public class CertificateManager {
 	            }
 	        };
 	    }
+	    else {
+	    	tm = jvmTrustManager;
+	    }
 
         return tm;
 
@@ -774,9 +794,6 @@ public class CertificateManager {
 	    	if (certLoc == null) {
 	    		certLoc = locateCertificate();
 	    	}
-	        // get the private key and certificate from the PEM
-	        // TODO: find a way to do this with default Java provider (not Bouncy Castle)?
-	    	Security.addProvider(new BouncyCastleProvider());
 	    	PEMReader pemReader = null;
 	    	try {
 	    		pemReader = new PEMReader(new FileReader(certLoc));
@@ -817,8 +834,6 @@ public class CertificateManager {
      */
     public PrivateKey loadPrivateKeyFromFile(String fileName, final String password) throws IOException {
 		
-        // get the private key and certificate from the PEM
-    	Security.addProvider(new BouncyCastleProvider());
         Object pemObject = null;
         PrivateKey privateKey = null;
         
@@ -865,8 +880,6 @@ public class CertificateManager {
     public X509Certificate loadCertificateFromFile(String fileName) throws IOException {
 		X509Certificate certificate = null;
 		
-    	// get the private key and certificate from the PEM
-    	Security.addProvider(new BouncyCastleProvider());
         PEMReader pemReader = null;
         try {
         	pemReader = new PEMReader(new FileReader(fileName));
