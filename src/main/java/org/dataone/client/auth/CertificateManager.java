@@ -25,12 +25,12 @@ package org.dataone.client.auth;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URL;
 import java.security.InvalidKeyException;
 import java.security.KeyManagementException;
 import java.security.KeyPair;
@@ -104,12 +104,15 @@ public class CertificateManager {
 	private String keyStoreType = null;
 
     // this is packaged with the library
-	// note: the caTrustStore file needs to have a file extension to be found by 
-	// getResourceAsStream in loadTrustStore.  Otherwise it won't be read.
-    private static final String caTrustStore = "/org/dataone/client/auth/d1-trusted-certs.crt";
-    private static final String caTrustStorePass = "cilogon";
-    private static KeyStore d1TrustStore;
+    private static final String shippedCAcerts = "/org/dataone/client/auth/d1-trusted-certs.crt";
+    private static final char[] caTrustStorePass = "dataOnE".toCharArray();
+    private KeyStore d1TrustStore;
    
+    // BouncyCastle added to be able to get the private key and certificate from the PEM
+    // TODO: find a way to do this with default Java provider (not Bouncy Castle)? 
+    static {
+		Security.addProvider(new BouncyCastleProvider());
+    }
     
     private static String CILOGON_OID_SUBJECT_INFO = null;
 
@@ -199,49 +202,88 @@ public class CertificateManager {
 	 * with libclient_java.  The idea that updates to the dataone-trusted lists
 	 * should be used first, if they exist.
 	 */
-	// TODO: the mechanism for deciding the aux.location is a hack that needs
-	// to be replaced
+	// TODO: it would be best to have the aux.location be a standard predefined location,
+	// so that multiple libclient-using applications can get the update.
 	private KeyStore loadTrustStore()
 	{
-		if (d1TrustStore == null ) {
-			this.d1TrustStore = null;
-			InputStream caStream = null;
+		if (this.d1TrustStore == null ) {
 			try {
 				this.d1TrustStore = KeyStore.getInstance(KeyStore.getDefaultType());
-				String auxLocation = System.getProperty("user.home") + System.getProperty("file.separator") +
-						Settings.getConfiguration().getString("certificate.truststore.aux.location");
-
+			    this.d1TrustStore.load(null, caTrustStorePass);
+				
+				
+				String auxLocation = Settings.getConfiguration().getString("certificate.truststore.aux.location");
+				
+				int count = 0;
 				if (auxLocation != null) {
-					File f = new File(auxLocation);
-					if (f.exists()) 
-						try {
-							caStream = new FileInputStream(f);
-						} catch (Exception e) {
-							// if we got here, the file was there but there was a problem
-							// we will continue anyway
-							log.error(e.getMessage(), e);
+					File loc = new File(auxLocation);
+					if (loc.exists()) {
+						if (loc.isDirectory()) {
+							for (File f : loc.listFiles()) {
+								count += loadIntoTrustStore(this.d1TrustStore, f.getAbsolutePath());
+							}
+						} 
+						else {
+							count += loadIntoTrustStore(this.d1TrustStore, loc.getAbsolutePath());
 						}
+					}
 				}
-				if (caStream == null)
-					System.out.println("caTrustStore: " + caTrustStore);
-				caStream = this.getClass().getResourceAsStream(caTrustStore);
-
-				this.d1TrustStore.load(caStream, caTrustStorePass.toCharArray());
+				if (count == 0) {
+					URL shippedCerts = this.getClass().getResource(shippedCAcerts);
+					count += loadIntoTrustStore(this.d1TrustStore, shippedCerts.getPath());
+				}
+				Enumeration<String> aliases = this.d1TrustStore.aliases();
+				while (aliases.hasMoreElements()) {
+					log.debug(aliases.nextElement());
+				}
+				log.debug(this.d1TrustStore.aliases());
 			} catch (KeyStoreException e) {
+				log.error(e.getMessage(), e);
+			} catch (FileNotFoundException e) {
 				log.error(e.getMessage(), e);
 			} catch (NoSuchAlgorithmException e) {
 				log.error(e.getMessage(), e);
 			} catch (CertificateException e) {
 				log.error(e.getMessage(), e);
-			} catch (FileNotFoundException e) {
-				log.error(e.getMessage(), e);
 			} catch (IOException e) {
 				log.error(e.getMessage(), e);
-			} finally {
-				IOUtils.closeQuietly(caStream);
-			}
+			} 
 		}
+	
         return this.d1TrustStore;
+	}
+	
+	
+	private int loadIntoTrustStore(KeyStore trustStore, String certLoc) 
+	throws FileNotFoundException
+	{
+    	int count = 0;
+		PEMReader pemReader = null;
+    	try {
+    		pemReader = new PEMReader(new FileReader(certLoc));
+    		
+    		Object pemObject;
+			log.info("loading into client truststore: ");
+    		while ((pemObject = pemReader.readObject()) != null) {
+    			if (pemObject instanceof X509Certificate) {
+    				X509Certificate certificate = (X509Certificate) pemObject;
+    				String alias = certificate.getSubjectX500Principal().getName();
+    				
+    				if (!trustStore.containsAlias(alias)) {
+    					log.info(count + " alias " + alias);
+    					trustStore.setCertificateEntry(alias, certificate);
+    					count++;
+    				}
+    			}
+    		}
+    	} catch (KeyStoreException e) {
+    		log.error(e.getMessage() + " after loading " + count + "certificates", e);
+		} catch (IOException e) {
+			log.error(e.getMessage() + " after loading " + count + "certificates", e);
+		} finally {
+    		IOUtils.closeQuietly(pemReader);
+    	}
+    	return count;
 	}
 	
 	/**

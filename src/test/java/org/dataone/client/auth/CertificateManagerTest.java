@@ -69,7 +69,7 @@ public class CertificateManagerTest {
         assertNotNull(cm);
         
         // Get a certificate for the Root CA
-        X509Certificate caCert = cm.getCACert(CA_INVALID);
+        X509Certificate caCert = cm.getCACert("cn=dataone root ca,dc=dataone,dc=org");
         assertNotNull(caCert);
         System.out.println(caCert.getSubjectDN());
         //cm.displayCertificate(caCert);
@@ -88,7 +88,7 @@ public class CertificateManagerTest {
         assertNotNull(cm);
         
         // Get a certificate for the Root CA
-        X509Certificate caCert = cm.getCACert(CA_INVALID);
+        X509Certificate caCert = cm.getCACert("cn=dataone root ca,dc=dataone,dc=org");
         assertNotNull(caCert);
         cm.displayCertificate(caCert);
 
