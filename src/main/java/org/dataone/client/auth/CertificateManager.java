@@ -60,6 +60,9 @@ import java.util.Map;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocket;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
@@ -70,6 +73,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.DERObject;
 import org.bouncycastle.asn1.DEROctetString;
@@ -102,6 +106,7 @@ import org.jibx.runtime.JiBXException;
 public class CertificateManager {
 	
 	private static Log log = LogFactory.getLog(CertificateManager.class);
+//	private static Log trustManLog = LogFactory.getLog(X509TrustManager.class);
 	
 	// this can be set by caller if the default discovery mechanism is not applicable
 	private String certificateLocation = null;
@@ -628,7 +633,7 @@ public class CertificateManager {
     KeyManagementException, CertificateException, IOException 
     {
     	// our return object
-    	log.debug("Entering getSSLSocketFactory");
+    	log.info("Entering getSSLSocketFactory");
     	SSLSocketFactory socketFactory = null;
     	KeyStore keyStore = null;
     	
@@ -656,9 +661,40 @@ public class CertificateManager {
         // initialize the context
         ctx.init(keyManagers, new TrustManager[]{tm}, new SecureRandom());
         if (trustStoreIncludesD1CAs) {
+        	log.info("using allow-all hostname verifier");
 	        //socketFactory = new SSLSocketFactory(ctx, SSLSocketFactory.STRICT_HOSTNAME_VERIFIER);
 	        //socketFactory = new SSLSocketFactory(ctx, SSLSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
-	        socketFactory = new SSLSocketFactory(ctx, SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+        	
+        	// the ALLOW_ALL_HOSTNAME_VERIFIER did not work as advertised - it only overrode 1 of the verify methods
+	        X509HostnameVerifier allow_all = new X509HostnameVerifier() 
+	        {
+	        	
+	        	public void verify(String host, X509Certificate cert)
+	        	throws SSLException
+	        	{
+	        		; //never throw an exception
+	        	}
+	
+	        	public void verify(String host, String[] cns, String[] subjectAlts)
+	        	throws SSLException
+	        	{
+	        		; //never throw an exception
+	        	}
+
+				@Override
+				public boolean verify(String arg0, SSLSession arg1) {	
+					return true;
+				}
+
+				@Override
+				public void verify(String arg0, SSLSocket arg1)
+						throws IOException {
+					; //never thorw an exception
+					
+				}
+	        };
+	        
+        	socketFactory = new SSLSocketFactory(ctx, allow_all);
         } else {
 	        socketFactory = new SSLSocketFactory(ctx);
         }
@@ -700,7 +736,8 @@ public class CertificateManager {
 	    
 	    // choose to use the default as is, or make an augmented trust manager with additional entries
 	    if (trustStoreIncludesD1CAs) {
-
+	    	log.info("creating custom TrustManager");
+	    	
 		    // create a trustmanager from the default that is augmented with DataONE-trusted CAs
 			final X509TrustManager defaultTrustManager = jvmTrustManager;
 			tm = new X509TrustManager() {
@@ -708,7 +745,7 @@ public class CertificateManager {
 				private List<X509Certificate> d1CaCertificates = getSupplementalCACertificates();
 	
 	            public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-	            	log.debug("checkClientTrusted - " + authType);
+	            	System.out.println("checkClientTrusted - " + authType);
 	            
 	            	// check DataONE-trusted CAs in addition to the default
 	        		boolean trusted = false;
@@ -727,9 +764,8 @@ public class CertificateManager {
 	            }
 	            
 	            public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-	            	log.debug("checkServerTrusted - " + authType);
-	            		
-	            	
+	            	System.out.println("checkServerTrusted - " + authType);
+
 	            	// check DataONE-trusted CAs in addition to the default
 	        		boolean trusted = false;
 	        		List<X509Certificate> combinedIssuers = Arrays.asList(getAcceptedIssuers());
@@ -743,11 +779,12 @@ public class CertificateManager {
 	        			//throw new CertificateException("Certificate issuer not found in trusted CAs");
 	        			// try the default, which will either succeed, in which case we are good, or will throw exception
 	        			try {
+	        				System.out.println("CertMan Custom TrustManager: checking JVM trusted certs");
 	        				defaultTrustManager.checkServerTrusted(chain, authType);
 	        			} catch (CertificateException ce) {
-	        				log.warn("server cert chain subjectDNs: ");
+	        				System.out.println("CertMan Custom TrustManager: server cert chain subjectDNs: ");
 	        				for (X509Certificate cert: chain) {
-	    	            		log.warn("  " + cert.getSubjectDN());
+	        					System.out.println("CertMan Custom TrustManager:  " + cert.getSubjectDN());
 	    	            	}
 	        				throw ce;
 	        			}
@@ -755,7 +792,6 @@ public class CertificateManager {
 	            }
 	            
 	            public X509Certificate[] getAcceptedIssuers() {
-	            	log.debug("getAcceptedIssuers");
 	            	List<X509Certificate> combinedIssuers = new ArrayList<X509Certificate>();
 	            	// add DataONE-trusted CAs as accepted issuers, no matter what
 	            	combinedIssuers.addAll(d1CaCertificates);
@@ -767,6 +803,7 @@ public class CertificateManager {
 	        };
 	    }
 	    else {
+	    	log.info("using JVM TrustManager");
 	    	tm = jvmTrustManager;
 	    }
 

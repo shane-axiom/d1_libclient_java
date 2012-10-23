@@ -33,7 +33,10 @@ import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 
 import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.dataone.client.CNode;
 import org.dataone.configuration.Settings;
+import org.dataone.service.exceptions.NotImplemented;
+import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1.Subject;
 import org.dataone.service.types.v1.SubjectInfo;
@@ -72,11 +75,17 @@ public class CertificateManagerTest {
         X509Certificate caCert = cm.getCACert("cn=dataone root ca,dc=dataone,dc=org");
         assertNotNull(caCert);
         System.out.println(caCert.getSubjectDN());
-        //cm.displayCertificate(caCert);
-    	
-    	
+        //cm.displayCertificate(caCert);	
     }
     
+   // this was a temporary test to test against a real SSL handshake - if necessary
+    // move it to d1_integration
+ //   @Test
+    public void testWildcardCert() throws NotImplemented, ServiceFailure {
+    	CNode cn = new CNode("https://cn-dev.test.dataone.org/cn");
+    	cn.listNodes();
+    	
+    }
     
     
     @Ignore("will not pass until certificates installed on Hudson")
@@ -101,6 +110,10 @@ public class CertificateManagerTest {
         boolean valid = cm.verify(cert, caCert);
         assertTrue(valid);
     }
+ 
+    
+    
+    
     
     @Ignore("will not pass until certificates installed on Hudson")
     @Test
