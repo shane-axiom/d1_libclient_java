@@ -30,6 +30,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.URL;
 import java.security.InvalidKeyException;
 import java.security.KeyManagementException;
@@ -227,17 +228,22 @@ public class CertificateManager {
 					if (loc.exists()) {
 						if (loc.isDirectory()) {
 							for (File f : loc.listFiles()) {
-								count += loadIntoTrustStore(this.d1TrustStore, f.getAbsolutePath());
+								count += loadIntoTrustStore(this.d1TrustStore, new FileReader(f.getAbsolutePath()));
 							}
 						} 
 						else {
-							count += loadIntoTrustStore(this.d1TrustStore, loc.getAbsolutePath());
+							count += loadIntoTrustStore(this.d1TrustStore, new FileReader(loc.getAbsolutePath()));
 						}
 					}
 				}
 				if (count == 0) {
-					URL shippedCerts = this.getClass().getResource(shippedCAcerts);
-					count += loadIntoTrustStore(this.d1TrustStore, shippedCerts.getPath());
+					InputStream shippedCerts = this.getClass().getResourceAsStream(shippedCAcerts);
+					if (shippedCerts != null) {
+						count += loadIntoTrustStore(this.d1TrustStore, new InputStreamReader(shippedCerts));
+					} else {
+						log.error("'shippedCAcerts' file (" + shippedCAcerts + 
+								  ") could not be found. No DataONE-trusted CA certs loaded");
+					}
 				}
 				Enumeration<String> aliases = this.d1TrustStore.aliases();
 				while (aliases.hasMoreElements()) {
@@ -261,13 +267,13 @@ public class CertificateManager {
 	}
 	
 	
-	private int loadIntoTrustStore(KeyStore trustStore, String certLoc) 
+	private int loadIntoTrustStore(KeyStore trustStore, Reader certLoc) 
 	throws FileNotFoundException
 	{
     	int count = 0;
 		PEMReader pemReader = null;
     	try {
-    		pemReader = new PEMReader(new FileReader(certLoc));
+    		pemReader = new PEMReader(certLoc);
     		
     		Object pemObject;
 			log.info("loading into client truststore: ");
@@ -284,9 +290,9 @@ public class CertificateManager {
     			}
     		}
     	} catch (KeyStoreException e) {
-    		log.error(e.getMessage() + " after loading " + count + "certificates", e);
+    		log.error(e.getMessage() + " after loading " + count + " certificates", e);
 		} catch (IOException e) {
-			log.error(e.getMessage() + " after loading " + count + "certificates", e);
+			log.error(e.getMessage() + " after loading " + count + " certificates", e);
 		} finally {
     		IOUtils.closeQuietly(pemReader);
     	}
@@ -703,7 +709,7 @@ public class CertificateManager {
 	
 	            public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
 	            	log.debug("checkClientTrusted - " + authType);
-	            	
+	            
 	            	// check DataONE-trusted CAs in addition to the default
 	        		boolean trusted = false;
 	        		List<X509Certificate> combinedIssuers = Arrays.asList(getAcceptedIssuers());
@@ -723,6 +729,7 @@ public class CertificateManager {
 	            public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
 	            	log.debug("checkServerTrusted - " + authType);
 	            		
+	            	
 	            	// check DataONE-trusted CAs in addition to the default
 	        		boolean trusted = false;
 	        		List<X509Certificate> combinedIssuers = Arrays.asList(getAcceptedIssuers());
@@ -735,7 +742,15 @@ public class CertificateManager {
 	        		if (!trusted) {
 	        			//throw new CertificateException("Certificate issuer not found in trusted CAs");
 	        			// try the default, which will either succeed, in which case we are good, or will throw exception
-	        			defaultTrustManager.checkServerTrusted(chain, authType);
+	        			try {
+	        				defaultTrustManager.checkServerTrusted(chain, authType);
+	        			} catch (CertificateException ce) {
+	        				log.warn("server cert chain subjectDNs: ");
+	        				for (X509Certificate cert: chain) {
+	    	            		log.warn("  " + cert.getSubjectDN());
+	    	            	}
+	        				throw ce;
+	        			}
 	        		}
 	            }
 	            
