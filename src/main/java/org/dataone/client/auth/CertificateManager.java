@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.net.URL;
 import java.security.InvalidKeyException;
 import java.security.KeyManagementException;
 import java.security.KeyPair;
@@ -60,9 +59,6 @@ import java.util.Map;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLException;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.SSLSocket;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
@@ -73,7 +69,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.conn.ssl.SSLSocketFactory;
-import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.DERObject;
 import org.bouncycastle.asn1.DEROctetString;
@@ -117,7 +112,7 @@ public class CertificateManager {
 
     // this is packaged with the library
     private static final String shippedCAcerts = "/org/dataone/client/auth/d1-trusted-certs.crt";
-    private static final char[] caTrustStorePass = "dataONE".toCharArray();
+//    private static final char[] caTrustStorePass = "dataONE".toCharArray();
     private KeyStore d1TrustStore;
    
     // BouncyCastle added to be able to get the private key and certificate from the PEM
@@ -222,7 +217,7 @@ public class CertificateManager {
 		if (this.d1TrustStore == null ) {
 			try {
 				this.d1TrustStore = KeyStore.getInstance(KeyStore.getDefaultType());
-			    this.d1TrustStore.load(null, caTrustStorePass);
+			    this.d1TrustStore.load(null, null);
 				
 				
 				String auxLocation = Settings.getConfiguration().getString("certificate.truststore.aux.location");
@@ -490,30 +485,44 @@ public class CertificateManager {
 				CertificateManager.getInstance().standardizeDN(dn2));
     }
     
+    public static boolean verify(X509Certificate cert, X509Certificate caCert)
+    {
+    	return verify(cert, caCert, true);
+    }
+    
+    
     /**
      * Check the validity of a certificate, and be sure that it is verifiable using the given CA certificate.
      * @param cert the X509Certificate to be verified
      * @param caCert the X509Certificate of the trusted CertificateAuthority (CA)
      */
-    public static boolean verify(X509Certificate cert, X509Certificate caCert) {
+    public static boolean verify(X509Certificate cert, X509Certificate caCert, boolean logExceptions) {
         boolean isValid = false;
         try {
             cert.checkValidity();
             cert.verify(caCert.getPublicKey());
             isValid = true;
         } catch (CertificateException e) {
-        	log.error(e.getMessage(), e);
+        	if (logExceptions)
+        		log.error(e.getMessage(), e);
         } catch (InvalidKeyException e) {
-        	log.error("Certificate verification failed, invalid key.");
-            log.error(e.getMessage(), e);
+        	if (logExceptions) {
+        		log.error("Certificate verification failed, invalid key.");
+        		log.error(e.getMessage(), e);
+        	}
         } catch (NoSuchAlgorithmException e) {
-        	log.error("Certificate verification failed, no such algorithm.");
-            log.error(e.getMessage(), e);
+        	if (logExceptions) {
+        		log.error("Certificate verification failed, no such algorithm.");
+            	log.error(e.getMessage(), e);
+        	}
         } catch (NoSuchProviderException e) {
-        	log.error("Certificate verification failed, no such provider.");
-            log.error(e.getMessage(), e);
+        	if (logExceptions) {
+        		log.error("Certificate verification failed, no such provider.");
+            	log.error(e.getMessage(), e);
+        	}
         } catch (SignatureException e) {
-        	log.error("Certificate verification failed, signatures do not match.");
+        	if (logExceptions)
+        		log.error("Certificate verification failed, signatures do not match.");
         }
         return isValid;
     }
@@ -664,37 +673,7 @@ public class CertificateManager {
         	log.info("using allow-all hostname verifier");
 	        //socketFactory = new SSLSocketFactory(ctx, SSLSocketFactory.STRICT_HOSTNAME_VERIFIER);
 	        //socketFactory = new SSLSocketFactory(ctx, SSLSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
-        	
-        	// the ALLOW_ALL_HOSTNAME_VERIFIER did not work as advertised - it only overrode 1 of the verify methods
-	        X509HostnameVerifier allow_all = new X509HostnameVerifier() 
-	        {
-	        	
-	        	public void verify(String host, X509Certificate cert)
-	        	throws SSLException
-	        	{
-	        		; //never throw an exception
-	        	}
-	
-	        	public void verify(String host, String[] cns, String[] subjectAlts)
-	        	throws SSLException
-	        	{
-	        		; //never throw an exception
-	        	}
-
-				@Override
-				public boolean verify(String arg0, SSLSession arg1) {	
-					return true;
-				}
-
-				@Override
-				public void verify(String arg0, SSLSocket arg1)
-						throws IOException {
-					; //never thorw an exception
-					
-				}
-	        };
-	        
-        	socketFactory = new SSLSocketFactory(ctx, allow_all);
+	        socketFactory = new SSLSocketFactory(ctx, SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
         } else {
 	        socketFactory = new SSLSocketFactory(ctx);
         }
@@ -770,9 +749,11 @@ public class CertificateManager {
 	        		boolean trusted = false;
 	        		List<X509Certificate> combinedIssuers = Arrays.asList(getAcceptedIssuers());
 	        		for (X509Certificate cert: chain) {
-	        			if (combinedIssuers.contains(cert)) {
-	        				trusted = true;
-	        				break;
+	        			for (X509Certificate caCert : combinedIssuers) {
+	        				if (CertificateManager.verify(cert, caCert, false)) {
+	        					trusted = true;
+	        					break;
+	        				}
 	        			}
 	        		}
 	        		if (!trusted) {
@@ -784,7 +765,8 @@ public class CertificateManager {
 	        			} catch (CertificateException ce) {
 	        				System.out.println("CertMan Custom TrustManager: server cert chain subjectDNs: ");
 	        				for (X509Certificate cert: chain) {
-	        					System.out.println("CertMan Custom TrustManager:  " + cert.getSubjectDN());
+	        					System.out.println("CertMan Custom TrustManager:   subjDN: " + cert.getSubjectDN() + 
+	        							" / issuerDN: " + cert.getIssuerX500Principal());
 	    	            	}
 	        				throw ce;
 	        			}
