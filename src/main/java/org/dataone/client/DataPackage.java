@@ -62,6 +62,14 @@ public class DataPackage {
     private boolean validPackage = false; 
         
     /**
+     * Default constructor without identifier.
+     * Identifier should be provided later using setPackageId() method
+     */
+    public DataPackage() {
+    	this(null);
+    }
+    
+    /**
      * Construct a DataPackage using the given identifier to identify this package.  
      * The id is used as the identifier of the associated ORE map for this package.
      * @param id the Identifier of the package
