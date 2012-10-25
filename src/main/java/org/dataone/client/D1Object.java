@@ -78,7 +78,7 @@ public class D1Object {
      * Construct a new D1Object, which is then populated with data and system metadata
      * during the download process.
      */
-    private D1Object() {
+    public D1Object() {
     }
     
     /**
