@@ -19,17 +19,19 @@
  */
 package org.dataone.client.examples;
 
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.StringBufferInputStream;
 import java.math.BigInteger;
 
-import org.dataone.client.CNode;
 import org.dataone.client.D1Client;
 import org.dataone.client.MNode;
 import org.dataone.client.auth.ClientIdentityManager;
-import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.BaseException;
-import org.dataone.service.types.v1.*;
+import org.dataone.service.types.v1.Checksum;
+import org.dataone.service.types.v1.Identifier;
+import org.dataone.service.types.v1.ObjectFormatIdentifier;
+import org.dataone.service.types.v1.Subject;
+import org.dataone.service.types.v1.SystemMetadata;
 
 /**
  * ExampleClient is a command-line class that can be run to illustrate usage patterns
@@ -43,37 +45,28 @@ public class ExampleClient {
      * Execute the examples.
      */
     public static void main(String[] args) {
-        // By default, use development.
-        String cnUrl = System.getProperty("CN_URL", "https://cn-dev.test.dataone.org/cn");
-        Settings.getConfiguration().setProperty("D1Client.CN_URL", cnUrl);
         
         String currentUrl = "https://demo1.test.dataone.org:443/knb/d1/mn";
         MNode mn = D1Client.getMN(currentUrl);
 
         runExampleCreate(mn);
-
-        String currentMNodeId = "urn:node:mnDemo5";
-        runExampleCreate_version2(currentMNodeId);
     }
 
     /**
      * Demonstrate the execution of the MNRead.create() service on the given
      * Member Node.  This method creates a data object on the node with an
-     * identifier based on the current date in milliseconds, so it  
+     * identifier based on the current date in milliseconds, so it probably 
      * should only be run against test servers, not production servers, to
      * avoid polluting production servers with test data.
-     * For simplicity, this example skips the best-practice of reserving the
-     * identifier prior to creating the object. 
-     * 
      * @param mn the MNode member node on which to create the object
      */
     private static void runExampleCreate(MNode mn) {
         try {
             Identifier newid = new Identifier();
-            String idstr = "test:" + System.currentTimeMillis();
+            String idstr = new String("test:" + System.currentTimeMillis());
             newid.setValue(idstr);
             String csv = "1,2,3";
-            InputStream is = new ByteArrayInputStream(csv.getBytes());
+            InputStream is = new StringBufferInputStream(csv);
             SystemMetadata sm = generateSystemMetadata(newid);
             Identifier pid = mn.create(null, newid, is, sm);
             System.out.println("Create completed with PID: " + pid.getValue());
@@ -82,44 +75,6 @@ public class ExampleClient {
             e.printStackTrace();
         }
     }
-
-    /**
-     * Demonstrate the CNCore.reserveIdentifier() as well as the MNRead.create().
-     *
-     * Like the above method, this creates a data object that serves no purpose
-     * other than to demonstrate how to reserve and create objects.  Don't run
-     * this on production servers.
-     *
-     * @param mnNodeId  Member Node identifier
-     */
-    private static void runExampleCreate_version2(String mnNodeId) {
-        try {
-            Identifier newid = new Identifier();
-            String idstr = "test2_" + System.currentTimeMillis();
-            newid.setValue(idstr);
-
-            // Reserve this identifier, which makes sure it isn't already in use.
-            CNode cn = D1Client.getCN();
-            cn.reserveIdentifier(newid);
-
-            // Create the object and persist.
-            String csv = "1,2,3";
-            InputStream is = new ByteArrayInputStream(csv.getBytes());
-            SystemMetadata sm = generateSystemMetadata(newid);
-
-            // Get the Member node
-            NodeReference nodeRef = new NodeReference();
-            nodeRef.setValue(mnNodeId);
-            MNode mn = D1Client.getMN(nodeRef);
-            Identifier pid = mn.create(null, newid, is, sm);
-
-            System.out.println("Create completed with PID: " + pid.getValue());
-
-        } catch (BaseException e) {
-            e.printStackTrace();
-        }
-    }
-
 
     /**
      * Create a SystemMetadata object for the given Identifier, using fake values
