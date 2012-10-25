@@ -712,6 +712,7 @@ public class CertificateManager {
 	            break;
 	        }  
 	    }
+	
 	    
 	    // choose to use the default as is, or make an augmented trust manager with additional entries
 	    if (trustStoreIncludesD1CAs) {
@@ -783,6 +784,27 @@ public class CertificateManager {
 	            	return combinedIssuers.toArray(new X509Certificate[0]);
 	            }
 	        };
+	        
+
+//  uncomment the following to create an all-trusting trust manager
+//  WARNING: this is inherently unsafe, as you allow MITM attacks	        
+//	        tm = new X509TrustManager() {
+//				
+//	            public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+//	            	;
+//	            }
+//	            
+//	            public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+//	            	;
+//	            }
+//	            
+//	            public X509Certificate[] getAcceptedIssuers() {
+//	            	return null;
+//	            }
+//	        };
+	        
+	        
+	        
 	    }
 	    else {
 	    	log.info("using JVM TrustManager");
