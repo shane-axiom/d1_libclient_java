@@ -22,11 +22,22 @@
 
 package org.dataone.client;
 
+import java.io.ByteArrayInputStream;
+
 import org.dataone.configuration.Settings;
+import org.dataone.service.exceptions.IdentifierNotUnique;
+import org.dataone.service.exceptions.InsufficientResources;
+import org.dataone.service.exceptions.InvalidRequest;
+import org.dataone.service.exceptions.InvalidSystemMetadata;
+import org.dataone.service.exceptions.InvalidToken;
+import org.dataone.service.exceptions.NotAuthorized;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
+import org.dataone.service.exceptions.UnsupportedType;
+import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.types.v1.NodeReference;
 import org.dataone.service.types.v1.Session;
+import org.dataone.service.types.v1.SystemMetadata;
 
 /**
  * The D1Client class represents a client-side implementation of the DataONE
@@ -128,4 +139,63 @@ public class D1Client {
         MNode mn = new MNode(mnBaseUrl);
         return mn;
     }
+    
+    
+    /**
+     * Attempts to create the given D1Object on the originMemberNode contained 
+     * in its SystemMetadata.  Does not perform any identifier reservation checks
+     * or make any reservations.
+     * 
+     * @param session
+     * @param d1object - the d1object representing both the data bytes and systemMetadata
+     * @return the Identifier returned from the mn.create call
+     * 
+     * @throws InvalidToken
+     * @throws ServiceFailure
+     * @throws NotAuthorized
+     * @throws IdentifierNotUnique
+     * @throws UnsupportedType
+     * @throws InsufficientResources
+     * @throws InvalidSystemMetadata
+     * @throws NotImplemented
+     * @throws InvalidRequest
+     */
+    public static Identifier create(Session session, D1Object d1object) throws InvalidToken, ServiceFailure, NotAuthorized, 
+    IdentifierNotUnique, UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented, InvalidRequest 
+    {
+    	SystemMetadata sysmeta = d1object.getSystemMetadata();
+    	if (sysmeta == null) 
+    		throw new InvalidRequest("Client Error", "systemMetadata of the D1Object cannot be null");
+
+    	String mn_url = D1Client.getCN().lookupNodeBaseUrl(sysmeta.getOriginMemberNode().getValue());
+    	MNode mn = D1Client.getMN(mn_url);
+    	ByteArrayInputStream bis = new ByteArrayInputStream(d1object.getData());
+    	Identifier rGuid = mn.create(session, sysmeta.getIdentifier(), bis, sysmeta);
+    	return rGuid;
+    }
+
+    
+    /**
+     * Attempts to create the DataPackage.  First makes sure there is a D1Object
+     * representing the ORE resource map, then delegates D1Object creation to 
+     * D1Client.create(D1Object),
+     * 
+     * @since Not Implemented - need to determine correct assumptions and behavior
+     * 
+     * @param session
+     * @param dataPackage
+     * @return
+     * @throws NotImplemented 
+     */
+    
+    /* TODO: determine how to identify which objects are already created
+     * TODO: determine behavior under situations where exceptions thrown half-way 
+     * through.  Cannot package into a transaction.  
+     * data objects and science metadata objects that don't already exist on a MN and then
+     * create the ORE resource map on the MN
+     */   
+//    public static Identifier create(Session session, DataPackage dataPackage) throws NotImplemented {
+//    	throw new NotImplemented("Client Exception", "this method has not been implemented yet.");
+//    }
+    
 }

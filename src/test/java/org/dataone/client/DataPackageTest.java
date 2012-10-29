@@ -26,10 +26,13 @@ package org.dataone.client;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.dataone.service.types.v1.Identifier;
+import org.dspace.foresite.OREException;
+import org.dspace.foresite.ORESerialiserException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -40,7 +43,7 @@ public class DataPackageTest {
 	}
 
 	@Test
-	public void testSerializePackage()
+	public void testSerializePackage() throws OREException, URISyntaxException, ORESerialiserException
 	{
 	    Identifier packageId = D1TypeBuilder.buildIdentifier("myPackageID");
 	    DataPackage dataPackage = new DataPackage(packageId);
@@ -65,7 +68,7 @@ public class DataPackageTest {
 	    assertNotNull(resourceMapText);
 	    System.out.println("the resource map is:\n\n " + resourceMapText);
 	    
-	    DataPackage dp2 = dataPackage.deserializePackage(resourceMapText);
+	    DataPackage dp2 = DataPackage.deserializePackage(resourceMapText);
 	    assertTrue("deserialized dataPackage should have the original packageId",
 		       dp2.getPackageId().equals(packageId));
 

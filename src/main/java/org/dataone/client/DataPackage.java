@@ -29,11 +29,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.dataone.ore.ResourceMapFactory;
-import org.dataone.service.exceptions.InvalidToken;
-import org.dataone.service.exceptions.NotAuthorized;
-import org.dataone.service.exceptions.NotFound;
-import org.dataone.service.exceptions.NotImplemented;
-import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.types.v1.Identifier;
 import org.dspace.foresite.OREException;
 import org.dspace.foresite.OREParserException;
@@ -48,9 +43,6 @@ import org.dspace.foresite.ResourceMap;
  * D1Object instances.  The DataPackage can be serialized as an OAI-ORE ResourceMap
  * that details the linkages among data objects and science metadata objects.
  * 
- * TODO: add ability to call MN.create() for the package, which should create() any
- * data objects and science metadata objects that don't already exist on a MN and then
- * create the ORE resource map on the MN
  */
 public class DataPackage {
     
@@ -59,7 +51,6 @@ public class DataPackage {
     private HashMap<Identifier, D1Object> objectStore;
     private ResourceMap map = null;
     
-    private boolean validPackage = false; 
         
     /**
      * Default constructor without identifier.
@@ -76,7 +67,6 @@ public class DataPackage {
      */
     public DataPackage(Identifier id) {
         objectStore = new HashMap<Identifier, D1Object>();
-        setValidPackage(true);
         setPackageId(id);
     }
     
@@ -208,25 +198,15 @@ public class DataPackage {
         }
     }
 
-    /**
-     * @param validPackage the validPackage to set
-     */
-    public void setValidPackage(boolean validPackage) {
-        this.validPackage = validPackage;
-    }
-
-    /**
-     * @return the validPackage
-     */
-    public boolean isValidPackage() {
-        return validPackage;
-    }
-
+  
     /**
      * Return an ORE ResourceMap describing this package.
      * @return the map
+     * @throws URISyntaxException 
+     * @throws OREException 
      */
-    public ResourceMap getMap() {
+    public ResourceMap getMap() throws OREException, URISyntaxException 
+    {
         updateResourceMap();
         return map;
     }
@@ -234,16 +214,15 @@ public class DataPackage {
     /**
      * Return an ORE ResourceMap describing this package, serialized as an RDF graph.
      * @return the map as a serialized String
+     * @throws URISyntaxException 
+     * @throws OREException 
+     * @throws ORESerialiserException 
      */
-    public String serializePackage() {
+    public String serializePackage() throws OREException, URISyntaxException, ORESerialiserException 
+    {
         ResourceMap rm = getMap();
-        String rdfXml;
-        try {
-            rdfXml = ResourceMapFactory.getInstance().serializeResourceMap(rm);
-        } catch (ORESerialiserException e) {
-            setValidPackage(false);
-            rdfXml = "";
-        }
+        String  rdfXml = ResourceMapFactory.getInstance().serializeResourceMap(rm);
+     
         return rdfXml;
     }
     
@@ -258,7 +237,8 @@ public class DataPackage {
     public static DataPackage deserializePackage(String resourceMap) {
         DataPackage dp = null;
         try {
-            Map<Identifier, Map<Identifier, List<Identifier>>> packageMap = ResourceMapFactory.getInstance().parseResourceMap(resourceMap);
+            Map<Identifier, Map<Identifier, List<Identifier>>> packageMap = 
+            		ResourceMapFactory.getInstance().parseResourceMap(resourceMap);
 
             if (packageMap != null && !packageMap.isEmpty()) {
                 
@@ -310,24 +290,25 @@ public class DataPackage {
 
     /**
      * Create a ResourceMap from the component D1Object instances in this DataPackage.
+     * 
      * TODO: create a RM when science metadata is null
      * TODO: handle error conditions when data list is null
+     * @throws OREException 
+     * @throws URISyntaxException 
      */
-    private void updateResourceMap() {
+    private void updateResourceMap() throws OREException, URISyntaxException {
         
         //List<Identifier> dataIdentifiers = new ArrayList<Identifier>(objectStore.keySet());
         //Map<Identifier, List<Identifier>> idMap = new HashMap<Identifier, List<Identifier>>();
         //idMap.put(scienceMetadata.getIdentifier(), dataIdentifiers);
         try {
             map = ResourceMapFactory.getInstance().createResourceMap(packageId, metadataMap);
-        } catch (OREException e) {
-            // TODO: decide how to deal with packages cleanly that are missing information
-            setValidPackage(false);
+        } catch (OREException e) {        
             map = null;
+            throw e;
         } catch (URISyntaxException e) {
-            // TODO: decide how to deal with packages cleanly that are missing information
-            setValidPackage(false);
             map = null;
+            throw e;
         }
     }    
 }

@@ -193,53 +193,14 @@ public class D1Object {
 
     /**
      * @param data the data to set
+     * @throws InvalidRequest 
      */
     public void setData(byte[] data) {
-        assert(data != null);
+    	// TODO: replace assert with actual error checking.  see: http://docs.oracle.com/javase/1.4.2/docs/guide/lang/assert.html
+    	assert(data != null);
         this.data = data;
     }
 
-    /**
-     * Create the object on the associated member node that is present in the system metadata
-     * for the D1Object. Assumes that the object has not already been created.  If it
-     * already exists, an exception will be thrown.
-     * 
-     * @param token the session token to be used to create the object
-     * @throws InvalidToken
-     * @throws ServiceFailure
-     * @throws NotAuthorized
-     * @throws IdentifierNotUnique
-     * @throws UnsupportedType
-     * @throws InsufficientResources
-     * @throws InvalidSystemMetadata
-     * @throws NotImplemented
-     * @throws InvalidRequest 
-     */
-    public void create(Session token) throws InvalidToken, ServiceFailure, NotAuthorized, 
-        IdentifierNotUnique, UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented, InvalidRequest {
-        
-        if (alreadyCreated) {
-            throw new InvalidRequest("1102", "Object already exists on a Member Node, so create() can not be called.");
-        }
-        
-        // Check first that the identifier is not already in use
-        CNode cn = D1Client.getCN();
-        try {
-            ObjectLocationList oll = cn.resolve(token, sysmeta.getIdentifier());
-            // The object was found, so this ID is already used
-            throw new IdentifierNotUnique("1120", "Identifier is already in use.  Please choose another and try create() again.");
-        } catch (NotFound e) {
-            // This is good -- we don't want to find the ID (or it would be in use already), 
-            // so we purposely let this exception fall through to continue processing the create() call
-        }
-        
-        // The ID is good, so insert into the MN
-        String mn_url = D1Client.getCN().lookupNodeBaseUrl(sysmeta.getAuthoritativeMemberNode().getValue());
-        MNode mn = D1Client.getMN(mn_url);
-        ByteArrayInputStream bis = new ByteArrayInputStream(data);
-        Identifier rGuid = mn.create(token, sysmeta.getIdentifier(), bis, sysmeta);
-        alreadyCreated = true;
-    }
 
     /**
      * Change the object to publicly readable
@@ -313,7 +274,7 @@ public class D1Object {
                         // Couldn't get the object from this object location
                         // So move on to the next
                         e.printStackTrace();
-                    }
+                    } 
                 } catch (InvalidToken e) {
                     e.printStackTrace();
                 } catch (ServiceFailure e) {
