@@ -126,4 +126,28 @@ public class D1ObjectTest {
 		
 	}
 	
+	@Test
+	public void testSetData_UpdatesChecksum() throws NoSuchAlgorithmException, NotFound, InvalidRequest, IOException 
+	{
+		D1Object z = new D1Object(D1TypeBuilder.buildIdentifier("foooooo"),
+				"someData".getBytes(),
+				D1TypeBuilder.buildFormatIdentifier("text/csv"),
+				D1TypeBuilder.buildSubject("submitterMe"),
+				D1TypeBuilder.buildNodeReference("someMN"));
+
+		z.setData("somethingElse".getBytes());
+	}
+
+	@Test
+	public void testSetDataNull() throws NoSuchAlgorithmException, NotFound, InvalidRequest, IOException 
+	{
+		D1Object z = new D1Object(D1TypeBuilder.buildIdentifier("foooooo"),
+				"someData".getBytes(),
+				D1TypeBuilder.buildFormatIdentifier("text/csv"),
+				D1TypeBuilder.buildSubject("submitterMe"),
+				D1TypeBuilder.buildNodeReference("someMN"));
+
+		z.setData(null);
+	}
+	
 }
