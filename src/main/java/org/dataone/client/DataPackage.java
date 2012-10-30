@@ -29,6 +29,13 @@ import java.util.Map;
 import java.util.Set;
 
 import org.dataone.ore.ResourceMapFactory;
+import org.dataone.service.exceptions.InsufficientResources;
+import org.dataone.service.exceptions.InvalidRequest;
+import org.dataone.service.exceptions.InvalidToken;
+import org.dataone.service.exceptions.NotAuthorized;
+import org.dataone.service.exceptions.NotFound;
+import org.dataone.service.exceptions.NotImplemented;
+import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.types.v1.Identifier;
 import org.dspace.foresite.OREException;
 import org.dspace.foresite.OREParserException;
@@ -74,32 +81,20 @@ public class DataPackage {
      * Add a new object with the given Identifier to the package. This creates
      * a D1Object to wrap the identified object after downloading it from DataONE.
      * @param id the identifier of the object to be added
+     * @throws InvalidRequest 
+     * @throws InsufficientResources 
+     * @throws NotImplemented 
+     * @throws NotFound 
+     * @throws NotAuthorized 
+     * @throws ServiceFailure 
+     * @throws InvalidToken 
      */
-    public void addAndDownloadData(Identifier id) {
+    public void addAndDownloadData(Identifier id) throws InvalidToken, ServiceFailure, 
+    NotAuthorized, NotFound, NotImplemented, InsufficientResources, InvalidRequest 
+    {
         if (!contains(id)) {
         	D1Object o = D1Object.download(id);
-//            D1Object o = null;
-//			try {
-//				o = D1Object.download(id);
-//			} catch (InvalidToken e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			} catch (NotAuthorized e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			} catch (NotFound e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			} catch (ServiceFailure e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			} catch (NotImplemented e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-            if (o != null) {
-                objectStore.put(id, o);
-            }
+        	objectStore.put(id, o);
         }
     }
     
@@ -233,44 +228,47 @@ public class DataPackage {
      * package.
      * @param resourceMap the string representation of an ORE map in XML format
      * @return DataPackage constructed from the map
+     * @throws OREParserException 
+     * @throws URISyntaxException 
+     * @throws OREException 
+     * @throws UnsupportedEncodingException 
+     * @throws InvalidRequest 
+     * @throws InsufficientResources 
+     * @throws NotImplemented 
+     * @throws NotFound 
+     * @throws NotAuthorized 
+     * @throws ServiceFailure 
+     * @throws InvalidToken 
      */
-    public static DataPackage deserializePackage(String resourceMap) {
-        DataPackage dp = null;
-        try {
-            Map<Identifier, Map<Identifier, List<Identifier>>> packageMap = 
-            		ResourceMapFactory.getInstance().parseResourceMap(resourceMap);
+    public static DataPackage deserializePackage(String resourceMap) 
+    throws UnsupportedEncodingException, OREException, URISyntaxException, OREParserException, 
+    InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented, InsufficientResources, 
+    InvalidRequest 
+    {
+        
+        Map<Identifier, Map<Identifier, List<Identifier>>> packageMap = 
+        		ResourceMapFactory.getInstance().parseResourceMap(resourceMap);
 
-            if (packageMap != null && !packageMap.isEmpty()) {
-                
-                // Get and store the package Identifier in a new DataPackage
-                Identifier pid = packageMap.keySet().iterator().next();
-                dp = new DataPackage(pid);
-                
-                // Get the Map of metadata/data identifiers
-                Map<Identifier, List<Identifier>> mdMap = packageMap.get(pid);
-                dp.setMetadataMap(mdMap);
-                
-                // parse the metadata/data identifiers and store the associated objects if they are accessible
-                for (Identifier scienceMetadataId : mdMap.keySet()) {
-                    dp.addAndDownloadData(scienceMetadataId);
-                    List<Identifier> dataIdentifiers = mdMap.get(scienceMetadataId);
-                    for (Identifier dataId : dataIdentifiers) {
-                        dp.addAndDownloadData(dataId);
-                    }
-                }
-            }
-            
-            
-        } catch (UnsupportedEncodingException e) {
-            // TODO: these should probably be thrown as exceptions to avoid NPEs, but its not clear which would be appropriate
-            dp = null;
-        } catch (OREException e) {
-            dp = null;
-        } catch (URISyntaxException e) {
-            dp = null;
-        } catch (OREParserException e) {
-            dp = null;
-        } 
+        DataPackage dp = null;
+        if (packageMap != null && !packageMap.isEmpty()) {
+
+        	// Get and store the package Identifier in a new DataPackage
+        	Identifier pid = packageMap.keySet().iterator().next();
+        	dp = new DataPackage(pid);
+
+        	// Get the Map of metadata/data identifiers
+        	Map<Identifier, List<Identifier>> mdMap = packageMap.get(pid);
+        	dp.setMetadataMap(mdMap);
+
+        	// parse the metadata/data identifiers and store the associated objects if they are accessible
+        	for (Identifier scienceMetadataId : mdMap.keySet()) {
+        		dp.addAndDownloadData(scienceMetadataId);
+        		List<Identifier> dataIdentifiers = mdMap.get(scienceMetadataId);
+        		for (Identifier dataId : dataIdentifiers) {
+        			dp.addAndDownloadData(dataId);
+        		}
+        	}
+        }
         return dp;
     }
     

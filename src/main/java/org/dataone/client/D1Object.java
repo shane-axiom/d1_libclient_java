@@ -193,11 +193,12 @@ public class D1Object {
 
     /**
      * @param data the data to set
-     * @throws InvalidRequest 
+     * @throws InvalidRequest - if data parameter is null
      */
-    public void setData(byte[] data) {
-    	// TODO: replace assert with actual error checking.  see: http://docs.oracle.com/javase/1.4.2/docs/guide/lang/assert.html
-    	assert(data != null);
+    public void setData(byte[] data) throws InvalidRequest {
+    	if (data != null) {
+    		throw new InvalidRequest("Client Error", "data cannot be null");
+    	}
         this.data = data;
     }
 
@@ -235,13 +236,25 @@ public class D1Object {
     }
     
     /**
-     * Contact D1 services to download the metadata and data.
+     * Contact D1 services to download the metadata and data.  Multiple locations
+     * will be tried until the data bytes are successfully downloaded.  Any exception
+     * thrown will be from the latest location checked, or 
      * @param id identifier to be downloaded
+     * @throws InvalidToken 
+     * @throws ServiceFailure 
+     * @throws NotAuthorized 
+     * @throws NotFound 
+     * @throws NotImplemented 
+     * @throws InsufficientResources 
+     * @throws InvalidRequest - thrown when the data is retrieved but null
      */
-    public static D1Object download(Identifier id) {
+    public static D1Object download(Identifier id) throws InvalidToken, ServiceFailure, 
+    NotAuthorized, NotFound, NotImplemented, InsufficientResources, InvalidRequest 
+    {
         
         D1Object o = null;
         boolean gotData = false;
+        Exception latestException = null;
         try {	    
 	        CNode cn = D1Client.getCN();
 	        Session token = new Session();
@@ -256,54 +269,63 @@ public class D1Object {
             
             // Resolve the MNs that contain the object
             oll = cn.resolve(token, id);
+            
+            
             // Try each of the locations until we find the object
+            
             for (ObjectLocation ol : oll.getObjectLocationList()) {
                 System.out.println("   === Trying Location: "
                         + ol.getNodeIdentifier().getValue() + " ("
                         + ol.getUrl() + ")");
-                               
+                
                 // Get the contents of the object itself
-                MNode mn = D1Client.getMN(ol.getBaseURL());
+                MNode mn = D1Client.getMN(ol.getNodeIdentifier());
+                
                 try {
                     InputStream is = mn.get(token, id);
-                    try {
-                        o.setData(IOUtils.toByteArray(is));
-                        gotData = true;
-                        break;
-                    } catch (IOException e) {
-                        // Couldn't get the object from this object location
-                        // So move on to the next
-                        e.printStackTrace();
-                    } 
-                } catch (InvalidToken e) {
-                    e.printStackTrace();
-                } catch (ServiceFailure e) {
-                    e.printStackTrace();
-                } catch (NotAuthorized e) {
-                    e.printStackTrace();
-                } catch (NotFound e) {
-                    e.printStackTrace();
-                } catch (NotImplemented e) {
-                    e.printStackTrace();
-                } catch (InsufficientResources e) {
-					e.printStackTrace();
-				}
-            }
-        } catch (InvalidToken e) {
-            e.printStackTrace();
-        } catch (ServiceFailure e) {
-            e.printStackTrace();
-        } catch (NotAuthorized e) {
-            e.printStackTrace();
-        } catch (NotFound e) {
-            e.printStackTrace();
-        } catch (NotImplemented e) {
-            e.printStackTrace();
+                    o.setData(IOUtils.toByteArray(is));
+                    gotData = true;
+                    break;
+ 
+                } catch (IOException e) {
+                	latestException = e;
+                } catch (BaseException e) {
+                	latestException = e;
+                }
+            } 
+        }
+        catch (BaseException be) {
+        	latestException = be;
         }
         
         if (!gotData) {
-            System.out.println("Never found the data on MN.");
-        } else {
+        	if (latestException != null) {
+        		if (latestException instanceof InvalidToken) {
+        			throw (InvalidToken) latestException;
+        		}
+        		else if (latestException instanceof ServiceFailure) {
+        			throw (ServiceFailure) latestException;
+        		}
+        		else if (latestException instanceof NotAuthorized) {
+        			throw (NotAuthorized) latestException;
+        		}
+        		else if (latestException instanceof NotFound) {
+        			throw (NotFound) latestException;
+        		}
+        		else if (latestException instanceof NotImplemented) {
+        			throw (NotImplemented) latestException;
+        		}
+        		else if (latestException instanceof InsufficientResources) {
+        			throw (InsufficientResources) latestException;
+        		}
+        		else if (latestException instanceof InvalidRequest) {
+        			throw (InvalidRequest) latestException;
+        		}
+        	} else {
+        		return null;		
+        	}
+        } 
+        else {
             o.alreadyCreated = true;
         }
 

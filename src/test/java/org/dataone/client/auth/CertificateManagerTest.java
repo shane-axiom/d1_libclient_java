@@ -35,6 +35,7 @@ import java.security.cert.X509Certificate;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.dataone.client.CNode;
 import org.dataone.configuration.Settings;
+import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.types.v1.Session;
@@ -80,10 +81,22 @@ public class CertificateManagerTest {
     
    // this was a temporary test to test against a real SSL handshake - if necessary
     // move it to d1_integration
- //   @Test
-    public void testWildcardCert() throws NotImplemented, ServiceFailure {
-    	CNode cn = new CNode("https://cn-dev.test.dataone.org/cn");
-    	cn.listNodes();
+    @Test
+    public void testWildcardCert() throws BaseException {
+    	String[] cns = {"https://cn-dev-unm-1.test.dataone.org/cn",
+    			"https://cn-dev-ucsb-1.test.dataone.org/cn",
+    			"https://mn-demo-5.test.dataone.org/knb/d1/mn",
+    			"https://cn-dev-orc-1.test.dataone.org/cn"};
+    	for (String url : cns) {
+    		System.out.println(url);
+    		CNode cn = new CNode("https://cn-dev-unm-1.test.dataone.org/cn");
+    		try {
+    			cn.ping();
+    		} catch (BaseException e) {
+    			System.out.println("Failed: " + cn.getLatestRequestUrl());
+    		}
+    	}
+    	
     	
     }
     
