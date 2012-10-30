@@ -32,18 +32,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.dataone.service.exceptions.BaseException;
-import org.dataone.service.exceptions.InsufficientResources;
-import org.dataone.service.exceptions.InvalidRequest;
-import org.dataone.service.exceptions.InvalidToken;
-import org.dataone.service.exceptions.NotAuthorized;
-import org.dataone.service.exceptions.NotFound;
-import org.dataone.service.exceptions.NotImplemented;
-import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.types.v1.Identifier;
 import org.dspace.foresite.OREException;
 import org.dspace.foresite.OREParserException;
 import org.dspace.foresite.ORESerialiserException;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class DataPackageTest {
@@ -52,6 +46,7 @@ public class DataPackageTest {
 	public void setUp() throws Exception {
 	}
 
+	@Ignore("test cannot run as a unit test, as the method calls the CN and MNs")
 	@Test
 	public void testSerializePackage() throws OREException, URISyntaxException, 
 	ORESerialiserException, UnsupportedEncodingException, BaseException, OREParserException
