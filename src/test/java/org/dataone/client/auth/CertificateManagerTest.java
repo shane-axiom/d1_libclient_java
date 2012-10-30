@@ -81,7 +81,7 @@ public class CertificateManagerTest {
     
    // this was a temporary test to test against a real SSL handshake - if necessary
     // move it to d1_integration
-    @Test
+//    @Test
     public void testWildcardCert() throws BaseException {
     	String[] cns = {"https://cn-dev-unm-1.test.dataone.org/cn",
     			"https://cn-dev-ucsb-1.test.dataone.org/cn",
