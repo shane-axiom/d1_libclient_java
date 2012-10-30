@@ -136,7 +136,19 @@ public class D1ObjectTest {
 				D1TypeBuilder.buildSubject("submitterMe"),
 				D1TypeBuilder.buildNodeReference("someMN"));
 
-		z.setData(null);
+		try {
+			z.setData(null);
+			fail("should not have been able to setData(null) without throwing an Exception");
+		} catch (InvalidRequest e) {
+			;
+		}
+		
+		try {
+			z.setSystemMetadata(null);
+			fail("should not have been able to setSystemMetadata(null) without throwing an Exception");
+		} catch (InvalidRequest e) {
+			;
+		}
 	}
 	
 }
