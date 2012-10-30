@@ -181,7 +181,7 @@ public class D1Object {
      * @throws InvalidRequest - if the sysmeta parameter is null
      */
     public void setSystemMetadata(SystemMetadata sysmeta) throws InvalidRequest {
-    	if (sysmeta != null) {
+    	if (sysmeta == null) {
     		throw new InvalidRequest("Client Error", "sysmeta cannot be null");
     	}
         this.sysmeta = sysmeta;
@@ -199,7 +199,7 @@ public class D1Object {
      * @throws InvalidRequest - if data parameter is null
      */
     public void setData(byte[] data) throws InvalidRequest {
-    	if (data != null) {
+    	if (data == null) {
     		throw new InvalidRequest("Client Error", "data cannot be null");
     	}
         this.data = data;
@@ -239,9 +239,14 @@ public class D1Object {
     }
     
     /**
-     * Contact D1 services to download the metadata and data.  Multiple locations
+     * Contact D1 services to download the systemMetadata and data.  Multiple locations
      * will be tried until the data bytes are successfully downloaded.  Any exception
-     * thrown will be from the latest location checked, or 
+     * thrown will be from the latest location checked, or from the getSystemMetadata
+     * call.
+     * 
+     * Users are advised to check the integrity of the download with the checkDataIntegrity()
+     * method after the download.
+     * 
      * @param id identifier to be downloaded
      * @throws InvalidToken 
      * @throws ServiceFailure 
@@ -325,7 +330,8 @@ public class D1Object {
         			throw (InvalidRequest) latestException;
         		}
         	} else {
-        		return null;		
+        		throw new ServiceFailure("0000: Client Error", "Unexpected failure.  " +
+        				"Could not get the request object, but no exception raised");		
         	}
         } 
         else {
@@ -462,4 +468,26 @@ public class D1Object {
             }
         }
     }
+
+    /**
+     * Compares the data to the values in the size and checksum SystemMetadata fields
+     * and returns true if they match.  Calculates the checksum from the data, so might
+     * be processor intensive.
+     * 
+     * @return
+     * @throws NoSuchAlgorithmException
+     */
+    public boolean checkDataIntegrity() throws NoSuchAlgorithmException
+    {
+    	if (this.data.length != this.sysmeta.getSize().longValue()) 
+    		return false;
+    	
+    	Checksum calcd = ChecksumUtil.checksum(this.data, this.sysmeta.getChecksum().getAlgorithm());
+    	if (! calcd.getValue().equals( this.sysmeta.getChecksum().getValue() ) )
+    		return false;
+    	
+    	return true;
+    
+    }
+
 }
