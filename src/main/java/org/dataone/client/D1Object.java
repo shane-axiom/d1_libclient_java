@@ -178,9 +178,12 @@ public class D1Object {
 
     /**
      * @param sysmeta the sysmeta to set
+     * @throws InvalidRequest - if the sysmeta parameter is null
      */
-    public void setSystemMetadata(SystemMetadata sysmeta) {
-        assert(sysmeta != null);
+    public void setSystemMetadata(SystemMetadata sysmeta) throws InvalidRequest {
+    	if (sysmeta != null) {
+    		throw new InvalidRequest("Client Error", "sysmeta cannot be null");
+    	}
         this.sysmeta = sysmeta;
     }
 
