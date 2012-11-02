@@ -37,6 +37,7 @@ import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.types.v1.Identifier;
+import org.dataone.service.types.v1.SystemMetadata;
 import org.dspace.foresite.OREException;
 import org.dspace.foresite.OREParserException;
 import org.dspace.foresite.ORESerialiserException;
@@ -57,6 +58,7 @@ public class DataPackage {
     private Map<Identifier, List<Identifier>> metadataMap;
     private HashMap<Identifier, D1Object> objectStore;
     private ResourceMap map = null;
+    private SystemMetadata systemMetadata = null;
     
         
     /**
@@ -284,6 +286,22 @@ public class DataPackage {
      */
     public void setMetadataMap(Map<Identifier, List<Identifier>> metadataMap) {
         this.metadataMap = metadataMap;
+    }
+    
+    /**
+     * Set the SystemMetadata object to this data package.
+     * @param systemMetadata - the SystemMetadata object will be set.
+     */
+    public void setSystemMetadata(SystemMetadata systemMetadata) {
+      this.systemMetadata = systemMetadata;
+    }
+    
+    /**
+     * Get the SystemMetadata object associated with the data package.
+     *@return the SystemMetadata object associated with the data package.
+     */
+    public SystemMetadata getSystemMetadata() {
+      return this.systemMetadata;
     }
 
     /**
