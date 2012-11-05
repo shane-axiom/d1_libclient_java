@@ -489,5 +489,13 @@ public class D1Object {
     	return true;
     
     }
+    
+    public AccessPolicyEditor getAccessPolicyEditor() {
+    	AccessPolicy ap = this.sysmeta.getAccessPolicy();
+    	if (ap == null)
+    		this.sysmeta.setAccessPolicy(new AccessPolicy());
+    	
+    	return new AccessPolicyEditor(this.sysmeta.getAccessPolicy());
+    }
 
 }
