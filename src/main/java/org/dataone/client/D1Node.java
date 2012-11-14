@@ -118,8 +118,7 @@ public abstract class D1Node {
 	public D1Node(String nodeBaseServiceUrl, Session session) {
 	    setNodeBaseServiceUrl(nodeBaseServiceUrl);
 	    this.session = session;
-	    // (second parameter is a default value)
-	    useLocalCache = Settings.getConfiguration().getBoolean("D1Client.useLocalCache",useLocalCache);
+	    this.useLocalCache = Settings.getConfiguration().getBoolean("D1Client.useLocalCache",useLocalCache);
 	}
     
     
@@ -130,8 +129,7 @@ public abstract class D1Node {
 	public D1Node(String nodeBaseServiceUrl) {
 	    setNodeBaseServiceUrl(nodeBaseServiceUrl);
 	    this.session = null;
-	    // (second parameter is a default value)
-	    useLocalCache = Settings.getConfiguration().getBoolean("D1Client.useLocalCache",useLocalCache);
+	    this.useLocalCache = Settings.getConfiguration().getBoolean("D1Client.useLocalCache",useLocalCache);
 	}
 
 	// TODO: this constructor should not exist

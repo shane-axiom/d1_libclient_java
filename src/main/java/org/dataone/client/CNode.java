@@ -97,6 +97,7 @@ import org.jibx.runtime.JiBXException;
  * any value of the DefaultSoTimeout.  Timeouts are always represented in milliseconds
  * 
  * timeout properties recognized:
+ * D1Client.CNode.reserveIdentifier.timeout
  * D1Client.CNode.create.timeout
  * D1Client.CNode.registerSystemMetadata.timeout
  * D1Client.CNode.search.timeout
@@ -535,6 +536,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		
 		// send the request
 		D1RestClient client = new D1RestClient(session);
+		client.setTimeouts(Settings.getConfiguration()
+				.getInteger("D1Client.CNode.reserveIdentifier.timeout", getDefaultSoTimeout()));
 		Identifier identifier = null;
  		try {
  			InputStream is = client.doPostRequest(url.getUrl(),smpe);
