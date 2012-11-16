@@ -79,6 +79,7 @@ public class D1Object {
      * during the download process.
      */
     public D1Object() {
+    	sysmeta = new SystemMetadata();
     }
     
     /**
