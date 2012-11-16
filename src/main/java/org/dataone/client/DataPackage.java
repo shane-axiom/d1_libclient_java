@@ -76,6 +76,7 @@ public class DataPackage {
      */
     public DataPackage(Identifier id) {
         objectStore = new HashMap<Identifier, D1Object>();
+        metadataMap = new HashMap<Identifier, List<Identifier>>();
         setPackageId(id);
     }
     
@@ -118,10 +119,7 @@ public class DataPackage {
         List<Identifier> associatedData = null;
         
         // Determine if the metadata object is already in the relations list
-        // Use it if so, if not then create a list for this metadata link
-        if (metadataMap == null)
-        	metadataMap = new HashMap<Identifier, List<Identifier>>();
-        
+        // Use it if so, if not then create a list for this metadata link        	
         if (metadataMap.containsKey(metadataID)) {
             associatedData = metadataMap.get(metadataID);
         } else {
