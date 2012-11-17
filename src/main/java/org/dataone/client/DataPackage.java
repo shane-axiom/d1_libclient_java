@@ -221,6 +221,21 @@ public class DataPackage {
         return rdfXml;
     }
     
+    
+    public static DataPackage download(Identifier pid) 
+    throws UnsupportedEncodingException, InvalidToken, ServiceFailure, NotAuthorized,
+    NotFound, NotImplemented, InsufficientResources, InvalidRequest, OREException, 
+    URISyntaxException, OREParserException
+    {
+    	D1Object packageObject = D1Object.download(pid);
+    	
+    	if (packageObject.getFormatId().getValue().equals("http://www.openarchives.org/ore/terms")) {
+    		String resourceMap = new String(packageObject.getData(),"UTF-8");
+        	return deserializePackage(resourceMap);    		
+    	}
+    	throw new InvalidRequest("0000","The identifier does not represent a DataPackage (is not an ORE resource map)");
+    }
+    
     /**
      * Deserialize an ORE resourceMap by parsing it, extracting the associated package identifier,
      * and the list of metadata and data objects aggregated in the ORE Map.  Create an instance
