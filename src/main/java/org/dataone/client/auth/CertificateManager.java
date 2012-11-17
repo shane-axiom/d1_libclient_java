@@ -850,6 +850,7 @@ public class CertificateManager {
 	    	if (certLoc == null) {
 	    		certLoc = locateCertificate();
 	    	}
+			log.info("Using client certificate location: " + certLoc);
 	    	PEMReader pemReader = null;
 	    	try {
 	    		pemReader = new PEMReader(new FileReader(certLoc));
