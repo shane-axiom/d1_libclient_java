@@ -80,4 +80,36 @@ public class DataPackageTest {
 
 	}
 	
+	@Test
+	public void testGetDocumentedBy() throws OREException, URISyntaxException, 
+	ORESerialiserException, UnsupportedEncodingException, BaseException, OREParserException
+	{
+	    Identifier packageId = D1TypeBuilder.buildIdentifier("myPackageID");
+	    DataPackage dataPackage = new DataPackage(packageId);
+	    Identifier metadataId = D1TypeBuilder.buildIdentifier("myMetadataID");
+	    List<Identifier> dataIds = new ArrayList<Identifier>();
+	    dataIds.add(D1TypeBuilder.buildIdentifier("myDataID1"));
+	    dataIds.add(D1TypeBuilder.buildIdentifier("myDataID2"));
+	    dataIds.add(D1TypeBuilder.buildIdentifier("myDataID3"));
+	    dataIds.add(D1TypeBuilder.buildIdentifier("myDataID4"));
+	    
+	    dataPackage.insertRelationship(metadataId, dataIds);
+	    
+	    Identifier metadataIDa = D1TypeBuilder.buildIdentifier("myMetadataIDa");
+	    List<Identifier> dataIdsa = new ArrayList<Identifier>();
+	    dataIdsa.add(D1TypeBuilder.buildIdentifier("myDataID1a"));
+	    dataIdsa.add(D1TypeBuilder.buildIdentifier("myDataID2a"));
+	    dataIdsa.add(D1TypeBuilder.buildIdentifier("myDataID3a"));
+	    dataIdsa.add(D1TypeBuilder.buildIdentifier("myDataID4a"));
+
+	    dataPackage.insertRelationship(metadataIDa, dataIdsa);
+
+	    Identifier md = dataPackage.getDocumentedBy(D1TypeBuilder.buildIdentifier("myDataID3"));
+	    Identifier mda = dataPackage.getDocumentedBy(D1TypeBuilder.buildIdentifier("myDataID2a"));
+	    
+	    assertTrue("'myMetadataID' should be returned by getDocumentedBy('myDataID3')", md.equals(metadataId));
+	    assertTrue("'myMetadataIDa' should be returned by getDocumentedBy('myDataID2a')", mda.equals(metadataIDa));
+
+	}
+	
 }
