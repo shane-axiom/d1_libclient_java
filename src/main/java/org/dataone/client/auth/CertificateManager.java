@@ -715,6 +715,7 @@ public class CertificateManager {
 	
 	    
 	    // choose to use the default as is, or make an augmented trust manager with additional entries
+	    // TODO: remove the System.out.println statements in the TrustManager
 	    if (trustStoreIncludesD1CAs) {
 	    	log.info("creating custom TrustManager");
 	    	

@@ -293,6 +293,27 @@ public class DataPackage {
     public Map<Identifier, List<Identifier>> getMetadataMap() {
         return metadataMap;
     }
+    
+    /**
+     * Convenience function for working with the metadataMap. Does a reverse
+     * lookup to get the metadata object that is defined to document the provided
+     * data object.  Returns null if the relationship has not been defined.
+     * @param dataObject
+     * @return
+     */
+    public Identifier getDocumentedBy(Identifier dataObject) {
+    	Map<Identifier, List<Identifier>> mdMap = getMetadataMap();
+    	Set<Identifier> metadataMembers = mdMap.keySet();
+    	Identifier documenter = null;
+    	for (Identifier md : metadataMembers) {
+    		if (mdMap.get(md).contains(dataObject)) {
+    			documenter = md;
+    			break;
+    		}
+    	}
+    	return documenter;
+    }
+    
 
     /**
      * @param metadataMap the metadataMap to set
