@@ -24,6 +24,7 @@ package org.dataone.client;
 
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
@@ -33,7 +34,10 @@ import org.dataone.service.exceptions.InvalidRequest;
 import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.types.v1.NodeReference;
 import org.dataone.service.types.v1.ObjectFormatIdentifier;
+import org.dataone.service.types.v1.Permission;
 import org.dataone.service.types.v1.Subject;
+import org.dataone.service.types.v1.util.AccessUtil;
+import org.dataone.service.util.Constants;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -151,4 +155,41 @@ public class D1ObjectTest {
 		}
 	}
 	
+	
+	@Test
+	public void testGetAccessPolicyEditor() throws NoSuchAlgorithmException, NotFound, InvalidRequest, IOException
+	{
+		D1Object d = new D1Object(D1TypeBuilder.buildIdentifier("foooooo"),
+				"someData".getBytes(),
+				D1TypeBuilder.buildFormatIdentifier("text/csv"),
+				D1TypeBuilder.buildSubject("submitterMe"),
+				D1TypeBuilder.buildNodeReference("someMN"));
+		
+		Subject s = D1TypeBuilder.buildSubject("mee-mee-mee");
+		try {
+			AccessPolicyEditor editor = d.getAccessPolicyEditor();
+			editor.setAccess(new Subject[]{s}, Permission.READ);
+			editor = null;
+		} finally {}
+		
+		assertTrue(AccessUtil.getPermissionMap( d.getSystemMetadata().getAccessPolicy()).containsKey(s));
+	}
+	
+	@Test
+	public void testGetAccessPolicyEditor_setPublicAccess() throws NoSuchAlgorithmException, NotFound, InvalidRequest, IOException
+	{
+		D1Object d = new D1Object(D1TypeBuilder.buildIdentifier("foooooo"),
+				"someData".getBytes(),
+				D1TypeBuilder.buildFormatIdentifier("text/csv"),
+				D1TypeBuilder.buildSubject("submitterMe"),
+				D1TypeBuilder.buildNodeReference("someMN"));
+		
+		AccessPolicyEditor editor = d.getAccessPolicyEditor();
+		editor.setPublicAccess();
+		
+		assertTrue(AccessUtil.getPermissionMap( 
+				d.getSystemMetadata().getAccessPolicy()).containsKey(
+						D1TypeBuilder.buildSubject(Constants.SUBJECT_PUBLIC
+								)));
+	}
 }

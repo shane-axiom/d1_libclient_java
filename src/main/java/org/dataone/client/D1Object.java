@@ -79,6 +79,7 @@ public class D1Object {
      * during the download process.
      */
     public D1Object() {
+    	sysmeta = new SystemMetadata();
     }
     
     /**
@@ -265,18 +266,20 @@ public class D1Object {
         Exception latestException = null;
         try {	    
 	        CNode cn = D1Client.getCN();
-	        Session token = new Session();
 	    
 	        ObjectLocationList oll;
             // Get the system metadata for the object
-            SystemMetadata m = cn.getSystemMetadata(token, id);
+            SystemMetadata m = cn.getSystemMetadata(id);
             if (m != null) {
                 o = new D1Object();
                 o.setSystemMetadata(m);
             }
             
             // Resolve the MNs that contain the object
-            oll = cn.resolve(token, id);
+            // Using resolve instead of the systemMetadata is the more formal way
+            // to do this, because theoretically, resolve will aid in prioritizing
+            // which node to go to first.
+            oll = cn.resolve(id);
             
             
             // Try each of the locations until we find the object
@@ -290,7 +293,7 @@ public class D1Object {
                 MNode mn = D1Client.getMN(ol.getNodeIdentifier());
                 
                 try {
-                    InputStream is = mn.get(token, id);
+                    InputStream is = mn.get(id);
                     o.setData(IOUtils.toByteArray(is));
                     gotData = true;
                     break;
@@ -488,6 +491,14 @@ public class D1Object {
     	
     	return true;
     
+    }
+
+    public AccessPolicyEditor getAccessPolicyEditor() {
+    	AccessPolicy ap = this.sysmeta.getAccessPolicy();
+    	if (ap == null)
+    		this.sysmeta.setAccessPolicy(new AccessPolicy());
+    	
+    	return new AccessPolicyEditor(this.sysmeta.getAccessPolicy());
     }
 
 }

@@ -715,6 +715,7 @@ public class CertificateManager {
 	
 	    
 	    // choose to use the default as is, or make an augmented trust manager with additional entries
+	    // TODO: remove the System.out.println statements in the TrustManager
 	    if (trustStoreIncludesD1CAs) {
 	    	log.info("creating custom TrustManager");
 	    	
@@ -850,6 +851,7 @@ public class CertificateManager {
 	    	if (certLoc == null) {
 	    		certLoc = locateCertificate();
 	    	}
+			log.info("Using client certificate location: " + certLoc);
 	    	PEMReader pemReader = null;
 	    	try {
 	    		pemReader = new PEMReader(new FileReader(certLoc));

@@ -37,6 +37,7 @@ import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.types.v1.Identifier;
+import org.dataone.service.types.v1.SystemMetadata;
 import org.dspace.foresite.OREException;
 import org.dspace.foresite.OREParserException;
 import org.dspace.foresite.ORESerialiserException;
@@ -57,6 +58,7 @@ public class DataPackage {
     private Map<Identifier, List<Identifier>> metadataMap;
     private HashMap<Identifier, D1Object> objectStore;
     private ResourceMap map = null;
+    private SystemMetadata systemMetadata = null;
     
         
     /**
@@ -74,6 +76,7 @@ public class DataPackage {
      */
     public DataPackage(Identifier id) {
         objectStore = new HashMap<Identifier, D1Object>();
+        metadataMap = new HashMap<Identifier, List<Identifier>>();
         setPackageId(id);
     }
     
@@ -117,9 +120,6 @@ public class DataPackage {
         
         // Determine if the metadata object is already in the relations list
         // Use it if so, if not then create a list for this metadata link
-        if (metadataMap == null)
-        	metadataMap = new HashMap<Identifier, List<Identifier>>();
-        
         if (metadataMap.containsKey(metadataID)) {
             associatedData = metadataMap.get(metadataID);
         } else {
@@ -221,6 +221,21 @@ public class DataPackage {
         return rdfXml;
     }
     
+    
+    public static DataPackage download(Identifier pid) 
+    throws UnsupportedEncodingException, InvalidToken, ServiceFailure, NotAuthorized,
+    NotFound, NotImplemented, InsufficientResources, InvalidRequest, OREException, 
+    URISyntaxException, OREParserException
+    {
+    	D1Object packageObject = D1Object.download(pid);
+    	
+    	if (packageObject.getFormatId().getValue().equals("http://www.openarchives.org/ore/terms")) {
+    		String resourceMap = new String(packageObject.getData(),"UTF-8");
+        	return deserializePackage(resourceMap);    		
+    	}
+    	throw new InvalidRequest("0000","The identifier does not represent a DataPackage (is not an ORE resource map)");
+    }
+    
     /**
      * Deserialize an ORE resourceMap by parsing it, extracting the associated package identifier,
      * and the list of metadata and data objects aggregated in the ORE Map.  Create an instance
@@ -280,10 +295,47 @@ public class DataPackage {
     }
 
     /**
+     * Convenience function for working with the metadataMap. Does a reverse
+     * lookup to get the metadata object that is defined to document the provided
+     * data object.  Returns null if the relationship has not been defined.
+     * @param dataObject
+     * @return
+     */
+    public Identifier getDocumentedBy(Identifier dataObject) {
+    	Map<Identifier, List<Identifier>> mdMap = getMetadataMap();
+    	Set<Identifier> metadataMembers = mdMap.keySet();
+    	Identifier documenter = null;
+    	for (Identifier md : metadataMembers) {
+    		if (mdMap.get(md).contains(dataObject)) {
+    			documenter = md;
+    			break;
+    		}
+    	}
+    	return documenter;
+    }
+    
+
+    /**
      * @param metadataMap the metadataMap to set
      */
     public void setMetadataMap(Map<Identifier, List<Identifier>> metadataMap) {
         this.metadataMap = metadataMap;
+    }
+    
+    /**
+     * Set the SystemMetadata object to this data package.
+     * @param systemMetadata - the SystemMetadata object will be set.
+     */
+    public void setSystemMetadata(SystemMetadata systemMetadata) {
+      this.systemMetadata = systemMetadata;
+    }
+    
+    /**
+     * Get the SystemMetadata object associated with the data package.
+     *@return the SystemMetadata object associated with the data package.
+     */
+    public SystemMetadata getSystemMetadata() {
+      return this.systemMetadata;
     }
 
     /**
