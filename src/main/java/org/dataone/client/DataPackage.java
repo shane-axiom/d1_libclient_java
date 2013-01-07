@@ -24,6 +24,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -44,12 +45,29 @@ import org.dspace.foresite.ORESerialiserException;
 import org.dspace.foresite.ResourceMap;
 
 /**
- * A collection of @see D1Object that are interrelated as a package.  The 
+ * A DataPackage is a collection of interrelated data (science data, metadata) 
+ * D1Objects plus their defined relationships (the ResourceMap object)
+ * 
  * DataPackage allows all of the science metadata, data objects, and system metadata
- * associated with those objects to be accessed in a common place.  Each DataPackage
- * contains one science metadata D1Object, and 0 or more data objects represented as 
- * D1Object instances.  The DataPackage can be serialized as an OAI-ORE ResourceMap
- * that details the linkages among data objects and science metadata objects.
+ * associated with those objects to be accessed from a common place.  A well-formed
+ * DataPackage contains one or more science metadata D1Objects that document
+ * 1 or more data D1Objects.  The DataPackage relationship graph can be serialized 
+ * as an OAI-ORE ResourceMap, which details the linkages among science data objects 
+ * and science metadata objects.  
+ * 
+ * The ResourceMap is a first-class object in the DataONE object collection, the 
+ * same as metadata and science data, having its own unique identifier. Retrieving 
+ * a DataPackage from DataONE therefore involves first retrieving the ResourceMap, 
+ * then retrieving the member data individually. That is to say, the ResourceMap 
+ * contains only references to the package members, not the content.
+ * 
+ * DataPackage independently maintains 2 properties, the data map, and the 
+ * relationships map.  The data map one which maintains the list of D1Objects 
+ * associated with the DataPackage, and should not contain data objects not found in 
+ * the relationship map. The data map is used to access the package's data members.
+ * 
+ * It is the relationships map that determines the contents of the ResourceMap, 
+ * and therefore defines package membership. 
  * 
  */
 public class DataPackage {
@@ -81,8 +99,9 @@ public class DataPackage {
     }
     
     /**
-     * Add a new object with the given Identifier to the package. This creates
-     * a D1Object to wrap the identified object after downloading it from DataONE.
+     * Puts an object with the given Identifier to the package's data store. 
+     * This creates a D1Object to wrap the identified object after downloading it 
+     * from DataONE.
      * @param id the identifier of the object to be added
      * @throws InvalidRequest 
      * @throws InsufficientResources 
@@ -102,9 +121,9 @@ public class DataPackage {
     }
     
     /**
-     * Add a new object directly to the package without downloading it from a node. 
-     * The identifier for this object is extracted from its system metadata.
-     * @param obj the D1Object to be added
+     * Puts a D1Object directly to the package's data map without downloading 
+     * it from a node. The identifier for this object is extracted from the D1Object. 
+     * @param obj the D1Object to be added to the object map
      */
     public void addData(D1Object obj) {
         Identifier id = obj.getIdentifier();
@@ -114,7 +133,9 @@ public class DataPackage {
             }
         }
     }
-        
+    
+    // TODO: this should be renamed to include the relationship to be added to the 
+    // resourceMap
     public void insertRelationship(Identifier metadataID, List<Identifier> dataIDList) {
         List<Identifier> associatedData = null;
         
@@ -139,6 +160,9 @@ public class DataPackage {
     /**
      * @return the number of objects in this package
      */
+    //TODO: rename. size() is ambiguous and potentially inaccurate,
+    //  as the number of objects in the objectStore is 
+    // different than the number of package members.
     public int size() {
         return objectStore.size();
     }
@@ -162,10 +186,21 @@ public class DataPackage {
     }
     
     /**
-     * Remove an object from a DataPackage based on its Identifier.
-     * @param id the Identifier of the object to be removed.
+     * @param id
+     * @deprecated renaming to removeData(Identifier id) for naming consistency
+     * with addData, addAndDownloadData
      */
     public void remove(Identifier id) {
+    	removeData(id);
+    }
+    
+    /**
+     * Removes a D1Object from a DataPackage based on its Identifier.  Does
+     * not affect the relationship map.
+     * @param id the Identifier of the object to be removed.
+     * @since v1.1.1
+     */
+    public void removeData(Identifier id) {
         objectStore.remove(id);
     }
     
@@ -361,4 +396,40 @@ public class DataPackage {
             throw e;
         }
     }    
+    
+    /**
+     * Validates the data map by checking that all objects are also found
+     * in the relationship map.  Otherwise, a relationship needs to be defined, or
+     * an object removed from the data map.
+     * @return true if all D1Objects in the data map are found in the metadata map
+     * @since v1.1.1 
+     */
+    // TODO: needs unit test
+    public boolean validateDataMap() {
+    	for (Identifier pid: objectStore.keySet()) {
+    		if (!metadataMap.containsKey(pid) && (getDocumentedBy(pid) == null)) {
+    			return false;
+    		}
+    	}
+    	return true;
+    }
+    
+    /**
+     * Returns a list of objects in the data map that are not found in the
+     * metadata map.  (Implying that these are not true members, as they will
+     * not be included in the serialized ResourceMap).
+     * 
+     * @return List<Identifier> an identifier list
+     * @since v1.1.1
+     */
+    //TODO: needs unit test
+    public List<Identifier> listUncharacterizedData() {
+    	List<Identifier> results = new LinkedList<Identifier>();
+    	for (Identifier pid: objectStore.keySet()) {
+    		if (!metadataMap.containsKey(pid) && (getDocumentedBy(pid) == null)) {
+    			results.add(pid);
+    		}
+    	}
+    	return results;
+    }
 }
