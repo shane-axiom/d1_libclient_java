@@ -28,6 +28,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.TreeMap;
 
+import org.dataone.client.types.ObsoletesChain;
 import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.IdentifierNotUnique;
 import org.dataone.service.exceptions.InsufficientResources;
@@ -205,10 +206,10 @@ public class D1Client {
     
     
     /**
-     * Return the full 'obsoletes chain' for the given Identifier.  Includes 
+     * Return the full ObsoletesChain for the given Identifier.  Includes 
      * predecessors and antecedents. 
      * @param pid
-     * @return
+     * @return a complete ObsoletesChain
      * @throws InvalidToken
      * @throws ServiceFailure
      * @throws NotAuthorized
@@ -216,35 +217,45 @@ public class D1Client {
      * @throws NotImplemented
      * @since v1.1.1
      */
-    
-    //TODO: replace the return map with an 'ObsoletesChain' (a new datatype) so that
-    // some functionality can be included with it.
-    public TreeMap<Date,Object[]> listUpdateHistory(Identifier pid) 
+    public static ObsoletesChain listUpdateHistory(Identifier pid) 
     throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented 
     {
     	Identifier startingPid = pid;
-    	TreeMap<Date, Object[]> updatesTable = new TreeMap<Date, Object[]>();
+    	ObsoletesChain chain = new ObsoletesChain(startingPid);
 
     	SystemMetadata smd = getCN().getSystemMetadata(startingPid, true);
-    	Object[] data = {pid, smd.getDateUploaded(), smd.getObsoletedBy(), smd.getObsoletes(), smd.getArchived()};
-		updatesTable.put(smd.getDateUploaded(), data);
+    	chain.addObject(
+    			pid, 
+    			smd.getDateUploaded(), 
+    			smd.getObsoletes(), 
+    			smd.getObsoletedBy(), 
+    			smd.getArchived());
+
 		Identifier fpid = smd.getObsoletedBy();
 		Identifier bpid = smd.getObsoletes();
 		
     	while (fpid != null) {
         	smd = getCN().getSystemMetadata(fpid, true);
-        	Object[] dataF = {fpid, smd.getDateUploaded(), smd.getObsoletedBy(), smd.getObsoletes(), smd.getArchived()};
-    		updatesTable.put(smd.getDateUploaded(), dataF);
+        	chain.addObject(
+        			fpid, 
+        			smd.getDateUploaded(), 
+        			smd.getObsoletes(), 
+        			smd.getObsoletedBy(), 
+        			smd.getArchived());
     		fpid = smd.getObsoletedBy();
     	}
     	
     	// get the first obsoletes by looking up in the stored list
     	while (bpid != null) {
     		smd = getCN().getSystemMetadata(bpid, true);
-    		Object[] dataB = {bpid, smd.getDateUploaded(), smd.getObsoletedBy(), smd.getObsoletes(), smd.getArchived()};
-    		updatesTable.put(smd.getDateUploaded(), dataB);
+    		chain.addObject(
+        			bpid, 
+        			smd.getDateUploaded(), 
+        			smd.getObsoletes(), 
+        			smd.getObsoletedBy(), 
+        			smd.getArchived());
     		bpid = smd.getObsoletes();
     	}
-    	return(updatesTable);
+    	return chain;
     }
 }
