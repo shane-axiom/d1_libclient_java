@@ -64,11 +64,15 @@ public class ObsoletesChain {
 		Iterator<Long> it = this.byDateIndex.keySet().iterator();
 		Long time = null;
 		while (it.hasNext()) {
-			time = it.next();
-			if (asOf >= time) {
+			Long nextTime = it.next();
+			if (asOf < nextTime) {
 				break;
 			}
+			time = nextTime;
 		}
+		if (time == null)
+			return null;
+		
 		int tableIndex = this.byDateIndex.get(time);
 		return (Identifier) this.infoTable.get(tableIndex)[PID];
 	}
@@ -148,7 +152,7 @@ public class ObsoletesChain {
 	
 	public Date getPublishDate(Identifier pid) {
 		int tableIndex = this.byIdIndex.get(pid);
-		return new Date((Long) this.infoTable.get(tableIndex)[PUBLISH_DATE]);
+		return (Date) this.infoTable.get(tableIndex)[PUBLISH_DATE];
 		
 	}
 	
