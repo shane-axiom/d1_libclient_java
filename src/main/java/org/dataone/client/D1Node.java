@@ -988,6 +988,12 @@ public abstract class D1Node {
      * As with the sister query() method that takes a D1Url, the contents of 
      * encodedQuery will be joined to the url with as follows:
      * /{queryEngine}/{encodedQuery}
+     * 
+     * Note:  Users will need to provide the '?' where appropriate to mark
+     * the beginning of the url-query portion.  (for example, solr queries are
+     * entirely contained in the query portion of a url, so users need the first
+     *  character of the provided encodedQuery to be a '?')
+     * 
      * @param queryEngine
      * @param encodedQuery
      * @return

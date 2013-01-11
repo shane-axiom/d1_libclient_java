@@ -396,10 +396,15 @@ public class D1Object {
     	sm.setSubmitter(submitter);
     	sm.setRightsHolder(submitter);
     	
-    	Date dateCreated = new Date();
-    	sm.setDateUploaded(dateCreated);
-    	Date dateUpdated = new Date();
-    	sm.setDateSysMetadataModified(dateUpdated);
+    	// the dateUploaded field should be left blank - otherwise indicates
+    	// that the object is already created on a MN
+//    	Date dateCreated = new Date();
+//    	sm.setDateUploaded(dateCreated);
+    	
+    	// can be used to indicate the last time there was a change
+    	// but no guarantees
+    	Date dateChanged = new Date();
+    	sm.setDateSysMetadataModified(dateChanged);
 
     	// Node information
     	sm.setOriginMemberNode(nodeId);
