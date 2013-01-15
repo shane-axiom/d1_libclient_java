@@ -23,16 +23,7 @@ public class ObsoletesChainTest {
 	private Identifier foo9 = D1TypeBuilder.buildIdentifier("foo9");
 	
 	@Before
-	public void setUp() throws Exception {
-//		Identifier foo1 = D1TypeBuilder.buildIdentifier("foo1");
-//		Identifier foo2 = D1TypeBuilder.buildIdentifier("foo2");
-//		Identifier foo3 = D1TypeBuilder.buildIdentifier("foo3");
-//		Identifier foo4 = D1TypeBuilder.buildIdentifier("foo4");
-//		Identifier foo5 = D1TypeBuilder.buildIdentifier("foo5");
-//		Identifier foo6 = D1TypeBuilder.buildIdentifier("foo6");
-//		Identifier foo7 = D1TypeBuilder.buildIdentifier("foo7");
-//		Identifier foo8 = D1TypeBuilder.buildIdentifier("foo8");
-//		Identifier foo9 = D1TypeBuilder.buildIdentifier("foo9");
+	public void setUp() throws Exception { 
 
 		chain = new ObsoletesChain(foo3);
 		chain.addObject(foo4, new Date(4000000), foo3, foo5, true);
