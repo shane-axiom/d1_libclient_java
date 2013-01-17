@@ -49,7 +49,7 @@ public class ClientIdentityManager {
 	/**
 	 * a simple encapsulation to return the client's (current) identity
 	 * from the CertificateManager as a dataone Subject 
-	 * @return
+	 * @return subject containing the DN of the loadedCertificate, or 'public'
 	 */
 	public static Subject getCurrentIdentity() 
 	{
@@ -111,10 +111,13 @@ public class ClientIdentityManager {
 		return subject;
 	}
 	
-	public static Date getCertificateExpriation()
+	public static Date getCertificateExpiration()
 	{
 		java.security.cert.X509Certificate x509cert = CertificateManager.getInstance().loadCertificate();
-		Date expires = x509cert.getNotAfter();
+		Date expires = null;
+		if (x509cert != null)
+			expires = x509cert.getNotAfter();
+		
 		return expires;
 	}
 }
