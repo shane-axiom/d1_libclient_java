@@ -355,6 +355,8 @@ public class CertificateManager {
         	KeyStore keyStore = getKeyStore(null);
         	// get it from the store
             cert = (X509Certificate) keyStore.getCertificate("cilogon");
+        } catch (FileNotFoundException fnf) {
+        	log.warn(fnf.getMessage());
         } catch (Exception e) {
         	log.error(e.getMessage(), e);
         }
@@ -726,7 +728,7 @@ public class CertificateManager {
 				private List<X509Certificate> d1CaCertificates = getSupplementalCACertificates();
 	
 	            public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-	            	System.out.println("checkClientTrusted - " + authType);
+	            	System.err.println("checkClientTrusted - " + authType);
 	            
 	            	// check DataONE-trusted CAs in addition to the default
 	        		boolean trusted = false;
@@ -745,7 +747,7 @@ public class CertificateManager {
 	            }
 	            
 	            public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-	            	System.out.println("checkServerTrusted - " + authType);
+	            	System.err.println("checkServerTrusted - " + authType);
 
 	            	// check DataONE-trusted CAs in addition to the default
 	        		boolean trusted = false;
@@ -762,12 +764,12 @@ public class CertificateManager {
 	        			//throw new CertificateException("Certificate issuer not found in trusted CAs");
 	        			// try the default, which will either succeed, in which case we are good, or will throw exception
 	        			try {
-	        				System.out.println("CertMan Custom TrustManager: checking JVM trusted certs");
+	        				System.err.println("CertMan Custom TrustManager: checking JVM trusted certs");
 	        				defaultTrustManager.checkServerTrusted(chain, authType);
 	        			} catch (CertificateException ce) {
-	        				System.out.println("CertMan Custom TrustManager: server cert chain subjectDNs: ");
+	        				System.err.println("CertMan Custom TrustManager: server cert chain subjectDNs: ");
 	        				for (X509Certificate cert: chain) {
-	        					System.out.println("CertMan Custom TrustManager:   subjDN: " + cert.getSubjectDN() + 
+	        					System.err.println("CertMan Custom TrustManager:   subjDN: " + cert.getSubjectDN() + 
 	        							" / issuerDN: " + cert.getIssuerX500Principal());
 	    	            	}
 	        				throw ce;
@@ -848,13 +850,14 @@ public class CertificateManager {
     	else {
 			// if the location has been set, use it
 	    	String certLoc = certificateLocation;
-	    	if (certLoc == null) {
-	    		certLoc = locateCertificate();
-	    	}
+	    	File certFile = (certLoc == null) ? 
+	    			locateDefaultCertificate() :
+	    			new File(certLoc);
+
 			log.info("Using client certificate location: " + certLoc);
 	    	PEMReader pemReader = null;
 	    	try {
-	    		pemReader = new PEMReader(new FileReader(certLoc));
+	    		pemReader = new PEMReader(new FileReader(certFile));
 	    		Object pemObject = null;
 	        
 	    		KeyPair keyPair = null;
@@ -956,12 +959,16 @@ public class CertificateManager {
     }
     
     /**
-     * Locate the default certificate location
-     * http://www.cilogon.org/cert-howto#TOC-Finding-CILogon-Certificates
-     * @return
-     * @throws FileNotFoundException 
+     * Locate the default certificate.  The default location is constructed based
+     * on user environment properties, so this method constructs a path and tests
+     * whether or not the resulting path exists.
+     * 
+     * see also {@link http://www.cilogon.org/cert-howto#TOC-Finding-CILogon-Certificates}
+     * 
+     * @return File object of known-to-exist location
+     * @throws FileNotFoundException  if no default certificate can be located
      */
-    private String locateCertificate() throws FileNotFoundException {
+    public File locateDefaultCertificate() throws FileNotFoundException {
     	StringBuffer location = new StringBuffer();
     	
     	// the tmp dir
@@ -1004,7 +1011,7 @@ public class CertificateManager {
 			throw new FileNotFoundException("No certificate installed in expected location: " + location.toString());
 		}
 		
-    	return location.toString();
+    	return fileLocation;
     }
     
     /**

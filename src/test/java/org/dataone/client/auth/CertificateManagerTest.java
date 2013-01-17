@@ -28,16 +28,21 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.security.KeyManagementException;
 import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.dataone.client.CNode;
 import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.BaseException;
-import org.dataone.service.exceptions.NotImplemented;
-import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1.Subject;
 import org.dataone.service.types.v1.SubjectInfo;
@@ -240,10 +245,10 @@ public class CertificateManagerTest {
 		} catch (Exception e) {
 			e.printStackTrace();
 			fail();
-		} 
-        
-       
+		}    
     }
+    
+    
     /**
      * tests that exception thrown when a bad subject value is passed in
      */
@@ -256,9 +261,28 @@ public class CertificateManagerTest {
     	} catch (Exception e) {
     		e.printStackTrace();
     		fail();
-	} 
+    	} 
+    }
     
+    @Test
+    public void testLocateDefaultCertificate() {
+    	try {
+    		File f = CertificateManager.getInstance().locateDefaultCertificate();
+    		System.out.println("Default Certificate Loation: " + f.getAbsolutePath());
+    		assertTrue(f.exists());
+    		String userTmpDir = (System.getProperty("tmpdir") == null) ? "/tmp" : System.getProperty("tmpdir");
+    		System.out.println("user tempDir: " + userTmpDir);
+    		assertTrue(f.getAbsolutePath().startsWith(userTmpDir + "/x509up_u"));
+    		
+    	} catch (FileNotFoundException e) {
+    		// ok
+    	}
+    }
     
+    @Test
+    public void testSetupSSLSocketFactory() throws UnrecoverableKeyException, KeyManagementException, 
+    NoSuchAlgorithmException, KeyStoreException, CertificateException, IOException {
+    	CertificateManager.getInstance().getSSLSocketFactory(null);
     }
     
 }
