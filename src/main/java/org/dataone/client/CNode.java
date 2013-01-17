@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpException;
@@ -231,6 +232,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
      * @throws NotImplemented 
      * @throws ServiceFailure 
      */
+    // TODO: check other packages to see if we can return null instead of empty string
+    // (one dependency is d1_client_r D1Client)
     public String lookupNodeId(String nodeBaseUrl) throws ServiceFailure, NotImplemented {
         String nodeId = "";
         if (isNodeMapStale()) {
@@ -256,6 +259,19 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     private void refreshNodeMap() throws ServiceFailure, NotImplemented
     { 		
     	nodeId2URLMap = NodelistUtil.mapNodeList(listNodes());
+    }
+    
+    /**
+     * Return the set of Node IDs for all of the nodes registered to the CN 
+     * @return
+     * @throws NotImplemented 
+     * @throws ServiceFailure 
+     */
+    public Set<String> listNodeIds() throws ServiceFailure, NotImplemented {
+    	if (isNodeMapStale()) {
+    		refreshNodeMap();
+    	}
+    	return nodeId2URLMap.keySet();
     }
 	
     
