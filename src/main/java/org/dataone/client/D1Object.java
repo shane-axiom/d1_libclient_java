@@ -32,21 +32,17 @@ import java.util.List;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.dataone.service.exceptions.BaseException;
-import org.dataone.service.exceptions.IdentifierNotUnique;
 import org.dataone.service.exceptions.InsufficientResources;
 import org.dataone.service.exceptions.InvalidRequest;
-import org.dataone.service.exceptions.InvalidSystemMetadata;
 import org.dataone.service.exceptions.InvalidToken;
 import org.dataone.service.exceptions.NotAuthorized;
 import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
-import org.dataone.service.exceptions.UnsupportedType;
 import org.dataone.service.exceptions.VersionMismatch;
 import org.dataone.service.types.v1.AccessPolicy;
 import org.dataone.service.types.v1.AccessRule;
 import org.dataone.service.types.v1.Checksum;
-import org.dataone.service.types.v1.DescribeResponse;
 import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.types.v1.NodeReference;
 import org.dataone.service.types.v1.ObjectFormat;
@@ -499,6 +495,11 @@ public class D1Object {
     
     }
     
+    /**
+     * Provides an object to manipulate this D1Object's accessPolicy
+     * @return
+     * @since v1.1.0
+     */
     public AccessPolicyEditor getAccessPolicyEditor() {
     	AccessPolicy ap = this.sysmeta.getAccessPolicy();
     	if (ap == null)
@@ -508,7 +509,6 @@ public class D1Object {
     }
     
     
-    // TODO: unit test/ integration test
     /**
      * refresh the SystemMetadata of this object, first trying the CN, then the 
      * authoritative MN.  Will only do the refresh if what's found on the CN or MN
@@ -523,12 +523,15 @@ public class D1Object {
      * @throws NotImplemented 
      * @throws NotAuthorized 
      * @throws InvalidToken 
-     * @throws InterruptedException 
+     * @throws InterruptedException
+     * @since v1.1.1 
      */
     public boolean refreshSystemMetadata(Integer retryTimeoutMS) 
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, InterruptedException 
     {
     	SystemMetadata smd = null;
+    	if (retryTimeoutMS == null) 
+    		retryTimeoutMS = 0;
     	try {
 			smd = D1Client.getCN().getSystemMetadata(getIdentifier());
 		} 
