@@ -46,6 +46,7 @@ import org.dataone.service.exceptions.VersionMismatch;
 import org.dataone.service.types.v1.AccessPolicy;
 import org.dataone.service.types.v1.AccessRule;
 import org.dataone.service.types.v1.Checksum;
+import org.dataone.service.types.v1.DescribeResponse;
 import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.types.v1.NodeReference;
 import org.dataone.service.types.v1.ObjectFormat;
@@ -504,6 +505,27 @@ public class D1Object {
     		this.sysmeta.setAccessPolicy(new AccessPolicy());
     	
     	return new AccessPolicyEditor(this.sysmeta.getAccessPolicy());
+    }
+    
+    /**
+     * refresh the SystemMetadata of this object, using the existing systemMetadata
+     * dateUploaded and dataSysMetadataModified fields to determine where to refresh
+     * from.
+     * 
+     * @return
+     */
+    public boolean refreshSystemMetadata() {
+    	if (this.sysmeta.getDateUploaded() == null) {
+    		// either not created yet or newly created and only available on the MN
+    		NodeReference nodeId = this.sysmeta.getAuthoritativeMemberNode();
+    	//	MNode mn = D1Client.getMN(nodeId);
+    	//	DescribeResponse dr = mn.describe(this.getIdentifier());
+    	//	dr.getLast_Modified();
+    	// TODO complete the implementation of this one.  
+    	// should it check CN nodelist for next sync?
+
+    	}
+    	return false;
     }
 
 }

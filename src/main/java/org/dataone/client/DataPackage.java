@@ -24,6 +24,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +53,7 @@ import org.dspace.foresite.ResourceMap;
  * DataPackage allows all of the science metadata, data objects, and system metadata
  * associated with those objects to be accessed from a common place.  A well-formed
  * DataPackage contains one or more science metadata D1Objects that document
- * 1 or more data D1Objects.  The DataPackage relationship graph can be serialized 
+ * one or more data D1Objects.  The DataPackage relationship graph can be serialized 
  * as an OAI-ORE ResourceMap, which details the linkages among science data objects 
  * and science metadata objects.  
  * 
@@ -62,12 +64,18 @@ import org.dspace.foresite.ResourceMap;
  * contains only references to the package members, not the content.
  * 
  * DataPackage independently maintains 2 properties, the data map, and the 
- * relationships map.  The data map one which maintains the list of D1Objects 
- * associated with the DataPackage, and should not contain data objects not found in 
- * the relationship map. The data map is used to access the package's data members.
+ * relationships map.  The data map maintains the list of D1Objects associated 
+ * with the DataPackage, and should not contain data objects not found in the 
+ * relationship map. It is also used internally to access the package's data members.
  * 
- * It is the relationships map that determines the contents of the ResourceMap, 
- * and therefore defines package membership. 
+ * The relationships map determines the contents of the ResourceMap, so therefore
+ * is the ultimate authority on package membership.
+ * 
+ * When creating (submitting) a new package, it is important for the object map
+ * and relationship map to be consistent.  The validate*Map(), 
+ * getUnresolvableMembers(), and getUnmappedMembers() should be invoked before
+ * uploading package members and the resourceMap to a MemberNode.
+ * 
  * 
  */
 public class DataPackage {
@@ -383,9 +391,6 @@ public class DataPackage {
      */
     private void updateResourceMap() throws OREException, URISyntaxException {
         
-        //List<Identifier> dataIdentifiers = new ArrayList<Identifier>(objectStore.keySet());
-        //Map<Identifier, List<Identifier>> idMap = new HashMap<Identifier, List<Identifier>>();
-        //idMap.put(scienceMetadata.getIdentifier(), dataIdentifiers);
         try {
             map = ResourceMapFactory.getInstance().createResourceMap(packageId, metadataMap);
         } catch (OREException e) {        
@@ -396,40 +401,107 @@ public class DataPackage {
             throw e;
         }
     }    
-    
+ 
+    // TODO: needs unit test. 
+//    /**
+//     * Validates the data map by checking that all objects are also found
+//     * in the relationship map.  Otherwise, a relationship needs to be defined, or
+//     * an object removed from the data map.  getUncharacterizedMember
+//     * @return true if all D1Objects in the data map are found in the relationship map
+//     * @since v1.1.1 
+//     */
+//    public boolean validateDataMap() {
+//    	if (getUncharacterizedMembers().isEmpty()) {
+//    		return true;
+//    	}
+//    	return false;
+//    }
+ 
+    // TODO: needs unit test    
     /**
-     * Validates the data map by checking that all objects are also found
-     * in the relationship map.  Otherwise, a relationship needs to be defined, or
-     * an object removed from the data map.
-     * @return true if all D1Objects in the data map are found in the metadata map
-     * @since v1.1.1 
+     * Returns a list of package members that are not in the relationship map
+     * (implying that these are not true members, as they will
+     * not be included in the serialized ResourceMap).
+     * @return Set<Identifier> : an identifier list
+     * @since v1.1.1
      */
-    // TODO: needs unit test
-    public boolean validateDataMap() {
-    	for (Identifier pid: objectStore.keySet()) {
-    		if (!metadataMap.containsKey(pid) && (getDocumentedBy(pid) == null)) {
-    			return false;
+    public Set<Identifier> getUncharacterizedMembers() {
+    	Set<Identifier> unmappedMembers = new HashSet<Identifier>();
+    	Iterator<Identifier> it = objectStore.keySet().iterator();
+    	while (it.hasNext()) {
+    		Identifier pid = it.next();
+    		if (!getMetadataMap().containsKey(pid) && (getDocumentedBy(pid) == null)) {
+    			unmappedMembers.add(pid);
     		}
     	}
-    	return true;
+    	return unmappedMembers;
+    }
+
+    
+    // TODO: needs unit test    
+//    /**
+//     * Validates the relationship map to ensure that all of the objects in the
+//     * relationship map are either in the package locally (added to the data map),
+//     * or are resolvable against the CN.
+//     * @return boolean
+//     * @throws InvalidToken
+//     * @throws ServiceFailure
+//     * @throws NotImplemented
+//     * @since v1.1.1
+//     */
+//    public boolean validateRelationshipMap() 
+//    throws InvalidToken, ServiceFailure, NotImplemented {
+//    	if(getUnresolvableMembers().isEmpty()) {
+//    		return true;
+//    	}
+//    	return false;
+//    }
+    
+    /**
+     * Returns the Identifiers in the relationship map that cannot
+     * be found in the object map or resolved by the CN. (Indicating that
+     * if the DataPackage is submitted as is, it will refer to non-existent
+     * objects).
+     * 
+     * @return Set of unresolvable package resources
+     * @throws InvalidToken
+     * @throws ServiceFailure
+     * @throws NotImplemented
+     * @since v1.1.1
+     */
+    public Set<Identifier> getUnresolvableMembers() 
+    throws InvalidToken, ServiceFailure, NotImplemented {
+    	
+    	Set<Identifier> unresolvedItems = getPackageResources();
+
+    	unresolvedItems.removeAll(objectStore.keySet());
+    	Iterator<Identifier> it = unresolvedItems.iterator();
+    	while (it. hasNext()) {
+    		Identifier item = it.next();
+    		try {
+    			D1Client.getCN().resolve(item);
+    			unresolvedItems.remove(item);
+    		} catch (NotAuthorized e) {
+    			// counts as exists, so remove from the list
+    			unresolvedItems.remove(item);
+    		} catch (NotFound e) {
+    			; // keep in the relationshoItems set
+    		}
+    	}
+    	return unresolvedItems;
     }
     
     /**
-     * Returns a list of objects in the data map that are not found in the
-     * metadata map.  (Implying that these are not true members, as they will
-     * not be included in the serialized ResourceMap).
-     * 
-     * @return List<Identifier> an identifier list
-     * @since v1.1.1
+     * Returns the set of Identifiers that are in the relationship map
+     * (metadataMap)
+     * @return
      */
-    //TODO: needs unit test
-    public List<Identifier> listUncharacterizedData() {
-    	List<Identifier> results = new LinkedList<Identifier>();
-    	for (Identifier pid: objectStore.keySet()) {
-    		if (!metadataMap.containsKey(pid) && (getDocumentedBy(pid) == null)) {
-    			results.add(pid);
-    		}
+    private Set<Identifier> getPackageResources() {
+    	Set<Identifier> packageResources = new HashSet<Identifier>();
+    	for (Identifier pid: getMetadataMap().keySet()) {
+    		packageResources.add(pid);
+    		packageResources.addAll(getMetadataMap().get(pid));
     	}
-    	return results;
+    	return packageResources;
     }
 }
