@@ -507,25 +507,66 @@ public class D1Object {
     	return new AccessPolicyEditor(this.sysmeta.getAccessPolicy());
     }
     
+    
+    // TODO: unit test/ integration test
     /**
-     * refresh the SystemMetadata of this object, using the existing systemMetadata
-     * dateUploaded and dataSysMetadataModified fields to determine where to refresh
-     * from.
+     * refresh the SystemMetadata of this object, first trying the CN, then the 
+     * authoritative MN.  Will only do the refresh if what's found on the CN or MN
+     * is more up-to-date than what's already here.  
      * 
-     * @return
+     * @param retryTimeoutMS - the number of milliseconds to wait before giving up
+     * on refresh.  If null, will only try the MN 1 time, otherwise will retry at 
+     * regular intervals until the retryTimeout is reached.
+     * @return boolean: true if a refresh took place, otherwise false
+     * already had.
+     * @throws ServiceFailure 
+     * @throws NotImplemented 
+     * @throws NotAuthorized 
+     * @throws InvalidToken 
+     * @throws InterruptedException 
      */
-    public boolean refreshSystemMetadata() {
-    	if (this.sysmeta.getDateUploaded() == null) {
-    		// either not created yet or newly created and only available on the MN
-    		NodeReference nodeId = this.sysmeta.getAuthoritativeMemberNode();
-    	//	MNode mn = D1Client.getMN(nodeId);
-    	//	DescribeResponse dr = mn.describe(this.getIdentifier());
-    	//	dr.getLast_Modified();
-    	// TODO complete the implementation of this one.  
-    	// should it check CN nodelist for next sync?
-
+    public boolean refreshSystemMetadata(Integer retryTimeoutMS) 
+    throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, InterruptedException 
+    {
+    	SystemMetadata smd = null;
+    	try {
+			smd = D1Client.getCN().getSystemMetadata(getIdentifier());
+		} 
+    	catch (BaseException be) {
+			NodeReference nodeId = this.sysmeta.getAuthoritativeMemberNode();
+			int interval = retryTimeoutMS > 40000 ? 10000 : 5000;
+			for (int i=-1; i<retryTimeoutMS; i+=interval) {	
+				try {
+					smd = D1Client.getMN(nodeId).getSystemMetadata(getIdentifier());
+					break;
+				} catch (NotFound e) {
+					if (i+interval < retryTimeoutMS) 
+						Thread.sleep(interval);
+					; // not exception within timeout window
+				} 
+			}
+		}
+    	if (smd == null) {
+    		return false;
+    	} else if (smd.getIdentifier().equals(this.getSystemMetadata().getIdentifier())) {
+    		// don't update if the sysmeta we already is both from DataONE (has dataUploaded field)
+    		// and the new serial version is greater what we already have
+    		if (this.getSystemMetadata().getDateUploaded() != null &&
+    			(smd.getSerialVersion().compareTo(this.getSystemMetadata().getSerialVersion()) > 0))
+    		{ 
+    			try {
+    				this.setSystemMetadata(smd);
+    			} catch (InvalidRequest e) {
+    				; // with the explicit smd == null check, this should never be reached
+    			}
+    			return true;
+    		} else {
+    			// already up-to-date, so nothing has changed
+    			return false;
+    		}
+    	} else {
+    		throw new ServiceFailure("clientException","The identifier for the " +
+    				"retrieved systemMetadata doesn't match that of the local version.");
     	}
-    	return false;
     }
-
 }
