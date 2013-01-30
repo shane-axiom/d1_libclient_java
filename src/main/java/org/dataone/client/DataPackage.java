@@ -20,6 +20,7 @@
 
 package org.dataone.client;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -31,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.io.IOUtils;
 import org.dataone.ore.ResourceMapFactory;
 import org.dataone.service.exceptions.InsufficientResources;
 import org.dataone.service.exceptions.InvalidRequest;
@@ -266,14 +268,14 @@ public class DataPackage {
     
     
     public static DataPackage download(Identifier pid) 
-    throws UnsupportedEncodingException, InvalidToken, ServiceFailure, NotAuthorized,
+    throws InvalidToken, ServiceFailure, NotAuthorized,
     NotFound, NotImplemented, InsufficientResources, InvalidRequest, OREException, 
-    URISyntaxException, OREParserException
+    URISyntaxException, OREParserException, IOException
     {
     	D1Object packageObject = D1Object.download(pid);
     	
     	if (packageObject.getFormatId().getValue().equals("http://www.openarchives.org/ore/terms")) {
-    		String resourceMap = new String(packageObject.getData(),"UTF-8");
+    		String resourceMap = IOUtils.toString(packageObject.getDataSource().getInputStream());
         	return deserializePackage(resourceMap);    		
     	}
     	throw new InvalidRequest("0000","The identifier does not represent a DataPackage (is not an ORE resource map)");

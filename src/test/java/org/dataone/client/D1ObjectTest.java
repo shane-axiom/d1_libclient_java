@@ -30,6 +30,9 @@ import static org.junit.Assert.fail;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 
+import javax.mail.util.ByteArrayDataSource;
+
+import org.apache.commons.io.IOUtils;
 import org.dataone.service.exceptions.InvalidRequest;
 import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.types.v1.NodeReference;
@@ -192,4 +195,28 @@ public class D1ObjectTest {
 						D1TypeBuilder.buildSubject(Constants.SUBJECT_PUBLIC
 								)));
 	}
+	
+	@Test
+	public void testGetDataSource() throws NoSuchAlgorithmException, NotFound, InvalidRequest, IOException {
+		D1Object d = new D1Object(D1TypeBuilder.buildIdentifier("foooooo"),
+				"someData".getBytes(),
+				D1TypeBuilder.buildFormatIdentifier("text/csv"),
+				D1TypeBuilder.buildSubject("submitterMe"),
+				D1TypeBuilder.buildNodeReference("someMN"));
+		assertTrue(IOUtils.toString(d.getDataSource().getInputStream()).equals("someData"));	
+	}
+	
+	@Test
+	public void testSetDataSource() throws NoSuchAlgorithmException, NotFound, InvalidRequest, IOException {
+		D1Object d = new D1Object(D1TypeBuilder.buildIdentifier("foooooo"),
+				"someData".getBytes(),
+				D1TypeBuilder.buildFormatIdentifier("text/csv"),
+				D1TypeBuilder.buildSubject("submitterMe"),
+				D1TypeBuilder.buildNodeReference("someMN"));
+		d.setDataSource(new ByteArrayDataSource("someOtherData".getBytes(),null));
+		assertTrue(IOUtils.toString(d.getDataSource().getInputStream()).equals("someOtherData"));
+		
+	}
+	
+	
 }

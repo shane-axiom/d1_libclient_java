@@ -23,6 +23,7 @@
 package org.dataone.client;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -175,8 +176,13 @@ public class D1Client {
 
     	String mn_url = D1Client.getCN().lookupNodeBaseUrl(sysmeta.getOriginMemberNode().getValue());
     	MNode mn = D1Client.getMN(mn_url);
-    	ByteArrayInputStream bis = new ByteArrayInputStream(d1object.getData());
-    	Identifier rGuid = mn.create(session, sysmeta.getIdentifier(), bis, sysmeta);
+    	Identifier rGuid;
+		try {
+			rGuid = mn.create(session, sysmeta.getIdentifier(), 
+					d1object.getDataSource().getInputStream(), sysmeta);
+		} catch (IOException e) {
+			throw new ServiceFailure("000 Client Exception","Could not open InputStream from the data: " + e.getMessage());
+		}
     	return rGuid;
     }
 
