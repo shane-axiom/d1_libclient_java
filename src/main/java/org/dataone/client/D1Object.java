@@ -20,7 +20,6 @@
 
 package org.dataone.client;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
@@ -29,7 +28,11 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import javax.activation.DataSource;
+import javax.mail.util.ByteArrayDataSource;
+
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.input.CountingInputStream;
 import org.apache.commons.lang.StringUtils;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.InsufficientResources;
@@ -65,8 +68,7 @@ public class D1Object {
 
     private SystemMetadata sysmeta;
     
-    // TODO: this should also be able to be a reference to data, rather than a value, with late binding to allow efficient implementations
-    private byte[] data;
+    private DataSource data;
     
     // Flag indicating whether the object already exists in a MN; set when the D1Object is created
     private boolean alreadyCreated = false;
@@ -111,7 +113,7 @@ public class D1Object {
     public D1Object(Identifier id, byte[] data, String formatValue, String submitterValue, String nodeIdValue) 
         throws NoSuchAlgorithmException, IOException, NotFound, InvalidRequest {
         alreadyCreated = false;
-        this.data = data;
+        this.data = new ByteArrayDataSource(data, formatValue);
         ObjectFormatIdentifier formatId = new ObjectFormatIdentifier();
         formatId.setValue(formatValue);
         Subject submitter = new Subject();
@@ -119,7 +121,8 @@ public class D1Object {
         NodeReference nodeRef = new NodeReference();
         nodeRef.setValue(nodeIdValue);
         try {
-			this.sysmeta = generateSystemMetadata(id, data, formatId, submitter, nodeRef);
+			this.sysmeta = generateSystemMetadata(id, this.data.getInputStream(),
+					formatId, submitter, nodeRef);
 		} catch (ServiceFailure e) {
 			// TODO: revisit whether these should be exposed (thrown)
 			throw new NotFound("0","recast ServiceFailure: " + e.getDescription());
@@ -129,12 +132,31 @@ public class D1Object {
 		}
     }
     
+    
+   /**
+    * Deprecated in favor of constructor that takes a DataSource
+    * 
+    * Create an object that contains the given data bytes and with the given system metadata values. This 
+    * constructor is used to build a D1Object locally in order to then call D1Object.create() to upload it 
+    * to the proper Member Node.
+    * 
+    * @param id the identifier of the object
+    * @param data the data bytes of the object
+    * @param format the format of the object
+    * @param submitter the submitter for the object
+    * @param nodeId the identifier of the node on which the object will be created
+    * @throws NoSuchAlgorithmException if the checksum algorithm does not exist
+    * @throws IOException if the data bytes can not be read
+    * @throws NotFound if the format specified is not found in the formatCache
+    * @throws InvalidRequest if the content of parameters is not correct
+    */
+    @Deprecated
     public D1Object(Identifier id, byte[] data, ObjectFormatIdentifier formatId, Subject submitter, NodeReference nodeId) throws NoSuchAlgorithmException,
             IOException, NotFound, InvalidRequest {
         alreadyCreated = false;
-        this.data = data;
+        this.data = new ByteArrayDataSource(data, (formatId == null ? null : formatId.getValue()));
         try {
-            this.sysmeta = generateSystemMetadata(id, data, formatId, submitter, nodeId);
+            this.sysmeta = generateSystemMetadata(id, this.data.getInputStream(), formatId, submitter, nodeId);
         } catch (ServiceFailure e) {
             // TODO: revisit whether these should be exposed (thrown)
             throw new NotFound("0", "recast ServiceFailure: " + e.getDescription());
@@ -143,6 +165,36 @@ public class D1Object {
             throw new NotFound("0", "recast NotImplemented: " + e.getDescription());
         }
     }
+    
+    /**
+     * Create an object that contains the given data bytes and with the given system metadata values. This 
+     * constructor is used to build a D1Object locally in order to then call D1Object.create() to upload it 
+     * to the proper Member Node.
+     * 
+     * @param id the identifier of the object
+     * @param data the data bytes of the object
+     * @param format the format of the object
+     * @param submitter the submitter for the object
+     * @param nodeId the identifier of the node on which the object will be created
+     * @throws NoSuchAlgorithmException if the checksum algorithm does not exist
+     * @throws IOException if the data bytes can not be read
+     * @throws NotFound if the format specified is not found in the formatCache
+     * @throws InvalidRequest if the content of parameters is not correct
+     */
+     public D1Object(Identifier id, DataSource data, ObjectFormatIdentifier formatId, Subject submitter, NodeReference nodeId) throws NoSuchAlgorithmException,
+             IOException, NotFound, InvalidRequest {
+         alreadyCreated = false;
+         this.data = data;
+         try {
+             this.sysmeta = generateSystemMetadata(id, data.getInputStream(), formatId, submitter, nodeId);
+         } catch (ServiceFailure e) {
+             // TODO: revisit whether these should be exposed (thrown)
+             throw new NotFound("0", "recast ServiceFailure: " + e.getDescription());
+         } catch (NotImplemented e) {
+             // TODO: revisit whether these should be exposed (thrown)
+             throw new NotFound("0", "recast NotImplemented: " + e.getDescription());
+         }
+     }
 
     /**
      * @return the identifier
@@ -186,24 +238,50 @@ public class D1Object {
     }
 
     /**
+     * Deprecated in favor of the getDataSource method
+     * 
      * @return the data
+     * @throws IOException
+     * @deprecated
      */
-    public byte[] getData() {
-        return data;
+    public byte[] getData() throws IOException {
+        return IOUtils.toByteArray(data.getInputStream());
     }
 
     /**
+     * Deprecated in favor of the setDataSource method
+     * 
      * @param data the data to set
      * @throws InvalidRequest - if data parameter is null
+     * @deprecated
      */
     public void setData(byte[] data) throws InvalidRequest {
     	if (data == null) {
     		throw new InvalidRequest("Client Error", "data cannot be null");
     	}
-        this.data = data;
+        this.data = new ByteArrayDataSource(data, null);
+    }
+    
+    /**
+     * get the DataSource representing the data
+     * @return
+     * @since v1.1.1
+     */
+    public DataSource getDataSource()
+    {
+    	return data;
     }
 
-
+    /**
+     * set the DataSource representation of the data
+     * @return
+     * @since v1.1.1
+     */
+    public void setDataSource(DataSource dataSource) {
+    	this.data = dataSource;
+    }
+    
+    
     /**
      * Change the object to publicly readable
      * @param token the credentials to use to make the change
@@ -341,10 +419,11 @@ public class D1Object {
         return o;
     }
 
+    
     /**
      * Generate a new system metadata object using the given input parameters. 
      * @param id the identifier of the object
-     * @param data the data bytes of the object
+     * @param data inputStream to the data
      * @param formatId the format identifier for the object.  If not found in the cache,
      *                   set the formatId to "application/octet-stream"
      * @param submitter the submitter for the object
@@ -357,58 +436,110 @@ public class D1Object {
      * @throws NotImplemented 
      * @throws ServiceFailure 
      */
-    private SystemMetadata generateSystemMetadata(Identifier id, byte[] data, 
-    		ObjectFormatIdentifier formatId, Subject submitter, NodeReference nodeId) 
-            throws NoSuchAlgorithmException, IOException, NotFound, InvalidRequest, ServiceFailure, NotImplemented {
+    private SystemMetadata generateSystemMetadata(Identifier id, InputStream data, 
+        	ObjectFormatIdentifier formatId, Subject submitter, NodeReference nodeId) 
+        throws NoSuchAlgorithmException, IOException, NotFound, InvalidRequest, ServiceFailure, NotImplemented 
+        {
+       	
+        	validateRequest(id, "ignore".getBytes(), formatId, submitter, nodeId);
 
-    	    	
-    	validateRequest(id, data, formatId, submitter, nodeId);
+        	SystemMetadata sm = new SystemMetadata();
+        	sm.setIdentifier(id);
+        	ObjectFormat fmt;
+        	try {
+        		fmt = ObjectFormatCache.getInstance().getFormat(formatId);
+        	}
+        	catch (BaseException be) {
+        		formatId.setValue("application/octet-stream");
+        		fmt = ObjectFormatCache.getInstance().getFormat(formatId);
+        	}
+        	sm.setFormatId(fmt.getFormatId());
 
-    	SystemMetadata sm = new SystemMetadata();
-    	sm.setIdentifier(id);
-    	ObjectFormat fmt;
-    	try {
-    		fmt = ObjectFormatCache.getInstance().getFormat(formatId);
-    	}
-    	catch (BaseException be) {
-    		formatId.setValue("application/octet-stream");
-    		fmt = ObjectFormatCache.getInstance().getFormat(formatId);
-    	}
-    	sm.setFormatId(fmt.getFormatId());
+        	//create the checksum
+        	CountingInputStream cis = new CountingInputStream(data);
 
-    	//create the checksum
-    	InputStream is = new ByteArrayInputStream(data);
+        	Checksum checksum;
+        	checksum = ChecksumUtil.checksum(cis, "MD5");
+        	sm.setChecksum(checksum);
 
-    	Checksum checksum;
-    	checksum = ChecksumUtil.checksum(is, "MD5");
-    	sm.setChecksum(checksum);
+        	//set the size
+        	sm.setSize(new BigInteger(String.valueOf(cis.getByteCount())));
 
-    	//set the size
-    	sm.setSize(new BigInteger(String.valueOf(data.length)));
+        	// serializer needs a value, though MN will ignore the value
+        	sm.setSerialVersion(BigInteger.ONE);
+        	
+        	// set submitter and rightholder from the associated string
+        	sm.setSubmitter(submitter);
+        	sm.setRightsHolder(submitter);
+        	
+        	Date dateCreated = new Date();
+        	sm.setDateUploaded(dateCreated);
+        	Date dateUpdated = new Date();
+        	sm.setDateSysMetadataModified(dateUpdated);
 
-    	// serializer needs a value, though MN will ignore the value
-    	sm.setSerialVersion(BigInteger.ONE);
-    	
-    	// set submitter and rightholder from the associated string
-    	sm.setSubmitter(submitter);
-    	sm.setRightsHolder(submitter);
-    	
-    	// the dateUploaded field should be left blank - otherwise indicates
-    	// that the object is already created on a MN
-//    	Date dateCreated = new Date();
-//    	sm.setDateUploaded(dateCreated);
-    	
-    	// can be used to indicate the last time there was a change
-    	// but no guarantees
-    	Date dateChanged = new Date();
-    	sm.setDateSysMetadataModified(dateChanged);
+        	// Node information
+        	sm.setOriginMemberNode(nodeId);
+        	sm.setAuthoritativeMemberNode(nodeId);
 
-    	// Node information
-    	sm.setOriginMemberNode(nodeId);
-    	sm.setAuthoritativeMemberNode(nodeId);
-
-    	return sm;
-    }
+        	return sm;
+        }
+    
+    
+    
+    
+   
+//    private SystemMetadata generateSystemMetadata(Identifier id, byte[] data, 
+//    		ObjectFormatIdentifier formatId, Subject submitter, NodeReference nodeId) 
+//            throws NoSuchAlgorithmException, IOException, NotFound, InvalidRequest, ServiceFailure, NotImplemented {
+//
+//    	    	
+//    	validateRequest(id, data, formatId, submitter, nodeId);
+//
+//    	SystemMetadata sm = new SystemMetadata();
+//    	sm.setIdentifier(id);
+//    	ObjectFormat fmt;
+//    	try {
+//    		fmt = ObjectFormatCache.getInstance().getFormat(formatId);
+//    	}
+//    	catch (BaseException be) {
+//    		formatId.setValue("application/octet-stream");
+//    		fmt = ObjectFormatCache.getInstance().getFormat(formatId);
+//    	}
+//    	sm.setFormatId(fmt.getFormatId());
+//
+//    	//create the checksum
+//    	InputStream is = new ByteArrayInputStream(data);
+//
+//    	Checksum checksum;
+//    	checksum = ChecksumUtil.checksum(is, "MD5");
+//    	sm.setChecksum(checksum);
+//
+//    	//set the size
+//    	sm.setSize(new BigInteger(String.valueOf(data.length)));
+//
+//    	// serializer needs a value, though MN will ignore the value
+//    	sm.setSerialVersion(BigInteger.ONE);
+//    	
+//    	// set submitter and rightholder from the associated string
+//    	sm.setSubmitter(submitter);
+//    	sm.setRightsHolder(submitter);
+//    	
+//    	// the dateUploaded field should be left blank - otherwise indicates
+//    	// that the object is already created on a MN
+////    	Date dateCreated = new Date();
+////    	sm.setDateUploaded(dateCreated);
+//    	
+//    	// can be used to indicate the last time there was a change
+//    	// but no guarantees
+//    	Date dateChanged = new Date();
+//    	sm.setDateSysMetadataModified(dateChanged);
+//
+//    	// Node information
+//    	sm.setOriginMemberNode(nodeId);
+//    	sm.setAuthoritativeMemberNode(nodeId);
+//
+//    	return sm;
+//    }
 
     /**
      * 
@@ -481,13 +612,12 @@ public class D1Object {
      * 
      * @return
      * @throws NoSuchAlgorithmException
+     * @throws IOException 
      */
-    public boolean checkDataIntegrity() throws NoSuchAlgorithmException
+    public boolean checkDataIntegrity() throws NoSuchAlgorithmException, IOException
     {
-    	if (this.data.length != this.sysmeta.getSize().longValue()) 
-    		return false;
-    	
-    	Checksum calcd = ChecksumUtil.checksum(this.data, this.sysmeta.getChecksum().getAlgorithm());
+    	Checksum calcd = ChecksumUtil.checksum(this.data.getInputStream(), 
+    			this.sysmeta.getChecksum().getAlgorithm());
     	if (! calcd.getValue().equals( this.sysmeta.getChecksum().getValue() ) )
     		return false;
     	
