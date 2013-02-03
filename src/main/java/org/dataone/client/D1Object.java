@@ -265,7 +265,7 @@ public class D1Object {
     /**
      * get the DataSource representing the data
      * @return
-     * @since v1.1.1
+     * @since v1.2
      */
     public DataSource getDataSource()
     {
@@ -275,7 +275,7 @@ public class D1Object {
     /**
      * set the DataSource representation of the data
      * @return
-     * @since v1.1.1
+     * @since v1.2
      */
     public void setDataSource(DataSource dataSource) {
     	this.data = dataSource;
@@ -628,7 +628,7 @@ public class D1Object {
     /**
      * Provides an object to manipulate this D1Object's accessPolicy
      * @return
-     * @since v1.1.0
+     * @since v1.1
      */
     public AccessPolicyEditor getAccessPolicyEditor() {
     	AccessPolicy ap = this.sysmeta.getAccessPolicy();
@@ -654,7 +654,7 @@ public class D1Object {
      * @throws NotAuthorized 
      * @throws InvalidToken 
      * @throws InterruptedException
-     * @since v1.1.1 
+     * @since v1.2
      */
     public boolean refreshSystemMetadata(Integer retryTimeoutMS) 
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, InterruptedException 
