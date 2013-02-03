@@ -27,9 +27,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 
+import javax.activation.DataSource;
+import javax.activation.FileDataSource;
 import javax.mail.util.ByteArrayDataSource;
 
 import org.apache.commons.io.IOUtils;
@@ -50,11 +54,15 @@ public class D1ObjectTest {
 	public void setUp() throws Exception {
 	}
 
+	
 	@Test
 	public void testConstructor() throws NoSuchAlgorithmException, NotFound, InvalidRequest, IOException 
 	{
-		byte[] data = "someData".getBytes();
-		D1Object x = new D1Object(D1TypeBuilder.buildIdentifier("foo"),data, "aFormat", "aSubmitter","aNodeRef");
+		DataSource data = new ByteArrayDataSource("someData".getBytes(),null);
+		D1Object x = new D1Object(D1TypeBuilder.buildIdentifier("foo"),
+				data, 
+				D1TypeBuilder.buildFormatIdentifier("aFormat"), D1TypeBuilder.buildSubject("aSubmitter"),
+				D1TypeBuilder.buildNodeReference("aNodeRef"));
 		
 		D1Object y = new D1Object(D1TypeBuilder.buildIdentifier("foo"),data, 
 				D1TypeBuilder.buildFormatIdentifier("aFormat"), 
@@ -67,15 +75,17 @@ public class D1ObjectTest {
 		assertEquals(x.getSystemMetadata().getFormatId().getValue(),y.getSystemMetadata().getFormatId().getValue());
 	}
 	
+	
 	@Test
 	public void testEmptyParameters() throws NoSuchAlgorithmException, NotFound, IOException
 	{
 		try {
-			D1Object y = new D1Object(D1TypeBuilder.buildIdentifier(""),
-					"someData".getBytes(), 
-					D1TypeBuilder.buildFormatIdentifier(""), 
-					D1TypeBuilder.buildSubject(""),
+			DataSource data = new ByteArrayDataSource("someData".getBytes(),null);
+			D1Object x = new D1Object(D1TypeBuilder.buildIdentifier(""),
+					data, 
+					D1TypeBuilder.buildFormatIdentifier(""), D1TypeBuilder.buildSubject(""),
 					D1TypeBuilder.buildNodeReference(""));
+			
 			fail("should not have been able to build D1Object with empty-string parameters");
 		} catch (InvalidRequest e) {
 			System.out.println(e.getDescription());
@@ -88,17 +98,20 @@ public class D1ObjectTest {
 	public void testNullParameters() throws NoSuchAlgorithmException, NotFound, IOException
 	{
 		try {
-			D1Object y = new D1Object(D1TypeBuilder.buildIdentifier("foo"),
-					"someData".getBytes(), 
+			DataSource data = new ByteArrayDataSource("someData".getBytes(),null);
+			D1Object x = new D1Object(D1TypeBuilder.buildIdentifier("foo"),
+					data, 
 					(ObjectFormatIdentifier) null,
 					(Subject) null,
 					(NodeReference) null);
+			
 			fail("should not have been able to build D1Object with empty-string parameters");
 		} catch (InvalidRequest e) {
 			System.out.println(e.getDescription());
 		} finally {}
 		
 	}
+	
 	
 	@Test
 	public void testDeprecatedEmptyParameters() throws NoSuchAlgorithmException, NotFound, IOException
@@ -178,6 +191,7 @@ public class D1ObjectTest {
 		assertTrue(AccessUtil.getPermissionMap( d.getSystemMetadata().getAccessPolicy()).containsKey(s));
 	}
 	
+	
 	@Test
 	public void testGetAccessPolicyEditor_setPublicAccess() throws NoSuchAlgorithmException, NotFound, InvalidRequest, IOException
 	{
@@ -196,20 +210,25 @@ public class D1ObjectTest {
 								)));
 	}
 	
+	
 	@Test
 	public void testGetDataSource() throws NoSuchAlgorithmException, NotFound, InvalidRequest, IOException {
+		
+		DataSource data = new ByteArrayDataSource("someData".getBytes(),null);
 		D1Object d = new D1Object(D1TypeBuilder.buildIdentifier("foooooo"),
-				"someData".getBytes(),
+				data, 
 				D1TypeBuilder.buildFormatIdentifier("text/csv"),
 				D1TypeBuilder.buildSubject("submitterMe"),
 				D1TypeBuilder.buildNodeReference("someMN"));
 		assertTrue(IOUtils.toString(d.getDataSource().getInputStream()).equals("someData"));	
 	}
 	
+	
 	@Test
 	public void testSetDataSource() throws NoSuchAlgorithmException, NotFound, InvalidRequest, IOException {
+		DataSource data = new ByteArrayDataSource("someData".getBytes(),null);
 		D1Object d = new D1Object(D1TypeBuilder.buildIdentifier("foooooo"),
-				"someData".getBytes(),
+				data, 
 				D1TypeBuilder.buildFormatIdentifier("text/csv"),
 				D1TypeBuilder.buildSubject("submitterMe"),
 				D1TypeBuilder.buildNodeReference("someMN"));
@@ -217,6 +236,32 @@ public class D1ObjectTest {
 		assertTrue(IOUtils.toString(d.getDataSource().getInputStream()).equals("someOtherData"));
 		
 	}
+	
+	
+	@Test
+	public void testFileDataSource() throws NoSuchAlgorithmException, NotFound, InvalidRequest, IOException {
+		
+		File dataFile = File.createTempFile("d1ObjectTest", "123");		
+		
+		try {
+			FileWriter fw = new FileWriter(dataFile);
+			fw.write("someData");
+			fw.flush();
+			fw.close();
+
+			DataSource data = new FileDataSource( dataFile );
+
+			D1Object d = new D1Object(D1TypeBuilder.buildIdentifier("foooooo"),
+					data, 
+					D1TypeBuilder.buildFormatIdentifier("text/csv"),
+					D1TypeBuilder.buildSubject("submitterMe"),
+					D1TypeBuilder.buildNodeReference("someMN"));
+
+			assertTrue(IOUtils.toString(d.getDataSource().getInputStream()).equals("someData"));	
+		} finally {
+			dataFile.delete();
+		}
+		}
 	
 	
 }
