@@ -212,6 +212,7 @@ public class D1Client {
      * @throws NotImplemented
      * @throws InvalidRequest
      * @throws NotFound 
+     * @since v1.2
      */
     public static Identifier update(Session session, D1Object d1object) 
     throws InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, 
@@ -249,7 +250,8 @@ public class D1Client {
      * @throws NotAuthorized
      * @throws NotImplemented
      * @throws InvalidRequest
-     * @throws NotFound 
+     * @throws NotFound
+     * @since v1.2 
      */
     public static Identifier archive(Session session, D1Object d1object) 
     throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented, InvalidRequest 
@@ -300,7 +302,7 @@ public class D1Client {
      * @throws NotAuthorized
      * @throws NotFound
      * @throws NotImplemented
-     * @since v1.1.1
+     * @since v1.2
      */
     public static ObsoletesChain listUpdateHistory(Identifier pid) 
     throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented 
@@ -308,38 +310,47 @@ public class D1Client {
     	Identifier startingPid = pid;
     	ObsoletesChain chain = new ObsoletesChain(startingPid);
 
-    	SystemMetadata smd = getCN().getSystemMetadata(startingPid, true);
-    	chain.addObject(
+    	SystemMetadata smd = null;
+    	try {
+    		smd = getCN().getSystemMetadata(startingPid, true);
+    		chain.addObject(
     			pid, 
     			smd.getDateUploaded(), 
     			smd.getObsoletes(), 
     			smd.getObsoletedBy(), 
     			smd.getArchived());
 
-		Identifier fpid = smd.getObsoletedBy();
-		Identifier bpid = smd.getObsoletes();
+    		Identifier fpid = smd.getObsoletedBy();
+    		Identifier bpid = smd.getObsoletes();
 		
-    	while (fpid != null) {
-        	smd = getCN().getSystemMetadata(fpid, true);
-        	chain.addObject(
+    		while (fpid != null) {
+    			smd = getCN().getSystemMetadata(fpid, true);
+    			chain.addObject(
         			fpid, 
         			smd.getDateUploaded(), 
         			smd.getObsoletes(), 
         			smd.getObsoletedBy(), 
         			smd.getArchived());
-    		fpid = smd.getObsoletedBy();
-    	}
+    			fpid = smd.getObsoletedBy();
+    		}
     	
-    	// get the first obsoletes by looking up in the stored list
-    	while (bpid != null) {
-    		smd = getCN().getSystemMetadata(bpid, true);
-    		chain.addObject(
+    		// get the first obsoletes by looking up in the stored list
+    		while (bpid != null) {
+    			smd = getCN().getSystemMetadata(bpid, true);
+    			chain.addObject(
         			bpid, 
         			smd.getDateUploaded(), 
         			smd.getObsoletes(), 
         			smd.getObsoletedBy(), 
         			smd.getArchived());
-    		bpid = smd.getObsoletes();
+    			bpid = smd.getObsoletes();
+    		}
+    	} catch (NullPointerException npe) {
+    		ServiceFailure sf = new ServiceFailure("0000", 
+    				"Likely Null value for required systemMetadata field for: " + 
+    				smd.getIdentifier() + npe.getMessage());
+    		sf.setStackTrace(npe.getStackTrace());
+    		throw sf;
     	}
     	return chain;
     }
