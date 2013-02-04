@@ -185,6 +185,85 @@ public class D1Client {
 		}
     	return rGuid;
     }
+    
+    
+    /**
+     * Perform an update an object in DataONE with the given D1Object on the 
+     * originMemberNode contained in its systemMetadata. 
+     * 
+     * For this operation to work, the D1Object's systemMetadata needs have the
+     * obsoletes field set with the object to be updated, and the originMemberNode
+     * needs to match the authoritativeMemberNode of the object being updated.
+     * 
+     * As with D1Client.create(), this method does not perform any identifier
+     * reservation checks or make any reservations.
+     * 
+     * @param session
+     * @param d1object - the d1object representing both the data bytes and systemMetadata
+     * @return the Identifier returned from the mn.create call
+     * 
+     * @throws InvalidToken
+     * @throws ServiceFailure
+     * @throws NotAuthorized
+     * @throws IdentifierNotUnique
+     * @throws UnsupportedType
+     * @throws InsufficientResources
+     * @throws InvalidSystemMetadata
+     * @throws NotImplemented
+     * @throws InvalidRequest
+     * @throws NotFound 
+     */
+    public static Identifier update(Session session, D1Object d1object) 
+    throws InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, 
+    UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented, 
+    InvalidRequest, NotFound 
+    {
+    	SystemMetadata sysmeta = d1object.getSystemMetadata();
+    	if (sysmeta == null) 
+    		throw new InvalidRequest("Client Error", "systemMetadata of the D1Object cannot be null");
+
+    	String mn_url = D1Client.getCN().lookupNodeBaseUrl(sysmeta.getOriginMemberNode().getValue());
+    	MNode mn = D1Client.getMN(mn_url);
+    	Identifier rGuid;
+		try {
+			rGuid = mn.update(sysmeta.getObsoletes(), d1object.getDataSource().getInputStream(), 
+					sysmeta.getIdentifier(),sysmeta);
+		} catch (IOException e) {
+			throw new ServiceFailure("000 Client Exception","Could not open InputStream from the data: " + e.getMessage());
+		}
+    	return rGuid;
+    }
+    
+    
+    
+    /**
+     * Perform an archive on an object in DataONE with the given D1Object on the 
+     * authoritativeMemberNode contained in its systemMetadata. 
+     * 
+     * @param session
+     * @param d1object - the d1object representing both the data bytes and systemMetadata
+     * @return the Identifier returned from the mn.archive call
+     * 
+     * @throws InvalidToken
+     * @throws ServiceFailure
+     * @throws NotAuthorized
+     * @throws NotImplemented
+     * @throws InvalidRequest
+     * @throws NotFound 
+     */
+    public static Identifier archive(Session session, D1Object d1object) 
+    throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented, InvalidRequest 
+    {
+    	SystemMetadata sysmeta = d1object.getSystemMetadata();
+    	if (sysmeta == null) 
+    		throw new InvalidRequest("Client Error", "systemMetadata of the D1Object cannot be null");
+
+    	String mn_url = D1Client.getCN().lookupNodeBaseUrl(sysmeta.getAuthoritativeMemberNode().getValue());
+    	MNode mn = D1Client.getMN(mn_url);
+    	Identifier rGuid;
+		rGuid = mn.archive(d1object.getIdentifier());
+    	return rGuid;
+    }
 
     
     /**

@@ -426,7 +426,7 @@ public class D1Object {
      * @param data inputStream to the data
      * @param formatId the format identifier for the object.  If not found in the cache,
      *                   set the formatId to "application/octet-stream"
-     * @param submitter the submitter for the object
+     * @param rightsHolder - the rightsHolder for the object if different from the submitter. can be null.
      * @param nodeId the identifier of the node on which the object will be created
      * @return the generated SystemMetadata instance
      * @throws NoSuchAlgorithmException if the checksum algorithm does not exist
@@ -437,11 +437,11 @@ public class D1Object {
      * @throws ServiceFailure 
      */
     private SystemMetadata generateSystemMetadata(Identifier id, InputStream data, 
-        	ObjectFormatIdentifier formatId, Subject submitter, NodeReference nodeId) 
+        	ObjectFormatIdentifier formatId, Subject rightsHolder, NodeReference nodeId) 
         throws NoSuchAlgorithmException, IOException, NotFound, InvalidRequest, ServiceFailure, NotImplemented 
         {
        	
-        	validateRequest(id, "ignore".getBytes(), formatId, submitter, nodeId);
+        	validateRequest(id, "ignore".getBytes(), formatId, rightsHolder, nodeId);
 
         	SystemMetadata sm = new SystemMetadata();
         	sm.setIdentifier(id);
@@ -465,12 +465,13 @@ public class D1Object {
         	//set the size
         	sm.setSize(new BigInteger(String.valueOf(cis.getByteCount())));
 
-        	// serializer needs a value, though MN will ignore the value
+        	// the object serializer needs a value for this field, 
+        	// though MNs will ignore the value
         	sm.setSerialVersion(BigInteger.ONE);
         	
-        	// set submitter and rightholder from the associated string
-        	sm.setSubmitter(submitter);
-        	sm.setRightsHolder(submitter);
+        	// set rightsHolder from the associated string
+        	if (rightsHolder != null)
+        		sm.setRightsHolder(rightsHolder);
         	
         	Date dateCreated = new Date();
         	sm.setDateUploaded(dateCreated);
