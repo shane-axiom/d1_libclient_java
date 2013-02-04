@@ -12,6 +12,7 @@ import org.junit.Test;
 public class ObsoletesChainTest {
 
 	private ObsoletesChain chain;
+	private ObsoletesChain chainWithNulls;
 	private Identifier foo1 = D1TypeBuilder.buildIdentifier("foo1");
 	private Identifier foo2 = D1TypeBuilder.buildIdentifier("foo2");
 	private Identifier foo3 = D1TypeBuilder.buildIdentifier("foo3");
@@ -36,6 +37,19 @@ public class ObsoletesChainTest {
 		chain.addObject(foo7, new Date(7000000), foo6, foo8, true);
 		chain.addObject(foo8, new Date(8000000), foo7, foo9, true);
 		chain.addObject(foo9, new Date(9000000), foo8, null, false);
+		
+		chainWithNulls = new ObsoletesChain(foo3);
+		chainWithNulls.addObject(foo4, new Date(4000000), foo3, foo5, true);
+		chainWithNulls.addObject(foo3, new Date(3000000), foo2, foo4, true);
+		chainWithNulls.addObject(foo2, new Date(2000000), foo1, foo3, true);
+		chainWithNulls.addObject(foo1, new Date(1000000), null, foo2, true);
+		
+		chainWithNulls.addObject(foo5, new Date(5000000), foo4, foo6, true);
+		chainWithNulls.addObject(foo6, new Date(6000000), foo5, foo7, true);
+		chainWithNulls.addObject(foo7, new Date(7000000), foo6, foo8, true);
+		chainWithNulls.addObject(foo8, new Date(8000000), foo7, foo9, true);
+		chainWithNulls.addObject(foo9, new Date(9000000), foo8, null, null);
+		
 		
 	}
 
@@ -117,5 +131,11 @@ public class ObsoletesChainTest {
 		assertTrue(chain.isLatestVersion(foo9));
 		assertFalse(chain.isLatestVersion(foo5));
 	}
-
+	
+	
+	@Test
+	public void testIsArchived_Null() {
+		assertTrue(chainWithNulls.isArchived(foo2));	
+		assertFalse(chainWithNulls.isArchived(foo9));
+	}
 }

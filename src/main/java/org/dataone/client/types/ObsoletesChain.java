@@ -46,6 +46,9 @@ public class ObsoletesChain {
 	
 	public void addObject(Identifier pid, Date publishDate, 
 	Identifier obsoletes, Identifier obsoletedBy, Boolean isArchived) {
+		if( publishDate == null) {
+			throw new NullPointerException("publishDate parameter cannot be null.");
+		}
 		this.infoTable.add(new Object[]{pid,publishDate,obsoletes, obsoletedBy, isArchived});
 		this.byDateIndex.put(publishDate.getTime(), this.infoTable.size()-1);
 		this.byIdIndex.put(pid, this.infoTable.size()-1);
@@ -140,20 +143,17 @@ public class ObsoletesChain {
 	
 	public Boolean isArchived(Identifier pid) {
 		int tableIndex = this.byIdIndex.get(pid);
-		return (Boolean) this.infoTable.get(tableIndex)[IS_ARCHIVED];
-		
+		Object[] oa = this.infoTable.get(tableIndex);
+		return oa[IS_ARCHIVED] == null ? Boolean.FALSE : (Boolean) oa[IS_ARCHIVED];		
 	}
 	
 	public Boolean latestIsArchived() {
-		int tableIndex = this.byIdIndex.get(getLatestVersion());
-		return (Boolean) this.infoTable.get(tableIndex)[IS_ARCHIVED];
-		
+		return isArchived(getLatestVersion());
 	}
 	
 	public Date getPublishDate(Identifier pid) {
 		int tableIndex = this.byIdIndex.get(pid);
 		return (Date) this.infoTable.get(tableIndex)[PUBLISH_DATE];
-		
 	}
 	
 	public boolean isLatestVersion(Identifier pid) {
