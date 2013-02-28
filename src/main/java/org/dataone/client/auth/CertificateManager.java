@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.KeyManagementException;
 import java.security.KeyPair;
@@ -66,6 +67,7 @@ import javax.security.auth.x500.X500Principal;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.conn.ssl.SSLSocketFactory;
@@ -456,9 +458,18 @@ public class CertificateManager {
      * @return subject DN using RFC2253 format
      */
     public String getSubjectDN(X509Certificate certificate) {
-    	if (certificate == null)
+    	if (certificate == null) {
     		return null;
-    	return certificate.getSubjectX500Principal().getName(X500Principal.RFC2253);
+    	}
+    	String dn = certificate.getSubjectX500Principal().getName(X500Principal.RFC2253);
+    	try {
+			dn = decodeDN(dn);
+		} catch (UnsupportedEncodingException e) {
+			// nothing we can do about not supporting UTF-7
+			e.printStackTrace();
+		}
+    	dn = standardizeDN(dn);
+    	return dn;
     }
     
     /**
@@ -473,6 +484,18 @@ public class CertificateManager {
     	String standardizedName = principal.getName(X500Principal.RFC2253);
 		log.debug("standardizedName: " + standardizedName);
 		return standardizedName;
+    }
+    
+    public String decodeDN(String dn) throws UnsupportedEncodingException {
+		
+		// remove the escaping for the encodes
+		dn = StringEscapeUtils.unescapeJava(dn);
+		// get the original bytes - all ASCII/UTF-8 with encoded special characters
+		byte[] bytes = dn.getBytes("UTF-8");
+		// CILogon is using UTF-7 to encode the special characters
+		dn = new String(bytes, "UTF-7");
+		
+		return dn;
     }
     
     /**
