@@ -90,11 +90,23 @@ import org.jibx.runtime.JiBXException;
 
 /**
  * Import and manage certificates to be used for authentication against DataONE
- * service providers.  Also sets up the TrustManager used by clients for authenticating
- * certificates coming from DataONE services.  It knows how to find CILogon certificates,
- * and uses the list of dataONE trusted CAs shipped with d1_libclient_java package.
- * (see getTrustManager() method for details)
+ * service providers.  It uses the concepts of 'keystores' and 'truststores' to 
+ * represent, respectively, the client certificate to be used for SSL connections,
+ * and the set of CA certificates that are trusted.
+ * <br>
  * 
+ * For the client keystore, the CertificateManager knows how to locate CILogon
+ * certificates downloaded via a browser.  Because certificate downloads take place
+ * outside of the application using this class, the client keystore is not cached.
+ * <br>
+ * 
+ * For the truststore, the CertificateManager builds and caches a TrustManager that
+ * is reused for all SSL connections it builds.  It is assumed that these certificate
+ * are long-lived and as a whole, the set of them are stable throughout the life
+ * of the application.  The TrustManager contains all of the CA certificates used
+ * by the JVM, and defaults also to include DataONE-trusted CA certificate that 
+ * ship with d1_libclient_java.jar.  For more information, see getSSLConnectionFactory()
+ * <br>
  * 
  * This class is a singleton, as in any given application there 
  * need only be one collection of certificates.  
@@ -206,7 +218,7 @@ public class CertificateManager {
 
 	
 	
-	/*
+	/**
 	 * this method builds the truststore from the proper file, first looking
 	 * for the one at the auxiliary location, then defaulting to the one shipped
 	 * with libclient_java.  The idea that updates to the dataone-trusted lists
@@ -247,11 +259,13 @@ public class CertificateManager {
 								  ") could not be found. No DataONE-trusted CA certs loaded");
 					}
 				}
-				Enumeration<String> aliases = this.d1TrustStore.aliases();
-				while (aliases.hasMoreElements()) {
-					log.debug(aliases.nextElement());
+				if (log.isDebugEnabled()) {
+					Enumeration<String> aliases = this.d1TrustStore.aliases();
+					while (aliases.hasMoreElements()) {
+						log.debug(aliases.nextElement());
+					}
+					log.debug(this.d1TrustStore.aliases());
 				}
-				log.debug(this.d1TrustStore.aliases());
 			} catch (KeyStoreException e) {
 				log.error(e.getMessage(), e);
 			} catch (FileNotFoundException e) {
@@ -319,6 +333,7 @@ public class CertificateManager {
     
     /**
      * Find all supplemental CA certificates to be used to validate peer certificates.
+     * 
      * @return List<X509Certificate> of CAs
      */
     private List<X509Certificate> getSupplementalCACertificates() {
@@ -648,6 +663,16 @@ public class CertificateManager {
      * <br>
      * One can turn off the supplemental DataONE trusted CAs by setting the property
      * 'certificate.truststore.includeD1CAs=false'
+     * <br>
+     * The process of loading DataONE-trusted CA certificates is first to try to 
+     * find them in a default auxiliary location determined by 
+     * 'certificate.truststore.aux.location'.  Failing to find either the directory
+     * or any certificates in the directory, it will load a set of CA certificates
+     * that ship with d1_libclient_java.  This auxiliary location is to allow libclient
+     * applications to keep up with any updates to the trust-list without having
+     * to update libclient_java itself.  Please note, however, that the CA certificates
+     * that ship with libclient_java will not be loaded if any certificates are 
+     * found in the auxiliary location (it uses one or the other)
      * 
      * @param subjectString - used to determine which certificate to use for the connection.
      *                        If null, it auto-discovers the certificate, using the setCertificate()
@@ -707,8 +732,11 @@ public class CertificateManager {
     }
     
     /**
-     * Based on configuration option, 'certificate.truststore.useDefault', returns either the 
-     * default Java truststore or the allow-all implementation.
+     * Based on the configuration option 'certificate.truststore.includeD1CAs', 
+     * returns either the JVM trustmanager or a custom trustmanager that augments 
+     * the JVM one with supplemental CA certificates for dataONE.
+     * see loadTrustStore() for more details.
+     * 
      * @return X509TrustManager for verifying server identity
      * @throws NoSuchAlgorithmException
      * @throws KeyStoreException
