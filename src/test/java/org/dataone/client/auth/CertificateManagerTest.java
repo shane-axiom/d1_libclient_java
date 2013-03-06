@@ -251,31 +251,33 @@ public class CertificateManagerTest {
     @Test
     public void testDecodeSubjectDN() {
     	try {
-    		// different special characters encoded/decoded using UTF-7
+    		// different special characters encoded using UTF-7
     		String dn1 = "CN=Fl\\+AOE-via Pezzini T6821,O=Google,C=US,DC=cilogon,DC=org"; // Flávia Pezzini
-    		String dn1Expected = "CN=Flávia Pezzini T6821,O=Google,C=US,DC=cilogon,DC=org";
+    		String dn1Expected = "CN=Fl\\+AOE-via Pezzini T6821,O=Google,C=US,DC=cilogon,DC=org";
+    		String dn1Incorrect = "CN=Flávia Pezzini T6821,O=Google,C=US,DC=cilogon,DC=org";
 
     		String dn2 = "CN=\\+aQVbUA-,O=Google,C=US,DC=cilogon,DC=org"; //椅子 -- "chair" in Chinese
-    		String dn2Expected = "CN=椅子,O=Google,C=US,DC=cilogon,DC=org";
+    		String dn2Expected = "CN=\\+aQVbUA-,O=Google,C=US,DC=cilogon,DC=org";
+    		String dn2Incorrect = "CN=椅子,O=Google,C=US,DC=cilogon,DC=org";
     		
     		// dn1 = expected
     		assertEquals(
     				dn1Expected, 
-    				CertificateManager.getInstance().decodeDN(dn1));
+    				CertificateManager.getInstance().standardizeDN(dn1));
     		// dn2 == expected
     		assertEquals(
     				dn2Expected, 
-    				CertificateManager.getInstance().decodeDN(dn2));
-    		// non-decoded should not equal the expected
+    				CertificateManager.getInstance().standardizeDN(dn2));
+    		// no decoding should be performed
     		assertFalse(
     				CertificateManager.getInstance().standardizeDN(dn1).equals( 
-    				CertificateManager.getInstance().standardizeDN(dn1Expected)));
+    				CertificateManager.getInstance().standardizeDN(dn1Incorrect)));
     		// equalsDN method
     		assertTrue(
-    				CertificateManager.getInstance().equalsDN(CertificateManager.getInstance().decodeDN(dn1), dn1Expected));
+    				CertificateManager.getInstance().equalsDN(CertificateManager.getInstance().standardizeDN(dn1), dn1Expected));
     		// equalsDN method
     		assertFalse(
-    				CertificateManager.getInstance().equalsDN(dn1, dn1Expected));
+    				CertificateManager.getInstance().equalsDN(dn2, dn2Incorrect));
     		
 		} catch (Exception e) {
 			e.printStackTrace();

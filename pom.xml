@@ -49,12 +49,6 @@
     </repositories>
     
   <dependencies>
-	<!-- Java does not support UTF-7 encoding by default, this library does  -->
-	<dependency>
-		<groupId>com.beetstra.jutf7</groupId>
-		<artifactId>jutf7</artifactId>
-		<version>1.0.0</version>
-	</dependency>
 	<dependency>
 		<groupId>junit</groupId>
 		<artifactId>junit</artifactId>
