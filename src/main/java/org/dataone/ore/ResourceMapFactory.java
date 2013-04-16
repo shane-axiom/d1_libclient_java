@@ -32,6 +32,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.dataone.client.cache.LocalCache;
 import org.dataone.configuration.Settings;
 import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.util.EncodingUtilities;
@@ -69,6 +72,8 @@ public class ResourceMapFactory {
 	private static Predicate CITO_DOCUMENTS = null;
 
 	private static ResourceMapFactory instance = null;
+	
+	private static Log log = LogFactory.getLog(ResourceMapFactory.class);
 	
 	private void init() throws URISyntaxException {
 		// use as much as we can from the included Vocab for dcterms:Agent
@@ -192,9 +197,13 @@ public class ResourceMapFactory {
 		
 		OREParser parser = OREParserFactory.getInstance(RESOURCE_MAP_SERIALIZATION_FORMAT);
 		ResourceMap resourceMap = parser.parse(is);
-        
+		if (resourceMap == null) {
+			throw new OREException("Null resource map returned from OREParser (format: " + 
+					RESOURCE_MAP_SERIALIZATION_FORMAT + ")");
+		}
 		// get the identifier of the whole package ResourceMap
 		Identifier packageId = new Identifier();
+		log.debug(resourceMap.getURI());
         TripleSelector packageIdSelector = 
         		new TripleSelector(resourceMap.getURI(), DC_TERMS_IDENTIFIER.getURI(), null);
         List<Triple> packageIdTriples = resourceMap.listTriples(packageIdSelector);
@@ -222,6 +231,7 @@ public class ResourceMapFactory {
 			List<Triple> identifierTriples = entry.listTriples(identifierSelector);
 			if (!identifierTriples.isEmpty()) {
 				String metadataIdValue = identifierTriples.get(0).getObjectLiteral();
+				log.debug("metadata (documents subject): " + metadataIdValue);
 				metadataId.setValue(EncodingUtilities.decodeString(metadataIdValue));
 			}
 			
