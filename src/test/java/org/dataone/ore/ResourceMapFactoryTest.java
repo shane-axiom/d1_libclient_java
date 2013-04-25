@@ -26,12 +26,21 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.io.input.CountingInputStream;
+import org.apache.commons.lang.StringUtils;
+import org.dataone.client.MNode;
 import org.dataone.service.types.v1.Identifier;
+import org.dspace.foresite.OREException;
+import org.dspace.foresite.OREParserException;
 import org.dspace.foresite.ResourceMap;
 import org.junit.Test;
 
@@ -96,5 +105,121 @@ public class ResourceMapFactoryTest {
 			e.printStackTrace();
 			fail();
 		}
+	}
+	
+//	@Test
+	public void resourceMapChecker() 
+			throws UnsupportedEncodingException, OREException, URISyntaxException, OREParserException 
+	{
+		System.out.println("***************  resourceMapChecker  ******************");
+//		String resourceMaps = "/D1shared/resourceMaps/EDAC_draft.xml";
+//		String resourceMaps = "/D1shared/resourceMaps/rdf-xml-python-a-cn_resolved.xml";
+		String resourceMaps = "/D1shared/resourceMaps/rdf-xml-java-1.xml";
+		InputStream is = this.getClass().getResourceAsStream(resourceMaps);
+		
+		Map<Identifier, Map<Identifier, List<Identifier>>> rm = 
+				ResourceMapFactory.getInstance().parseResourceMap(is);
+
+		//   	checkTrue(mn.getLatestRequestUrl(),  
+		//   	    "packageId matches packageId used to call", rm.containsKey(packageId));
+
+		if (rm != null) {
+			Iterator<Identifier> it = rm.keySet().iterator();
+
+			while (it.hasNext()) {
+				Identifier pp = it.next();
+				System.out.println("package: " + pp.getValue());
+			}
+
+			Map<Identifier, List<Identifier>> agg = rm.get(rm.keySet().iterator().next());
+			Iterator<Identifier> itt  = agg.keySet().iterator();
+			while (itt.hasNext()) {
+				Identifier docs = itt.next();
+				System.out.println("md: " + docs.getValue());
+				//checkTrue("the identifier should start with https://cn.dataone.org/cn/v1/resolve","",true);
+				List<Identifier> docd = agg.get(docs);
+				for (Identifier id: docd) {
+					System.out.println("data: " + id.getValue());
+				}
+			}
+		} else {
+			fail("parseResourceMap returned null for file: " + resourceMaps);
+		}
+
+	}
+	
+	@Test
+	public void testValidateResourceMap_Valid_PythonGenerated() 
+	throws UnsupportedEncodingException, OREException, URISyntaxException, OREParserException 
+	{
+		testValidateResourceMap("libclient_python_example_2013_04_16.xml", 
+				"ResourceMap should validate", true);
+	}
+	
+	@Test
+	public void testValidateResourceMap_Valid_JavaGenerated() 
+	throws UnsupportedEncodingException, OREException, URISyntaxException, OREParserException 
+	{
+		testValidateResourceMap("libclient_java_example_2013_04_15.xml", 
+				"ResourceMap should validate", true);
+	}
+	
+	@Test
+	public void testValidateResourceMap_MissingIdentifier() 
+	throws UnsupportedEncodingException, OREException, URISyntaxException, OREParserException 
+	{
+		testValidateResourceMap("missingIdentifier.xml", 
+				"ResourceMap missing an identifier triple should fail", false);
+	}
+	
+	@Test
+	public void testValidateResourceMap_nonStandardAggregation() 
+	throws UnsupportedEncodingException, OREException, URISyntaxException, OREParserException 
+	{
+		testValidateResourceMap("nonStandardAggregationResourceURI.xml", 
+				"ResourceMap without standard aggregation URI should fail", false);
+	}
+
+	@Test
+	public void testValidateResourceMap_notCnResolveResources() 
+	throws UnsupportedEncodingException, OREException, URISyntaxException, OREParserException 
+	{
+		testValidateResourceMap("nonCnResolveURIs.xml",
+				"ResourceMap without CN_Read.resolve Resources should fail",false);
+	}
+	
+	@Test
+	public void testValidateResourceMap_miscodedIdentifier() 
+	throws UnsupportedEncodingException, OREException, URISyntaxException, OREParserException 
+	{
+		testValidateResourceMap("miscodedIdentifier.xml",
+				"ResourceMap with miscoded identifier should fail",false);
+	}
+	
+	
+	private void testValidateResourceMap(String exampleFile, String failMessage, boolean expectPass) 
+	throws UnsupportedEncodingException, OREException, URISyntaxException, OREParserException 
+	{
+		System.out.println("example file: " + exampleFile);
+		String resourceMap = "/D1shared/resourceMaps/" + exampleFile;
+		InputStream is = this.getClass().getResourceAsStream(resourceMap);
+		CountingInputStream cis = new CountingInputStream(is);
+		ResourceMap rm = ResourceMapFactory.getInstance().deserializeResourceMap(cis);
+
+		System.out.println("byte count: " + cis.getByteCount());
+		
+		List<String> messages = ResourceMapFactory.getInstance().validateResourceMap(rm);
+	
+		for (String message : messages) {
+			System.out.println(message);
+		}
+		if (expectPass != messages.isEmpty()) {
+			fail(String.format("%s (%s):\n%s",
+					failMessage,
+					exampleFile,
+					StringUtils.join(messages, "\n")));
+		}
+	
+	
 	}
 }

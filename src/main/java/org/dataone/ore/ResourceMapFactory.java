@@ -29,12 +29,14 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.io.input.CountingInputStream;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.dataone.client.cache.LocalCache;
 import org.dataone.configuration.Settings;
 import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.util.EncodingUtilities;
@@ -277,5 +279,91 @@ public class ResourceMapFactory {
 		String serialisation = doc.toString();
 		return serialisation;
 	}
+	
+	public ResourceMap deserializeResourceMap(InputStream is)
+	throws OREException, URISyntaxException, UnsupportedEncodingException, OREParserException 
+	{		
+		OREParser parser = OREParserFactory.getInstance(RESOURCE_MAP_SERIALIZATION_FORMAT);
+		ResourceMap resourceMap = parser.parse(is);
+		return resourceMap;
+	}
+	
+	/**
+	 * Validate the ResourceMap against DataONE constraints (use of CN_Read.resolve,
+	 * identifier triple defined, identifier matching URI, aggregation resource
+	 * using {resourceMapID}#aggregation)
+	 * @param resourceMap
+	 * @return list of messages representing points of failure
+	 * @throws OREException
+	 * @throws UnsupportedEncodingException
+	 * @since v1.3
+	 */
+	public List<String> validateResourceMap(ResourceMap resourceMap) 
+	throws OREException, UnsupportedEncodingException 
+	{
+		List<String> messages = new LinkedList<String>();
+		if (resourceMap == null) {
+			messages.add("resource Map object was null");
+			return messages;
+		}
+		
+		// validate the resourceMap object's URI
+		messages.addAll(validateD1Resource(resourceMap, resourceMap.getURI()));
+	
+		Aggregation aggregation = resourceMap.getAggregation();
+		List<AggregatedResource> resources = aggregation.getAggregatedResources();
+		for (AggregatedResource entry: resources) {
+			log.info("aggregatedResource: " + entry.getURI());
+			messages.addAll(validateD1Resource(resourceMap,entry.getURI()));     
+		}
 
+		if (!aggregation.getURI().toString().equals(resourceMap.getURI().toString() + "#aggregation"))
+		{
+			messages.add("the aggregation resource is not of the proper construct: " +
+					"'{resourceMapURI}#aggregation'.  Got: " + aggregation.getURI().toString());
+		}
+		
+		return messages;
+	}
+	
+	
+	private List<String> validateD1Resource(ResourceMap resourceMap, URI subjectURI) 
+	throws UnsupportedEncodingException, OREException 
+	{
+		List<String> messages = new LinkedList<String>();
+		String uriIdentifier = EncodingUtilities.decodeString(
+				StringUtils.substringAfterLast(subjectURI.getRawPath(),"/"));
+		
+		String prefix = StringUtils.substringBeforeLast(subjectURI.toString(),"/");
+		
+		// 1. validate that using CN_READ.resolve endpoint
+		if (!prefix.endsWith(".dataone.org/cn/v1/resolve")) {
+			messages.add("A. uri does not use the DataONE CN_Read.resolve endpoint " +
+					"(https://cn(.*).dataone.org/cn/v1/resolve). Got " + 
+					prefix);
+		} else if (!prefix.startsWith("https://cn")) {
+			messages.add("A. uri does not use the DataONE CN_Read.resolve endpoint" +
+					"(https://cn(.*).dataone.org/cn/v1/resolve/{pid}). Got " + 
+					prefix);
+		}
+		TripleSelector idTripleSelector = 
+        		new TripleSelector(subjectURI, DC_TERMS_IDENTIFIER.getURI(), null);
+		
+		List<Triple> triples = resourceMap.listAllTriples(idTripleSelector);
+		
+		// 2. validate that the identifier triple is stated
+		if (triples.isEmpty()) {
+			messages.add("B. Identifier triple is not asserted for " + subjectURI.toString());
+		} else {
+
+			String identifierValue = triples.get(0).getObjectLiteral();
+
+			// 3. the identifier in the URI must match the identifier that's the object of the triple
+			if (!uriIdentifier.equals(identifierValue)) {
+				messages.add("C. Identifier object doesn't match the URI of the resource: " + subjectURI.toString() +
+						" : " + uriIdentifier + " : " + identifierValue);
+			}		
+		}
+		return messages;
+	}
 }
