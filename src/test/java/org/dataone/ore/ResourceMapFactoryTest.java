@@ -24,10 +24,13 @@ package org.dataone.ore;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,12 +40,26 @@ import java.util.Map;
 
 import org.apache.commons.io.input.CountingInputStream;
 import org.apache.commons.lang.StringUtils;
-import org.dataone.client.MNode;
 import org.dataone.service.types.v1.Identifier;
 import org.dspace.foresite.OREException;
 import org.dspace.foresite.OREParserException;
+import org.dspace.foresite.Predicate;
 import org.dspace.foresite.ResourceMap;
+import org.dspace.foresite.Triple;
+import org.dspace.foresite.TripleSelector;
+import org.dspace.foresite.jena.JenaOREFactory;
+import org.dspace.foresite.jena.ORE;
 import org.junit.Test;
+
+import com.hp.hpl.jena.ontology.OntModelSpec;
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.RDFNode;
+import com.hp.hpl.jena.rdf.model.Resource;
+import com.hp.hpl.jena.rdf.model.Selector;
+import com.hp.hpl.jena.rdf.model.SimpleSelector;
+import com.hp.hpl.jena.rdf.model.Statement;
+import com.hp.hpl.jena.rdf.model.StmtIterator;
 
 public class ResourceMapFactoryTest {
 	
@@ -219,7 +236,75 @@ public class ResourceMapFactoryTest {
 					exampleFile,
 					StringUtils.join(messages, "\n")));
 		}
-	
-	
 	}
+	
+	
+	@Test 
+	public void testRDFReasoningIsDescribedBy() 
+	throws OREException, URISyntaxException, OREParserException, IOException 
+	{
+		InputStream isoreBase = this.getClass().getResourceAsStream("/D1shared/resourceMaps/oreTerms.xml");
+		Model oreBaseModel = ModelFactory.createDefaultModel();
+		oreBaseModel = oreBaseModel.read(isoreBase, null, "RDF/XML");
+		
+		InputStream is = this.getClass().getResourceAsStream("/D1shared/resourceMaps/missingIsDescribedByTriple.xml");
+
+		Model model = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_RULE_INF, oreBaseModel);
+//		Model model = ModelFactory.createDefaultModel();
+		model = model.read(is, null, "RDF/XML");		
+		
+//		model = ModelFactory.createRDFSModel(model);
+
+		Selector selector = new SimpleSelector(null, ORE.isDescribedBy, (RDFNode) null);
+		StmtIterator itr = model.listStatements(selector);
+		System.out.println("size of list from model selector for ORE.isDescribedBy: " + itr.toList().size());
+		
+		selector = new SimpleSelector(null, ORE.describes, (RDFNode) null);
+		itr = model.listStatements(selector);
+		System.out.println("size of list from model selector for ORE.describes: " + itr.toList().size());
+		
+		itr = model.listStatements(selector);
+		ResourceMap rm = null;
+		if (itr.hasNext()) {
+			Statement statement = itr.nextStatement();
+			Resource resource = (Resource) statement.getSubject();
+			rm = JenaOREFactory.createResourceMap(model, new URI(resource.getURI()));
+		}
+
+		// create the CITO:isDocumentedBy predicate
+		Predicate oreIsDescribedByPred = new Predicate();
+		oreIsDescribedByPred.setNamespace("http://www.openarchives.org/ore/terms/");
+		oreIsDescribedByPred.setPrefix("ore");
+		oreIsDescribedByPred.setName("isDescribedBy");
+		oreIsDescribedByPred.setURI(new URI(oreIsDescribedByPred.getNamespace() 
+				+ oreIsDescribedByPred.getName()));
+		
+		// create the CITO:documents predicate
+		Predicate oreDescribesPred = new Predicate();
+		oreDescribesPred.setNamespace(oreIsDescribedByPred.getNamespace());
+		oreDescribesPred.setPrefix(oreIsDescribedByPred.getPrefix());
+		oreDescribesPred.setName("describes");
+		oreDescribesPred.setURI(new URI(oreDescribesPred.getNamespace() 
+				+ oreDescribesPred.getName()));
+		
+		
+		TripleSelector ts = 
+        		new TripleSelector(rm.getURI(), oreDescribesPred.getURI(), null);
+		List<Triple> triples = rm.listAllTriples(ts);
+		System.out.println("describes: number of triples: " + triples.size());
+		
+
+		ts = new TripleSelector(null, oreIsDescribedByPred.getURI(), rm.getURI());
+		triples = rm.listAllTriples(ts);
+		System.out.println("isDescribedBy: number of triples: " + triples.size());
+
+		//		System.out.println(triples.get(0).getPredicate().getName());
+		
+		
+		
+		assertTrue("should get an isDescribedBy triple", triples.size() > 0);
+		
+	}
+	
+	
 }
