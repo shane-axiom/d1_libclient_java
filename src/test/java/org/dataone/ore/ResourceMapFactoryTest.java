@@ -47,19 +47,7 @@ import org.dspace.foresite.Predicate;
 import org.dspace.foresite.ResourceMap;
 import org.dspace.foresite.Triple;
 import org.dspace.foresite.TripleSelector;
-import org.dspace.foresite.jena.JenaOREFactory;
-import org.dspace.foresite.jena.ORE;
 import org.junit.Test;
-
-import com.hp.hpl.jena.ontology.OntModelSpec;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.rdf.model.RDFNode;
-import com.hp.hpl.jena.rdf.model.Resource;
-import com.hp.hpl.jena.rdf.model.Selector;
-import com.hp.hpl.jena.rdf.model.SimpleSelector;
-import com.hp.hpl.jena.rdf.model.Statement;
-import com.hp.hpl.jena.rdf.model.StmtIterator;
 
 public class ResourceMapFactoryTest {
 	
@@ -243,34 +231,12 @@ public class ResourceMapFactoryTest {
 	public void testRDFReasoningIsDescribedBy() 
 	throws OREException, URISyntaxException, OREParserException, IOException 
 	{
-		InputStream isoreBase = this.getClass().getResourceAsStream("/D1shared/resourceMaps/oreTerms.xml");
-		Model oreBaseModel = ModelFactory.createDefaultModel();
-		oreBaseModel = oreBaseModel.read(isoreBase, null, "RDF/XML");
+
 		
 		InputStream is = this.getClass().getResourceAsStream("/D1shared/resourceMaps/missingIsDescribedByTriple.xml");
 
-		Model model = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_RULE_INF, oreBaseModel);
-//		Model model = ModelFactory.createDefaultModel();
-		model = model.read(is, null, "RDF/XML");		
+		ResourceMap  rm = ResourceMapFactory.getInstance().deserializeResourceMap(is, true);
 		
-//		model = ModelFactory.createRDFSModel(model);
-
-		Selector selector = new SimpleSelector(null, ORE.isDescribedBy, (RDFNode) null);
-		StmtIterator itr = model.listStatements(selector);
-		System.out.println("size of list from model selector for ORE.isDescribedBy: " + itr.toList().size());
-		
-		selector = new SimpleSelector(null, ORE.describes, (RDFNode) null);
-		itr = model.listStatements(selector);
-		System.out.println("size of list from model selector for ORE.describes: " + itr.toList().size());
-		
-		itr = model.listStatements(selector);
-		ResourceMap rm = null;
-		if (itr.hasNext()) {
-			Statement statement = itr.nextStatement();
-			Resource resource = (Resource) statement.getSubject();
-			rm = JenaOREFactory.createResourceMap(model, new URI(resource.getURI()));
-		}
-
 		// create the CITO:isDocumentedBy predicate
 		Predicate oreIsDescribedByPred = new Predicate();
 		oreIsDescribedByPred.setNamespace("http://www.openarchives.org/ore/terms/");
@@ -304,6 +270,38 @@ public class ResourceMapFactoryTest {
 		
 		assertTrue("should get an isDescribedBy triple", triples.size() > 0);
 		
+	}
+	
+	@Test
+	public void testOREModelReusability() 
+	throws UnsupportedEncodingException, OREException, URISyntaxException, OREParserException 
+	{
+		InputStream is = this.getClass().getResourceAsStream("/D1shared/resourceMaps/missingIsDescribedByTriple.xml");
+		ResourceMap  rm = ResourceMapFactory.getInstance().deserializeResourceMap(is, true);
+		
+		Predicate oreDescribesPred = new Predicate();
+		oreDescribesPred.setNamespace("http://www.openarchives.org/ore/terms/");
+		oreDescribesPred.setPrefix("ore");
+		oreDescribesPred.setName("describes");
+		oreDescribesPred.setURI(new URI(oreDescribesPred.getNamespace() 
+				+ oreDescribesPred.getName()));
+		
+		TripleSelector ts = 
+        		new TripleSelector(rm.getURI(), oreDescribesPred.getURI(), null);
+		List<Triple> triples = rm.listAllTriples(ts);
+		System.out.println("describes: number of triples: " + triples.size());
+		
+		
+		is = this.getClass().getResourceAsStream("/D1shared/resourceMaps/libclient_python_example_2013_04_16.xml");
+		rm = ResourceMapFactory.getInstance().deserializeResourceMap(is, true);
+		
+		ts = new TripleSelector(rm.getURI(), oreDescribesPred.getURI(), null);
+		triples = rm.listAllTriples(ts);
+		System.out.println("describes: number of triples: " + triples.size());
+		
+		assertTrue("should not get more than one describes statement when reusing" +
+				" the cached model",triples.size() == 1);
+	
 	}
 	
 	

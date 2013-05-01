@@ -33,7 +33,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.io.input.CountingInputStream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -57,8 +56,27 @@ import org.dspace.foresite.ResourceMapDocument;
 import org.dspace.foresite.Triple;
 import org.dspace.foresite.TripleSelector;
 import org.dspace.foresite.Vocab;
+import org.dspace.foresite.jena.JenaOREFactory;
+import org.dspace.foresite.jena.ORE;
 import org.dspace.foresite.jena.TripleJena;
 
+import com.hp.hpl.jena.ontology.OntModelSpec;
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.RDFNode;
+import com.hp.hpl.jena.rdf.model.Resource;
+import com.hp.hpl.jena.rdf.model.Selector;
+import com.hp.hpl.jena.rdf.model.SimpleSelector;
+import com.hp.hpl.jena.rdf.model.Statement;
+import com.hp.hpl.jena.rdf.model.StmtIterator;
+/**
+ *  A utility for serializing and deserializing Resource Maps used by DataONE,
+ *  following the conventions and constraints detailed in 
+ *  http://mule1.dataone.org/ArchitectureDocs-current/design/DataPackage.html
+ *  
+ *  the class org.dataone.client.DataPackage
+ *
+ */
 public class ResourceMapFactory {
 	
 	// TODO: will this always resolve?
@@ -74,6 +92,8 @@ public class ResourceMapFactory {
 	private static Predicate CITO_DOCUMENTS = null;
 
 	private static ResourceMapFactory instance = null;
+	
+	private static Model oreModel = null;
 	
 	private static Log log = LogFactory.getLog(ResourceMapFactory.class);
 	
@@ -191,7 +211,7 @@ public class ResourceMapFactory {
 		return parseResourceMap(is);
 	}
 	
-	//public Map<Identifier, List<Identifier>> parseResourceMap(InputStream is) 
+ 
 	public Map<Identifier, Map<Identifier, List<Identifier>>> parseResourceMap(InputStream is) 
 		throws OREException, URISyntaxException, UnsupportedEncodingException, OREParserException {
 		
@@ -280,13 +300,89 @@ public class ResourceMapFactory {
 		return serialisation;
 	}
 	
+	/**
+	 * Deserialize the inputStream into a ResourceMap using the standard OREParserFactory
+	 * settings. (No inferences / reasoning)
+	 * @param is
+	 * @return ResourceMap
+	 * @throws OREException
+	 * @throws URISyntaxException
+	 * @throws UnsupportedEncodingException
+	 * @throws OREParserException
+	 * @since v1.3
+	 */
 	public ResourceMap deserializeResourceMap(InputStream is)
 	throws OREException, URISyntaxException, UnsupportedEncodingException, OREParserException 
 	{		
-		OREParser parser = OREParserFactory.getInstance(RESOURCE_MAP_SERIALIZATION_FORMAT);
-		ResourceMap resourceMap = parser.parse(is);
+		return deserializeResourceMap(is, false);
+	}
+	
+	
+	/**
+	 * Deserialize the inputStream into a ResourceMap either literally (only asserted
+	 * statements present), or including inferred statements.  The model configuration
+	 * currently includes only the ORE model (http://www.openarchives.org/ore/terms)
+	 * on top of the OWL DL ontology, so reasoning may be limited.
+	 * @param is
+	 * @param useReasoning - if true, the resourceMap will contain inferred statements
+	 * @return ResourceMap
+	 * @throws OREException
+	 * @throws URISyntaxException
+	 * @throws UnsupportedEncodingException
+	 * @throws OREParserException
+	 * @since v1.3
+	 */
+	// Note:  depending on the need, future development might employ a bridge pattern
+	// by passing in a Model object instead of building it internally.  Not clear if
+	// it's necessary now.
+	public ResourceMap deserializeResourceMap(InputStream is, boolean useReasoning)
+	throws OREException, URISyntaxException, UnsupportedEncodingException, OREParserException 
+	{		
+		ResourceMap resourceMap = null;
+		if (useReasoning) {
+			// need to load in the ORE model / schema for ORE inferences to work
+			Model model = ModelFactory.createOntologyModel(
+					OntModelSpec.OWL_DL_MEM_RULE_INF, 
+					this.getOREModel()  /* passes in the ORE definitions */
+					);
+			model.read(is, null, RESOURCE_MAP_SERIALIZATION_FORMAT);
+			Selector selector = new SimpleSelector(null, ORE.describes, (RDFNode) null);
+			StmtIterator itr = model.listStatements(selector);
+		
+			if (itr.hasNext()) {
+				Statement statement = itr.nextStatement();
+				Resource resource = (Resource) statement.getSubject();
+				resourceMap = JenaOREFactory.createResourceMap(model, new URI(resource.getURI()));
+			}
+		} else {
+			// use the default (non-inferring model)
+			OREParser parser = OREParserFactory.getInstance(RESOURCE_MAP_SERIALIZATION_FORMAT);
+			resourceMap = parser.parse(is);
+		}
+		
+		
 		return resourceMap;
 	}
+
+	/**
+	 * this method optimizes retrieving and caching the ORE model
+	 * @return
+	 */
+	protected Model getOREModel()
+	{
+		if (oreModel == null) {
+			InputStream is = this.getClass().getResourceAsStream("www.openarchives.org-ore-terms.xml");
+			oreModel = ModelFactory.createDefaultModel();
+			if (is != null) {
+				oreModel.read(is, null, RESOURCE_MAP_SERIALIZATION_FORMAT);
+			} else {
+				log.warn("Cannot find cached ORE terms document. Getting from namespace URI");
+				oreModel.read("http://www.openarchives.org/ore/terms/");
+			}
+		}
+		return oreModel;
+	}
+	
 	
 	/**
 	 * Validate the ResourceMap against DataONE constraints (use of CN_Read.resolve,
