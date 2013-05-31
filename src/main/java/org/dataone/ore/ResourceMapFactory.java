@@ -74,7 +74,11 @@ import com.hp.hpl.jena.rdf.model.StmtIterator;
  *  following the conventions and constraints detailed in 
  *  http://mule1.dataone.org/ArchitectureDocs-current/design/DataPackage.html
  *  
- *  the class org.dataone.client.DataPackage
+ *  Note: DataONE uses the serialized form of ResourceMaps to persist the relationships
+ *  between metadata objects and the data objects they document, and builds a
+ *  ResourceMap as an intermediate form to derive the relationships into a simpler
+ *  "identifier map" representation.  There are methods for getting to both 
+ *  intermediate and final forms.
  *
  */
 public class ResourceMapFactory {
@@ -131,7 +135,10 @@ public class ResourceMapFactory {
 			e.printStackTrace();
 		}
 	}
-	
+	/**
+	 * Returns the singleton instance for this class.
+	 * @return
+	 */
 	public static ResourceMapFactory getInstance() {
 		if (instance == null) {
 			instance = new ResourceMapFactory();
@@ -139,6 +146,14 @@ public class ResourceMapFactory {
 		return instance;
 	}
 	
+	/**
+	 * creates a ResourceMap from the DataPackage representation.
+	 * @param resourceMapId
+	 * @param idMap
+	 * @return
+	 * @throws OREException
+	 * @throws URISyntaxException
+	 */
 	public ResourceMap createResourceMap(
 			Identifier resourceMapId, 
 			Map<Identifier, List<Identifier>> idMap) 
@@ -205,13 +220,110 @@ public class ResourceMapFactory {
 		
 	}
 	
+/*	/**
+	 * Experimental.  Do not use!  Creates a ResourceMap that does not contain the inverse
+	 * relationships for ore:aggregates, and cito:documents, requiring a reasoning
+	 * model to reconstitute to the DataPackage representation. 
+	 * @param resourceMapId
+	 * @param idMap
+	 * @return
+	 * @throws OREException
+	 * @throws URISyntaxException
+	 */
+/*	public ResourceMap createSparseResourceMap(
+			Identifier resourceMapId, 
+			Map<Identifier, List<Identifier>> idMap) 
+		throws OREException, URISyntaxException {
+
+	
+		// create the resource map and the aggregation
+		// NOTE: use distinct, but related URI for the aggregation
+		Aggregation aggregation = OREFactory.createAggregation(new URI(D1_URI_PREFIX 
+				+ EncodingUtilities.encodeUrlPathSegment(resourceMapId.getValue()) 
+				+ "#aggregation"));
+		ResourceMap resourceMap = aggregation.createResourceMap(new URI(D1_URI_PREFIX 
+				+ EncodingUtilities.encodeUrlPathSegment(resourceMapId.getValue())));
+		
+		Agent creator = OREFactory.createAgent();
+		creator.addName("Java libclient");
+		resourceMap.addCreator(creator);
+		// add the resource map identifier
+//		Triple resourceMapIdentifier = new TripleJena();
+//		resourceMapIdentifier.initialise(resourceMap);
+//		resourceMapIdentifier.relate(DC_TERMS_IDENTIFIER, resourceMapId.getValue());
+//		resourceMap.addTriple(resourceMapIdentifier);
+		
+		//aggregation.addCreator(creator);
+		aggregation.addTitle("DataONE Aggregation");
+		
+		// iterate through the metadata items
+		for (Identifier metadataId: idMap.keySet()) {
+		
+			// add the science metadata
+			AggregatedResource metadataResource = aggregation.createAggregatedResource(new URI(D1_URI_PREFIX 
+					+ EncodingUtilities.encodeUrlPathSegment(metadataId.getValue())));
+//			Triple metadataIdentifier = new TripleJena();
+//			metadataIdentifier.initialise(metadataResource);
+//			metadataIdentifier.relate(DC_TERMS_IDENTIFIER, metadataId.getValue());
+//			resourceMap.addTriple(metadataIdentifier);
+			aggregation.addAggregatedResource(metadataResource);
+	
+			// iterate through data items
+			List<Identifier> dataIds = idMap.get(metadataId);
+			for (Identifier dataId: dataIds) {
+				AggregatedResource dataResource = aggregation.createAggregatedResource(new URI(D1_URI_PREFIX 
+						+ EncodingUtilities.encodeUrlPathSegment(dataId.getValue())));
+				// dcterms:identifier
+//				Triple identifier = new TripleJena();
+//				identifier.initialise(dataResource);
+//				identifier.relate(DC_TERMS_IDENTIFIER, dataId.getValue());
+//				resourceMap.addTriple(identifier);
+				// cito:isDocumentedBy
+//				Triple isDocumentedBy = new TripleJena();
+//				isDocumentedBy.initialise(dataResource);
+//				isDocumentedBy.relate(CITO_IS_DOCUMENTED_BY, metadataResource);
+//				resourceMap.addTriple(isDocumentedBy);
+				// cito:documents (on metadata resource)
+				Triple documents = new TripleJena();
+				documents.initialise(metadataResource);
+				documents.relate(CITO_DOCUMENTS, dataResource);
+				resourceMap.addTriple(documents);
+				
+				aggregation.addAggregatedResource(dataResource);
+			}
+		}
+		
+		return resourceMap;
+		
+	}*/
+	
+	
+	/**
+	 * Parses the string containing serialized form into the Map representation
+     * used by the org.dataone.client.DataPackage class.
+	 * @param resourceMapContents
+	 * @return
+	 * @throws OREException
+	 * @throws URISyntaxException
+	 * @throws UnsupportedEncodingException
+	 * @throws OREParserException
+	 */
 	public Map<Identifier, Map<Identifier, List<Identifier>>> parseResourceMap(String resourceMapContents) 
 	throws OREException, URISyntaxException, UnsupportedEncodingException, OREParserException {
 		InputStream is = new ByteArrayInputStream(resourceMapContents.getBytes("UTF-8"));
 		return parseResourceMap(is);
 	}
 	
- 
+    /**
+     * Parses the input stream from the serialized form into the Map representation
+     * used by the org.dataone.client.DataPackage class.
+     * @param is
+     * @return
+     * @throws OREException
+     * @throws URISyntaxException
+     * @throws UnsupportedEncodingException
+     * @throws OREParserException
+     */
 	public Map<Identifier, Map<Identifier, List<Identifier>>> parseResourceMap(InputStream is) 
 		throws OREException, URISyntaxException, UnsupportedEncodingException, OREParserException {
 		
@@ -292,6 +404,12 @@ public class ResourceMapFactory {
 		
 	}
 	
+	/**
+	 * Serialize the ResourceMap
+	 * @param resourceMap
+	 * @return
+	 * @throws ORESerialiserException
+	 */
 	public String serializeResourceMap(ResourceMap resourceMap) throws ORESerialiserException {
 		// serialize
 		ORESerialiser serializer = ORESerialiserFactory.getInstance(RESOURCE_MAP_SERIALIZATION_FORMAT);
@@ -299,6 +417,7 @@ public class ResourceMapFactory {
 		String serialisation = doc.toString();
 		return serialisation;
 	}
+	
 	
 	/**
 	 * Deserialize the inputStream into a ResourceMap using the standard OREParserFactory
@@ -365,7 +484,8 @@ public class ResourceMapFactory {
 	}
 
 	/**
-	 * this method optimizes retrieving and caching the ORE model
+	 * this method optimizes retrieving and caching the ORE model, used for 
+	 * reasoning model
 	 * @return
 	 */
 	protected Model getOREModel()
