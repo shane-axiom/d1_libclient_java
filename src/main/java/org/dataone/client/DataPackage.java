@@ -62,22 +62,22 @@ import org.dspace.foresite.ResourceMap;
  * The ResourceMap is a first-class object in the DataONE object collection, the 
  * same as metadata and science data, having its own unique identifier. Retrieving 
  * a DataPackage from DataONE therefore involves first retrieving the ResourceMap, 
- * then retrieving the member data individually. That is to say, the ResourceMap 
+ * then retrieving the members individually. That is to say, the ResourceMap 
  * contains only references to the package members, not the content.
  * 
- * DataPackage independently maintains 2 properties, the data map, and the 
- * relationships map.  The data map maintains the list of D1Objects associated 
- * with the DataPackage, and should not contain data objects not found in the 
- * relationship map. It is also used internally to access the package's data members.
+ * DataPackage instances independently maintain 2 properties, the object map, and the 
+ * relationships map.  The object map maintains the local representations of the 
+ * D1Objects associated with the DataPackage, and should not contain data objects 
+ * not found in the relationship map.  It is also used internally to access the 
+ * package's data members.
  * 
  * The relationships map determines the contents of the ResourceMap, so therefore
  * is the ultimate authority on package membership.
  * 
  * When creating (submitting) a new package, it is important for the object map
- * and relationship map to be consistent.  The validate*Map(), 
- * getUnresolvableMembers(), and getUnmappedMembers() should be invoked before
- * uploading package members and the resourceMap to a MemberNode.
- * 
+ * and relationship map to be consistent.  The getUnresolvableMembers() and 
+ * getUncharacterizeddMembers() methods should be invoked before uploading package 
+ * members and the resourceMap to a MemberNode.
  * 
  */
 public class DataPackage {
@@ -85,7 +85,6 @@ public class DataPackage {
     private Identifier packageId;
     private Map<Identifier, List<Identifier>> metadataMap;
     private HashMap<Identifier, D1Object> objectStore;
-    private ResourceMap map = null;
     private SystemMetadata systemMetadata = null;
     
         
@@ -146,6 +145,13 @@ public class DataPackage {
     
     // TODO: this should be renamed to include the relationship to be added to the 
     // resourceMap
+    /**
+     * Declare which data objects are documented by a metadata object, using their
+     * identifiers.  Additional declarations for a metadata object are additive - 
+     * they do not replace earlier declarations.
+     * @param metadataID
+     * @param dataIDList
+     */
     public void insertRelationship(Identifier metadataID, List<Identifier> dataIDList) {
         List<Identifier> associatedData = null;
         
@@ -240,16 +246,19 @@ public class DataPackage {
 
   
     /**
-     * Return an ORE ResourceMap describing this package.
+     * Build and return a fresh ORE ResourceMap from the metadata map.
+     * TODO: create a RM when science metadata is null
+     * TODO: handle error conditions when data list is null
      * @return the map
      * @throws URISyntaxException 
      * @throws OREException 
      */
     public ResourceMap getMap() throws OREException, URISyntaxException 
     {
-        updateResourceMap();
-        return map;
+    	return ResourceMapFactory.getInstance().createResourceMap(packageId, metadataMap);
     }
+    
+    
     
     /**
      * Return an ORE ResourceMap describing this package, serialized as an RDF graph.
@@ -391,18 +400,7 @@ public class DataPackage {
      * @throws OREException 
      * @throws URISyntaxException 
      */
-    private void updateResourceMap() throws OREException, URISyntaxException {
-        
-        try {
-            map = ResourceMapFactory.getInstance().createResourceMap(packageId, metadataMap);
-        } catch (OREException e) {        
-            map = null;
-            throw e;
-        } catch (URISyntaxException e) {
-            map = null;
-            throw e;
-        }
-    }    
+   
  
     // TODO: needs unit test. 
 //    /**
