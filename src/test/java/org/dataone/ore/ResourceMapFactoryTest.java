@@ -27,27 +27,42 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.input.CountingInputStream;
 import org.apache.commons.lang.StringUtils;
+import org.dataone.client.D1TypeBuilder;
+import org.dataone.client.DataPackage;
 import org.dataone.service.types.v1.Identifier;
 import org.dspace.foresite.OREException;
 import org.dspace.foresite.OREParserException;
+import org.dspace.foresite.ORESerialiserException;
 import org.dspace.foresite.Predicate;
 import org.dspace.foresite.ResourceMap;
 import org.dspace.foresite.Triple;
 import org.dspace.foresite.TripleSelector;
+import org.dspace.foresite.jena.OREResourceJena;
 import org.junit.Test;
+
+import com.hp.hpl.jena.ontology.OntModelSpec;
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.ResourceFactory;
+import com.hp.hpl.jena.rdf.model.Statement;
+import com.hp.hpl.jena.rdf.model.StmtIterator;
 
 public class ResourceMapFactoryTest {
 	
@@ -302,6 +317,150 @@ public class ResourceMapFactoryTest {
 		assertTrue("should not get more than one describes statement when reusing" +
 				" the cached model",triples.size() == 1);
 	
+	}
+	
+	/**
+	 * a test to see how large of a resource map is possible to build using DataPackage
+	 * (1000 takes 3 seconds, 3000 takes 20 seconds, 10000 takes 5 minutes, 30000 
+	 * runs out of memory after 45 minutes :-) ) 
+	 * @throws OREException
+	 * @throws URISyntaxException
+	 * @throws ORESerialiserException
+	 * @throws IOException
+	 */
+//	@Test
+	public void testCreateHugeResourceMap() 
+	throws OREException, URISyntaxException, ORESerialiserException, IOException 
+	{
+		int count = 2;
+		System.out.println("count: " + count);
+		
+		
+		DataPackage dp = new DataPackage(D1TypeBuilder.buildIdentifier("MonolithicPackage"));
+		List<Identifier> datum = new LinkedList<Identifier>();
+		for (int i=1; i<=count; i++) {
+			datum.add(D1TypeBuilder.buildIdentifier("MonolithicData_" + i));
+		}
+		
+		Date now = new Date();
+		System.out.println("start build model " + now);
+		dp.insertRelationship(D1TypeBuilder.buildIdentifier("MonolithicMetadata"), datum);
+	
+		ResourceMap rm = ResourceMapFactory.getInstance().createResourceMap(dp.getPackageId(),dp.getMetadataMap());
+		
+		System.out.println("start serialize: " + new Date());
+		String epic = ResourceMapFactory.getInstance().serializeResourceMap(rm);
+//		String epic = dp.serializePackage();
+		now = new Date();
+		System.out.println("start writing to file... " + now);
+		FileWriter fw = new FileWriter("/tmp/monolithicResourceMap_" + count + ".xml");
+		fw.write(epic);
+		fw.flush();
+		fw.close();
+		now = new Date();
+		System.out.println("Done: " + now);
+	}
+	
+	
+//	@Test
+	public void testDeserializeHugeResourceMap() throws OREException, URISyntaxException, OREParserException, IOException 
+	{
+//		InputStream is = new FileInputStream("/tmp/monolithicResourceMap.xml");
+//		InputStream is = new FileInputStream("/tmp/monolithicSparseRM.xml");
+//		InputStream is = new FileInputStream("/tmp/monolithicSparseNoIDRM.xml");
+//		InputStream is = new FileInputStream("/tmp/monolithicResourceMap_10000.xml");
+		InputStream is = new FileInputStream("/Users/rnahf/software/tools/perl/sampleRDFs/sampleRDF_000033.xml");
+		Date now = new Date();
+//		System.out.println(IOUtils.toString(is));
+		System.out.println("start: " + now);
+
+		ResourceMap rm = ResourceMapFactory.getInstance().deserializeResourceMap(is, true);
+		System.out.println(rm);
+		now = new Date();
+		System.out.println("middle: " + now);
+		
+		System.out.println("model size: " + ((OREResourceJena) rm).getModel().size());
+		now = new Date();
+		System.out.println("end: " + now);
+	}
+	
+	
+//	@Test
+	public void testCreateNestedResourceMaps() 
+	throws OREException, URISyntaxException, ORESerialiserException, IOException 
+	{
+
+		Date now = new Date();
+		System.out.println("start: " + now);
+		DataPackage dp = new DataPackage(D1TypeBuilder.buildIdentifier("ParentPackage"));
+		List<Identifier> datum = new LinkedList<Identifier>();
+
+		int count = 10000;
+		for (int i=1; i<=count; i++) {
+			datum.add(D1TypeBuilder.buildIdentifier("ChildPackage_" + i));
+		
+			// create the childPackage
+			DataPackage chp = new DataPackage(D1TypeBuilder.buildIdentifier("ChildPackage_" + i));
+
+			List<Identifier> childData = new LinkedList<Identifier>();
+			childData.add(D1TypeBuilder.buildIdentifier("DataForChild_" + i));
+			
+			chp.insertRelationship(
+					D1TypeBuilder.buildIdentifier("MetadataForChild_" + i),
+					childData);
+		
+			String chReM = chp.serializePackage();
+			FileWriter fw = new FileWriter("/tmp/ChildPackage_" + i + ".xml");
+			fw.write(chReM);
+			fw.flush();
+			fw.close();
+		}
+
+		dp.insertRelationship(D1TypeBuilder.buildIdentifier("MetadataForAll"), datum);
+		String parentPackage = dp.serializePackage();
+		now = new Date();
+		FileWriter fw = new FileWriter("/tmp/ParentPackage.xml");
+		fw.write(parentPackage);
+		fw.flush();
+		fw.close();
+
+
+		Model model = ModelFactory.createOntologyModel(
+				OntModelSpec.OWL_DL_MEM_RULE_INF, 
+				ResourceMapFactory.getInstance().getOREModel());
+		
+		model.read("file:///tmp/ParentPackage.xml");
+		model.read("file:///tmp/ChildPackage_1.xml");
+		model.read("file:///tmp/ChildPackage_2.xml");
+		model.read("file:///tmp/ChildPackage_3.xml");
+
+	
+		//now see what resources the ParentPackage is said to aggregate
+		Predicate pred = new Predicate();
+		pred.setNamespace("http://www.openarchives.org/ore/terms/");
+		pred.setPrefix("ore");
+		pred.setName("aggregates");
+		pred.setURI(new URI(pred.getNamespace() 
+				+ pred.getName()));
+
+		StmtIterator it = model.listStatements(null,ResourceFactory.createProperty(pred.getURI().toString()) , (String)null);
+		int c = 1;
+		while (it.hasNext()) {
+			Statement st = it.nextStatement();
+			if (st != null && st.getSubject() != null &&
+					st.getSubject().getURI() != null && st.getSubject().getURI().contains("cn-dev")) {
+				System.out.println(String.format("%2d.  %30s %30s %30s", 
+					c++,
+					cleanupURIs(st.getSubject().getURI()),
+					cleanupURIs(st.getPredicate().getURI()),
+					cleanupURIs(st.getObject().toString())));
+			}
+		}
+		
+	}
+	
+	private String cleanupURIs(String s) {
+		return StringUtils.substringAfterLast(s, "/");
 	}
 	
 	
