@@ -289,20 +289,36 @@
 			<plugin>
 			  <artifactId>maven-javadoc-plugin</artifactId>
 			  <version>2.9</version>
-			  <executions>
-			    <execution>
-			      <id>resource-bundles</id>
-			      <phase>package</phase>
-			      <goals>
-				<!-- produce source artifact for main project sources -->
-				<goal>resource-bundle</goal>
-			      </goals>
-			    </execution>
-			  </executions>
+ 			  <executions>
+<!-- 			    <execution> -->
+<!-- 			      <id>resource-bundles</id> -->
+<!-- 			      <phase>package</phase> -->
+<!-- 			      <goals> -->
+			      
+<!-- 				produce source artifact for main project sources -->
+<!-- 				<goal>resource-bundle</goal> -->
+<!-- 			      </goals> -->
+<!-- 			    </execution> -->
+<!-- 			  </executions> -->
+			  	<execution>
+            		<id>aggregate</id>
+            		<goals>
+              			<goal>aggregate</goal>
+           		 	</goals>
+            		<phase>site</phase>
+              	</execution>
+              </executions>
 			  <configuration>
-			    <additionalparam>-noqualifier org.dataone.*:java.lang.*</additionalparam>
+			    <!-- switch on dependency-driven aggregation -->
+			  	<includeDependencySources>true</includeDependencySources>
+			  	
+			  	<dependencySourceIncludes>
+                	<!-- include ONLY dataone dependencies -->
+                	<dependencySourceInclude>org.dataone:*</dependencySourceInclude>
+              	</dependencySourceIncludes>	
+<!--			    <additionalparam>-noqualifier org.dataone.*:java.lang.*</additionalparam>  -->
 			    <detectOfflineLinks>false</detectOfflineLinks>
-<!-- 			    <debug>true</debug>  -->
+ 			    <debug>true</debug>
 			  </configuration>
 			</plugin>
 		</plugins>
