@@ -180,6 +180,10 @@ public class ResourceMapFactoryTest {
 //				"test_ResMap_isByOnly_5000.xml",
 				"test_ResMap_mixedDocDocBy_10.xml",
 				"test_ResMap_DocsOnly_10.xml"
+//				"merritt_literal_describes_object.xml",
+//				"merritt_literal_documents_object.xml",
+//				"merritt_literal_aggregates_object.xml",
+//				"merritt_fixed_describes_object.xml"
 				};
 		
 		boolean threwException = false;
