@@ -168,6 +168,58 @@ public class ResourceMapFactoryTest {
 
 	}
 	
+	
+	@Test 
+	public void testParseResourceMap() 
+	{
+		String[] files = new String[]{
+				"libclient_python_example_2013_04_16.xml",
+				"libclient_java_example_2013_04_15.xml",
+				"missingIsDescribedByTriple.xml",
+				"test_ResMap_isByOnly_5.xml",
+//				"test_ResMap_isByOnly_5000.xml",
+				"test_ResMap_mixedDocDocBy_10.xml",
+				"test_ResMap_DocsOnly_10.xml"
+				};
+		
+		boolean threwException = false;
+		for (String f : files) {
+			try {
+				String resourceMap = "/D1shared/resourceMaps/" + f;
+				System.out.println(resourceMap);
+				InputStream is = this.getClass().getResourceAsStream(resourceMap);
+				CountingInputStream cis = new CountingInputStream(is);
+				Map<Identifier, Map<Identifier,List<Identifier>>> d1rm =
+						ResourceMapFactory.getInstance().parseResourceMap(cis);
+				showResourceMap(d1rm);
+			} catch (Exception e) {
+				threwException = true;
+				e.printStackTrace();
+			}
+		}
+		if (threwException) {
+			fail("One of the resource maps failed to parse");
+		}
+	}
+		
+	private void showResourceMap(Map<Identifier, Map<Identifier,List<Identifier>>> d1rm) {
+		for ( Identifier packId: d1rm.keySet()) {
+			System.out.println(packId.getValue());
+			for (Identifier metadata: d1rm.get(packId).keySet()) {
+				System.out.println("   " + metadata.getValue());
+				for (Identifier dataId : d1rm.get(packId).get(metadata)) {
+					System.out.println("     " + dataId.getValue());
+				}
+			}
+		}
+		System.out.println("");
+	}
+	
+	
+	
+	
+	
+	
 	@Test
 	public void testValidateResourceMap_Valid_PythonGenerated() 
 	throws UnsupportedEncodingException, OREException, URISyntaxException, OREParserException 
@@ -199,7 +251,7 @@ public class ResourceMapFactoryTest {
 		testValidateResourceMap("nonStandardAggregationResourceURI.xml", 
 				"ResourceMap without standard aggregation URI should fail", false);
 	}
-
+ 
 	@Test
 	public void testValidateResourceMap_notCnResolveResources() 
 	throws UnsupportedEncodingException, OREException, URISyntaxException, OREParserException 
@@ -329,10 +381,10 @@ public class ResourceMapFactoryTest {
 	 * @throws IOException
 	 */
 //	@Test
-	public void testCreateHugeResourceMap() 
+/*	public void testCreateHugeResourceMap() 
 	throws OREException, URISyntaxException, ORESerialiserException, IOException 
 	{
-		int count = 2;
+		int count = 10;
 		System.out.println("count: " + count);
 		
 		
@@ -346,30 +398,31 @@ public class ResourceMapFactoryTest {
 		System.out.println("start build model " + now);
 		dp.insertRelationship(D1TypeBuilder.buildIdentifier("MonolithicMetadata"), datum);
 	
-		ResourceMap rm = ResourceMapFactory.getInstance().createResourceMap(dp.getPackageId(),dp.getMetadataMap());
+		ResourceMap rm = ResourceMapFactory.getInstance().createSparseResourceMap(dp.getPackageId(),dp.getMetadataMap());
 		
 		System.out.println("start serialize: " + new Date());
 		String epic = ResourceMapFactory.getInstance().serializeResourceMap(rm);
 //		String epic = dp.serializePackage();
 		now = new Date();
 		System.out.println("start writing to file... " + now);
-		FileWriter fw = new FileWriter("/tmp/monolithicResourceMap_" + count + ".xml");
+		FileWriter fw = new FileWriter("/Users/rnahf/Downloads/test_ResMap_DocsOnly_" + count + ".xml");
 		fw.write(epic);
 		fw.flush();
 		fw.close();
 		now = new Date();
 		System.out.println("Done: " + now);
 	}
+*/	
 	
-	
-//	@Test
+	@Test
 	public void testDeserializeHugeResourceMap() throws OREException, URISyntaxException, OREParserException, IOException 
 	{
 //		InputStream is = new FileInputStream("/tmp/monolithicResourceMap.xml");
 //		InputStream is = new FileInputStream("/tmp/monolithicSparseRM.xml");
 //		InputStream is = new FileInputStream("/tmp/monolithicSparseNoIDRM.xml");
 //		InputStream is = new FileInputStream("/tmp/monolithicResourceMap_10000.xml");
-		InputStream is = new FileInputStream("/Users/rnahf/software/tools/perl/sampleRDFs/sampleRDF_000033.xml");
+//		InputStream is = new FileInputStream("/Users/rnahf/software/tools/perl/sampleRDFs/sampleRDF_000033.xml");
+		InputStream is = new FileInputStream("/Users/rnahf/Downloads/test_data_package.xml");
 		Date now = new Date();
 //		System.out.println(IOUtils.toString(is));
 		System.out.println("start: " + now);
