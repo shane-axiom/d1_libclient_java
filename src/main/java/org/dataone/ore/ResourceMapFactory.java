@@ -29,13 +29,16 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.dataone.client.D1TypeBuilder;
 import org.dataone.configuration.Settings;
 import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.util.EncodingUtilities;
@@ -220,6 +223,10 @@ public class ResourceMapFactory {
 		
 	}
 	
+	
+	
+	
+	
 /*	/**
 	 * Experimental.  Do not use!  Creates a ResourceMap that does not contain the inverse
 	 * relationships for ore:aggregates, and cito:documents, requiring a reasoning
@@ -248,24 +255,26 @@ public class ResourceMapFactory {
 		creator.addName("Java libclient");
 		resourceMap.addCreator(creator);
 		// add the resource map identifier
-//		Triple resourceMapIdentifier = new TripleJena();
-//		resourceMapIdentifier.initialise(resourceMap);
-//		resourceMapIdentifier.relate(DC_TERMS_IDENTIFIER, resourceMapId.getValue());
-//		resourceMap.addTriple(resourceMapIdentifier);
+		Triple resourceMapIdentifier = new TripleJena();
+		resourceMapIdentifier.initialise(resourceMap);
+		resourceMapIdentifier.relate(DC_TERMS_IDENTIFIER, resourceMapId.getValue());
+		resourceMap.addTriple(resourceMapIdentifier);
 		
 		//aggregation.addCreator(creator);
 		aggregation.addTitle("DataONE Aggregation");
 		
 		// iterate through the metadata items
+
+		//		int i = 0;
 		for (Identifier metadataId: idMap.keySet()) {
 		
 			// add the science metadata
 			AggregatedResource metadataResource = aggregation.createAggregatedResource(new URI(D1_URI_PREFIX 
 					+ EncodingUtilities.encodeUrlPathSegment(metadataId.getValue())));
-//			Triple metadataIdentifier = new TripleJena();
-//			metadataIdentifier.initialise(metadataResource);
-//			metadataIdentifier.relate(DC_TERMS_IDENTIFIER, metadataId.getValue());
-//			resourceMap.addTriple(metadataIdentifier);
+			Triple metadataIdentifier = new TripleJena();
+			metadataIdentifier.initialise(metadataResource);
+			metadataIdentifier.relate(DC_TERMS_IDENTIFIER, metadataId.getValue());
+			resourceMap.addTriple(metadataIdentifier);
 			aggregation.addAggregatedResource(metadataResource);
 	
 			// iterate through data items
@@ -274,20 +283,24 @@ public class ResourceMapFactory {
 				AggregatedResource dataResource = aggregation.createAggregatedResource(new URI(D1_URI_PREFIX 
 						+ EncodingUtilities.encodeUrlPathSegment(dataId.getValue())));
 				// dcterms:identifier
-//				Triple identifier = new TripleJena();
-//				identifier.initialise(dataResource);
-//				identifier.relate(DC_TERMS_IDENTIFIER, dataId.getValue());
-//				resourceMap.addTriple(identifier);
-				// cito:isDocumentedBy
-//				Triple isDocumentedBy = new TripleJena();
-//				isDocumentedBy.initialise(dataResource);
-//				isDocumentedBy.relate(CITO_IS_DOCUMENTED_BY, metadataResource);
-//				resourceMap.addTriple(isDocumentedBy);
+				Triple identifier = new TripleJena();
+				identifier.initialise(dataResource);
+				identifier.relate(DC_TERMS_IDENTIFIER, dataId.getValue());
+				resourceMap.addTriple(identifier);
+
+//				if ((i++ % 2) == 0) {
+//					// cito:isDocumentedBy
+//					Triple isDocumentedBy = new TripleJena();
+//					isDocumentedBy.initialise(dataResource);
+//					isDocumentedBy.relate(CITO_IS_DOCUMENTED_BY, metadataResource);
+//					resourceMap.addTriple(isDocumentedBy);
+//				} else {
 				// cito:documents (on metadata resource)
-				Triple documents = new TripleJena();
-				documents.initialise(metadataResource);
-				documents.relate(CITO_DOCUMENTS, dataResource);
-				resourceMap.addTriple(documents);
+					Triple documents = new TripleJena();
+					documents.initialise(metadataResource);
+					documents.relate(CITO_DOCUMENTS, dataResource);
+					resourceMap.addTriple(documents);
+//				}
 				
 				aggregation.addAggregatedResource(dataResource);
 			}
@@ -295,7 +308,8 @@ public class ResourceMapFactory {
 		
 		return resourceMap;
 		
-	}*/
+	}
+	*/
 	
 	
 	/**
@@ -319,90 +333,124 @@ public class ResourceMapFactory {
      * used by the org.dataone.client.DataPackage class.
      * @param is
      * @return
-     * @throws OREException
+     * @throws OREException - also thrown when identifier triple is missing from 
+     *         any aggregated resource.
      * @throws URISyntaxException
      * @throws UnsupportedEncodingException
      * @throws OREParserException
      */
 	public Map<Identifier, Map<Identifier, List<Identifier>>> parseResourceMap(InputStream is) 
-		throws OREException, URISyntaxException, UnsupportedEncodingException, OREParserException {
-		
-	    Map<Identifier, List<Identifier>> idMap = new HashMap<Identifier, List<Identifier>>();
-		
+	throws OREException, URISyntaxException, UnsupportedEncodingException, OREParserException 
+	{
+		// the inner map of the return object	
+		Map<Identifier, List<Identifier>> idMap = new HashMap<Identifier, List<Identifier>>();
+			
 		OREParser parser = OREParserFactory.getInstance(RESOURCE_MAP_SERIALIZATION_FORMAT);
 		ResourceMap resourceMap = parser.parse(is);
 		if (resourceMap == null) {
 			throw new OREException("Null resource map returned from OREParser (format: " + 
 					RESOURCE_MAP_SERIALIZATION_FORMAT + ")");
 		}
+		
+		TripleSelector idSelector = new TripleSelector(null, DC_TERMS_IDENTIFIER.getURI(), null);
+		TripleSelector documentsSelector = new TripleSelector(null, CITO_DOCUMENTS.getURI(), null);
+		TripleSelector isDocBySelector = new TripleSelector(null, CITO_IS_DOCUMENTED_BY.getURI(), null);
+		
+		
+		
 		// get the identifier of the whole package ResourceMap
 		Identifier packageId = new Identifier();
 		log.debug(resourceMap.getURI());
-        TripleSelector packageIdSelector = 
-        		new TripleSelector(resourceMap.getURI(), DC_TERMS_IDENTIFIER.getURI(), null);
-        List<Triple> packageIdTriples = resourceMap.listTriples(packageIdSelector);
-        if (!packageIdTriples.isEmpty()) {
-            String packageIdValue = packageIdTriples.get(0).getObjectLiteral();
-            packageId.setValue(EncodingUtilities.decodeString(packageIdValue));
-        }
+	
 		
-        // Now process the aggregation
-        Aggregation aggregation = resourceMap.getAggregation();
-		List<AggregatedResource> resources = aggregation.getAggregatedResources();
-		for (AggregatedResource entry: resources) {
-			// metadata entries should have everything we need to reconstruct the model
-			Identifier metadataId = new Identifier();
-			List<Identifier> dataIds = new ArrayList<Identifier>();
-			
-			TripleSelector documentsSelector = new TripleSelector(null, CITO_DOCUMENTS.getURI(), null);
-			List<Triple> documentsTriples = entry.listTriples(documentsSelector);
-			if (documentsTriples.isEmpty()) {
-				continue;
+		// get the resource map identifier
+		List<Triple> packageIdTriples = resourceMap.listTriples(idSelector);
+		if (!packageIdTriples.isEmpty()) {
+			packageId.setValue(packageIdTriples.get(0).getObjectLiteral());
+		} else {
+			throw new OREException("No Identifer statement was found for the " +
+					"resourceMap resource ('" + resourceMap.getURI().toString() + "')");
+		}
+	
+		// Process the aggregated resources to get the other relevant statements
+		List<AggregatedResource> resources = resourceMap.getAggregation().getAggregatedResources();
+
+		// assemble an identifier map from the aggregated resources first, to
+		// make life easier later
+		HashMap<String, Identifier> idHash = new HashMap<String,Identifier>();
+		for (AggregatedResource ar: resources) {
+			List<Triple> idTriples = ar.listTriples(idSelector);
+			if (!idTriples.isEmpty()) {  // need an identifier to do anything
+				Identifier arId = D1TypeBuilder.buildIdentifier(idTriples.get(0).getObjectLiteral());
+				idHash.put(ar.getURI().toString(), arId);
+			} else {
+				throw new OREException("Aggregated resource '" + ar.getURI().toString() + 
+						"' in the resource map is missing the required Identifier statement");
 			}
-			
-			// get the identifier of the metadata
-			TripleSelector identifierSelector = new TripleSelector(null, DC_TERMS_IDENTIFIER.getURI(), null);
-			List<Triple> identifierTriples = entry.listTriples(identifierSelector);
-			if (!identifierTriples.isEmpty()) {
-				String metadataIdValue = identifierTriples.get(0).getObjectLiteral();
-				log.debug("metadata (documents subject): " + metadataIdValue);
-				metadataId.setValue(EncodingUtilities.decodeString(metadataIdValue));
-			}
-			
-			// iterate through the data entries to find dcterms:identifier
-			for (Triple triple: documentsTriples) {
-				String dataIdValue = null;
-				
-				// get the dataId reference we are documenting
-				URI dataResourceURI = triple.getObjectURI();
-				// look up the data object resource triple to find the dcterms:identifier for it
-				TripleSelector dataIdentifierSelector = 
-						new TripleSelector(dataResourceURI, DC_TERMS_IDENTIFIER.getURI(), null);
-				List<Triple> dataIdentifierTriples = resourceMap.listAllTriples(dataIdentifierSelector);
-				if (!dataIdentifierTriples.isEmpty()) {
-					// get the value of the identifier
-					dataIdValue = dataIdentifierTriples.get(0).getObjectLiteral();
-				}
-				
-				// add it to our list
-				Identifier dataId = new Identifier();
-				dataId.setValue(EncodingUtilities.decodeString(dataIdValue));
-				dataIds.add(dataId);
-			}
-			
-			// add the metadata entry with the data ids
-			idMap.put(metadataId , dataIds);
-			
 		}
 		
+		HashMap<String, Set<String>> metadataMap = new HashMap<String, Set<String>>();
+		for (AggregatedResource ar: resources) {
+			log.debug("Agg resource: " + ar.getURI());
+
+			List<Triple> documentsTriples = ar.listTriples(documentsSelector);
+			log.debug("--- documents count: " + documentsTriples.size());
+			
+			if (!documentsTriples.isEmpty()) {
+				// get all of the objects this resource documents
+				String metadataURI = ar.getURI().toString();
+				log.debug("  ---metadataURI : "  + metadataURI);
+				if (!metadataMap.containsKey(metadataURI))  {
+					metadataMap.put(metadataURI, new HashSet<String>());
+					log.debug("Creating new HashSet for: " + metadataURI + " : " + metadataMap.get(metadataURI).size());
+				}
+				for (Triple trip : documentsTriples) {
+					String documentsObject = trip.getObjectURI().toString();
+					log.debug("  ---documentsObject: " + documentsObject);
+					metadataMap.get(metadataURI).add(documentsObject);
+				}
+			}
+			
+			
+			List<Triple> docByTriples = ar.listTriples(isDocBySelector);
+			log.debug("+++ isDocBy count: " + docByTriples.size());
+			if (!docByTriples.isEmpty()) {
+				// get all of the objects this resource is documented by
+				String docBySubjectURI = ar.getURI().toString();
+				log.debug("  +++docBySubjectURI: " + docBySubjectURI);
+				for (Triple trip : docByTriples) {
+					String metadataURI = trip.getObjectURI().toString();
+					log.debug("  +++metadataURI: " + metadataURI);
+					if (!metadataMap.containsKey(metadataURI)) {
+						metadataMap.put(metadataURI,new HashSet<String>());
+						log.debug("Creating new HashSet for: " + metadataURI + " : " + metadataMap.get(metadataURI).size());
+					}
+					metadataMap.get(metadataURI).add(docBySubjectURI);
+				}
+			}
+		}
+	
+		for (String metadata : metadataMap.keySet()) {
+			Identifier metadataID = idHash.get(metadata);
+			List<Identifier> dataIDs = new ArrayList<Identifier>();
+			log.debug("~~~~~ data count: " + metadata + ": " + metadataMap.get(metadata).size());
+			for (String dataURI: metadataMap.get(metadata)) {
+				Identifier pid = idHash.get(dataURI);
+				dataIDs.add(pid);
+			}
+			idMap.put(metadataID, dataIDs);
+		}
+
 		// Now group the packageId with the Map of metadata/data Ids and return it
 		Map<Identifier, Map<Identifier, List<Identifier>>> packageMap = 
 				new HashMap<Identifier, Map<Identifier, List<Identifier>>>();
 		packageMap.put(packageId, idMap);
-		
-		return packageMap;
-		
+
+		return packageMap;			
 	}
+
+
+	
 	
 	/**
 	 * Serialize the ResourceMap
