@@ -414,7 +414,7 @@ public class ResourceMapFactoryTest {
 	}
 */	
 	
-	@Test
+//	@Test
 	public void testDeserializeHugeResourceMap() throws OREException, URISyntaxException, OREParserException, IOException 
 	{
 //		InputStream is = new FileInputStream("/tmp/monolithicResourceMap.xml");
