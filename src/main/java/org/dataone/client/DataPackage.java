@@ -108,9 +108,9 @@ public class DataPackage {
     }
     
     /**
-     * Puts an object with the given Identifier to the package's data store. 
-     * This creates a D1Object to wrap the identified object after downloading it 
-     * from DataONE.
+     * Puts an object with the given Identifier to the package's local, temporary
+     * data store. This creates a D1Object to wrap the identified object 
+     * after downloading it from DataONE.
      * @param id the identifier of the object to be added
      * @throws InvalidRequest 
      * @throws InsufficientResources 
@@ -130,8 +130,9 @@ public class DataPackage {
     }
     
     /**
-     * Puts a D1Object directly to the package's data map without downloading 
-     * it from a node. The identifier for this object is extracted from the D1Object. 
+     * Puts a D1Object directly to the package's local, temporary data store without 
+     * downloading it from a node.  The identifier for this object is extracted 
+     * from the D1Object. 
      * @param obj the D1Object to be added to the object map
      */
     public void addData(D1Object obj) {
@@ -143,12 +144,15 @@ public class DataPackage {
         }
     }
     
-    // TODO: this should be renamed to include the relationship to be added to the 
+    // TODO: consider renaming the method to include the relationship to be added to the 
     // resourceMap
     /**
      * Declare which data objects are documented by a metadata object, using their
-     * identifiers.  Additional declarations for a metadata object are additive - 
-     * they do not replace earlier declarations.
+     * identifiers.  Additional calls using the same metadata identifier will append 
+     * to existing data identifier lists. Identifiers used in this call will de 
+     * facto be part of any serialized resource map derived from the DataPackage 
+     * instance.
+     * 
      * @param metadataID
      * @param dataIDList
      */
@@ -174,7 +178,9 @@ public class DataPackage {
     }
     
     /**
-     * @return the number of objects in this package
+     * Used to introspect on the local temporary data store, NOT the number of 
+     * DataPackage members.
+     * @return the number of objects in the local temporary data store
      */
     //TODO: rename. size() is ambiguous and potentially inaccurate,
     //  as the number of objects in the objectStore is 
@@ -183,8 +189,10 @@ public class DataPackage {
         return objectStore.size();
     }
     
+    
     /**
-     * Determine if an object with the given Identifier is already present in the package.
+     * Determine if an object with the given Identifier is already present in
+     * the local data store.
      * @param id the Identifier to be checked
      * @return boolean true if the Identifier is in the package
      */
@@ -193,7 +201,7 @@ public class DataPackage {
     }
     
     /**
-     * Get the D1Object associated with a given Identifier.
+     * Get the D1Object associated with a given Identifier from the local data store.
      * @param id the identifier of the object to be retrieved
      * @return the D1Object for that identifier, or null if not found
      */
@@ -211,7 +219,7 @@ public class DataPackage {
     }
     
     /**
-     * Removes a D1Object from a DataPackage based on its Identifier.  Does
+     * Removes a D1Object from the local data store based on its Identifier.  Does
      * not affect the relationship map.
      * @param id the Identifier of the object to be removed.
      * @since v1.1.1
@@ -275,7 +283,22 @@ public class DataPackage {
         return rdfXml;
     }
     
-    
+    /**
+     * Download the resource map
+     * @param pid
+     * @return
+     * @throws InvalidToken
+     * @throws ServiceFailure
+     * @throws NotAuthorized
+     * @throws NotFound
+     * @throws NotImplemented
+     * @throws InsufficientResources
+     * @throws InvalidRequest
+     * @throws OREException
+     * @throws URISyntaxException
+     * @throws OREParserException
+     * @throws IOException
+     */
     public static DataPackage download(Identifier pid) 
     throws InvalidToken, ServiceFailure, NotAuthorized,
     NotFound, NotImplemented, InsufficientResources, InvalidRequest, OREException, 
@@ -342,14 +365,14 @@ public class DataPackage {
     }
     
     /**
-     * @return the metadataMap
+     * @return the metadata map
      */
     public Map<Identifier, List<Identifier>> getMetadataMap() {
         return metadataMap;
     }
     
     /**
-     * Convenience function for working with the metadataMap. Does a reverse
+     * Convenience function for working with the metadata map. Does a reverse
      * lookup to get the metadata object that is defined to document the provided
      * data object.  Returns null if the relationship has not been defined.
      * @param dataObject
