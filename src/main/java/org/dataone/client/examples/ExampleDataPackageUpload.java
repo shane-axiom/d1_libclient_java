@@ -68,10 +68,10 @@ import org.jibx.runtime.JiBXException;
  * Operates on a directory containing
  * data package files accompanied by system metadata documents
  * 
- * Traverses data package directories contained in SOURCE_DIR class attribute.
+ * Traverses data package directories contained in PACKAGE_DIR class attribute.
  * Each directory should contain the contents of a data package including the RDF/ORE file.
  * The directory should also contain the system metadata document for each document in the package.
- * Suffix the class attribute SYSMETA_SUFFIX value to the end of the system metadata documents.
+ * Suffix the class attribute SYSMETA_SUFFIX value (.SYSMETA) to the end of the system metadata documents.
  * 
  * Each file is uploaded to TARGET_MN_BASE_URL member node using java dataone libclient MNode class.
  * 
@@ -87,31 +87,51 @@ public class ExampleDataPackageUpload {
     //private static final String TARGET_MN_BASE_URL = "https://mn-demo-5.test.dataone.org:443/knb/d1/mn";
     private static final String TARGET_MN_BASE_URL = "https://mn-sandbox-ucsb-1.test.dataone.org:443/knb/d1/mn";
     private static final String SOURCE_CN_BASE_URL = "https://cn-ucsb-1.dataone.org:443/cn";
-    private static final String TEMP_DIR = "/tmp/";
+    private static final String PACKAGE_DIR = "/tmp/";
 
     private static final String SYSMETA_SUFFIX = ".SYSMETA";
 
     public ExampleDataPackageUpload() {
     }
 
+    /**
+     * Demonstrates copying data package from a source CN to a target MN.
+     * Copies data packages based on a solr query that returns resource map
+     * identifiers.
+     * 
+     * @param args
+     */
     public static void main(String[] args) {
         MNode targetMN = D1Client.getMN(TARGET_MN_BASE_URL);
         CNode sourceCN = new CNode(SOURCE_CN_BASE_URL);
 
         ExampleDataPackageUpload edpu = new ExampleDataPackageUpload();
-
-        //String query = "?q=id:resourceMap_107.xml";
-        String query = "?q=formatType:RESOURCE%20datasource:urn%5C:node%5C:ORNLDAAC&start=10&rows=2";
+        String query = buildQueryString();
         List<Identifier> oreIdentifiers = edpu.getDataPackagesToCopy(sourceCN, query);
-
         edpu.copyDataPackages(sourceCN, targetMN, oreIdentifiers);
+        /* 
+         If you have a directory containing data packages already,
+         you can upload them to targetMN using:
+              File folder = new File(PACKAGE_DIR);
+              edpu.uploadDataPackages(mn, folder);
+        */
+    }
 
-        // File folder = new File(TEMP_DIR);
-        // edpu.uploadDataPackages(mn, folder);
+    private static String buildQueryString() {
+        String baseResourceMapQuery = "?q=formatType:RESOURCE";
+        //String copyByIdQuery = "id:resourceMap_107.xml";
+        String daacFilter = "datasource:urn%5C:node%5C:ORNLDAAC";
+        String countToCopy = "rows=2";
+        String copyOffset = "start=10";
+        String query = baseResourceMapQuery + "%20" + daacFilter + "&" + copyOffset + "&"
+                + countToCopy;
+        return query;
     }
 
     /**
-     * Copy oreIdentifers from sourceCn to targetMn.
+     * Copy oreIdentifers from sourceCn to targetMN.  Each data package is downloaded to tmp directory
+     * within PACKAGE_DIR along with science metadata documents.  The data package is the uploaded to
+     * targetMN.
      * 
      * @param sourceCN
      * @param targetMN
@@ -157,6 +177,19 @@ public class ExampleDataPackageUpload {
         }
     }
 
+    /**
+     * Uploads data packages in rootDir to targetMN.
+     * 
+     * Descends into directories contained in rootDir directory.
+     * Assumes each directory within rootDir contains a data package.
+     * Each data package directory should contain all documents/files
+     * of the data package - including files for system metadata for each
+     * part of the data package.  System metadata files are suffixed with
+     * SYSMETA_SUFFIX value (".SYSMETA").
+     * 
+     * @param targetMN
+     * @param rootDir
+     */
     public void uploadDataPackages(MNode targetMN, File rootDir) {
         File[] listOfFiles = rootDir.listFiles();
         for (int i = 0; i < listOfFiles.length; i++) {
@@ -167,6 +200,19 @@ public class ExampleDataPackageUpload {
         }
     }
 
+    /**
+     * Uploads data package in tmpDir to targetMN.
+     * 
+     * Each data package directory should contain all documents/files
+     * of the data package - including files for system metadata for each
+     * part of the data package.  System metadata files are suffixed with
+     * SYSMETA_SUFFIX value (".SYSMETA").
+     * 
+     * @param targetMN
+     * @param tmpDir
+     * @param uploadRetries
+     * @return
+     */
     public boolean uploadDataPackageWithRetry(MNode targetMN, File tmpDir, int uploadRetries) {
         boolean success = false;
         int trycount = 0;
@@ -282,7 +328,7 @@ public class ExampleDataPackageUpload {
     }
 
     private File createTempPackageDir(int packageCount) {
-        File tmpDir = new File(TEMP_DIR + "//package" + packageCount);
+        File tmpDir = new File(PACKAGE_DIR + "//package" + packageCount);
         tmpDir.mkdir();
         return tmpDir;
     }
