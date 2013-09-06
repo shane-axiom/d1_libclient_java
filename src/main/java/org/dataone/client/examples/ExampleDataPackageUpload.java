@@ -95,16 +95,16 @@ public class ExampleDataPackageUpload {
     }
 
     public static void main(String[] args) {
-        MNode mn = D1Client.getMN(TARGET_MN_BASE_URL);
-        CNode cn = new CNode(SOURCE_CN_BASE_URL);
+        MNode targetMN = D1Client.getMN(TARGET_MN_BASE_URL);
+        CNode sourceCN = new CNode(SOURCE_CN_BASE_URL);
 
         ExampleDataPackageUpload edpu = new ExampleDataPackageUpload();
 
         //String query = "?q=id:resourceMap_107.xml";
         String query = "?q=formatType:RESOURCE%20datasource:urn%5C:node%5C:ORNLDAAC&start=10&rows=2";
-        List<Identifier> oreIdentifiers = edpu.getDataPackagesToCopy(cn, query);
+        List<Identifier> oreIdentifiers = edpu.getDataPackagesToCopy(sourceCN, query);
 
-        edpu.copyDataPackages(cn, mn, oreIdentifiers);
+        edpu.copyDataPackages(sourceCN, targetMN, oreIdentifiers);
 
         // File folder = new File(TEMP_DIR);
         // edpu.uploadDataPackages(mn, folder);
@@ -113,11 +113,11 @@ public class ExampleDataPackageUpload {
     /**
      * Copy oreIdentifers from sourceCn to targetMn.
      * 
-     * @param sourceCn
-     * @param targetMn
+     * @param sourceCN
+     * @param targetMN
      * @param oreIdentifiers
      */
-    public void copyDataPackages(CNode sourceCn, MNode targetMn, List<Identifier> oreIdentifiers) {
+    public void copyDataPackages(CNode sourceCN, MNode targetMN, List<Identifier> oreIdentifiers) {
         try {
             int packageCount = 0;
             for (Identifier orePid : oreIdentifiers) {
@@ -126,11 +126,11 @@ public class ExampleDataPackageUpload {
                 int docCount = 0;
                 boolean downloadedAllDocs = true;
 
-                Set<String> uniquePids = getUniqueIdsFromOre(orePid, sourceCn);
+                Set<String> uniquePids = getUniqueIdsFromOre(orePid, sourceCN);
                 for (String pidString : uniquePids) {
                     System.out.println("Id: " + pidString);
                     Identifier docPid = D1TypeBuilder.buildIdentifier(pidString);
-                    InputStream is = getDocumentFromCnResolve(sourceCn, docPid);
+                    InputStream is = getDocumentFromCnResolve(sourceCN, docPid);
                     if (is == null) {
                         System.out.println("unable to resolve pid: " + docPid.getValue()
                                 + " skipping to next data package.");
@@ -139,11 +139,11 @@ public class ExampleDataPackageUpload {
                     }
                     String docFilePath = tmpDir.getAbsolutePath() + "//doc" + docCount;
                     writeDocToDir(tmpDir, is, docFilePath);
-                    writeSystemMetadataToDir(sourceCn, docPid, docFilePath);
+                    writeSystemMetadataToDir(sourceCN, docPid, docFilePath);
                     docCount++;
                 }
                 if (downloadedAllDocs) {
-                    boolean success = uploadDataPackageWithRetry(targetMn, tmpDir, 5);
+                    boolean success = uploadDataPackageWithRetry(targetMN, tmpDir, 5);
                     if (success) {
                         deleteTempPackageDir(tmpDir);
                     }
