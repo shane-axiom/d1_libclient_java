@@ -144,6 +144,7 @@ public class D1Client {
 			throw D1Node.recastClientSideExceptionToServiceFailure(e);
 		}
         MNode mn = new MNode(mnBaseUrl);
+        mn.setNodeId(nodeRef.getValue());
         return mn;
     }
     
