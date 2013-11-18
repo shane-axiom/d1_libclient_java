@@ -135,6 +135,7 @@ public class ResourceMapFactoryTest {
 //		String resourceMaps = "/D1shared/resourceMaps/EDAC_draft.xml";
 //		String resourceMaps = "/D1shared/resourceMaps/rdf-xml-python-a-cn_resolved.xml";
 		String resourceMaps = "/D1shared/resourceMaps/rdf-xml-java-1.xml";
+//		String resourceMaps = "/D1shared/resourceMaps/libclient_python_example_2013_11_5.xml";
 		InputStream is = this.getClass().getResourceAsStream(resourceMaps);
 		
 		Map<Identifier, Map<Identifier, List<Identifier>>> rm = 
@@ -174,16 +175,17 @@ public class ResourceMapFactoryTest {
 	{
 		String[] files = new String[]{
 				"libclient_python_example_2013_04_16.xml",
+				"libclient_python_example_2013_11_5.xml",
 				"libclient_java_example_2013_04_15.xml",
 				"missingIsDescribedByTriple.xml",
-				"test_ResMap_isByOnly_5.xml",
+//				"test_ResMap_isByOnly_5.xml",
 //				"test_ResMap_isByOnly_5000.xml",
-				"test_ResMap_mixedDocDocBy_10.xml",
-				"test_ResMap_DocsOnly_10.xml"
+//				"test_ResMap_mixedDocDocBy_10.xml",
+//				"test_ResMap_DocsOnly_10.xml"
 //				"merritt_literal_describes_object.xml",
 //				"merritt_literal_documents_object.xml",
 //				"merritt_literal_aggregates_object.xml",
-//				"merritt_fixed_describes_object.xml"
+				"merritt_fixed_describes_object.xml"
 				};
 		
 		boolean threwException = false;
