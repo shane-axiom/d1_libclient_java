@@ -212,8 +212,15 @@ public class DataoneEMLParser
                     
                     // look for CSV files
                     if ( nl4.getLength() > 0 ) {
-                      log.debug("Found a csv format");
-                      formatId.setValue("text/csv");
+                        log.debug("Found a simpleDelimited format");
+                        NodeList nl5 = runXPath("dataFormat/textFormat/simpleDelimited/fieldDelimiter", physicalNode);
+                        if (nl5.getLength() > 0) {
+                        	String fieldDelimiter = nl5.item(0).getFirstChild().getNodeValue();
+                        	if (fieldDelimiter.equals(",")) {
+	                        	log.debug("Found a csv format");
+	                        	formatId.setValue("text/csv");
+                        	}
+                        }
                     }
                 }
                 else if (nl2.getLength() > 0) {
