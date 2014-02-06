@@ -1129,6 +1129,7 @@ public abstract class D1Node {
      */
     protected static ServiceFailure recastClientSideExceptionToServiceFailure(Exception e) {
     	ServiceFailure sfe = new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
+                sfe.initCause(e);
 		sfe.setStackTrace(e.getStackTrace());
     	return sfe;
     }
