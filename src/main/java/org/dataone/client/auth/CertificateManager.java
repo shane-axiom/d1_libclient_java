@@ -162,7 +162,7 @@ public class CertificateManager {
      */
     public CertificateManager() {
     	try {
-	    	keyStorePassword = Settings.getConfiguration().getString("certificate.keystore.password");
+	    	keyStorePassword = Settings.getConfiguration().getString("certificate.keystore.password", "changeit");
 	    	keyStoreType = Settings.getConfiguration().getString("certificate.keystore.type", KeyStore.getDefaultType());
 	    	trustStoreIncludesD1CAs = Settings.getConfiguration().getBoolean("certificate.truststore.includeD1CAs", true);
 	    	certificates = new HashMap<String, X509Certificate>();
