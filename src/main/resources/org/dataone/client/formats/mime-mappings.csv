@@ -56,6 +56,7 @@ http://digir.net/schema/conceptual/darwin/2003/1.0/darwin2.xsd,text/xml,.xml
 http://dublincore.org/schemas/xmls/qdc/2008/02/11/qualifieddc.xsd,text/xml,.xml
 http://dublincore.org/schemas/xmls/qdc/2008/02/11/simpledc.xsd,text/xml,.xml
 http://purl.org/dryad/terms/,text/xml,.xml
+http://datadryad.org/profile/v3.1,text/xml,.xml
 http://rs.tdwg.org/dwc/xsd/simpledarwincore/,text/xml,.xml
 http://www.cuahsi.org/waterML/1.0/,text/xml,.xml
 http://www.cuahsi.org/waterML/1.1/,text/xml,.xml
