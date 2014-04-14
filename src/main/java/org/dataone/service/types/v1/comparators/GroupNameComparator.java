@@ -25,26 +25,31 @@ import org.dataone.service.types.v1.Group;
 
 
 /**
- * A comparator for comparing the Group objects base on the group name.
+ * A comparator for comparing the Group objects base on the GroupName property (String)
+ * 
+ * Note: this comparator imposes orderings that are inconsistent with equals.
  * @author tao
  *
  */
-public class GroupNameComparator implements Comparator {
+public class GroupNameComparator implements Comparator<Group> 
+//This class does not implement Serializable as recommended because comparator orderings are inconsistent with equals
+{
 
   /** 
    * Compares order based on the String groupName of two Group objects.
+   * 
+   * Note: this comparator imposes orderings that are inconsistent with equals.
    * @param o1
    * @param o2
    * @return int 
    * @throws ClassCastException 
    */
   @Override
-  public int  compare(Object o1, Object o2) throws ClassCastException, NullPointerException {
-    if(o1 == null || o2 == null) {
+  public int  compare(Group group1, Group group2) throws ClassCastException, NullPointerException {
+    if(group1 == null || group2 == null) {
       throw new NullPointerException("GroupNameComparator.compare - the parameters of compare method can't be null.");
     }
-    Group group1 = (Group) o1;
-    Group group2 = (Group) o2;
+
     if(group1.getGroupName() == null || group2.getGroupName() == null ) {
       throw new NullPointerException("GroupNameComparator.compare - the group names of the Group objects can't be null.");
     }
