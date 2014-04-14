@@ -69,7 +69,7 @@ public class SysMetaModificationDateComparatorTest {
         date3.setTime(200000000);
         meta3.setDateSysMetadataModified(date3);
         
-        SysMetaModificationDateComparator comparator = new SysMetaModificationDateComparator();
+        SystemMetadataDateModifiedComparator comparator = new SystemMetadataDateModifiedComparator();
         assertTrue("SysMetaModificationDateComparatorTest.testCompares - the meta1 should be less than meta2", 
         		comparator.compare(meta1, meta2) <0);
         
@@ -124,7 +124,7 @@ public class SysMetaModificationDateComparatorTest {
         date3.setTime(300000000);
         meta3.setDateSysMetadataModified(date3);
         
-        SysMetaModificationDateComparator comparator = new SysMetaModificationDateComparator();
+        SystemMetadataDateModifiedComparator comparator = new SystemMetadataDateModifiedComparator();
         assertTrue("SysMetaModificationDateComparatorTest.testCompares - is transitive", 
         		comparator.compare(meta1, meta2) < 0 && comparator.compare(meta2, meta3) < 0
         		&& comparator.compare(meta1,meta3) < 0);
@@ -164,7 +164,7 @@ public class SysMetaModificationDateComparatorTest {
         meta5.setDateSysMetadataModified(date5);
         
         
-        SysMetaModificationDateComparator comparator = new SysMetaModificationDateComparator();
+        SystemMetadataDateModifiedComparator comparator = new SystemMetadataDateModifiedComparator();
         
         assertTrue("meta1 and meta2 should be equal", comparator.compare(meta1, meta2) == 0);
         
