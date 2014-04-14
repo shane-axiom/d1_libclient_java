@@ -23,11 +23,12 @@ import static org.junit.Assert.*;
 
 import java.util.Date;
 
+import org.dataone.service.types.v1.Group;
 import org.dataone.service.types.v1.SystemMetadata;
 import org.junit.Test;
 
 /**
- * The Junit test class to test the class SysMetaUploadDateComparator.
+ * The Junit test class to test the class GroupNameComparator.
  * 
  * The Contract:
  * Compares its two arguments for order. Returns a negative integer, zero, or a positive integer as the first argument is less than, equal to, or greater than the second.
@@ -46,7 +47,7 @@ import org.junit.Test;
  * @author tao
  *
  */
-public class SysMetaUploadDateComparatorTest {
+public class GroupNameComparatorTest {
  
 	/*
 	 * The implementor must ensure that sgn(compare(x, y)) == -sgn(compare(y, x)) for all x and y. 
@@ -54,35 +55,30 @@ public class SysMetaUploadDateComparatorTest {
 	 */
 	@Test
     public void testCompare_Contract_1() {
-        SystemMetadata meta1 = new SystemMetadata();
-        Date date1 = new Date();
-        date1.setTime(100000000);
-        meta1.setDateUploaded(date1);
+        Group group1 = new Group();
+        group1.setGroupName("foo");
         
-        SystemMetadata meta2 = new SystemMetadata();
-        Date date2 = new Date();
-        date2.setTime(200000000);
-        meta2.setDateUploaded(date2);
+        Group group2 = new Group();
+        group2.setGroupName("bar");
         
-        SystemMetadata meta3 = new SystemMetadata();
-        Date date3 = new Date();
-        date3.setTime(200000000);
-        meta3.setDateUploaded(date3);
+        Group group3 = new Group();
+        group3.setGroupName("bar");
         
-        SysMetaUploadDateComparator comparator = new SysMetaUploadDateComparator();
+        
+        GroupNameComparator comparator = new GroupNameComparator();
         assertTrue("SysMetaModificationDateComparatorTest.testCompares - the meta1 should be less than meta2", 
-        		comparator.compare(meta1, meta2) <0);
+        		comparator.compare(group1, group2) > 0);
         
         assertTrue("SysMetaModificationDateComparatorTest.testCompares - the meta2 should be greater than meta1", 
-        		comparator.compare(meta2, meta1) > 0);
+        		comparator.compare(group2, group1) < 0);
         
         assertTrue("SysMetaModificationDateComparatorTest.testCompares - the meta2 should be equal to meta3", 
-        		comparator.compare(meta2, meta3) == 0);
+        		comparator.compare(group2, group3) == 0);
         
         
         String resultA;
         try {
-        	comparator.compare(meta1, null);
+        	comparator.compare(group1, null);
         	resultA = "int";
         } catch (Exception e) {
         	resultA = "exception";
@@ -90,14 +86,14 @@ public class SysMetaUploadDateComparatorTest {
         
         String resultB;
         try {
-        	comparator.compare(null, meta1);
+        	comparator.compare(null, group1);
         	resultB = "int";
         } catch (Exception e) {
         	resultB = "exception";
         }
         
-        assertTrue("SysMetaModificationDateComparatorTest.testCompares - " +
-        		"meta1 vs. null should throw exception for both comparisons",
+        assertTrue("GroupNameComparatorTest.testCompares - " +
+        		"group1 vs. null should throw exception for both comparisons",
         		resultA.equals(resultB));
         
     }
@@ -109,25 +105,19 @@ public class SysMetaUploadDateComparatorTest {
 	
 	@Test
     public void testCompare_Contract_2() {
-        SystemMetadata meta1 = new SystemMetadata();
-        Date date1 = new Date();
-        date1.setTime(100000000);
-        meta1.setDateUploaded(date1);
+        Group group1 = new Group();
+        group1.setGroupName("aaaaa");
         
-        SystemMetadata meta2 = new SystemMetadata();
-        Date date2 = new Date();
-        date2.setTime(200000000);
-        meta2.setDateUploaded(date2);
+        Group group2 = new Group();
+        group2.setGroupName("bbbbb");
         
-        SystemMetadata meta3 = new SystemMetadata();
-        Date date3 = new Date();
-        date3.setTime(300000000);
-        meta3.setDateUploaded(date3);
+        Group group3 = new Group();
+        group3.setGroupName("ccccc");
         
-        SysMetaUploadDateComparator comparator = new SysMetaUploadDateComparator();
+        GroupNameComparator comparator = new GroupNameComparator();
         assertTrue("SysMetaModificationDateComparatorTest.testCompares - is transitive", 
-        		comparator.compare(meta1, meta2) < 0 && comparator.compare(meta2, meta3) < 0
-        		&& comparator.compare(meta1,meta3) < 0);
+        		comparator.compare(group1, group2) < 0 && comparator.compare(group2, group3) < 0
+        		&& comparator.compare(group1,group3) < 0);
         
  
     }
@@ -138,46 +128,60 @@ public class SysMetaUploadDateComparatorTest {
 	 */
 	@Test
     public void testCompare_Contract_3() {
-        SystemMetadata meta1 = new SystemMetadata();
+        Group group1 = new Group();
+        group1.setGroupName("bbbbb");
+        
+        Group group2 = new Group();
+        group2.setGroupName("bbbbb");
+        
+        Group group3 = new Group();
+        group3.setGroupName("ccccc");
+        
+        Group group4 = new Group();
+        group4.setGroupName("aaaaa");
+        
+        Group group5 = new Group();
+        group5.setGroupName("bbbbb");
+		
+		SystemMetadata meta1 = new SystemMetadata();
         Date date1 = new Date();
         date1.setTime(200000000);
-        meta1.setDateUploaded(date1);
+        meta1.setDateSysMetadataModified(date1);
         
         SystemMetadata meta2 = new SystemMetadata();
         Date date2 = new Date();
         date2.setTime(200000000);
-        meta2.setDateUploaded(date2);
+        meta2.setDateSysMetadataModified(date2);
         
         SystemMetadata meta3 = new SystemMetadata();
         Date date3 = new Date();
         date3.setTime(300000000);
-        meta3.setDateUploaded(date3);
+        meta3.setDateSysMetadataModified(date3);
         
         SystemMetadata meta4 = new SystemMetadata();
         Date date4 = new Date();
         date4.setTime(100000000);
-        meta4.setDateUploaded(date4);
+        meta4.setDateSysMetadataModified(date4);
         
         SystemMetadata meta5 = new SystemMetadata();
         Date date5 = new Date();
-        date5.setTime(200000000);
-        meta5.setDateUploaded(date5);
+        date5.setTime(100000000);
+        meta5.setDateSysMetadataModified(date5);
         
         
-        SysMetaUploadDateComparator comparator = new SysMetaUploadDateComparator();
+        GroupNameComparator comparator = new GroupNameComparator();
         
-        assertTrue("meta1 and meta2 should be equal", comparator.compare(meta1, meta2) == 0);
+        assertTrue("group1 and group2 should be equal", comparator.compare(group1, group2) == 0);
         
-        assertTrue("sgn(compare(meta1, meta3)==sgn(compare(meta2,meta3))", 
-        		comparator.compare(meta1, meta3) == comparator.compare(meta2, meta3));
+        assertTrue("sgn(compare(group1, group3)==sgn(compare(group2,group3))", 
+        		comparator.compare(group1, group3) == comparator.compare(group2, group3));
         
-        assertTrue("sgn(compare(meta1, meta4)==sgn(compare(meta2,meta4))", 
-        		comparator.compare(meta1, meta4) == comparator.compare(meta2, meta4));
+        assertTrue("sgn(compare(group1, group4)==sgn(compare(group2,group4))", 
+        		comparator.compare(group1, group4) == comparator.compare(group2, group4));
         
-        assertTrue("sgn(compare(meta1, meta5)==sgn(compare(meta2,meta5))", 
-        		comparator.compare(meta1, meta5) == comparator.compare(meta2, meta5));
+        assertTrue("sgn(compare(group1, group5)==sgn(compare(group2,group5))", 
+        		comparator.compare(group1, group5) == comparator.compare(group2, group5));
         
- 
     }
 	
 	

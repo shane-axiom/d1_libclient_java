@@ -25,27 +25,34 @@ import java.util.Date;
 import org.dataone.service.types.v1.SystemMetadata;
 
 /**
- * A Comparator compares two SystemMetadata objects base on the date of the upload. 
+ * A Comparator that compares two SystemMetadata objects based on the DateUploaded property (Date) 
+ * 
+ * Note: this comparator imposes orderings that are inconsistent with equals.
  * @author tao
  *
  */
-public class SysMetaUploadDateComparator implements Comparator {
+public class SysMetaUploadDateComparator implements Comparator<SystemMetadata> 
+//This class does not implement Serializable as recommended because comparator orderings are inconsistent with equals
+{
     /** 
      * Compares the order based on the uploaded date of the two SystemMetadata objects.
+     * 
+     * Note: this comparator imposes orderings that are inconsistent with equals.
      * @param o1
      * @param o2
      * @return a negative integer, zero, or a positive integer as the first argument is less than, equal to, or greater than the second.
      * @throws ClassCastException 
      */
     @Override
-    public int  compare(Object o1, Object o2) throws ClassCastException, NullPointerException {
-      if(o1 == null || o2 == null) {
+    public int  compare(SystemMetadata sysmeta1, SystemMetadata sysmeta2) 
+    throws ClassCastException, NullPointerException 
+    {
+      if(sysmeta1 == null || sysmeta2 == null) {
         throw new NullPointerException("SysMetaUploadDateComparator.compare - the parameters of compare method can't be null.");
       }
-      SystemMetadata meta1 = (SystemMetadata) o1;
-      SystemMetadata meta2 = (SystemMetadata) o2;
-      Date date1 = meta1.getDateUploaded();
-      Date date2 = meta2.getDateUploaded();
+      
+      Date date1 = sysmeta1.getDateUploaded();
+      Date date2 = sysmeta2.getDateUploaded();
       if(date1 == null || date2 == null) {
         throw new NullPointerException("SysMetaUploadDateComparator.compare - the upload date of the SystemMetadata can't be null.");
       }
