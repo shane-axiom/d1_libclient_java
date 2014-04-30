@@ -22,12 +22,7 @@
 
 package org.dataone.client;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.TreeMap;
 
 import org.dataone.client.types.ObsoletesChain;
 import org.dataone.configuration.Settings;
@@ -91,6 +86,35 @@ public class D1Client {
         return cn;
     }
     
+	/**
+	 * Get the client instance of the Coordinating Node object for calling
+	 * Coordinating Node services. Allows caller to specify the CN URL. NOTE:
+	 * this will be used by the shared static instance.
+	 * 
+	 * @param cnUrl the CN' baseUrl
+	 * @return the cn
+	 * @throws ServiceFailure
+	 */
+	public static CNode getCN(String cnUrl) throws ServiceFailure {
+
+		// determine which implementation to instantiate
+		String cnClassName = Settings.getConfiguration().getString("D1Client.cnClassName");
+
+		if (cnClassName != null) {
+			// construct it using reflection
+			try {
+				cn = (CNode) Class.forName(cnClassName).newInstance();
+			} catch (Exception e) {
+				throw D1Node.recastClientSideExceptionToServiceFailure(e);
+			}
+			cn.setNodeBaseServiceUrl(cnUrl);
+		} else {
+			// default
+			cn = new CNode(cnUrl, null);
+		}
+
+		return cn;
+	}
     
     /**
 	 * Get the client instance of the Coordinating Node object for calling Coordinating Node services.
@@ -103,7 +127,7 @@ public class D1Client {
 	 * @throws ServiceFailure 
      */
     public static CNode getCN() throws ServiceFailure {
-        return getCN(null);
+        return getCN((Session)null);
     }
     
     
