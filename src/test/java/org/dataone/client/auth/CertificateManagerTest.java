@@ -125,7 +125,7 @@ public class CertificateManagerTest {
         cm.displayCertificate(cert);
         
         // Verify the subject's certificate
-        boolean valid = cm.verify(cert, caCert);
+        boolean valid = CertificateManager.verify(cert, caCert);
         assertTrue(valid);
     }
  
@@ -212,7 +212,7 @@ public class CertificateManagerTest {
         
         // Verify the subject's certificate, but expect this to fail because we
         // are using the incorrect CA certificate
-        boolean valid = cm.verify(cert, caCert);
+        boolean valid = CertificateManager.verify(cert, caCert);
         assertFalse(valid);
     }
     

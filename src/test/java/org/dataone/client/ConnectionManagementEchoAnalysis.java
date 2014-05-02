@@ -52,8 +52,8 @@ import org.junit.Test;
 public class ConnectionManagementEchoAnalysis {
 
 	private static String echoNodeURL = "http://dev-testing.dataone.org/testsvc";
-	private static String echoResource = "echo";
-	private static String mmEchoResource = "echomm";
+//	private static String echoResource = "echo";
+//	private static String mmEchoResource = "echomm";
 	
 
 	/**
@@ -173,7 +173,7 @@ public class ConnectionManagementEchoAnalysis {
 	        	} catch (Exception e) {
 	        		e.printStackTrace(System.err);
 	        	}
-	        	Thread.currentThread().sleep(6*1000);
+	        	Thread.sleep(6*1000);
 	        }
 			
 			
