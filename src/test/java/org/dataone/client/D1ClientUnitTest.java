@@ -36,7 +36,6 @@ import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1.Subject;
 import org.dataone.service.types.v1.SubjectInfo;
-import org.dataone.service.types.v1.SubjectList;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
