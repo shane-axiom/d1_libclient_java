@@ -1021,7 +1021,8 @@ public abstract class D1Node {
         D1RestClient client = new D1RestClient(session);
         InputStream is = null;
         try {
-        	is = client.doGetRequest(finalUrl);
+        	byte[] bytes = IOUtils.toByteArray(client.doGetRequest(finalUrl));
+        	is = new ByteArrayInputStream(bytes); 
 		}
         catch (BaseException be) {
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
