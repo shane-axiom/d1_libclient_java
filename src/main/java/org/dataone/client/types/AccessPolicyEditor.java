@@ -1,4 +1,4 @@
-package org.dataone.client;
+package org.dataone.client.types;
 
 import java.util.Arrays;
 import java.util.List;

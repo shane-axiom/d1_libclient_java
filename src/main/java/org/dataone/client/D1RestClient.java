@@ -37,22 +37,9 @@ import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.impl.client.AbstractHttpClient;
 import org.dataone.client.auth.CertificateManager;
+import org.dataone.client.exception.ClientSideException;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
-import org.dataone.service.exceptions.AuthenticationTimeout;
-import org.dataone.service.exceptions.IdentifierNotUnique;
-import org.dataone.service.exceptions.InsufficientResources;
-import org.dataone.service.exceptions.InvalidCredentials;
-import org.dataone.service.exceptions.InvalidRequest;
-import org.dataone.service.exceptions.InvalidSystemMetadata;
-import org.dataone.service.exceptions.InvalidToken;
-import org.dataone.service.exceptions.NotAuthorized;
-import org.dataone.service.exceptions.NotFound;
-import org.dataone.service.exceptions.NotImplemented;
-import org.dataone.service.exceptions.ServiceFailure;
-import org.dataone.service.exceptions.SynchronizationFailed;
-import org.dataone.service.exceptions.UnsupportedMetadataType;
-import org.dataone.service.exceptions.UnsupportedType;
-import org.dataone.service.exceptions.VersionMismatch;
+import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.util.Constants;
 import org.dataone.service.util.ExceptionHandler;
@@ -63,7 +50,7 @@ import org.dataone.service.util.ExceptionHandler;
  * 
  * 
  */
-public class D1RestClient {
+public class D1RestClient implements MultipartRestClient {
 	
 	protected static Log log = LogFactory.getLog(D1RestClient.class);
 	
@@ -73,13 +60,13 @@ public class D1RestClient {
 	 * Default constructor to create a new instance.  SSL is setup using
 	 * the default location for the client certificate.
 	 */
-	public D1RestClient() {
-		this.rc = new RestClient();
-		setupSSL(null);
-	}
+//	public D1RestClient() {
+//		this.rc = new DefaultRestClient();
+//		setupSSL(null);
+//	}
 	
 	
-	public D1RestClient(AbstractHttpClient httpClient) {
+	public D1RestClient(HttpClient httpClient) {
 		this.rc = new RestClient(httpClient);
 		setupSSL(null);
 	}
@@ -90,13 +77,13 @@ public class D1RestClient {
 	 * The session's subject is used to find the registered certificate and key
 	 * 
 	 */
-	public D1RestClient(Session session) {
-		this.rc = new RestClient();
-		setupSSL(session);
-	}
+//	public D1RestClient(Session session) {
+//		this.rc = new DefaultRestClient();
+//		setupSSL(session);
+//	}
 
 	
-	public D1RestClient(AbstractHttpClient httpClient, Session session) {
+	public D1RestClient(HttpClient httpClient, Session session) {
 		this.rc = new RestClient(httpClient);
 		setupSSL(session);
 	}
@@ -129,6 +116,7 @@ public class D1RestClient {
 	{
 		getHttpClient().getConnectionManager().closeIdleConnections(0,TimeUnit.MILLISECONDS);
 	}
+
 	/**
 	 * Sets the CONNECTION_TIMEOUT and SO_TIMEOUT values for the underlying httpClient.
 	 * (max delay in initial response, max delay between tcp packets, respectively).  
@@ -138,9 +126,9 @@ public class D1RestClient {
 	 * 
 	 * @param milliseconds
 	 */
-	public void setTimeouts(int milliseconds) {
-		this.rc.setTimeouts(milliseconds);
-	}
+//	public void setTimeouts(int milliseconds) {
+//		((AbstractHttpClient) this.getHttpClient()).setTimeouts(milliseconds);
+//	}
  
 	
 	/**
@@ -183,76 +171,77 @@ public class D1RestClient {
 	}
 	
 	
-	/**
-	 * Perform an HTTP GET request, setting the headers first and parsing /filtering
-	 * exceptions to the exception stream on the response into their
-	 * respective java instances.
-	 * 
-	 * @param url - the encoded url string
-	 * @return the InputStream from the http Response
-	 * 
-	 * @throws AuthenticationTimeout
-	 * @throws IdentifierNotUnique
-	 * @throws InsufficientResources
-	 * @throws InvalidCredentials
-	 * @throws InvalidRequest
-	 * @throws InvalidSystemMetadata
-	 * @throws InvalidToken
-	 * @throws NotAuthorized
-	 * @throws NotFound
-	 * @throws NotImplemented
-	 * @throws ServiceFailure
-	 * @throws SynchronizationFailed
-	 * @throws UnsupportedMetadataType
-	 * @throws UnsupportedQueryType
-	 * @throws UnsupportedType
-	 * @throws IllegalStateException
-	 * @throws ClientProtocolException
-	 * @throws IOException
-	 * @throws HttpException
-	 * @throws VersionMismatch 
+	/* (non-Javadoc)
+	 * @see org.dataone.client.MultipartRestClient#doGetRequest(java.lang.String)
 	 */
+	@Override
 	public InputStream doGetRequest(String url) 
-	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
-	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
-	NotAuthorized, NotFound, NotImplemented, ServiceFailure, SynchronizationFailed,
-	UnsupportedMetadataType, UnsupportedType,
-	IllegalStateException, ClientProtocolException, IOException, HttpException, VersionMismatch 
+	throws BaseException, ClientSideException
 	{
 		return doGetRequest(url,false);
 	}
 	
+	/* (non-Javadoc)
+	 * @see org.dataone.client.MultipartRestClient#doGetRequest(java.lang.String, boolean)
+	 */
+	@Override
 	public InputStream doGetRequest(String url, boolean allowRedirect) 
-	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
-	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
-	NotAuthorized, NotFound, NotImplemented, ServiceFailure, SynchronizationFailed,
-	UnsupportedMetadataType, UnsupportedType,
-	IllegalStateException, ClientProtocolException, IOException, HttpException, VersionMismatch 
+			throws BaseException, ClientSideException
 	{
 		rc.setHeader("Accept", "text/xml");
-		return ExceptionHandler.filterErrors(rc.doGetRequest(url), allowRedirect);
+		try {
+			return ExceptionHandler.filterErrors(rc.doGetRequest(url), allowRedirect);
+		} catch (IllegalStateException e) {
+			throw new ClientSideException("", e);
+		} catch (ClientProtocolException e) {
+			throw new ClientSideException("", e);
+		} catch (IOException e) {
+			throw new ClientSideException("", e);
+		} catch (HttpException e) {
+			throw new ClientSideException("", e);
+		}
 	}
 
+	/* (non-Javadoc)
+	 * @see org.dataone.client.MultipartRestClient#doGetRequestForHeaders(java.lang.String)
+	 */
+	@Override
 	public Header[] doGetRequestForHeaders(String url) 
-	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
-	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
-	NotAuthorized, NotFound, NotImplemented, ServiceFailure, SynchronizationFailed,
-	UnsupportedMetadataType, UnsupportedType,
-	IllegalStateException, ClientProtocolException, IOException, HttpException, VersionMismatch 
+			throws BaseException, ClientSideException
 	{
 		rc.setHeader("Accept", "text/xml");
-		return ExceptionHandler.filterErrorsHeader(rc.doGetRequest(url),Constants.GET);
+		try {
+			return ExceptionHandler.filterErrorsHeader(rc.doGetRequest(url),Constants.GET);
+		} catch (IllegalStateException e) {
+			throw new ClientSideException("", e);
+		} catch (ClientProtocolException e) {
+			throw new ClientSideException("", e);
+		} catch (IOException e) {
+			throw new ClientSideException("", e);
+		} catch (HttpException e) {
+			throw new ClientSideException("", e);
+		}
 	}
 	
+	/* (non-Javadoc)
+	 * @see org.dataone.client.MultipartRestClient#doDeleteRequest(java.lang.String)
+	 */
+	@Override
 	public InputStream doDeleteRequest(String url) 
-	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
-	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
-	NotAuthorized, NotFound, NotImplemented, ServiceFailure, SynchronizationFailed,
-	UnsupportedMetadataType, UnsupportedType,
-	IllegalStateException, ClientProtocolException, IOException, HttpException, VersionMismatch 
+			throws BaseException, ClientSideException
 	{
 		rc.setHeader("Accept", "text/xml");
-		return ExceptionHandler.filterErrors(rc.doDeleteRequest(url));
+		try {
+			return ExceptionHandler.filterErrors(rc.doDeleteRequest(url));
+		} catch (IllegalStateException e) {
+			throw new ClientSideException("", e);
+		} catch (ClientProtocolException e) {
+			throw new ClientSideException("", e);
+		} catch (IOException e) {
+			throw new ClientSideException("", e);
+		} catch (HttpException e) {
+			throw new ClientSideException("", e);
+		}
 	}
 	
 //	public InputStream doDeleteRequest(String url, SimpleMultipartEntity mpe) 
@@ -266,37 +255,67 @@ public class D1RestClient {
 //		return ExceptionHandler.filterErrors(rc.doDeleteRequest(url, mpe));
 //	}
 	
+	/* (non-Javadoc)
+	 * @see org.dataone.client.MultipartRestClient#doHeadRequest(java.lang.String)
+	 */
+	@Override
 	public Header[] doHeadRequest(String url) 
-	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
-	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
-	NotAuthorized, NotFound, NotImplemented, ServiceFailure, SynchronizationFailed,
-	UnsupportedMetadataType, UnsupportedType,
-	IllegalStateException, ClientProtocolException, IOException, HttpException, VersionMismatch 
+			throws BaseException, ClientSideException
 	{
 		rc.setHeader("Accept", "text/xml");
-		return ExceptionHandler.filterErrorsHeader(rc.doHeadRequest(url),Constants.HEAD);
+		try {
+			return ExceptionHandler.filterErrorsHeader(rc.doHeadRequest(url),Constants.HEAD);
+		} catch (IllegalStateException e) {
+			throw new ClientSideException("", e);
+		} catch (ClientProtocolException e) {
+			throw new ClientSideException("", e);
+		} catch (IOException e) {
+			throw new ClientSideException("", e);
+		} catch (HttpException e) {
+			throw new ClientSideException("", e);
+		}
 	}
 	
+	/* (non-Javadoc)
+	 * @see org.dataone.client.MultipartRestClient#doPutRequest(java.lang.String, org.dataone.mimemultipart.SimpleMultipartEntity)
+	 */
+	@Override
 	public InputStream doPutRequest(String url, SimpleMultipartEntity entity) 
-	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
-	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
-	NotAuthorized, NotFound, NotImplemented, ServiceFailure, SynchronizationFailed,
-	UnsupportedMetadataType, UnsupportedType,
-	IllegalStateException, ClientProtocolException, IOException, HttpException, VersionMismatch 
+			throws BaseException, ClientSideException
 	{
 		rc.setHeader("Accept", "text/xml");
-		return ExceptionHandler.filterErrors(rc.doPutRequest(url, entity));
+		try {
+			return ExceptionHandler.filterErrors(rc.doPutRequest(url, entity));
+		} catch (IllegalStateException e) {
+			throw new ClientSideException("", e);
+		} catch (ClientProtocolException e) {
+			throw new ClientSideException("", e);
+		} catch (IOException e) {
+			throw new ClientSideException("", e);
+		} catch (HttpException e) {
+			throw new ClientSideException("", e);
+		}
 	}
 	
+	/* (non-Javadoc)
+	 * @see org.dataone.client.MultipartRestClient#doPostRequest(java.lang.String, org.dataone.mimemultipart.SimpleMultipartEntity)
+	 */
+	@Override
 	public InputStream doPostRequest(String url, SimpleMultipartEntity entity) 
-	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources, 
-	InvalidCredentials, InvalidRequest, InvalidSystemMetadata, InvalidToken, 
-	NotAuthorized, NotFound, NotImplemented, ServiceFailure, SynchronizationFailed,
-	UnsupportedMetadataType, UnsupportedType,
-	IllegalStateException, ClientProtocolException, IOException, HttpException, VersionMismatch 
+			throws BaseException, ClientSideException
 	{
 		rc.setHeader("Accept", "text/xml");
-		return ExceptionHandler.filterErrors(rc.doPostRequest(url,entity));
+		try {
+			return ExceptionHandler.filterErrors(rc.doPostRequest(url,entity));
+		} catch (IllegalStateException e) {
+			throw new ClientSideException("", e);
+		} catch (ClientProtocolException e) {
+			throw new ClientSideException("", e);
+		} catch (IOException e) {
+			throw new ClientSideException("", e);
+		} catch (HttpException e) {
+			throw new ClientSideException("", e);
+		}
 	}
 	
 

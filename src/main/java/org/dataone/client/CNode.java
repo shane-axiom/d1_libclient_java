@@ -27,9 +27,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.logging.LogFactory;
-import org.apache.http.HttpException;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.params.ClientPNames;
+import org.dataone.client.exception.ClientSideException;
 import org.dataone.configuration.Settings;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.cn.v1.CNAuthorization;
@@ -118,7 +117,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	private long lastNodeListRefreshTimeMS = 0;
     private Integer nodelistRefreshIntervalSeconds = 2 * 60;
 	
-    private static final String REPLICATION_TIMEOUT_PROPERTY = "D1Client.CNode.replication.timeout";
+ //   private static final String REPLICATION_TIMEOUT_PROPERTY = "D1Client.CNode.replication.timeout";
 	
 	/**
 	 * Construct a Coordinating Node, passing in the base url for node services. The CN
@@ -313,13 +312,11 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	{
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_FORMATS);
 
-		// send the request
-		D1RestClient client = new D1RestClient();
-                
+		// send the request                
 		ObjectFormatList formatList = null;
 		
 		try {			
-			InputStream is = client.doGetRequest(url.getUrl());
+			InputStream is = this.restClient.doGetRequest(url.getUrl());
 			formatList = deserializeServiceType(ObjectFormatList.class, is);
 
 		} catch (BaseException be) {
@@ -328,15 +325,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
 
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
 		return formatList;
 	}
 
@@ -378,10 +368,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			url.addNextPathElement(formatid.getValue());
 
 			// send the request
-			D1RestClient client = new D1RestClient();
 
 			try {
-				InputStream is = client.doGetRequest(url.getUrl());
+				InputStream is = this.restClient.doGetRequest(url.getUrl());
 				objectFormat = deserializeServiceType(ObjectFormat.class, is);
 
 			} catch (BaseException be) {
@@ -391,15 +380,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 				throw recastDataONEExceptionToServiceFailure(be);
 			} 
-			catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-			catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-			catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-			catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
-			finally {
-				setLatestRequestUrl(client.getLatestRequestUrl());
-				client.closeIdleConnections();
-			}
+			catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
 
 		}
 		return objectFormat;
@@ -414,11 +395,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	{
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_CHECKSUM);
 
-		D1RestClient client = new D1RestClient();
-
 		ChecksumAlgorithmList algorithmList = null;
 		try {
-			InputStream is = client.doGetRequest(url.getUrl());
+			InputStream is = this.restClient.doGetRequest(url.getUrl());
 			algorithmList = deserializeServiceType(ChecksumAlgorithmList.class, is);
 		} catch (BaseException be) {
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
@@ -426,15 +405,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-	
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
+		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+
 		return algorithmList;
 	}
 
@@ -498,11 +470,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_NODE);
 
 		// send the request
-		D1RestClient client = new D1RestClient();
 		NodeList nodelist = null;
 
 		try {
-			InputStream is = client.doGetRequest(url.getUrl());
+			InputStream is = this.restClient.doGetRequest(url.getUrl());
 			nodelist = deserializeServiceType(NodeList.class, is);
 			
 		} catch (BaseException be) {
@@ -511,15 +482,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-	
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
+		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+
 		return nodelist;
 	}
 
@@ -550,13 +514,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw new InvalidRequest("0000","PID cannot be null");
 		}
 		
-		// send the request
-		D1RestClient client = new D1RestClient(session);
-		client.setTimeouts(Settings.getConfiguration()
-				.getInteger("D1Client.CNode.reserveIdentifier.timeout", getDefaultSoTimeout()));
 		Identifier identifier = null;
  		try {
- 			InputStream is = client.doPostRequest(url.getUrl(),smpe);
+ 			InputStream is = this.restClient.doPostRequest(url.getUrl(),smpe);
  			identifier = deserializeServiceType(Identifier.class, is);
  			
 		} catch (BaseException be) {
@@ -569,15 +529,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
 
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
  		return identifier;
 	}
 
@@ -631,10 +584,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		}
     	
 		// send the request
-		D1RestClient client = new D1RestClient(session);
 		
 		try {
-			InputStream is = client.doGetRequest(url.getUrl());
+			InputStream is = this.restClient.doGetRequest(url.getUrl());
 			if (is != null)
 				is.close();
 			
@@ -648,15 +600,13 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
+		catch (ClientSideException e)  {
+			throw recastClientSideExceptionToServiceFailure(e); 
+		} 
+		catch (IOException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
 		}
+
 		return true;
 	}
 
@@ -710,13 +660,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e);	
 		}
 
-        D1RestClient client = new D1RestClient(session);
-        client.setTimeouts(Settings.getConfiguration()
-			.getInteger("D1Client.CNode.create.timeout", getDefaultSoTimeout()));
         Identifier identifier = null;
 
         try {
-        	InputStream is = client.doPostRequest(url.getUrl(), mpe);
+        	InputStream is = this.restClient.doPostRequest(url.getUrl(), mpe);
         	identifier = deserializeServiceType(Identifier.class, is);
         	
 		} catch (BaseException be) {
@@ -732,15 +679,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-      
-        finally {
-        	setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
+		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+
  		return identifier;
 	}
 
@@ -780,12 +720,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient(session);
-                client.setTimeouts(Settings.getConfiguration()
-			.getInteger("D1Client.CNode.registerSystemMetadata.timeout", getDefaultSoTimeout()));
 		Identifier identifier = null;
 		try {
-			InputStream is = client.doPostRequest(url.getUrl(),mpe);
+			InputStream is = this.restClient.doPostRequest(url.getUrl(),mpe);
 			identifier = deserializeServiceType(Identifier.class, is);
 		} catch (BaseException be) {
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
@@ -797,15 +734,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
 
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
  		return identifier;
 	}
 
@@ -845,10 +775,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     		mpe.addParamPart("obsoletedByPid", obsoletedByPid.getValue());
 		mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
 
-		D1RestClient client = new D1RestClient(session);
-
 		try {
-			InputStream is = client.doPutRequest(url.getUrl(), mpe);
+			InputStream is = this.restClient.doPutRequest(url.getUrl(), mpe);
 			if (is != null)
 				is.close();
 
@@ -863,15 +791,13 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+		catch (ClientSideException e)  {
+			throw recastClientSideExceptionToServiceFailure(e); 
+		} 
+		catch (IOException e) {
+			throw recastClientSideExceptionToServiceFailure(e); 
+		} 
 
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
 		return true;
 	}
 
@@ -1003,15 +929,12 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw new NotFound("0000", "'pid' cannot be null");
 		}
         url.addNextPathElement(pid.getValue());
-
-		// send the request
-		D1RestClient client = new D1RestClient(session);
-		client.getHttpClient().getParams().setParameter(ClientPNames.HANDLE_REDIRECTS, false);
+		
 		ObjectLocationList oll = null;
 
 		try {
 			// set flag to true to allow redirects (http.SEE_OTHER) to represent success
-			InputStream is = client.doGetRequest(url.getUrl(),true);
+			InputStream is = this.restClient.doGetRequest(url.getUrl(),true);
 			oll = deserializeServiceType(ObjectLocationList.class, is);
 			
 		} catch (BaseException be) {
@@ -1023,15 +946,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-	
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
+		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+
  		return oll;
 	}
 
@@ -1177,13 +1093,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         url.addNextPathElement(queryType);
         
         String finalUrl = url.getUrl() + "/" + query;
-        
-        D1RestClient client = new D1RestClient(session);
-        client.setTimeouts(Settings.getConfiguration()
-			.getInteger("D1Client.CNode.search.timeout", getDefaultSoTimeout()));
+
         ObjectList objectList = null;
         try {
-            InputStream is = client.doGetRequest(finalUrl);
+            InputStream is = this.restClient.doGetRequest(finalUrl);
             objectList = deserializeServiceType(ObjectList.class, is);
             
 		} catch (BaseException be) {
@@ -1195,15 +1108,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-	
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
+		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+
 		return objectList;
 	}
 
@@ -1242,11 +1148,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
 
 		// send the request
-		D1RestClient client = new D1RestClient(session);
 		Identifier identifier = null;
 
 		try {
-			InputStream is = client.doPutRequest(url.getUrl(),mpe);
+			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe);
 			identifier = deserializeServiceType(Identifier.class, is);
 			
 		} catch (BaseException be) {
@@ -1260,15 +1165,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
 
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
 		return identifier;
 	}
 
@@ -1329,10 +1227,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient(session);
-
 		try {
-			InputStream is = client.doPutRequest(url.getUrl(),mpe);
+			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe);
 			if (is != null)
 				is.close();
 
@@ -1347,15 +1243,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)  {throw recastClientSideExceptionToServiceFailure(e); }
 
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
 		return true;
 	}
 
@@ -1391,11 +1281,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient(session);
-
 		Subject subject = null;
 		try {
-			InputStream is = client.doPostRequest(url.getUrl(),mpe);
+			InputStream is = this.restClient.doPostRequest(url.getUrl(),mpe);
 			subject = deserializeServiceType(Subject.class, is);
 			
 		} catch (BaseException be) {
@@ -1409,15 +1297,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-	
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
+		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+
 		return subject;
 	}
 
@@ -1458,11 +1339,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient(session);
-
 		Subject subject = null;
 		try {
-			InputStream is = client.doPutRequest(url.getUrl(),mpe);
+			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe);
 			subject = deserializeServiceType(Subject.class, is);
 			
 		} catch (BaseException be) {
@@ -1476,15 +1355,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
 
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
 		return subject;
 	}
 
@@ -1513,10 +1385,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		}
 		url.addNextPathElement(subject.getValue());
 		
-        D1RestClient client = new D1RestClient(session);
-
 		try {
-			InputStream is = client.doPutRequest(url.getUrl(),null);
+			InputStream is = this.restClient.doPutRequest(url.getUrl(),null);
 			if (is != null)
 				is.close();
 		
@@ -1529,15 +1399,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-		
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
+		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)  {throw recastClientSideExceptionToServiceFailure(e); }
 		return true;
 	}
 
@@ -1562,11 +1425,11 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw new NotFound("0000","'subject' cannot be null");
 		url.addNextPathElement(subject.getValue());
 
-		D1RestClient client = new D1RestClient(session);
+
 		SubjectInfo subjectInfo = null;
 
 		try {
-			InputStream is = client.doGetRequest(url.getUrl());
+			InputStream is = this.restClient.doGetRequest(url.getUrl());
 			subjectInfo = deserializeServiceType(SubjectInfo.class, is);
 			
 		} catch (BaseException be) {
@@ -1578,15 +1441,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-	
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
+		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+
 		return subjectInfo;
 	}
 
@@ -1615,11 +1471,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	url.addNonEmptyParamPair("start", start);
     	url.addNonEmptyParamPair("count", count);
     	
-		D1RestClient client = new D1RestClient(session);
 		SubjectInfo subjectInfo = null;
 
 		try {
-			InputStream is = client.doGetRequest(url.getUrl());
+			InputStream is = this.restClient.doGetRequest(url.getUrl());
 			subjectInfo = deserializeServiceType(SubjectInfo.class, is);
 			
 		} catch (BaseException be) {
@@ -1631,15 +1486,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-		
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
+		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+
 		return subjectInfo;
 	}
 
@@ -1670,11 +1518,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     		mpe.addParamPart("primarySubject", primarySubject.getValue());
     	if (secondarySubject != null)
     		mpe.addParamPart("secondarySubject", secondarySubject.getValue());
-			
-		D1RestClient client = new D1RestClient(session);
 
 		try {
-			InputStream is = client.doPostRequest(url.getUrl(),mpe);
+			InputStream is = this.restClient.doPostRequest(url.getUrl(),mpe);
 			if (is != null)
 				is.close();
 			
@@ -1689,15 +1535,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)  {throw recastClientSideExceptionToServiceFailure(e); }
 
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
 		return true;
 	}
 
@@ -1725,10 +1565,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		SimpleMultipartEntity mpe = new SimpleMultipartEntity();
 		mpe.addParamPart("subject", subject.getValue());
 
-		D1RestClient client = new D1RestClient(session);
-
 		try {
-			InputStream is = client.doPostRequest(url.getUrl(), mpe);
+			InputStream is = this.restClient.doPostRequest(url.getUrl(), mpe);
 			if (is != null)
 				is.close();
 		
@@ -1743,15 +1581,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
+		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		
 		return true;
 	}
 
@@ -1776,11 +1608,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING_PENDING);
     	url.addNextPathElement(subject.getValue());
     	
-		D1RestClient client = new D1RestClient(session);
 		SubjectInfo subjectInfo = null;
 
 		try {
-			InputStream is = client.doGetRequest(url.getUrl());
+			InputStream is = this.restClient.doGetRequest(url.getUrl());
 			subjectInfo = deserializeServiceType(SubjectInfo.class, is);
 			
 		} catch (BaseException be) {
@@ -1792,15 +1623,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-		
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
+		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+
 		return subjectInfo;
     }
     
@@ -1827,10 +1651,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING_PENDING);
     	url.addNextPathElement(subject.getValue());
 
-		D1RestClient client = new D1RestClient(session);
-
 		try {
-			InputStream is = client.doPutRequest(url.getUrl(), null);
+			InputStream is = this.restClient.doPutRequest(url.getUrl(), null);
 			if (is != null)
 				is.close();
 
@@ -1843,15 +1665,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
+		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)  {throw recastClientSideExceptionToServiceFailure(e); }
 		return true;
 	}
 
@@ -1877,10 +1692,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	{
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING_PENDING);
     	url.addNextPathElement(subject.getValue());
-		D1RestClient client = new D1RestClient(session);
 		
 		try {
-			InputStream is = client.doDeleteRequest(url.getUrl());
+			InputStream is = this.restClient.doDeleteRequest(url.getUrl());
 			if (is != null)
 				is.close();
 
@@ -1893,15 +1707,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
+		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		
 		return true;
 	}
 
@@ -1927,10 +1735,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	{
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING);
     	url.addNextPathElement(subject.getValue());
-		D1RestClient client = new D1RestClient(session);
 
 		try {
-			InputStream is = client.doDeleteRequest(url.getUrl());
+			InputStream is = this.restClient.doDeleteRequest(url.getUrl());
 			if (is != null)
 				is.close();
 
@@ -1943,15 +1750,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
+		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		
 		return true;
 	}
 
@@ -1983,11 +1784,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		}
 
 		// send the request
-		D1RestClient client = new D1RestClient(session);
 		Subject subject = null;
 
 		try {
-			InputStream is = client.doPostRequest(url.getUrl(), mpe);
+			InputStream is = this.restClient.doPostRequest(url.getUrl(), mpe);
 			subject = deserializeServiceType(Subject.class, is);
 			
 		} catch (BaseException be) {
@@ -1999,15 +1799,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-		
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
+		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+
 		return subject;
 	}
 
@@ -2042,10 +1835,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient(session);
-
 		try {
-			InputStream is = client.doPutRequest(url.getUrl(),mpe);
+			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe);
 			if (is != null)
 				is.close();
 			
@@ -2059,15 +1850,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
+		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		
 		return true;
 	}
 
@@ -2103,10 +1888,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient(session);
-
 		try {
-			InputStream is = client.doPutRequest(url.getUrl(),mpe);
+			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe);
 			if (is != null)
 				is.close();
 
@@ -2120,15 +1903,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)  {throw recastClientSideExceptionToServiceFailure(e); }
 		
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
 		return true;
 	}
 
@@ -2161,11 +1938,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient(session);
-
 		NodeReference nodeRef = null;
 		try {
-			InputStream is = client.doPostRequest(url.getUrl(),mpe);
+			InputStream is = this.restClient.doPostRequest(url.getUrl(),mpe);
 			nodeRef = deserializeServiceType(NodeReference.class, is);
 			
 		} catch (BaseException be) {
@@ -2178,15 +1953,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-		
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
+		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+
 		return nodeRef;
 	}
 
@@ -2231,11 +1999,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
             throw recastClientSideExceptionToServiceFailure(e1);        
         }
 
-		D1RestClient client = new D1RestClient(session);
-        client.setTimeouts(Settings.getConfiguration().getInteger(
-                REPLICATION_TIMEOUT_PROPERTY, getDefaultSoTimeout()));
 		try {
-			InputStream is = client.doPutRequest(url.getUrl(),mpe);
+			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe);
 			if (is != null) 
 				is.close();
 			
@@ -2249,15 +2014,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
+		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		
 		return true;
 	}
 
@@ -2296,11 +2055,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient(session);
-        client.setTimeouts(Settings.getConfiguration().getInteger(
-                REPLICATION_TIMEOUT_PROPERTY, getDefaultSoTimeout()));
 		try {
-			InputStream is = client.doPutRequest(url.getUrl(),mpe);
+			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe);
 			if (is != null) 
 				is.close();
 	
@@ -2315,15 +2071,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
+		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		
 		return true;
 	}
 
@@ -2354,10 +2104,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         if (targetNodeSubject != null)
         	url.addNonEmptyParamPair("targetNodeSubject", targetNodeSubject.getValue());
 
-        D1RestClient client = new D1RestClient(session);
-
 		try {
-			InputStream is = client.doGetRequest(url.getUrl());
+			InputStream is = this.restClient.doGetRequest(url.getUrl());
 			if (is != null) 
 				is.close();
 
@@ -2371,15 +2119,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
+		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		
 		return true;
 	}
 
@@ -2420,12 +2162,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throw recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		D1RestClient client = new D1RestClient(session);
-        client.setTimeouts(Settings.getConfiguration().getInteger(
-                REPLICATION_TIMEOUT_PROPERTY,
-                getDefaultSoTimeout()));
 		try {
-			InputStream is = client.doPutRequest(url.getUrl(),mpe);
+			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe);
 			if (is != null)
 				is.close();
 
@@ -2440,15 +2178,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
+		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		
 		return true;
 	}
 
@@ -2485,11 +2217,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			mpe.addParamPart("nodeId", nodeId.getValue());
 		mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
 
-		D1RestClient client = new D1RestClient(session);
-        client.setTimeouts(Settings.getConfiguration().getInteger(
-                REPLICATION_TIMEOUT_PROPERTY, getDefaultSoTimeout()));
 		try {
-			InputStream is = client.doPutRequest(url.getUrl(),mpe);
+			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe);
 			if (is != null)
 				is.close();
 
@@ -2504,15 +2233,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
+		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		
 		return true;
 	}
 

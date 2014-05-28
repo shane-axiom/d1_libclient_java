@@ -38,10 +38,10 @@ import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.impl.client.AbstractHttpClient;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpParams;
+//import org.apache.http.impl.client.AbstractHttpClient;
+//import org.apache.http.impl.client.DefaultHttpClient;
+//import org.apache.http.params.HttpConnectionParams;
+//import org.apache.http.params.HttpParams;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.util.Constants;
 
@@ -53,10 +53,9 @@ import org.dataone.service.util.Constants;
  * It is built to encapsulate the communication conventions dataONE is following
  * but does not know about dataone objects (see D1RestClient for that).  
  * Specifically, it requires encoding of message bodies as mime-multipart.
- * It exposes the underlying httpClient for further configuration of the 
- * connection.
  * 
- * ( Each RestClient has an HttpClient that is reused for all do{XX}Requests )
+ * The HttpClient can be set either in the constructor or via the setter.  It is 
+ * generally advised to not change the HttpClient once set.
  * 
  * */
 public class RestClient {
@@ -64,28 +63,23 @@ public class RestClient {
 	protected static Log log = LogFactory.getLog(RestClient.class);
 	
 	
-    private AbstractHttpClient httpClient;
-    private HashMap<String, String> headers = new HashMap<String, String>();
+    protected HttpClient httpClient;
+    protected HashMap<String, String> headers = new HashMap<String, String>();
     
     private String latestRequestUrl = null;
     
 	/**
 	 * Default constructor to create a new instance.
 	 */
-	public RestClient() 
-	{
-		httpClient = new DefaultHttpClient();
-	    setTimeouts(30 * 1000);
-	}
+
 	
-	public RestClient(AbstractHttpClient client)
+	public RestClient(HttpClient client)
 	{
-		httpClient = client;
-		setTimeouts(30 * 1000);
+		this.httpClient = client;
 	}
 	
 	public String getLatestRequestUrl() {
-		return latestRequestUrl;
+		return this.latestRequestUrl;
 	}
 	
 	private void setLatestRequestUrl(String value) {
@@ -98,46 +92,22 @@ public class RestClient {
 	 */
 	public HttpClient getHttpClient() 
 	{
-		return httpClient;
+		return this.httpClient;
 	}
 	
 	
 	/**
-	 * Sets the AbstractHttpClient instance used for the connection.
-	 * Use with caution.  AbstractHttpClient is necessary to make use of
-	 * the setParams() method.
+	 * Sets the HttpClient instance used for the connection.
+	 * Use with caution.
 	 * @param httpClient
 	 */
-	public void setHttpClient(AbstractHttpClient httpClient) 
+	public void setHttpClient(HttpClient httpClient) 
 	{
 		this.httpClient = httpClient;
 	}
 	
 	
-	/**
-	 * Sets the CONNECTION_TIMEOUT and SO_TIMEOUT values for the underlying httpClient.
-	 * (max delay in initial response, max delay between tcp packets, respectively).  
-	 * Uses the same value for both.
-	 * 
-	 * (The default value set by the constructor is 30 seconds)
-	 * 
-	 * @param milliseconds
-	 */
-	public void setTimeouts(int milliseconds) 
-	{
-        Integer timeout = new Integer(milliseconds);
-        
-        HttpParams params = httpClient.getParams();
-        // the timeout in milliseconds until a connection is established.
-        HttpConnectionParams.setConnectionTimeout(params, timeout);
-        
-        //defines the socket timeout (SO_TIMEOUT) in milliseconds, which is the timeout
-        // for waiting for data or, put differently, a maximum period inactivity between
-        // two consecutive data packets).
-        HttpConnectionParams.setSoTimeout(params, timeout);
-      
-        httpClient.setParams(params);
-	}
+
 
 	
 	/**
@@ -313,7 +283,7 @@ public class RestClient {
 	}
 
 	/*
-	 * applies the header settings and executes the request
+	 * applies the headers to the request and executes the request
 	 */
 	private HttpResponse doRequest(HttpUriRequest req) 
 	throws ClientProtocolException, IOException

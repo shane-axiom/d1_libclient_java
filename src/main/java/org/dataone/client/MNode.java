@@ -1,5 +1,5 @@
 /**
-  * This work was created by participants in the DataONE project, and is
+   * This work was created by participants in the DataONE project, and is
  * jointly copyrighted by participating institutions in DataONE. For
  * more information on DataONE, see our web site at http://dataone.org.
  *
@@ -28,7 +28,7 @@ import java.util.Date;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpException;
-import org.apache.http.client.ClientProtocolException;
+import org.dataone.client.exception.ClientSideException;
 import org.dataone.configuration.Settings;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.exceptions.BaseException;
@@ -275,11 +275,10 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_NODE);
 
         // send the request
-        D1RestClient client = new D1RestClient();
         Node node = null;
 
         try {
-        	InputStream is = client.doGetRequest(url.getUrl());
+        	InputStream is = this.restClient.doGetRequest(url.getUrl());
         	node = deserializeServiceType(Node.class, is);
         } catch (BaseException be) {
             if (be instanceof NotImplemented)    throw (NotImplemented) be;
@@ -287,15 +286,8 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
                     
             throw recastDataONEExceptionToServiceFailure(be);
         } 
-        catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+        catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
 
-        finally {
-        	setLatestRequestUrl(client.getLatestRequestUrl());
-        	client.closeIdleConnections();
-        }
         return node;
     }
 
@@ -394,11 +386,11 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
 		}
     	
         // send the request
-        D1RestClient client = new D1RestClient(session);
+
 
         InputStream is = null;
         try {
-        	is = client.doPostRequest(url.getUrl(),mpe);
+        	is = this.restClient.doPostRequest(url.getUrl(),mpe);
         	if (is != null)
 				is.close();
         } catch (BaseException be) {
@@ -409,15 +401,9 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
                     
             throw recastDataONEExceptionToServiceFailure(be);
         } 
-        catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-        
-        finally {
-        	setLatestRequestUrl(client.getLatestRequestUrl());
-        	client.closeIdleConnections();
-        }
+        catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+        catch (IOException e)          {throw recastClientSideExceptionToServiceFailure(e); }
+      
         return true;
     }
 
@@ -495,14 +481,12 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
 			throw recastClientSideExceptionToServiceFailure(e);	
 		}
 
-    	
-    	D1RestClient client = new D1RestClient(session);
-        client.setTimeouts(Settings.getConfiguration()
-			.getInteger("D1Client.MNode.create.timeout", getDefaultSoTimeout()));
+//        client.setTimeouts(Settings.getConfiguration()
+//			.getInteger("D1Client.MNode.create.timeout", getDefaultSoTimeout()));
     	Identifier identifier = null;
 
     	try {
-    		InputStream is = client.doPostRequest(url.getUrl(),mpe);
+    		InputStream is = this.restClient.doPostRequest(url.getUrl(),mpe);
     		 identifier = deserializeServiceType(Identifier.class, is);
         } catch (BaseException be) {
             if (be instanceof IdentifierNotUnique)    throw (IdentifierNotUnique) be;
@@ -517,15 +501,8 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
                     
             throw recastDataONEExceptionToServiceFailure(be);
         } 
-        catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
-        finally {
-        	setLatestRequestUrl(client.getLatestRequestUrl());
-        	client.closeIdleConnections();
-        }
+        catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+ 
         return identifier;
     }
 
@@ -567,13 +544,12 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
 			throw recastClientSideExceptionToServiceFailure(e);	
 		}
     	  	
-    	D1RestClient client = new D1RestClient(session);
-        client.setTimeouts(Settings.getConfiguration()
-			.getInteger("D1Client.MNode.update.timeout", getDefaultSoTimeout()));
+//        client.setTimeouts(Settings.getConfiguration()
+//			.getInteger("D1Client.MNode.update.timeout", getDefaultSoTimeout()));
     	Identifier identifier = null;
     	
     	try {
-    		InputStream is = client.doPutRequest(url.getUrl(),mpe);
+    		InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe);
     		identifier = deserializeServiceType(Identifier.class, is);
         } catch (BaseException be) {
             if (be instanceof IdentifierNotUnique)    throw (IdentifierNotUnique) be;
@@ -589,15 +565,8 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
                     
             throw recastDataONEExceptionToServiceFailure(be);
         } 
-        catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
-        finally {
-        	setLatestRequestUrl(client.getLatestRequestUrl());
-        	client.closeIdleConnections();
-        }
+        catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+ 
         return identifier;
     }
 
@@ -669,10 +638,9 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
                 DateTimeMarshaller.serializeDateToUTC(dateSystemMetadataLastModified));
         mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
 		    	
-		D1RestClient client = new D1RestClient(session);
 		InputStream is = null;
 		try {
-			is = client.doPostRequest(url.getUrl(), mpe);
+			is = this.restClient.doPostRequest(url.getUrl(), mpe);
 			if (is != null)
 				is.close();
         } catch (BaseException be) {
@@ -684,15 +652,8 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
                     
             throw recastDataONEExceptionToServiceFailure(be);
         } 
-        catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); }  
-		
-		finally {	
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
+        catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+        catch (IOException e)          {throw recastClientSideExceptionToServiceFailure(e); }
 		return true;
     }
    
@@ -732,12 +693,11 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
 			throw recastClientSideExceptionToServiceFailure(e);
 		}
     	
-    	D1RestClient client = new D1RestClient(session);
-        client.setTimeouts(Settings.getConfiguration()
-			.getInteger("D1Client.MNode.replicate.timeout", getDefaultSoTimeout()));
+//        client.setTimeouts(Settings.getConfiguration()
+//			.getInteger("D1Client.MNode.replicate.timeout", getDefaultSoTimeout()));
     	InputStream is = null;
     	try {
-			is = client.doPostRequest(url.getUrl(),smpe);
+			is = this.restClient.doPostRequest(url.getUrl(),smpe);
 			if (is != null)
 				is.close();
         } catch (BaseException be) {
@@ -751,15 +711,9 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
                     
             throw recastDataONEExceptionToServiceFailure(be);
         } 
-        catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+        catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+        catch (IOException e)          {throw recastClientSideExceptionToServiceFailure(e); }
     	
-    	finally {
-    		setLatestRequestUrl(client.getLatestRequestUrl());
-    		client.closeIdleConnections();
-    	}
         return true;
     }
 
@@ -787,12 +741,11 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
         	url.addNextPathElement(pid.getValue());
 
         // send the request
-        D1RestClient client = new D1RestClient(session);
-                client.setTimeouts(Settings.getConfiguration()
-			.getInteger("D1Client.MNode.getReplica.timeout", getDefaultSoTimeout()));
+//                client.setTimeouts(Settings.getConfiguration()
+//			.getInteger("D1Client.MNode.getReplica.timeout", getDefaultSoTimeout()));
         ByteArrayInputStream bais = null;
         try {
-        	byte[] bytes = IOUtils.toByteArray(client.doGetRequest(url.getUrl()));
+        	byte[] bytes = IOUtils.toByteArray(this.restClient.doGetRequest(url.getUrl()));
         	bais = new ByteArrayInputStream(bytes);     	
         } catch (BaseException be) {
             if (be instanceof InvalidToken)           throw (InvalidToken) be;
@@ -804,15 +757,9 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
                     
             throw recastDataONEExceptionToServiceFailure(be);
         } 
-        catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
+        catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
         catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-        
-        finally {
-        	setLatestRequestUrl(client.getLatestRequestUrl());
-        	client.closeIdleConnections();
-        }
+
         return bais;
     }
     

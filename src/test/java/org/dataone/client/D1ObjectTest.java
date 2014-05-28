@@ -37,6 +37,8 @@ import javax.activation.FileDataSource;
 import javax.mail.util.ByteArrayDataSource;
 
 import org.apache.commons.io.IOUtils;
+import org.dataone.client.types.AccessPolicyEditor;
+import org.dataone.client.types.D1TypeBuilder;
 import org.dataone.service.exceptions.InvalidRequest;
 import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.types.v1.NodeReference;

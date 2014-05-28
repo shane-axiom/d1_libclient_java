@@ -35,9 +35,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.Header;
-import org.apache.http.HttpException;
-import org.apache.http.client.ClientProtocolException;
 import org.dataone.client.cache.LocalCache;
+import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.exception.NotCached;
 import org.dataone.configuration.Settings;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
@@ -87,36 +86,65 @@ public abstract class D1Node {
 
 	protected static org.apache.commons.logging.Log log = LogFactory.getLog(D1Node.class);
 	
+	/** the adapter / connector to the RESTful service endpoints */
+	protected MultipartRestClient restClient;
+	
     /** The URL string for the node REST API */
     private String nodeBaseServiceUrl;
+    
+    /** The string representation of the NodeReference */
     private String nodeId;
     
     /** this represents the session to be used for establishing the SSL connection */
     protected Session session;
     
+    /** flag that controls whether or not a local cache is used */
     private boolean useLocalCache = false;
 
-	private String lastRequestUrl = null;
+//	private String lastRequestUrl = null;
+
+	
+	
+//	/**
+//     * Useful for debugging to see what the last call was
+//     * @return
+//     */
+//    public String getLatestRequestUrl() {
+//    	return lastRequestUrl;
+//    }
+//    
+//    protected void setLatestRequestUrl(String url) {
+//    	lastRequestUrl = url;
+//    }
+ 
+    /**
+ 	 * Constructor to create a new instance.
+ 	 */
+ 	public D1Node(MultipartRestClient client, String nodeBaseServiceUrl, Session session) {
+ 	    setNodeBaseServiceUrl(nodeBaseServiceUrl);
+ 	    this.restClient = client;
+ 	    this.session = session;
+ 	    this.useLocalCache = Settings.getConfiguration().getBoolean("D1Client.useLocalCache",useLocalCache);
+ 	}
     
-    /** default Socket timeout in milliseconds **/
-    private Integer defaultSoTimeout = 30000;
 	/**
-     * Useful for debugging to see what the last call was
-     * @return
-     */
-    public String getLatestRequestUrl() {
-    	return lastRequestUrl;
-    }
-    
-    protected void setLatestRequestUrl(String url) {
-    	lastRequestUrl = url;
-    }
+	 * Constructor to create a new instance.
+	 */
+	public D1Node(MultipartRestClient client, String nodeBaseServiceUrl) {
+	    setNodeBaseServiceUrl(nodeBaseServiceUrl);
+	    this.restClient = client;
+	    this.session = null;
+	    this.useLocalCache = Settings.getConfiguration().getBoolean("D1Client.useLocalCache",useLocalCache);
+	}
+ 	
+ 	
     
     /**
 	 * Constructor to create a new instance.
 	 */
 	public D1Node(String nodeBaseServiceUrl, Session session) {
 	    setNodeBaseServiceUrl(nodeBaseServiceUrl);
+	    this.restClient = new DefaultD1RestClient();
 	    this.session = session;
 	    this.useLocalCache = Settings.getConfiguration().getBoolean("D1Client.useLocalCache",useLocalCache);
 	}
@@ -128,6 +156,7 @@ public abstract class D1Node {
 	 */
 	public D1Node(String nodeBaseServiceUrl) {
 	    setNodeBaseServiceUrl(nodeBaseServiceUrl);
+	    this.restClient = new DefaultD1RestClient();
 	    this.session = null;
 	    this.useLocalCache = Settings.getConfiguration().getBoolean("D1Client.useLocalCache",useLocalCache);
 	}
@@ -188,14 +217,12 @@ public abstract class D1Node {
 		// assemble the url
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_MONITOR_PING);
 		
-		// using the simple RestClient because we are going to get the date from
+		// we are going to get the date from
 		// the headers instead of looking in the message body
-
-		D1RestClient client = new D1RestClient();
 		Header[] headers = null;
 	
 	    try {
-	    	headers = client.doGetRequestForHeaders(url.getUrl());
+	    	headers = this.restClient.doGetRequestForHeaders(url.getUrl());
 		} catch (BaseException be) {
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
@@ -203,15 +230,11 @@ public abstract class D1Node {
 	
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+		catch (ClientSideException e) {
+			throw recastClientSideExceptionToServiceFailure(e); 
+		} 
 
-	    finally {
-	    	setLatestRequestUrl(client.getLatestRequestUrl());
-	    	client.closeIdleConnections();
-	    }
+
 		// if exception not thrown, and we got this far,
 		// then pull the date info from the headers
 		Date date = null;
@@ -228,6 +251,7 @@ public abstract class D1Node {
 		
 	    return date;
 	}
+
 	
 	/**
      * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.listObjects">see DataONE API Reference</a> }
@@ -282,13 +306,10 @@ public abstract class D1Node {
 		url.addNonEmptyParamPair("count",count);
 		
         // send the request
-        D1RestClient client = new D1RestClient(session);
-        client.setTimeouts(Settings.getConfiguration()
-			.getInteger("D1Client.D1Node.listObjects.timeout", getDefaultSoTimeout()));
         ObjectList objectList = null;
 
         try {
-        	InputStream is = client.doGetRequest(url.getUrl());
+        	InputStream is = this.restClient.doGetRequest(url.getUrl());
         	objectList =  deserializeServiceType(ObjectList.class, is);
         } catch (BaseException be) {
             if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
@@ -299,15 +320,8 @@ public abstract class D1Node {
                     
             throw recastDataONEExceptionToServiceFailure(be);
         } 
-        catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+        catch (ClientSideException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
  
-        finally {
-        	setLatestRequestUrl(client.getLatestRequestUrl());
-	    	client.closeIdleConnections();
-	    }
         return objectList;
     }
 
@@ -356,13 +370,10 @@ public abstract class D1Node {
     	url.addNonEmptyParamPair("pidFilter", pidFilter);
     	
 		// send the request
-		D1RestClient client = new D1RestClient(session);
-                client.setTimeouts(Settings.getConfiguration()
-			.getInteger("D1Client.D1Node.getLogRecords.timeout", getDefaultSoTimeout()));
 		Log log = null;
 
 		try {
-			InputStream is = client.doGetRequest(url.getUrl());
+			InputStream is = this.restClient.doGetRequest(url.getUrl());
 			log = deserializeServiceType(Log.class, is);
 		} catch (BaseException be) {
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
@@ -374,15 +385,8 @@ public abstract class D1Node {
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+		catch (ClientSideException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
 		return log;
 	}
     
@@ -439,12 +443,8 @@ public abstract class D1Node {
        		throw new NotFound("0000", "'pid' cannot be null nor empty");
        	}
        	
-
-		D1RestClient client = new D1RestClient(session);
-                client.setTimeouts(Settings.getConfiguration()
-                .getInteger("D1Client.D1Node.get.timeout", getDefaultSoTimeout()));
         try {
-        	byte[] bytes = IOUtils.toByteArray(client.doGetRequest(url.getUrl()));
+        	byte[] bytes = IOUtils.toByteArray(this.restClient.doGetRequest(url.getUrl()));
         	is = new ByteArrayInputStream(bytes); 
 		
 			if (cacheMissed) {
@@ -461,15 +461,9 @@ public abstract class D1Node {
                     
             throw recastDataONEExceptionToServiceFailure(be);
         } 
-        catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+        catch (ClientSideException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+        catch (IOException e)                    {throw recastClientSideExceptionToServiceFailure(e); }
         
-        finally {
-        	setLatestRequestUrl(client.getLatestRequestUrl());
-        	client.closeIdleConnections();
-        }
         return is;
     }
  
@@ -550,14 +544,12 @@ public abstract class D1Node {
 		if (pid != null)
 			url.addNextPathElement(pid.getValue());
 
-		D1RestClient client = new D1RestClient(session);
-		client.setTimeouts(Settings.getConfiguration()
-                    .getInteger("D1Client.D1Node.getSystemMetadata.timeout", getDefaultSoTimeout()));
+
 		InputStream is = null;
 		SystemMetadata sysmeta = null;
 		
 		try {
-			is = client.doGetRequest(url.getUrl());
+			is = this.restClient.doGetRequest(url.getUrl());
 			sysmeta = deserializeServiceType(SystemMetadata.class,is);
 			if (cacheMissed) {
                 // Cache the result in the system metadata cache
@@ -571,16 +563,10 @@ public abstract class D1Node {
             if (be instanceof NotFound)          throw (NotFound) be;
                     
             throw recastDataONEExceptionToServiceFailure(be);
-        } 
-        catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-	
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
+        }
+		catch (ClientSideException e) {
+			throw recastClientSideExceptionToServiceFailure(e);
+		} 	
         return sysmeta;
 	}
 
@@ -603,12 +589,10 @@ public abstract class D1Node {
     		throw new NotFound("0000", "'pid' cannot be null nor empty");
     	url.addNextPathElement(pid.getValue());
     	
-     	D1RestClient client = new D1RestClient(session);
-    	
     	Header[] headers = null;
     	Map<String, String> headersMap = new HashMap<String,String>();
     	try {
-    		headers = client.doHeadRequest(url.getUrl());
+    		headers = this.restClient.doHeadRequest(url.getUrl());
     		for (Header header: headers) {
     			if (log.isDebugEnabled())
     				log.debug(String.format("header: %s = %s", 
@@ -625,15 +609,8 @@ public abstract class D1Node {
                     
             throw recastDataONEExceptionToServiceFailure(be);
         } 
-        catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+        catch (ClientSideException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-    	finally {
-    		setLatestRequestUrl(client.getLatestRequestUrl());
-    		client.closeIdleConnections();
-    	}
     	
  //   	DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
         String objectFormatIdStr = headersMap.get("DataONE-ObjectFormat");//.get(0);
@@ -732,11 +709,10 @@ public abstract class D1Node {
     	url.addNonEmptyParamPair("checksumAlgorithm", checksumAlgorithm);
 
         // send the request
-        D1RestClient client = new D1RestClient(session);
         Checksum checksum = null;
 
         try {
-        	InputStream is = client.doGetRequest(url.getUrl());
+        	InputStream is = this.restClient.doGetRequest(url.getUrl());
         	checksum = deserializeServiceType(Checksum.class, is);
         } catch (BaseException be) {
             if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
@@ -748,15 +724,8 @@ public abstract class D1Node {
                     
             throw recastDataONEExceptionToServiceFailure(be);
         } 
-        catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+        catch (ClientSideException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-        finally {
-        	setLatestRequestUrl(client.getLatestRequestUrl());
-        	client.closeIdleConnections();
-        }
         return checksum;
     }
     
@@ -780,11 +749,10 @@ public abstract class D1Node {
         	url.addNonEmptyParamPair("action", action.xmlValue());
     	
         // send the request
-        D1RestClient client = new D1RestClient(session);
         
         InputStream is = null;
         try {
-        	is = client.doGetRequest(url.getUrl());
+        	is = this.restClient.doGetRequest(url.getUrl());
         	if (is != null)
 				is.close();
         } catch (BaseException be) {
@@ -797,15 +765,9 @@ public abstract class D1Node {
                     
             throw recastDataONEExceptionToServiceFailure(be);
         } 
-        catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
-        finally {
-        	setLatestRequestUrl(client.getLatestRequestUrl());
-        	client.closeIdleConnections();
-        }
+        catch (ClientSideException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+        catch (IOException e)                    {throw recastClientSideExceptionToServiceFailure(e); } 
+		
         return true;
     }
 
@@ -832,11 +794,10 @@ public abstract class D1Node {
 			smpe.addParamPart("fragment", fragment);
 		}
 		// send the request
-		D1RestClient client = new D1RestClient(session);
 		Identifier identifier = null;
 
 		try {
-			InputStream is = client.doPostRequest(url.getUrl(),smpe);
+			InputStream is = this.restClient.doPostRequest(url.getUrl(),smpe);
 			identifier = deserializeServiceType(Identifier.class, is);
 			
 		} catch (BaseException be) {
@@ -848,15 +809,8 @@ public abstract class D1Node {
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+		catch (ClientSideException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
  		return identifier;
 	}
     
@@ -887,11 +841,9 @@ public abstract class D1Node {
     	if (pid != null)
     		url.addNextPathElement(pid.getValue());
 
-     	D1RestClient client = new D1RestClient(session);
-
      	Identifier identifier = null;
     	try {
-    		InputStream is = client.doPutRequest(url.getUrl(), null);
+    		InputStream is = this.restClient.doPutRequest(url.getUrl(), null);
     		identifier = deserializeServiceType(Identifier.class, is);
         } catch (BaseException be) {
             if (be instanceof InvalidToken)           throw (InvalidToken) be;
@@ -901,15 +853,8 @@ public abstract class D1Node {
             if (be instanceof NotImplemented)         throw (NotImplemented) be;
             throw recastDataONEExceptionToServiceFailure(be);
         }
-        catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); }
+        catch (ClientSideException e)            {throw recastClientSideExceptionToServiceFailure(e); }
 
-        finally {
-        	setLatestRequestUrl(client.getLatestRequestUrl());
-        	client.closeIdleConnections();
-        }
         return identifier;
     }
     
@@ -928,11 +873,10 @@ public abstract class D1Node {
     	if (pid != null)
     		url.addNextPathElement(pid.getValue());
 
-     	D1RestClient client = new D1RestClient(session);
 
      	Identifier identifier = null;
     	try {
-    		InputStream is = client.doDeleteRequest(url.getUrl());
+    		InputStream is = this.restClient.doDeleteRequest(url.getUrl());
     		identifier = deserializeServiceType(Identifier.class, is);
         } catch (BaseException be) {
             if (be instanceof InvalidToken)           throw (InvalidToken) be;
@@ -942,15 +886,8 @@ public abstract class D1Node {
             if (be instanceof NotImplemented)         throw (NotImplemented) be;
             throw recastDataONEExceptionToServiceFailure(be);
         }
-        catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); }
+        catch (ClientSideException e)            {throw recastClientSideExceptionToServiceFailure(e); }
 
-        finally {
-        	setLatestRequestUrl(client.getLatestRequestUrl());
-        	client.closeIdleConnections();
-        }
         return identifier;
     }
     
@@ -1018,10 +955,10 @@ public abstract class D1Node {
         	throw new InvalidRequest("0000", "'encodedQuery' parameter cannot be null or empty");
         }
     	String finalUrl = url.getUrl() + "/" + encodedQuery;
-        D1RestClient client = new D1RestClient(session);
+
         InputStream is = null;
         try {
-        	byte[] bytes = IOUtils.toByteArray(client.doGetRequest(finalUrl));
+        	byte[] bytes = IOUtils.toByteArray(this.restClient.doGetRequest(finalUrl));
         	is = new ByteArrayInputStream(bytes); 
 		}
         catch (BaseException be) {
@@ -1033,16 +970,10 @@ public abstract class D1Node {
 			if (be instanceof NotFound)               throw (NotFound) be;
 
 			throw recastDataONEExceptionToServiceFailure(be);
-		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
+		catch (ClientSideException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+        catch (IOException e)                    {throw recastClientSideExceptionToServiceFailure(e); }
+        
 		return is;
 	}
 
@@ -1059,10 +990,9 @@ public abstract class D1Node {
        		throw new NotFound("0000", "'queryEngine' cannot be null nor empty");
        	}
 
-        D1RestClient client = new D1RestClient(session);
         QueryEngineDescription description = null;
         try {
-        	InputStream is = client.doGetRequest(url.getUrl());
+        	InputStream is = this.restClient.doGetRequest(url.getUrl());
              description = deserializeServiceType(QueryEngineDescription.class, is);
 		}
         catch (BaseException be) {
@@ -1074,15 +1004,8 @@ public abstract class D1Node {
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
+		catch (ClientSideException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+        
 		return description;
 	}
 
@@ -1093,10 +1016,9 @@ public abstract class D1Node {
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_QUERY);
         
 		InputStream is = null;
-        D1RestClient client = new D1RestClient(session);
         QueryEngineList engines = null;
         try {
-             is = client.doGetRequest(url.getUrl());
+             is = this.restClient.doGetRequest(url.getUrl());
              engines = deserializeServiceType(QueryEngineList.class, is);
 		}
         catch (BaseException be) {
@@ -1107,15 +1029,8 @@ public abstract class D1Node {
 
 			throw recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+		catch (ClientSideException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
 
-		finally {
-			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
-		}
 		return engines;
 	}
     
@@ -1187,14 +1102,5 @@ public abstract class D1Node {
 			throw new ServiceFailure("0",
                     "Could not deserialize the " + domainClass.getCanonicalName() + ": " + e.getMessage());
 		}
-	}
-
-    public Integer getDefaultSoTimeout() {
-        return defaultSoTimeout;
-    }
-
-    public void setDefaultSoTimeout(Integer defaultSoTimeout) {
-        this.defaultSoTimeout = defaultSoTimeout;
-    }
-        
+	}   
 }

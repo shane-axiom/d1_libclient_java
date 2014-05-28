@@ -98,7 +98,9 @@ public class CertificateManagerTest {
     		try {
     			cn.ping();
     		} catch (BaseException e) {
-    			System.out.println("Failed: " + cn.getLatestRequestUrl());
+    			// TODO:  get getLatestRequestUrl to work again
+ //   			System.out.println("Failed: " + cn.getLatestRequestUrl());
+    			System.out.println("Failed: " + e.getDescription());
     		}
     	}
     	

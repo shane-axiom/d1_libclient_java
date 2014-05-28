@@ -31,6 +31,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.util.D1Url;
 import org.junit.Test;
@@ -46,7 +47,7 @@ public class EchoTestRestClientIT {
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		RestClient rc = new RestClient();
+		RestClient rc = new RestClient(new DefaultHttpClient());
 		HttpResponse resp = rc.doGetRequest(u.getUrl());
 		InputStream is = resp.getEntity().getContent();
 		String contentString = IOUtils.toString(is);
@@ -61,7 +62,7 @@ public class EchoTestRestClientIT {
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		RestClient rc = new RestClient();
+		RestClient rc = new RestClient(new DefaultHttpClient());
 		HttpResponse resp = rc.doDeleteRequest(u.getUrl());
 		InputStream is = resp.getEntity().getContent();
 		String contentString = IOUtils.toString(is);
@@ -76,7 +77,7 @@ public class EchoTestRestClientIT {
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		RestClient rc = new RestClient();
+		RestClient rc = new RestClient(new DefaultHttpClient());
 		HttpResponse resp = rc.doHeadRequest(u.getUrl());
 		Header[] headers = resp.getAllHeaders();
 		String hString = new String();
@@ -91,7 +92,7 @@ public class EchoTestRestClientIT {
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		RestClient rc = new RestClient();
+		RestClient rc = new RestClient(new DefaultHttpClient());
 		HttpResponse resp = rc.doPutRequest(u.getUrl(),null);
 		InputStream is = resp.getEntity().getContent();
 		String contentString = IOUtils.toString(is);
@@ -106,7 +107,7 @@ public class EchoTestRestClientIT {
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		RestClient rc = new RestClient();
+		RestClient rc = new RestClient(new DefaultHttpClient());
 		HttpResponse resp = rc.doPostRequest(u.getUrl(),null);
 		InputStream is = resp.getEntity().getContent();
 		String contentString = IOUtils.toString(is);
@@ -124,7 +125,7 @@ public class EchoTestRestClientIT {
 		SimpleMultipartEntity ent = new SimpleMultipartEntity();
 		ent.addParamPart("Jabberwocky", "Twas brillig and the slithy tove, did gyre and gimble in the wabe");
 		ent.addFilePart("Jabberwocky2", "All mimsy was the borogrove, and the mome wrath ungrabe.");
-		RestClient rc = new RestClient();
+		RestClient rc = new RestClient(new DefaultHttpClient());
 		HttpResponse resp = rc.doPutRequest(u.getUrl(),ent);
 		InputStream is = resp.getEntity().getContent();
 		String contentString = IOUtils.toString(is);
@@ -142,7 +143,7 @@ public class EchoTestRestClientIT {
 		SimpleMultipartEntity ent = new SimpleMultipartEntity();
 		ent.addParamPart("Jabberwocky", "Twas brillig and the slithy tove, did gyre and gimble in the wabe");
 		ent.addFilePart("Jabberwocky2", "All mimsy was the borogrove, and the mome wrath ungrabe.");
-		RestClient rc = new RestClient();
+		RestClient rc = new RestClient(new DefaultHttpClient());
 		HttpResponse resp = rc.doPostRequest(u.getUrl(),ent);
 		InputStream is = resp.getEntity().getContent();
 		String contentString = IOUtils.toString(is);
@@ -158,7 +159,7 @@ public class EchoTestRestClientIT {
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		RestClient rc = new RestClient();
+		RestClient rc = new RestClient(new DefaultHttpClient());
 		rc.setHeader("mememe", "momomo");
 		HttpResponse resp = rc.doGetRequest(u.getUrl());
 		InputStream is = resp.getEntity().getContent();
