@@ -77,7 +77,7 @@ import org.bouncycastle.asn1.DERUTF8String;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMReader;
 import org.bouncycastle.openssl.PasswordFinder;
-import org.dataone.client.impl.rest.CNode;
+import org.dataone.client.CNode;
 import org.dataone.client.itk.D1Client;
 import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.InvalidToken;

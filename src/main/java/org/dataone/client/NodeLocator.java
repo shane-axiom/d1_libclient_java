@@ -21,7 +21,6 @@ package org.dataone.client;
 
 import java.util.Map;
 
-import org.dataone.client.impl.rest.CNode;
 import org.dataone.service.types.v1.NodeReference;
 
 /**

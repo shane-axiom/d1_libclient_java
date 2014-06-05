@@ -87,7 +87,7 @@ import org.dataone.service.util.D1Url;
  * D1Client.D1Node.getSystemMetadata.timeout
  * 
  */
-public class HttpCNode extends CNode 
+public class HttpCNode extends MultipartCNode 
 implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplication 
 {
 	protected static org.apache.commons.logging.Log log = LogFactory.getLog(HttpCNode.class);

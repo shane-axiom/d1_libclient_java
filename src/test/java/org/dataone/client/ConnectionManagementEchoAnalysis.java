@@ -27,7 +27,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.commons.io.IOUtils;
-import org.dataone.client.impl.rest.CNode;
+import org.dataone.client.impl.rest.MultipartCNode;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
@@ -66,7 +66,7 @@ public class ConnectionManagementEchoAnalysis {
 	@Test
 	public void testConnectionClose_singleThread_CLOSE_WAIT() 
 	{
-		CNode echoNode = new CNode(echoNodeURL + "/echo");
+		MultipartCNode echoNode = new MultipartCNode(echoNodeURL + "/echo");
 		
 		int i = 0;
 		try {
@@ -103,7 +103,7 @@ public class ConnectionManagementEchoAnalysis {
 			for (i=0; i <= 10 * 1000; i++) {
 				execService.execute(new Runnable() 
 				{
-					final CNode echoNode = new CNode(echoNodeURL + "/echo");
+					final MultipartCNode echoNode = new MultipartCNode(echoNodeURL + "/echo");
 					final Identifier pid = new Identifier();
 					final NodeReference nodeRef = new NodeReference();
 			

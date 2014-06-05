@@ -61,6 +61,17 @@ extends MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
 	public String getNodeBaseServiceUrl();
 
 	/**
+     * @return the nodeId
+     */
+    public String getNodeId();
+
+    /**
+     * @param nodeId the nodeId to set
+     */
+    public void setNodeId(String nodeId);
+    
+    
+	/**
 	 * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNCore.ping">see DataONE API Reference</a> } 
 	 */
 	public Date ping() throws NotImplemented, ServiceFailure,

@@ -25,7 +25,8 @@ package org.dataone.client.formats;
 import java.util.Date;
 
 import org.apache.log4j.Logger;
-import org.dataone.client.impl.rest.CNode;
+import org.dataone.client.CNode;
+import org.dataone.client.impl.rest.HttpCNode;
 import org.dataone.client.itk.D1Client;
 import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.NotFound;
@@ -191,7 +192,7 @@ public class ObjectFormatCache extends ObjectFormatServiceImpl {
 			CNode cn = null;
 			String overridingCN = Settings.getConfiguration().getString("ObjectFormatCache.overriding.CN_URL");
 			if (overridingCN != null) {
-				cn = new CNode(overridingCN);
+				cn = new HttpCNode(overridingCN, null);
 			} else {
 				cn = D1Client.getCN();
 			}

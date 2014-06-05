@@ -23,8 +23,8 @@ import java.io.InputStream;
 import java.io.StringBufferInputStream;
 import java.math.BigInteger;
 
+import org.dataone.client.MNode;
 import org.dataone.client.auth.ClientIdentityManager;
-import org.dataone.client.impl.rest.MultipartMNode;
 import org.dataone.client.itk.D1Client;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.types.v1.Checksum;
@@ -47,7 +47,7 @@ public class ExampleClient {
     public static void main(String[] args) {
         
         String currentUrl = "https://demo1.test.dataone.org:443/knb/d1/mn";
-        MultipartMNode mn = D1Client.getMN(currentUrl);
+        MNode mn = D1Client.getMN(currentUrl);
 
         runExampleCreate(mn);
     }
@@ -60,7 +60,7 @@ public class ExampleClient {
      * avoid polluting production servers with test data.
      * @param mn the MultipartMNode member node on which to create the object
      */
-    private static void runExampleCreate(MultipartMNode mn) {
+    private static void runExampleCreate(MNode mn) {
         try {
             Identifier newid = new Identifier();
             String idstr = new String("test:" + System.currentTimeMillis());

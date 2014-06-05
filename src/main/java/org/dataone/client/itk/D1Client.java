@@ -24,8 +24,14 @@ package org.dataone.client.itk;
 
 import java.io.IOException;
 
-import org.dataone.client.impl.rest.CNode;
-import org.dataone.client.impl.rest.MultipartMNode;
+import org.dataone.client.CNode;
+import org.dataone.client.MNode;
+import org.dataone.client.NodeLocator;
+import org.dataone.client.impl.NodeListNodeLocator;
+import org.dataone.client.impl.rest.DefaultHttpMultipartRestClient;
+import org.dataone.client.impl.rest.HttpCNode;
+import org.dataone.client.impl.rest.HttpMNode;
+import org.dataone.client.impl.rest.MultipartCNode;
 import org.dataone.client.types.ObsoletesChain;
 import org.dataone.client.utils.ExceptionUtils;
 import org.dataone.configuration.Settings;
@@ -53,12 +59,30 @@ import org.dataone.service.types.v1.SystemMetadata;
 public class D1Client {
 
     private static CNode cn = null;
+    private static NodeLocator nodeLocator;
+    
+    /**
+	 * Get the cached CNode object for calling Coordinating Node services.
+	 * By default returns the production context CN, defined via the property 
+	 * "D1Client.CN_URL". Use of D1Client in other contexts (non-production) 
+	 * requires overriding or changing this property name.  
+	 * See org.dataone.configuration.Settings class for details.
+	 * 
+	 * Connects using the default session / certificate 
+     * @return the cn
+	 * @throws ServiceFailure 
+     */
+    public static CNode getCN() throws ServiceFailure {
+        return getCN((Session)null);
+    }
+    
     
 	/**
-	 * Get the client instance of the Coordinating Node object for calling Coordinating Node services.
-	 * By default returns the production context CN, defined via the property "D1Client.CN_URL".
-	 * Use of D1Client in other contexts (non-production) requires overriding or changing this 
-	 * property name.  See org.dataone.configuration.Settings class for details.
+	 * Get the cached CNode object for calling Coordinating Node services.
+	 * By default returns the production context CN, defined via the property 
+	 * "D1Client.CN_URL".  Use of D1Client in other contexts (non-production) 
+	 * requires overriding or changing this property name.  
+	 * See org.dataone.configuration.Settings class for details.
 	 * 
 	 * @param session - the client session to be used in connections, null uses default behavior. 
      * @return the cn
@@ -66,39 +90,40 @@ public class D1Client {
      */
     public static CNode getCN(Session session) throws ServiceFailure {
         if (cn == null) {
+        	
         	// get the CN URL
             String cnUrl = Settings.getConfiguration().getString("D1Client.CN_URL");
-
-        	// determine which implementation to instantiate
-        	String cnClassName = Settings.getConfiguration().getString("D1Client.cnClassName");
-        	
-        	if (cnClassName != null) {
-        		// construct it using reflection
-            	try {
-					cn = (CNode) Class.forName(cnClassName).newInstance();
-				} catch (Exception e) {
-					throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
-
-				}
-            	cn.setNodeBaseServiceUrl(cnUrl);
-        	} else {
-        		// default
-                cn = new CNode(cnUrl, session);
-        	}
+        	getCN(cnUrl,session);
         }
         return cn;
     }
+ 
+    
+    /**
+     * Get the client instance of the Coordinating Node object for calling
+     * Coordinating Node services.  Allows the caller to specify the CN URL.
+     * NOTE: this will replace the shared static CNode instance.
+     * 
+     * @param cnUrl
+     * @return
+     * @throws ServiceFailure
+     */
+	public static CNode getCN(String cnUrl) throws ServiceFailure 
+	{
+		return getCN(cnUrl, null);
+	}
     
 	/**
 	 * Get the client instance of the Coordinating Node object for calling
 	 * Coordinating Node services. Allows caller to specify the CN URL. NOTE:
-	 * this will be used by the shared static instance.
+	 * this will replace the shared static CNode instance.
 	 * 
-	 * @param cnUrl the CN' baseUrl
+	 * @param cnUrl the CN baseUrl
+	 * @param session - session to passed through to the CNode
 	 * @return the cn
 	 * @throws ServiceFailure
 	 */
-	public static CNode getCN(String cnUrl) throws ServiceFailure {
+	public static CNode getCN(String cnUrl, Session session) throws ServiceFailure {
 
 		// determine which implementation to instantiate
 		String cnClassName = Settings.getConfiguration().getString("D1Client.cnClassName");
@@ -110,28 +135,17 @@ public class D1Client {
 			} catch (Exception e) {
 				throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
 			}
-			cn.setNodeBaseServiceUrl(cnUrl);
+// TODO: figure out if this needs to be populated
+//			cn.setNodeBaseServiceUrl(cnUrl);
 		} else {
 			// default
-			cn = new CNode(cnUrl, null);
+			cn = new HttpCNode(cnUrl, session);
 		}
-
+		nodeLocator = null;
 		return cn;
 	}
     
-    /**
-	 * Get the client instance of the Coordinating Node object for calling Coordinating Node services.
-	 * By default returns the production context CN, defined via the property "D1Client.CN_URL".
-	 * Use of D1Client in other contexts (non-production) requires overriding or changing this 
-	 * property name.  See org.dataone.configuration.Settings class for details.
-	 * 
-	 * Connects using the default session / certificate 
-     * @return the cn
-	 * @throws ServiceFailure 
-     */
-    public static CNode getCN() throws ServiceFailure {
-        return getCN((Session)null);
-    }
+
     
     
     
@@ -140,14 +154,14 @@ public class D1Client {
      * @param mnBaseUrl the service URL for the Member Node
      * @return the mn at a particular URL
      */
-    public static MultipartMNode getMN(String mnBaseUrl) {
-        MultipartMNode mn = new MultipartMNode( mnBaseUrl);
+    public static MNode getMN(String mnBaseUrl) {
+        MNode mn = new HttpMNode( mnBaseUrl);
         return mn;
     }
     
     
     /**
-     * Construct and return a Member Node using the nodeReference
+     * Return an MNode using the nodeReference
      * for the member node.  D1Client's cn instance will look up the
      * member node's baseURL from the passed in nodeReference
      * 
@@ -155,22 +169,21 @@ public class D1Client {
      * @return
      * @throws ServiceFailure
      */
-    public static MultipartMNode getMN(NodeReference nodeRef) throws ServiceFailure {
-    	CNode cn;
-		try {
-			cn = getCN();
-		} catch (Exception e) {
-			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
-		}
-    	String mnBaseUrl = null;
-		try {
-			mnBaseUrl = cn.lookupNodeBaseUrl(nodeRef.getValue());
-			if (mnBaseUrl == null) 
-				throw new ServiceFailure("0000","Failed to find baseUrl for node " + nodeRef.getValue() + " in the NodeList");
-		} catch (NotImplemented e) {
-			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
-		}
-        MultipartMNode mn = new MultipartMNode(mnBaseUrl);
+    public static MNode getMN(NodeReference nodeRef) throws ServiceFailure 
+    {  	
+    	if (nodeLocator == null) {
+    		try {
+				nodeLocator = new NodeListNodeLocator(D1Client.getCN().listNodes(), 
+						new DefaultHttpMultipartRestClient(30));
+			} catch (NotImplemented e) {
+				throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
+			}
+    	}
+    	MNode mn = nodeLocator.getMNode(nodeRef);
+    	if (mn == null) {
+    		throw new ServiceFailure("0000", "Failed to find baseUrl for node "
+    				 + nodeRef.getValue() + " in the NodeList");
+    	}
         mn.setNodeId(nodeRef.getValue());
         return mn;
     }
@@ -202,8 +215,7 @@ public class D1Client {
     	if (sysmeta == null) 
     		throw new InvalidRequest("Client Error", "systemMetadata of the D1Object cannot be null");
 
-    	String mn_url = D1Client.getCN().lookupNodeBaseUrl(sysmeta.getOriginMemberNode().getValue());
-    	MultipartMNode mn = D1Client.getMN(mn_url);
+    	MNode mn = D1Client.getMN(sysmeta.getOriginMemberNode());
     	Identifier rGuid;
 		try {
 			rGuid = mn.create(session, sysmeta.getIdentifier(), 
@@ -251,8 +263,7 @@ public class D1Client {
     	if (sysmeta == null) 
     		throw new InvalidRequest("Client Error", "systemMetadata of the D1Object cannot be null");
 
-    	String mn_url = D1Client.getCN().lookupNodeBaseUrl(sysmeta.getOriginMemberNode().getValue());
-    	MultipartMNode mn = D1Client.getMN(mn_url);
+    	MNode mn = D1Client.getMN(sysmeta.getOriginMemberNode());
     	Identifier rGuid;
 		try {
 			rGuid = mn.update(sysmeta.getObsoletes(), d1object.getDataSource().getInputStream(), 
@@ -288,8 +299,7 @@ public class D1Client {
     	if (sysmeta == null) 
     		throw new InvalidRequest("Client Error", "systemMetadata of the D1Object cannot be null");
 
-    	String mn_url = D1Client.getCN().lookupNodeBaseUrl(sysmeta.getAuthoritativeMemberNode().getValue());
-    	MultipartMNode mn = D1Client.getMN(mn_url);
+    	MNode mn = D1Client.getMN(sysmeta.getAuthoritativeMemberNode());
     	Identifier rGuid;
 		rGuid = mn.archive(d1object.getIdentifier());
     	return rGuid;
@@ -340,7 +350,7 @@ public class D1Client {
 
     	SystemMetadata smd = null;
     	try {
-    		smd = getCN().getSystemMetadata(startingPid, true);
+    		smd = getSysmeta(startingPid);
     		chain.addObject(
     			pid, 
     			smd.getDateUploaded(), 
@@ -352,7 +362,7 @@ public class D1Client {
     		Identifier bpid = smd.getObsoletes();
 		
     		while (fpid != null) {
-    			smd = getCN().getSystemMetadata(fpid, true);
+    			smd = getSysmeta(fpid);
     			chain.addObject(
         			fpid, 
         			smd.getDateUploaded(), 
@@ -364,7 +374,7 @@ public class D1Client {
     	
     		// get the first obsoletes by looking up in the stored list
     		while (bpid != null) {
-    			smd = getCN().getSystemMetadata(bpid, true);
+    			smd = getSysmeta(bpid);
     			chain.addObject(
         			bpid, 
         			smd.getDateUploaded(), 
@@ -381,5 +391,16 @@ public class D1Client {
     		throw sf;
     	}
     	return chain;
+    }
+    
+    private static SystemMetadata getSysmeta(Identifier pid) 
+    throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented 
+    {
+    	if (getCN() instanceof HttpCNode) {
+    		return ((HttpCNode)getCN()).getSystemMetadata(pid, true);
+    	
+    	} else {
+    		return getCN().getSystemMetadata(pid);
+    	}
     }
 }

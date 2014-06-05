@@ -27,7 +27,7 @@ import static org.junit.Assert.fail;
 import java.util.Arrays;
 import java.util.List;
 
-import org.dataone.client.impl.rest.CNode;
+import org.dataone.client.CNode;
 import org.dataone.client.itk.D1Client;
 import org.dataone.client.itk.D1Object;
 import org.dataone.configuration.Settings;
@@ -70,20 +70,20 @@ public class D1ClientUnitTest  {
     	// moved to d1_integration product because of dependency on knb instance 
     }
 
-    @Ignore("once we have a mock HttpClient client to test against, add this back in. Currently depends on external resource (cn-dev)")
-    @Test
-    public void testNodeMap() throws ServiceFailure, NotImplemented {
-        printHeader("testNodeMap");
-        CNode cn = D1Client.getCN();
-        String nodeId = cn.lookupNodeId(TEST_CN_URL);
-        assertTrue(nodeId != null);
-        System.out.println("Found nodeId = " + nodeId);
-        assertTrue(nodeId.contains("c3p0"));
-        String registeredUrl = cn.lookupNodeBaseUrl(nodeId);
-        assertTrue(registeredUrl != null);
-        System.out.println("Found nodeUrl = " + registeredUrl);
-        assertEquals(TEST_CN_URL, registeredUrl);
-    }
+//    @Ignore("once we have a mock HttpClient client to test against, add this back in. Currently depends on external resource (cn-dev)")
+//    @Test
+//    public void testNodeMap() throws ServiceFailure, NotImplemented {
+//        printHeader("testNodeMap");
+//        CNode cn = D1Client.getCN();
+//        String nodeId = cn.lookupNodeId(TEST_CN_URL);
+//        assertTrue(nodeId != null);
+//        System.out.println("Found nodeId = " + nodeId);
+//        assertTrue(nodeId.contains("c3p0"));
+//        String registeredUrl = cn.lookupNodeBaseUrl(nodeId);
+//        assertTrue(registeredUrl != null);
+//        System.out.println("Found nodeUrl = " + registeredUrl);
+//        assertEquals(TEST_CN_URL, registeredUrl);
+//    }
     
     @Ignore
     @Test

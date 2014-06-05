@@ -21,9 +21,9 @@ package org.dataone.client.impl;
 
 import java.util.Map;
 
+import org.dataone.client.CNode;
 import org.dataone.client.MNode;
 import org.dataone.client.NodeLocator;
-import org.dataone.client.impl.rest.CNode;
 import org.dataone.client.impl.rest.DefaultHttpMultipartRestClient;
 import org.dataone.client.impl.rest.HttpCNode;
 import org.dataone.client.impl.rest.HttpMNode;
@@ -34,7 +34,18 @@ import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.types.v1.NodeList;
 import org.dataone.service.types.v1.NodeReference;
 import org.dataone.service.types.v1.util.NodelistUtil;
-
+/**
+ * This implementation of NodeLocator uses a NodeList document to populate
+ * the internal maps that have all of the registered MNodes and CNodes, instead
+ * of relying on the put methods.  The MNode and CNode objects are 
+ * instantiated the first time they are requested from the get methods.
+ * 
+ * Calling putMNode, for example, will replace the current MNode associated with
+ * the NodeReference, so use with care.  
+ * 
+ * @author rnahf
+ *
+ */
 public class NodeListNodeLocator extends NodeLocator {
 
 	protected Map<String, String> baseUrlMap;
@@ -43,7 +54,11 @@ public class NodeListNodeLocator extends NodeLocator {
 	
 	protected static final Integer DEFAULT_TIMEOUT_SECONDS = 30;
 	
-	
+	/**
+	 * Creates a NodeLocator using default timeout settings (30 sec), and 
+	 * using a DefaultHttpMultipartRestClient. It uses the property D1Client.CN_URL
+	 * accessible through the Settings class.
+	 */
 	public NodeListNodeLocator() 
 	throws NotImplemented, ServiceFailure {
 		this(DEFAULT_TIMEOUT_SECONDS);
@@ -61,6 +76,7 @@ public class NodeListNodeLocator extends NodeLocator {
 
 		// get the CN URL
         String cnUrl = Settings.getConfiguration().getString("D1Client.CN_URL");
+        
         CNode cn = new HttpCNode( this.restClient, cnUrl );
 
         NodeList nl = cn.listNodes();
@@ -73,12 +89,11 @@ public class NodeListNodeLocator extends NodeLocator {
 	}
 	
 	
-	
 	/**
 	 * Gets the MNode associated with the NodeReference.  The MNode is lazy-
 	 * instantiated at the first request.  If the NodeReference does not exist
 	 * in the NodeList passed into the constructor, and an instantiated MNode is
-	 * not put into the map via the API, an MNode is not returned. 
+	 * not put into the registry, and an MNode is not returned. 
 	 */
 	@Override
 	public MNode getMNode(NodeReference nodeRef) 
@@ -90,8 +105,11 @@ public class NodeListNodeLocator extends NodeLocator {
 		    // not instantiated yet, so instantiate and put in the map
 			if (this.baseUrlMap.containsKey(nodeRef.getValue())) 
 			{
-				mn = new HttpMNode(this.restClient, this.baseUrlMap.get(nodeRef.getValue()) );
-				super.putMNode(nodeRef, mn);
+				mn = new HttpMNode(this.restClient, 
+						this.baseUrlMap.get(nodeRef.getValue()) 
+						);
+				mn.setNodeId(nodeRef.getValue());
+				putMNode(nodeRef, mn);
 			}
 		}
 		return mn;
@@ -102,7 +120,7 @@ public class NodeListNodeLocator extends NodeLocator {
 	 * Gets the CNode associated with the NodeReference.  The CNode is lazy-
 	 * instantiated at the first request.  If the NodeReference does not exist
 	 * in the NodeList passed into the constructor, and an instantiated CNode is
-	 * not put into the map via the API, a CNode is not returned. 
+	 * not put into the registry, and a CNode is not returned. 
 	 */
 	@Override
 	public CNode getCNode(NodeReference nodeRef) 
@@ -118,9 +136,10 @@ public class NodeListNodeLocator extends NodeLocator {
 						this.restClient,
 						this.baseUrlMap.get(nodeRef.getValue()) 
 						);
-				super.putCNode(nodeRef, cn);			
+				cn.setNodeId(nodeRef.getValue());
+				putCNode(nodeRef, cn);			
 			}
 		}
 		return cn;
-	}	
+	}
 }
