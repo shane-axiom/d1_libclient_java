@@ -25,6 +25,8 @@ package org.dataone.client;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.dataone.client.impl.rest.CNode;
+import org.dataone.client.itk.D1Client;
 import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;

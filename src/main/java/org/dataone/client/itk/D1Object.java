@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-package org.dataone.client;
+package org.dataone.client.itk;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,6 +34,9 @@ import javax.mail.util.ByteArrayDataSource;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.CountingInputStream;
 import org.apache.commons.lang.StringUtils;
+import org.dataone.client.formats.ObjectFormatCache;
+import org.dataone.client.impl.rest.CNode;
+import org.dataone.client.impl.rest.MultipartMNode;
 import org.dataone.client.types.AccessPolicyEditor;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.InsufficientResources;
@@ -366,7 +369,7 @@ public class D1Object {
                         + ol.getUrl() + ")");
                 
                 // Get the contents of the object itself
-                MNode mn = D1Client.getMN(ol.getNodeIdentifier());
+                MultipartMNode mn = D1Client.getMN(ol.getNodeIdentifier());
                 
                 try {
                     InputStream is = mn.get(id);

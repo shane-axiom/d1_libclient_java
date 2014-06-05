@@ -1,5 +1,5 @@
 /**
- * This work was created by participants in the DataONE project, and is
+    * This work was created by participants in the DataONE project, and is
  * jointly copyrighted by participating institutions in DataONE. For 
  * more information on DataONE, see our web site at http://dataone.org.
  *
@@ -68,6 +68,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.DERObject;
@@ -76,8 +77,8 @@ import org.bouncycastle.asn1.DERUTF8String;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMReader;
 import org.bouncycastle.openssl.PasswordFinder;
-import org.dataone.client.CNode;
-import org.dataone.client.D1Client;
+import org.dataone.client.impl.rest.CNode;
+import org.dataone.client.itk.D1Client;
 import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.InvalidToken;
 import org.dataone.service.types.v1.Session;
@@ -711,6 +712,53 @@ public class CertificateManager {
         
         return socketFactory;
     }
+    
+    
+    
+    
+    public SSLConnectionSocketFactory getSSLConnectionSocketFactory(String subjectString) 
+    	    throws NoSuchAlgorithmException, UnrecoverableKeyException, KeyStoreException,
+    	    KeyManagementException, CertificateException, IOException 
+    	    {
+    	    	// our return object
+    	    	log.info("Entering getSSLConnectionSocketFactory");
+    	    	SSLConnectionSocketFactory socketFactory = null;
+    	    	KeyStore keyStore = null;
+    	    	
+    	    	// get the keystore that will provide the material
+    	    	// Catch the exception here so that the TLS connection scheme
+    	    	// will still be setup if the client certificate is not found.
+    	    	try {
+    	    		keyStore = getKeyStore(subjectString);
+    			} catch (FileNotFoundException e) {
+    				// these are somewhat expected for anonymous d1 client use
+    				log.warn("Client certificate could not be located. Setting up SocketFactory without it." + e.getMessage());
+    			}
+    	       
+    	        // create SSL context
+    	        SSLContext ctx = SSLContext.getInstance("TLS");
+    	        
+    	        // based on config options, we get an appropriate truststore
+    	        X509TrustManager tm = getTrustManager();
+    	        
+    	        // specify the client key manager
+    	        KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+    	        keyManagerFactory.init(keyStore, keyStorePassword.toCharArray());
+    	        KeyManager[] keyManagers = keyManagerFactory.getKeyManagers();
+    	        
+    	        // initialize the context
+    	        ctx.init(keyManagers, new TrustManager[]{tm}, new SecureRandom());
+    	        if (trustStoreIncludesD1CAs) {
+    	        	log.info("using allow-all hostname verifier");
+    		        //socketFactory = new SSLSocketFactory(ctx, SSLSocketFactory.STRICT_HOSTNAME_VERIFIER);
+    		        //socketFactory = new SSLSocketFactory(ctx, SSLSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
+    		        socketFactory = new SSLConnectionSocketFactory(ctx, SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+    	        } else {
+    		        socketFactory = new SSLConnectionSocketFactory(ctx);
+    	        }
+    	        
+    	        return socketFactory;
+    	    }
     
     /**
      * Based on the configuration option 'certificate.truststore.includeD1CAs', 

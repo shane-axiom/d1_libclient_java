@@ -20,7 +20,7 @@
  * $Id$
  */
 
-package org.dataone.client;
+package org.dataone.client.impl.rest;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,11 +33,14 @@ import org.apache.http.Header;
 import org.apache.http.HttpException;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.impl.client.AbstractHttpClient;
 import org.dataone.client.auth.CertificateManager;
 import org.dataone.client.exception.ClientSideException;
+import org.dataone.client.rest.MultipartRestClient;
+import org.dataone.client.utils.HttpUtils;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.types.v1.Session;
@@ -50,25 +53,21 @@ import org.dataone.service.util.ExceptionHandler;
  * 
  * 
  */
-public class D1RestClient implements MultipartRestClient {
+public class HttpMultipartRestClient implements MultipartRestClient {
 	
-	protected static Log log = LogFactory.getLog(D1RestClient.class);
+	protected static Log log = LogFactory.getLog(HttpMultipartRestClient.class);
 	
     protected RestClient rc;
+    protected RequestConfig reqConfig;
 
 	/**
 	 * Default constructor to create a new instance.  SSL is setup using
 	 * the default location for the client certificate.
 	 */
-//	public D1RestClient() {
-//		this.rc = new DefaultRestClient();
-//		setupSSL(null);
-//	}
-	
-	
-	public D1RestClient(HttpClient httpClient) {
+	public HttpMultipartRestClient(HttpClient httpClient, RequestConfig reqConfig) {
 		this.rc = new RestClient(httpClient);
-		setupSSL(null);
+		this.reqConfig = reqConfig;
+		HttpUtils.setupSSL(httpClient, null);
 	}
 	
 	
@@ -76,20 +75,23 @@ public class D1RestClient implements MultipartRestClient {
 	 * Constructor to create a new instance with given session/subject.
 	 * The session's subject is used to find the registered certificate and key
 	 * 
-	 */
-//	public D1RestClient(Session session) {
-//		this.rc = new DefaultRestClient();
-//		setupSSL(session);
-//	}
-
-	
-	public D1RestClient(HttpClient httpClient, Session session) {
+	 */	
+	public HttpMultipartRestClient(HttpClient httpClient, Session session, RequestConfig reqConfig) {
 		this.rc = new RestClient(httpClient);
-		setupSSL(session);
+		this.reqConfig = reqConfig;
+		HttpUtils.setupSSL(httpClient, session);
 	}
 
+	public void setRequestConfig(RequestConfig reqConfig) {
+		this.reqConfig = reqConfig;
+	}
+	
+	public RequestConfig getRequestConfig() {
+		return this.reqConfig;
+	}
+	
 	/**
-	 * Gets the AbstractHttpClient instance used to make the connection
+	 * Gets the HttpClient instance used to make the connection
 	 * @return
 	 */
 	public HttpClient getHttpClient() 
@@ -112,63 +114,28 @@ public class D1RestClient implements MultipartRestClient {
 	 * Calls closeIdleConnections on the underlying connection manager. This will
 	 * effectively close all released connections managed by the connection manager.
 	 */
+	@Deprecated
 	public void closeIdleConnections()
 	{
 		getHttpClient().getConnectionManager().closeIdleConnections(0,TimeUnit.MILLISECONDS);
 	}
 
-	/**
-	 * Sets the CONNECTION_TIMEOUT and SO_TIMEOUT values for the underlying httpClient.
-	 * (max delay in initial response, max delay between tcp packets, respectively).  
-	 * Uses the same value for both.
-	 * 
-	 * (The default value set in the constructor is 30 seconds)
-	 * 
-	 * @param milliseconds
-	 */
+//	/**
+//	 * Sets the CONNECTION_TIMEOUT and SO_TIMEOUT values for the underlying httpClient.
+//	 * (max delay in initial response, max delay between tcp packets, respectively).  
+//	 * Uses the same value for both.
+//	 * 
+//	 * (The default value set in the constructor is 30 seconds)
+//	 * 
+//	 * @param milliseconds
+//	 */
+//	@Deprecated
 //	public void setTimeouts(int milliseconds) {
 //		((AbstractHttpClient) this.getHttpClient()).setTimeouts(milliseconds);
 //	}
  
 	
-	/**
-	 * Method used by the constructors to setup the connection with SSL.
-	 * With the current CertificateManager implementation, a null value for 
-	 * the session object causes the certificate at the default location to 
-	 * be used.  If the certificate is not found, a warning will be logged 
-	 * and SSL scheme setup will continue.
-	 * <p>
-	 * Calling from a D1RestClient instance should override previous
-	 * connection setups
-	 *  
-	 * @param session
-	 */
-	public void setupSSL(Session session) 
-	{		
-//		long startMS = new Date().getTime();
-		SSLSocketFactory socketFactory = null;
-		try {
-			String subjectString = null;
-			if (session != null && session.getSubject() != null) {
-				subjectString = session.getSubject().getValue();
-			}
-			socketFactory = CertificateManager.getInstance().getSSLSocketFactory(subjectString);
-		} catch (Exception e) {
-			// this is likely more severe
-			log.warn("Exception from CertificateManager at SSL setup - client will be anonymous: " + 
-					e.getClass() + ":: " + e.getMessage());
-		}
-		try {
-			//443 is the default port, this value is overridden if explicitly set in the URL
-			Scheme sch = new Scheme("https", 443, socketFactory );
-			this.rc.getHttpClient().getConnectionManager().getSchemeRegistry().register(sch);
-		} catch (Exception e) {
-			// this is likely more severe
-			log.error("Failed to set up SSL connection for client. Continuing. " + e.getClass() + ":: " + e.getMessage(), e);
-		}
-//		long deltaT = new Date().getTime() - startMS;
-//		log.warn("  SSLsetupTime: " + deltaT);
-	}
+
 	
 	
 	/* (non-Javadoc)
@@ -190,7 +157,7 @@ public class D1RestClient implements MultipartRestClient {
 	{
 		rc.setHeader("Accept", "text/xml");
 		try {
-			return ExceptionHandler.filterErrors(rc.doGetRequest(url), allowRedirect);
+			return ExceptionHandler.filterErrors(rc.doGetRequest(url, this.reqConfig), allowRedirect);
 		} catch (IllegalStateException e) {
 			throw new ClientSideException("", e);
 		} catch (ClientProtocolException e) {
@@ -211,7 +178,7 @@ public class D1RestClient implements MultipartRestClient {
 	{
 		rc.setHeader("Accept", "text/xml");
 		try {
-			return ExceptionHandler.filterErrorsHeader(rc.doGetRequest(url),Constants.GET);
+			return ExceptionHandler.filterErrorsHeader(rc.doGetRequest(url, this.reqConfig),Constants.GET);
 		} catch (IllegalStateException e) {
 			throw new ClientSideException("", e);
 		} catch (ClientProtocolException e) {
@@ -232,7 +199,7 @@ public class D1RestClient implements MultipartRestClient {
 	{
 		rc.setHeader("Accept", "text/xml");
 		try {
-			return ExceptionHandler.filterErrors(rc.doDeleteRequest(url));
+			return ExceptionHandler.filterErrors(rc.doDeleteRequest(url, this.reqConfig));
 		} catch (IllegalStateException e) {
 			throw new ClientSideException("", e);
 		} catch (ClientProtocolException e) {
@@ -264,7 +231,7 @@ public class D1RestClient implements MultipartRestClient {
 	{
 		rc.setHeader("Accept", "text/xml");
 		try {
-			return ExceptionHandler.filterErrorsHeader(rc.doHeadRequest(url),Constants.HEAD);
+			return ExceptionHandler.filterErrorsHeader(rc.doHeadRequest(url, this.reqConfig),Constants.HEAD);
 		} catch (IllegalStateException e) {
 			throw new ClientSideException("", e);
 		} catch (ClientProtocolException e) {
@@ -285,7 +252,7 @@ public class D1RestClient implements MultipartRestClient {
 	{
 		rc.setHeader("Accept", "text/xml");
 		try {
-			return ExceptionHandler.filterErrors(rc.doPutRequest(url, entity));
+			return ExceptionHandler.filterErrors(rc.doPutRequest(url, entity, this.reqConfig));
 		} catch (IllegalStateException e) {
 			throw new ClientSideException("", e);
 		} catch (ClientProtocolException e) {
@@ -306,7 +273,7 @@ public class D1RestClient implements MultipartRestClient {
 	{
 		rc.setHeader("Accept", "text/xml");
 		try {
-			return ExceptionHandler.filterErrors(rc.doPostRequest(url,entity));
+			return ExceptionHandler.filterErrors(rc.doPostRequest(url,entity, this.reqConfig));
 		} catch (IllegalStateException e) {
 			throw new ClientSideException("", e);
 		} catch (ClientProtocolException e) {

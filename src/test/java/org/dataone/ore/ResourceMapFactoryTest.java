@@ -44,7 +44,7 @@ import java.util.Map;
 
 import org.apache.commons.io.input.CountingInputStream;
 import org.apache.commons.lang.StringUtils;
-import org.dataone.client.DataPackage;
+import org.dataone.client.itk.DataPackage;
 import org.dataone.client.types.D1TypeBuilder;
 import org.dataone.service.types.v1.Identifier;
 import org.dspace.foresite.OREException;

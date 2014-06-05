@@ -20,7 +20,7 @@
  * $Id$
  */
 
-package org.dataone.client;
+package org.dataone.client.impl.rest;
 
 
 import java.io.IOException;
@@ -31,12 +31,14 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.methods.HttpUriRequest;
 //import org.apache.http.impl.client.AbstractHttpClient;
 //import org.apache.http.impl.client.DefaultHttpClient;
@@ -51,14 +53,14 @@ import org.dataone.service.util.Constants;
  * A generic client class that contains base functionality for making REST calls
  * to remote REST servers.  
  * It is built to encapsulate the communication conventions dataONE is following
- * but does not know about dataone objects (see D1RestClient for that).  
+ * but does not know about dataone objects (see HttpMultipartRestClient for that).  
  * Specifically, it requires encoding of message bodies as mime-multipart.
  * 
  * The HttpClient can be set either in the constructor or via the setter.  It is 
  * generally advised to not change the HttpClient once set.
  * 
  * */
-public class RestClient {
+class RestClient {
 
 	protected static Log log = LogFactory.getLog(RestClient.class);
 	
@@ -145,10 +147,10 @@ public class RestClient {
      * @throws IOException 
      * @throws ClientProtocolException  
 	 */
-	public HttpResponse doGetRequest(String url) 
+	public HttpResponse doGetRequest(String url, RequestConfig requestConfig) 
 	throws ClientProtocolException, IOException  
 	{
-		return doRequestNoBody(url,Constants.GET);
+		return doRequestNoBody(url,Constants.GET,requestConfig);
 	}
 
     /**
@@ -157,10 +159,10 @@ public class RestClient {
      * @throws ClientProtocolException 
 	 */
 
-	public HttpResponse doHeadRequest(String url) 
+	public HttpResponse doHeadRequest(String url, RequestConfig requestConfig) 
 	throws ClientProtocolException, IOException  
 	{
-		return doRequestNoBody(url,Constants.HEAD);
+		return doRequestNoBody(url,Constants.HEAD,requestConfig);
 	}
 
     /**
@@ -169,10 +171,10 @@ public class RestClient {
      * @throws ClientProtocolException 
 	 */
 
-	public HttpResponse doDeleteRequest(String url) 
+	public HttpResponse doDeleteRequest(String url, RequestConfig requestConfig) 
 	throws ClientProtocolException, IOException 
 	{
-		return doRequestNoBody(url,Constants.DELETE);
+		return doRequestNoBody(url,Constants.DELETE,requestConfig);
 	}
 	
 //	/**
@@ -192,10 +194,10 @@ public class RestClient {
      * @throws IOException 
      * @throws ClientProtocolException  
 	 */
-	public HttpResponse doPostRequest(String url, SimpleMultipartEntity mpe) 
+	public HttpResponse doPostRequest(String url, SimpleMultipartEntity mpe, RequestConfig requestConfig) 
 	throws ClientProtocolException, IOException
 	{
-		return doRequestMMBody(url,Constants.POST,mpe);
+		return doRequestMMBody(url,Constants.POST,mpe,requestConfig);
 	}
 
     /**
@@ -203,24 +205,24 @@ public class RestClient {
      * @throws IOException 
      * @throws ClientProtocolException 
 	 */
-	public HttpResponse doPutRequest(String url, SimpleMultipartEntity mpe) 
+	public HttpResponse doPutRequest(String url, SimpleMultipartEntity mpe, RequestConfig requestConfig) 
 	throws ClientProtocolException, IOException  
 	{
-		return doRequestMMBody(url,Constants.PUT,mpe);
+		return doRequestMMBody(url,Constants.PUT,mpe,requestConfig);
 	}
 	
 
 	/*
 	 * assembles the request for GETs, HEADs and DELETEs - assumes no message body
 	 */
-	private synchronized HttpResponse doRequestNoBody(String url,String httpMethod) 
+	private synchronized HttpResponse doRequestNoBody(String url,String httpMethod, RequestConfig requestConfig) 
 	throws ClientProtocolException, IOException
 	{
 		String latestCall = httpMethod + " " + url;
 	
 		HttpResponse response = null;
 		try {
-			HttpUriRequest req = null;
+			HttpRequestBase req = null;
 			if (httpMethod == Constants.GET) 
 				req = new HttpGet(url);
 
@@ -233,6 +235,7 @@ public class RestClient {
 			else
 				throw new ClientProtocolException("method requested not defined: " + httpMethod);
 			
+			req.setConfig(requestConfig);
 			response = doRequest(req);
 		}
 		finally {
@@ -246,7 +249,7 @@ public class RestClient {
 	/*
 	 * assembles the request for POSTs and PUTs (uses a different base class for these entity-enclosing methods)
 	 */
-	private synchronized HttpResponse doRequestMMBody(String url,String httpMethod, SimpleMultipartEntity mpe)
+	private synchronized HttpResponse doRequestMMBody(String url,String httpMethod, SimpleMultipartEntity mpe, RequestConfig requestConfig)
 	throws ClientProtocolException, IOException 
 	{
 		String latestCall = httpMethod + " " + url;
@@ -269,6 +272,7 @@ public class RestClient {
 			} else {
 				latestCall += "; MMP entity is null";
 			}
+			req.setConfig(requestConfig);
 			response = doRequest(req);
 		} 
 		finally { 
@@ -292,7 +296,6 @@ public class RestClient {
 		{
 			req.setHeader(n,(String)headers.get(n));
 		}
-		
 		return httpClient.execute(req);
 	}
 }

@@ -20,11 +20,14 @@
  * $Id$
  */
 
-package org.dataone.client;
+package org.dataone.client.itk;
 
 import java.io.IOException;
 
+import org.dataone.client.impl.rest.CNode;
+import org.dataone.client.impl.rest.MultipartMNode;
 import org.dataone.client.types.ObsoletesChain;
+import org.dataone.client.utils.ExceptionUtils;
 import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.IdentifierNotUnique;
 import org.dataone.service.exceptions.InsufficientResources;
@@ -74,7 +77,7 @@ public class D1Client {
             	try {
 					cn = (CNode) Class.forName(cnClassName).newInstance();
 				} catch (Exception e) {
-					throw D1Node.recastClientSideExceptionToServiceFailure(e);
+					throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
 
 				}
             	cn.setNodeBaseServiceUrl(cnUrl);
@@ -105,7 +108,7 @@ public class D1Client {
 			try {
 				cn = (CNode) Class.forName(cnClassName).newInstance();
 			} catch (Exception e) {
-				throw D1Node.recastClientSideExceptionToServiceFailure(e);
+				throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
 			}
 			cn.setNodeBaseServiceUrl(cnUrl);
 		} else {
@@ -137,8 +140,8 @@ public class D1Client {
      * @param mnBaseUrl the service URL for the Member Node
      * @return the mn at a particular URL
      */
-    public static MNode getMN(String mnBaseUrl) {
-        MNode mn = new MNode( mnBaseUrl);
+    public static MultipartMNode getMN(String mnBaseUrl) {
+        MultipartMNode mn = new MultipartMNode( mnBaseUrl);
         return mn;
     }
     
@@ -152,12 +155,12 @@ public class D1Client {
      * @return
      * @throws ServiceFailure
      */
-    public static MNode getMN(NodeReference nodeRef) throws ServiceFailure {
+    public static MultipartMNode getMN(NodeReference nodeRef) throws ServiceFailure {
     	CNode cn;
 		try {
 			cn = getCN();
 		} catch (Exception e) {
-			throw D1Node.recastClientSideExceptionToServiceFailure(e);
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
 		}
     	String mnBaseUrl = null;
 		try {
@@ -165,9 +168,9 @@ public class D1Client {
 			if (mnBaseUrl == null) 
 				throw new ServiceFailure("0000","Failed to find baseUrl for node " + nodeRef.getValue() + " in the NodeList");
 		} catch (NotImplemented e) {
-			throw D1Node.recastClientSideExceptionToServiceFailure(e);
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
 		}
-        MNode mn = new MNode(mnBaseUrl);
+        MultipartMNode mn = new MultipartMNode(mnBaseUrl);
         mn.setNodeId(nodeRef.getValue());
         return mn;
     }
@@ -200,7 +203,7 @@ public class D1Client {
     		throw new InvalidRequest("Client Error", "systemMetadata of the D1Object cannot be null");
 
     	String mn_url = D1Client.getCN().lookupNodeBaseUrl(sysmeta.getOriginMemberNode().getValue());
-    	MNode mn = D1Client.getMN(mn_url);
+    	MultipartMNode mn = D1Client.getMN(mn_url);
     	Identifier rGuid;
 		try {
 			rGuid = mn.create(session, sysmeta.getIdentifier(), 
@@ -249,7 +252,7 @@ public class D1Client {
     		throw new InvalidRequest("Client Error", "systemMetadata of the D1Object cannot be null");
 
     	String mn_url = D1Client.getCN().lookupNodeBaseUrl(sysmeta.getOriginMemberNode().getValue());
-    	MNode mn = D1Client.getMN(mn_url);
+    	MultipartMNode mn = D1Client.getMN(mn_url);
     	Identifier rGuid;
 		try {
 			rGuid = mn.update(sysmeta.getObsoletes(), d1object.getDataSource().getInputStream(), 
@@ -286,7 +289,7 @@ public class D1Client {
     		throw new InvalidRequest("Client Error", "systemMetadata of the D1Object cannot be null");
 
     	String mn_url = D1Client.getCN().lookupNodeBaseUrl(sysmeta.getAuthoritativeMemberNode().getValue());
-    	MNode mn = D1Client.getMN(mn_url);
+    	MultipartMNode mn = D1Client.getMN(mn_url);
     	Identifier rGuid;
 		rGuid = mn.archive(d1object.getIdentifier());
     	return rGuid;

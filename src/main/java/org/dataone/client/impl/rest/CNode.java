@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.dataone.client;
+package org.dataone.client.impl.rest;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,6 +29,8 @@ import java.util.Set;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.client.params.ClientPNames;
 import org.dataone.client.exception.ClientSideException;
+import org.dataone.client.formats.ObjectFormatCache;
+import org.dataone.client.utils.ExceptionUtils;
 import org.dataone.configuration.Settings;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.cn.v1.CNAuthorization;
@@ -108,7 +110,7 @@ import org.jibx.runtime.JiBXException;
  * D1Client.D1Node.getSystemMetadata.timeout
  * 
  */
-public class CNode extends D1Node 
+public class CNode extends MultipartD1Node 
 implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplication 
 {
 	protected static org.apache.commons.logging.Log log = LogFactory.getLog(CNode.class);
@@ -323,9 +325,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 
 		return formatList;
 	}
@@ -360,7 +362,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 				if (be instanceof NotFound)              throw (NotFound) be;
 				if (be instanceof NotImplemented)        throw (NotImplemented) be;
 
-				throw recastDataONEExceptionToServiceFailure(be);
+				throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 			} 
 
 		} else {
@@ -378,9 +380,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 				if (be instanceof NotFound)               throw (NotFound) be;
 				if (be instanceof NotImplemented)         throw (NotImplemented) be;
 
-				throw recastDataONEExceptionToServiceFailure(be);
+				throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 			} 
-			catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+			catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 
 		}
 		return objectFormat;
@@ -403,9 +405,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 
 		return algorithmList;
 	}
@@ -480,9 +482,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 
 		return nodelist;
 	}
@@ -527,9 +529,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 
  		return identifier;
 	}
@@ -580,7 +582,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (pid != null)
 				url.addNextPathElement(pid.getValue());
 		} catch (Exception e) {
-			throw recastClientSideExceptionToServiceFailure(e);
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
 		}
     	
 		// send the request
@@ -598,13 +600,13 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 			if (be instanceof IdentifierNotUnique)    throw (IdentifierNotUnique) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
 		catch (ClientSideException e)  {
-			throw recastClientSideExceptionToServiceFailure(e); 
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
 		} 
 		catch (IOException e) {
-			throw recastClientSideExceptionToServiceFailure(e);
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
 		}
 
 		return true;
@@ -655,9 +657,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         	}
         	mpe.addFilePart("sysmeta", sysmeta);
         } catch (IOException e) {
-			throw recastClientSideExceptionToServiceFailure(e);
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
 		} catch (JiBXException e) {
-			throw recastClientSideExceptionToServiceFailure(e);	
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);	
 		}
 
         Identifier identifier = null;
@@ -677,9 +679,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 
  		return identifier;
 	}
@@ -715,9 +717,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     		mpe.addParamPart("pid", pid.getValue());
     		mpe.addFilePart("sysmeta", sysmeta);
     	} catch (IOException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
 		} catch (JiBXException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
 		}
 
 		Identifier identifier = null;
@@ -732,9 +734,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof InvalidSystemMetadata)  throw (InvalidSystemMetadata) be;
 			if (be instanceof InvalidToken)	          throw (InvalidToken) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 
  		return identifier;
 	}
@@ -789,13 +791,13 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
 			if (be instanceof VersionMismatch)        throw (VersionMismatch) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
 		catch (ClientSideException e)  {
-			throw recastClientSideExceptionToServiceFailure(e); 
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
 		} 
 		catch (IOException e) {
-			throw recastClientSideExceptionToServiceFailure(e); 
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
 		} 
 
 		return true;
@@ -860,7 +862,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		try {
 			return super.get(pid);
 		} catch (InsufficientResources e) {
-			throw recastDataONEExceptionToServiceFailure(e);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(e);
 		}
 	}
 	
@@ -870,7 +872,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		try {
 			return super.get(session, pid);
 		} catch (InsufficientResources e) {
-			throw recastDataONEExceptionToServiceFailure(e);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(e);
 		}
 	}
 
@@ -944,9 +946,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof NotFound)               throw (NotFound) be;
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 
  		return oll;
 	}
@@ -962,7 +964,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		try {
 			cs = super.getChecksum(pid, null);
 		} catch (InvalidRequest e) {
-			throw recastDataONEExceptionToServiceFailure(e);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(e);
 		}
     	return cs;
 	}
@@ -978,7 +980,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		try {
 			cs = super.getChecksum(session, pid, null);
 		} catch (InvalidRequest e) {
-			throw recastDataONEExceptionToServiceFailure(e);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(e);
 		}
     	return cs;
 	}
@@ -1106,9 +1108,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 
 		return objectList;
 	}
@@ -1163,9 +1165,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
 			if (be instanceof VersionMismatch)        throw (VersionMismatch) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 
 		return identifier;
 	}
@@ -1222,9 +1224,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     		mpe.addFilePart("accessPolicy", accessPolicy);
     		mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
     	} catch (IOException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
 		} catch (JiBXException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
 		}
 
 		try {
@@ -1241,10 +1243,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
 			if (be instanceof VersionMismatch)         throw (VersionMismatch) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 
 		return true;
 	}
@@ -1276,9 +1278,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	try {
     		mpe.addFilePart("person", person);
     	} catch (IOException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
 		} catch (JiBXException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
 		}
 
 		Subject subject = null;
@@ -1295,9 +1297,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
 			if (be instanceof InvalidToken)	          throw (InvalidToken) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 
 		return subject;
 	}
@@ -1334,9 +1336,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	try {
     		mpe.addFilePart("person", person);
     	} catch (IOException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
 		} catch (JiBXException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
 		}
 
 		Subject subject = null;
@@ -1353,9 +1355,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof InvalidToken)	          throw (InvalidToken) be;
 			if (be instanceof NotFound)               throw (NotFound) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 
 		return subject;
 	}
@@ -1397,10 +1399,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
 			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 		return true;
 	}
 
@@ -1439,9 +1441,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
 			if (be instanceof NotFound)               throw (NotFound) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 
 		return subjectInfo;
 	}
@@ -1484,9 +1486,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 
 		return subjectInfo;
 	}
@@ -1533,10 +1535,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
 			if (be instanceof IdentifierNotUnique)    throw (IdentifierNotUnique) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 
 		return true;
 	}
@@ -1579,10 +1581,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
 			if (be instanceof IdentifierNotUnique)    throw (IdentifierNotUnique) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 		
 		return true;
 	}
@@ -1621,9 +1623,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof NotFound)               throw (NotFound) be;
 			if (be instanceof InvalidToken)	          throw (InvalidToken) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 
 		return subjectInfo;
     }
@@ -1663,10 +1665,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof NotFound)               throw (NotFound) be;
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 		return true;
 	}
 
@@ -1705,10 +1707,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof NotFound)               throw (NotFound) be;
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 		
 		return true;
 	}
@@ -1748,10 +1750,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof NotFound)               throw (NotFound) be;
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 		
 		return true;
 	}
@@ -1778,9 +1780,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         	//url.addNextPathElement(group.getSubject().getValue());
     		mpe.addFilePart("group", group);
     	} catch (IOException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
 		} catch (JiBXException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
 		}
 
 		// send the request
@@ -1797,9 +1799,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 			if (be instanceof IdentifierNotUnique)    throw (IdentifierNotUnique) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 
 		return subject;
 	}
@@ -1830,9 +1832,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
         	//url.addNextPathElement(group.getSubject().getValue());
     		mpe.addFilePart("group", group);
     	} catch (IOException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
 		} catch (JiBXException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
 		}
 
 		try {
@@ -1848,10 +1850,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 		
 		return true;
 	}
@@ -1883,9 +1885,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	try {
     		mpe.addFilePart("node", node);
     	} catch (IOException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
 		} catch (JiBXException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
 		}
 
 		try {
@@ -1901,10 +1903,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
 			if (be instanceof NotFound)               throw (NotFound) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 		
 		return true;
 	}
@@ -1933,9 +1935,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     	try {
     		mpe.addFilePart("node", node);
     	} catch (IOException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
 		} catch (JiBXException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
 		}
 
 		NodeReference nodeRef = null;
@@ -1951,9 +1953,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof IdentifierNotUnique)    throw (IdentifierNotUnique) be;
 			if (be instanceof InvalidToken)	          throw (InvalidToken) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 
 		return nodeRef;
 	}
@@ -1996,7 +1998,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
             }
             
         } catch (IOException e1) {
-            throw recastClientSideExceptionToServiceFailure(e1);        
+            throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);        
         }
 
 		try {
@@ -2012,10 +2014,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
 			if (be instanceof NotFound)               throw (NotFound) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 		
 		return true;
 	}
@@ -2050,9 +2052,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     		mpe.addFilePart("policy", policy);
     		mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
     	} catch (IOException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
 		} catch (JiBXException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
 		}
 
 		try {
@@ -2069,10 +2071,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
 			if (be instanceof VersionMismatch)         throw (VersionMismatch) be;
 			
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 		
 		return true;
 	}
@@ -2117,10 +2119,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof NotFound)               throw (NotFound) be;
 			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 		
 		return true;
 	}
@@ -2157,9 +2159,9 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			mpe.addFilePart("replicaMetadata", replicaMetadata);
 			mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
 		} catch (IOException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
 		} catch (JiBXException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
 		}
 
 		try {
@@ -2176,10 +2178,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
 			if (be instanceof VersionMismatch)        throw (VersionMismatch) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 		
 		return true;
 	}
@@ -2231,10 +2233,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			if (be instanceof InvalidRequest)           throw (InvalidRequest) be;
 			if (be instanceof VersionMismatch)         throw (VersionMismatch) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 		
 		return true;
 	}

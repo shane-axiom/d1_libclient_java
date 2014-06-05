@@ -17,21 +17,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.dataone.client;
+package org.dataone.client.impl.rest;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.text.DateFormat;
 import java.util.Date;
-import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.logging.LogFactory;
-import org.apache.http.HttpException;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.params.ClientPNames;
-import org.dataone.client.exception.ClientSideException;
+import org.dataone.client.rest.MultipartRestClient;
+import org.dataone.client.utils.HttpUtils;
 import org.dataone.configuration.Settings;
-import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.cn.v1.CNAuthorization;
 import org.dataone.service.cn.v1.CNCore;
 import org.dataone.service.cn.v1.CNIdentity;
@@ -41,7 +37,6 @@ import org.dataone.service.cn.v1.CNReplication;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.IdentifierNotUnique;
 import org.dataone.service.exceptions.InsufficientResources;
-import org.dataone.service.exceptions.InvalidCredentials;
 import org.dataone.service.exceptions.InvalidRequest;
 import org.dataone.service.exceptions.InvalidSystemMetadata;
 import org.dataone.service.exceptions.InvalidToken;
@@ -51,37 +46,20 @@ import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.exceptions.UnsupportedType;
 import org.dataone.service.exceptions.VersionMismatch;
-import org.dataone.service.types.v1.AccessPolicy;
-import org.dataone.service.types.v1.Checksum;
-import org.dataone.service.types.v1.ChecksumAlgorithmList;
-import org.dataone.service.types.v1.DescribeResponse;
 import org.dataone.service.types.v1.Event;
-import org.dataone.service.types.v1.Group;
 import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.types.v1.Log;
 import org.dataone.service.types.v1.Node;
-import org.dataone.service.types.v1.NodeList;
 import org.dataone.service.types.v1.NodeReference;
-import org.dataone.service.types.v1.ObjectFormat;
 import org.dataone.service.types.v1.ObjectFormatIdentifier;
-import org.dataone.service.types.v1.ObjectFormatList;
 import org.dataone.service.types.v1.ObjectList;
 import org.dataone.service.types.v1.ObjectLocationList;
-import org.dataone.service.types.v1.Permission;
-import org.dataone.service.types.v1.Person;
 import org.dataone.service.types.v1.Replica;
 import org.dataone.service.types.v1.ReplicationPolicy;
 import org.dataone.service.types.v1.ReplicationStatus;
 import org.dataone.service.types.v1.Session;
-import org.dataone.service.types.v1.Subject;
-import org.dataone.service.types.v1.SubjectInfo;
 import org.dataone.service.types.v1.SystemMetadata;
-import org.dataone.service.types.v1.util.NodelistUtil;
-import org.dataone.service.types.v1_1.QueryEngineDescription;
-import org.dataone.service.types.v1_1.QueryEngineList;
-import org.dataone.service.util.Constants;
 import org.dataone.service.util.D1Url;
-import org.jibx.runtime.JiBXException;
 
 /**
  * CNode represents a DataONE Coordinating Node, and allows calling classes to
@@ -117,6 +95,8 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	/** default Socket timeout in milliseconds **/
 	private Integer defaultSoTimeout = 30000;
 	
+	private static final Integer TIMEOUT_SECONDS = 30;
+	
     private static final String REPLICATION_TIMEOUT_PROPERTY = "D1Client.CNode.replication.timeout";
 	
 	/**
@@ -126,7 +106,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	 *
 	 * @param nodeBaseServiceUrl base url for constructing service endpoints.
 	 */
-	public HttpCNode(String nodeBaseServiceUrl) {
+	public HttpCNode(MultipartRestClient mrc, String nodeBaseServiceUrl) {
 		super(nodeBaseServiceUrl);
 	}
 
@@ -200,10 +180,12 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	throws InvalidToken, InvalidRequest, ServiceFailure,
 	NotAuthorized, NotImplemented, InsufficientResources
 	{
-		setTimeouts(Settings.getConfiguration()
+		RequestConfig previous = setTimeouts(Settings.getConfiguration()
 				.getInteger("D1Client.D1Node.getLogRecords.timeout", getDefaultSoTimeout()));
 		
-		return super.getLogRecords(session, fromDate, toDate, event, pidFilter, start, count);
+		Log log = super.getLogRecords(session, fromDate, toDate, event, pidFilter, start, count);
+		((HttpMultipartRestClient)this.restClient).setRequestConfig(previous);
+		return log;
 	}
 		
 
@@ -227,10 +209,12 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	throws InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, 
 	NotImplemented, InvalidRequest
 	{
-		setTimeouts(Settings.getConfiguration()
+		RequestConfig previous = setTimeouts(Settings.getConfiguration()
 				.getInteger("D1Client.CNode.reserveIdentifier.timeout", getDefaultSoTimeout()));
 
- 		return super.reserveIdentifier(session, pid);
+ 		Identifier id = super.reserveIdentifier(session, pid);
+ 		((HttpMultipartRestClient)this.restClient).setRequestConfig(previous);
+ 		return id;
 	}
 
 
@@ -253,10 +237,12 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	throws InvalidToken, ServiceFailure,NotAuthorized, IdentifierNotUnique, UnsupportedType,
 	InsufficientResources, InvalidSystemMetadata, NotImplemented, InvalidRequest
 	{
-        setTimeouts(Settings.getConfiguration()
+		RequestConfig previous = setTimeouts(Settings.getConfiguration()
 			.getInteger("D1Client.CNode.create.timeout", getDefaultSoTimeout()));
  
-        return super.create(null,  object, sysmeta);
+        Identifier id = super.create(null,  object, sysmeta);
+        ((HttpMultipartRestClient)this.restClient).setRequestConfig(previous);
+        return id;
 	}
 
 
@@ -280,10 +266,12 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	throws NotImplemented, NotAuthorized,ServiceFailure, InvalidRequest, 
 	InvalidSystemMetadata, InvalidToken
 	{
-    	setTimeouts(Settings.getConfiguration()
+		RequestConfig previous = setTimeouts(Settings.getConfiguration()
 			.getInteger("D1Client.CNode.registerSystemMetadata.timeout", getDefaultSoTimeout()));
 
- 		return super.registerSystemMetadata(session, pid, sysmeta);
+ 		Identifier id = super.registerSystemMetadata(session, pid, sysmeta);
+ 		((HttpMultipartRestClient)this.restClient).setRequestConfig(previous);
+ 		return id;
 	}
 
 	
@@ -337,10 +325,12 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented,
 			ServiceFailure 
 	{
-		setTimeouts(Settings.getConfiguration()
+		RequestConfig previous = setTimeouts(Settings.getConfiguration()
 				.getInteger("D1Client.D1Node.listObjects.timeout", getDefaultSoTimeout()));
 		
-		return super.listObjects(session,fromDate,toDate,formatid,replicaStatus,start,count);
+		ObjectList ol = super.listObjects(session,fromDate,toDate,formatid,replicaStatus,start,count);
+		((HttpMultipartRestClient)this.restClient).setRequestConfig(previous);
+		return ol;
 	}
 	
 
@@ -354,10 +344,12 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	public InputStream get(Session session, Identifier pid)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
 	{
-		setTimeouts(Settings.getConfiguration()
+		RequestConfig previous = setTimeouts(Settings.getConfiguration()
 				.getInteger("D1Client.D1Node.get.timeout", getDefaultSoTimeout()));
 
-		return super.get(session, pid);
+		InputStream is =  super.get(session, pid);
+		((HttpMultipartRestClient)this.restClient).setRequestConfig(previous);
+		return is;
 	}
 
 
@@ -371,9 +363,11 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	public SystemMetadata getSystemMetadata(Session session, Identifier pid)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
 	{
-		setTimeouts(Settings.getConfiguration()
+		RequestConfig previous = setTimeouts(Settings.getConfiguration()
                 .getInteger("D1Client.D1Node.getSystemMetadata.timeout", getDefaultSoTimeout()));
-		return super.getSystemMetadata(session, pid);
+		SystemMetadata smd =  super.getSystemMetadata(session, pid);
+		((HttpMultipartRestClient)this.restClient).setRequestConfig(previous);
+		return smd;
 	}
 
 
@@ -395,11 +389,12 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	{
 
         // TODO: Refactor away from reliance on implementations
-		if (this.restClient instanceof D1RestClient) {
-			((D1RestClient)this.restClient).getHttpClient().getParams().setParameter(ClientPNames.HANDLE_REDIRECTS, false);
+		if (this.restClient instanceof HttpMultipartRestClient) {
+			((HttpMultipartRestClient)this.restClient).getHttpClient().getParams().setParameter(ClientPNames.HANDLE_REDIRECTS, false);
 		}
 
  		return super.resolve(session, pid);
+// 		((HttpMultipartRestClient)this.restClient).setRequestConfig(previous);
 	}
 
 
@@ -508,9 +503,11 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest, NotImplemented
 	{
 
-        setTimeouts(Settings.getConfiguration()
+		RequestConfig previous = setTimeouts(Settings.getConfiguration()
 			.getInteger("D1Client.CNode.search.timeout", getDefaultSoTimeout()));
-		return super.search(session, queryType, query);
+		ObjectList ol =  super.search(session, queryType, query);
+		((HttpMultipartRestClient)this.restClient).setRequestConfig(previous);
+		return ol;
 	}
 
 	
@@ -530,43 +527,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		return register(this.session, node);
 	}
 	
-	/**
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRegister.register">see DataONE API Reference</a> }
-	 */
-	public NodeReference register(Session session, Node node)
-	throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, 
-	IdentifierNotUnique, InvalidToken
-	{
-    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_NODE);
-    	
-    	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
-    	try {
-    		mpe.addFilePart("node", node);
-    	} catch (IOException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
-		} catch (JiBXException e1) {
-			throw recastClientSideExceptionToServiceFailure(e1);
-		}
-
-		NodeReference nodeRef = null;
-		try {
-			InputStream is = this.restClient.doPostRequest(url.getUrl(),mpe);
-			nodeRef = deserializeServiceType(NodeReference.class, is);
-			
-		} catch (BaseException be) {
-			if (be instanceof NotImplemented)         throw (NotImplemented) be;
-			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
-			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
-			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
-			if (be instanceof IdentifierNotUnique)    throw (IdentifierNotUnique) be;
-			if (be instanceof InvalidToken)	          throw (InvalidToken) be;
-
-			throw recastDataONEExceptionToServiceFailure(be);
-		} 
-		catch (ClientSideException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-
-		return nodeRef;
-	}
 
 
 	////////////  CN REPLICATION API    ////////////////////
@@ -592,10 +552,12 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 					throws ServiceFailure, NotImplemented, InvalidToken, NotAuthorized, 
 					InvalidRequest, NotFound
 	{
-        setTimeouts(Settings.getConfiguration().getInteger(
+		RequestConfig previous = setTimeouts(Settings.getConfiguration().getInteger(
                 REPLICATION_TIMEOUT_PROPERTY, getDefaultSoTimeout()));
 
-		return super.setReplicationStatus(session, pid, nodeRef, status, failure);
+		boolean b = super.setReplicationStatus(session, pid, nodeRef, status, failure);
+		((HttpMultipartRestClient)this.restClient).setRequestConfig(previous);
+		return b;
 	}
 
 
@@ -608,6 +570,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		InvalidRequest, InvalidToken, VersionMismatch
 	{
 		return this.setReplicationPolicy(this.session, pid, policy, serialVersion);
+		
 	}
 	
 	
@@ -619,10 +582,12 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	throws NotImplemented, NotFound, NotAuthorized, ServiceFailure, 
 		InvalidRequest, InvalidToken, VersionMismatch
 	{
-		setTimeouts(Settings.getConfiguration().getInteger(
+		RequestConfig previous = setTimeouts(Settings.getConfiguration().getInteger(
                 REPLICATION_TIMEOUT_PROPERTY, getDefaultSoTimeout()));
 
-		return super.setReplicationPolicy(session, pid, policy, serialVersion);
+		boolean b = super.setReplicationPolicy(session, pid, policy, serialVersion);
+		((HttpMultipartRestClient)this.restClient).setRequestConfig(previous);
+		return b;
 	}
 
 
@@ -647,10 +612,12 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	InvalidRequest, InvalidToken, VersionMismatch
 	{
 
-        setTimeouts(Settings.getConfiguration().getInteger( REPLICATION_TIMEOUT_PROPERTY,
+		RequestConfig previous = setTimeouts(Settings.getConfiguration().getInteger( REPLICATION_TIMEOUT_PROPERTY,
                 getDefaultSoTimeout()));
 
-		return super.updateReplicationMetadata(session, pid, replicaMetadata, serialVersion);
+		boolean b =  super.updateReplicationMetadata(session, pid, replicaMetadata, serialVersion);
+		((HttpMultipartRestClient)this.restClient).setRequestConfig(previous);
+		return b;
 	}
 
 
@@ -676,16 +643,18 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 			ServiceFailure, NotAuthorized, NotFound, NotImplemented,
 			VersionMismatch, InvalidRequest 
 	{
-        setTimeouts(Settings.getConfiguration().getInteger(
+		RequestConfig previous = setTimeouts(Settings.getConfiguration().getInteger(
                 REPLICATION_TIMEOUT_PROPERTY, getDefaultSoTimeout()));
 		
-		return super.deleteReplicationMetadata(session, pid, nodeId, serialVersion);
+		boolean b = super.deleteReplicationMetadata(session, pid, nodeId, serialVersion);
+		((HttpMultipartRestClient)this.restClient).setRequestConfig(previous);
+		return b;
 	}
 
 	
 
-	protected void setTimeouts(Integer milliseconds) {
-		HttpUtils.setTimeouts(this.restClient, milliseconds);
+	protected RequestConfig setTimeouts(Integer milliseconds) {
+		return HttpUtils.setTimeouts(this.restClient, milliseconds);
 	}
 
 	public Integer getDefaultSoTimeout() {

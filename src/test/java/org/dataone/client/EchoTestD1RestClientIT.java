@@ -34,6 +34,8 @@ import org.apache.http.HttpException;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.dataone.client.exception.ClientSideException;
+import org.dataone.client.impl.rest.HttpMultipartRestClient;
+import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.NotFound;
@@ -55,7 +57,7 @@ public class EchoTestD1RestClientIT {
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		MultipartRestClient rc = new D1RestClient(new DefaultHttpClient());
+		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient(), null);
 		String contentString = null;
 		try {
 			InputStream is = rc.doGetRequest(u.getUrl());
@@ -76,7 +78,7 @@ public class EchoTestD1RestClientIT {
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		MultipartRestClient rc = new D1RestClient(new DefaultHttpClient());
+		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient(), null);
 		String contentString = null;
 		try {
 			InputStream is = rc.doDeleteRequest(u.getUrl());
@@ -98,7 +100,7 @@ public class EchoTestD1RestClientIT {
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		MultipartRestClient rc = new D1RestClient(new DefaultHttpClient());
+		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient(), null);
 		Header[] headers = null;
 		try {
 			headers = rc.doHeadRequest(u.getUrl());
@@ -120,7 +122,7 @@ public class EchoTestD1RestClientIT {
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		MultipartRestClient rc = new D1RestClient(new DefaultHttpClient());
+		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient(), null);
 		String contentString = null;
 		try {
 			InputStream is = rc.doPutRequest(u.getUrl(),null);
@@ -141,7 +143,7 @@ public class EchoTestD1RestClientIT {
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		MultipartRestClient rc = new D1RestClient(new DefaultHttpClient());
+		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient(), null);
 		String contentString = null;
 		try {
 			InputStream is = rc.doPostRequest(u.getUrl(),null);
@@ -166,7 +168,7 @@ public class EchoTestD1RestClientIT {
 		SimpleMultipartEntity ent = new SimpleMultipartEntity();
 		ent.addParamPart("Jabberwocky", "Twas brillig and the slithy tove, did gyre and gimble in the wabe");
 		ent.addFilePart("Jabberwocky2", "All mimsy was the borogrove, and the mome wrath ungrabe.");
-		MultipartRestClient rc = new D1RestClient(new DefaultHttpClient());
+		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient(), null);
 		String contentString = null;
 		try {
 			InputStream is = rc.doPutRequest(u.getUrl(),ent);
@@ -190,7 +192,7 @@ public class EchoTestD1RestClientIT {
 		SimpleMultipartEntity ent = new SimpleMultipartEntity();
 		ent.addParamPart("Jabberwocky", "Twas brillig and the slithy tove, did gyre and gimble in the wabe");
 		ent.addFilePart("Jabberwocky2", "All mimsy was the borogrove, and the mome wrath ungrabe.");
-		MultipartRestClient rc = new D1RestClient(new DefaultHttpClient());
+		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient(), null);
 		String contentString = null;
 		try {
 			InputStream is = rc.doPostRequest(u.getUrl(),ent);
@@ -211,7 +213,7 @@ public class EchoTestD1RestClientIT {
 		D1Url u = new D1Url(echoNode + "xx", "fakeResource");
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		MultipartRestClient rc = new D1RestClient(new DefaultHttpClient());
+		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient(), null);
 
 		try {
 			InputStream is = rc.doGetRequest(u.getUrl());

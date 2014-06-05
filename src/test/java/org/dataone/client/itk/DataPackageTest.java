@@ -20,7 +20,7 @@
  * $Id$
  */
 
-package org.dataone.client;
+package org.dataone.client.itk;
 
 
 import static org.junit.Assert.assertNotNull;
@@ -31,6 +31,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.dataone.client.itk.DataPackage;
 import org.dataone.client.types.D1TypeBuilder;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.types.v1.Identifier;

@@ -18,12 +18,15 @@
  * limitations under the License.
  */
 
-package org.dataone.client;
+package org.dataone.client.impl.rest;
 
 import java.io.InputStream;
 import java.util.Date;
 
 import org.apache.commons.logging.LogFactory;
+import org.apache.http.client.config.RequestConfig;
+import org.dataone.client.rest.MultipartRestClient;
+import org.dataone.client.utils.HttpUtils;
 import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.IdentifierNotUnique;
 import org.dataone.service.exceptions.InsufficientResources;
@@ -52,7 +55,7 @@ import org.dataone.service.types.v1.SystemMetadata;
 import org.dataone.service.util.D1Url;
 
 /**
- * MNode represents a MemberNode, and exposes the services associated with a
+ * MultipartMNode represents a MemberNode, and exposes the services associated with a
  * DataONE Member Node, allowing calling clients to call the services associated
  * with the node.
  * 
@@ -62,7 +65,7 @@ import org.dataone.service.util.D1Url;
  * 2. omit the url query parameter if the parameter is mapped to a URL query segment
  * 3. throw an InvalidRequest exception if the parameter is mapped to the message body
  * 
- * Session objects get passed to the underlying D1RestClient class, but  be passed to the httpClient request, as they are
+ * Session objects get passed to the underlying HttpMultipartRestClient class, but  be passed to the httpClient request, as they are
  * pulled from the underlying filesystem of the local machine.
  * 
  * Java implementation of the following types:
@@ -87,7 +90,7 @@ import org.dataone.service.util.D1Url;
  *  @author Rob Nahf
  */
 
-public class HttpMNode extends MNode 
+public class HttpMNode extends MultipartMNode 
 implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery 
 {
   
@@ -98,25 +101,49 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
 	
 	
     /**
-     * Construct a new client-side MNode (Member Node) object, 
+     * Construct a new client-side MultipartMNode (Member Node) object, 
      * passing in the base url of the member node for calling its services.
      * @param nodeBaseServiceUrl base url for constructing service endpoints.
      */
+	@Deprecated
     public HttpMNode(String nodeBaseServiceUrl) {
         super(nodeBaseServiceUrl); 
     }
    
     
     /**
-     * Construct a new client-side MNode (Member Node) object, 
+     * Construct a new client-side MultipartMNode (Member Node) object, 
      * passing in the base url of the member node for calling its services,
      * and the Session to use for connections to that node. 
      * @param nodeBaseServiceUrl base url for constructing service endpoints.
      * @param session - the Session object passed to the CertificateManager
      *                  to be used for establishing connections
      */
+    @Deprecated
     public HttpMNode(String nodeBaseServiceUrl, Session session) {
         super(nodeBaseServiceUrl, session); 
+    }
+    
+    /**
+     * Construct a new client-side MultipartMNode (Member Node) object, 
+     * passing in the base url of the member node for calling its services.
+     * @param nodeBaseServiceUrl base url for constructing service endpoints.
+     */
+    public HttpMNode(MultipartRestClient mrc, String nodeBaseServiceUrl) {
+        super(mrc, nodeBaseServiceUrl); 
+    }
+   
+    
+    /**
+     * Construct a new client-side MultipartMNode (Member Node) object, 
+     * passing in the base url of the member node for calling its services,
+     * and the Session to use for connections to that node. 
+     * @param nodeBaseServiceUrl base url for constructing service endpoints.
+     * @param session - the Session object passed to the CertificateManager
+     *                  to be used for establishing connections
+     */
+    public HttpMNode(MultipartRestClient mrc, String nodeBaseServiceUrl, Session session) {
+        super(mrc, nodeBaseServiceUrl, session); 
     }
     
     
@@ -134,7 +161,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
 	public Log getLogRecords() 
 	throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure 
 	{	
-    	return this.getLogRecords(null);
+    	return this.getLogRecords(this.session);
 	}
 	
 	
@@ -158,7 +185,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
                Integer start, Integer count) 
     throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
     {	
-    	return this.getLogRecords(null, fromDate, toDate, event, pidFilter, start, count);
+    	return this.getLogRecords(this.session, fromDate, toDate, event, pidFilter, start, count);
     }
     
     
@@ -170,10 +197,13 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
                Event event, String pidFilter, Integer start, Integer count) 
     throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
     {
-		setTimeouts(Settings.getConfiguration()
+
+    	RequestConfig previous = setTimeouts(Settings.getConfiguration()
 				.getInteger("D1Client.D1Node.getLogRecords.timeout", getDefaultSoTimeout()));
     	
-    	return super.getLogRecords(session, fromDate, toDate, event, pidFilter, start, count);
+    	Log log = super.getLogRecords(session, fromDate, toDate, event, pidFilter, start, count);
+    	((HttpMultipartRestClient)this.restClient).setRequestConfig(previous);
+    	return log;
     }
 
     
@@ -183,7 +213,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
 	public ObjectList listObjects() 
 	throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure 
 	{
-		return this.listObjects(null);
+		return this.listObjects(this.session);
 	}
     
     /**
@@ -204,7 +234,7 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
 			Boolean replicaStatus, Integer start, Integer count)
 	throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure 
 	{
-		return this.listObjects(null, fromDate,toDate,formatid,replicaStatus,start,count);
+		return this.listObjects(this.session, fromDate,toDate,formatid,replicaStatus,start,count);
 	}
 	
  
@@ -218,43 +248,46 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
 			throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented,
 			ServiceFailure 
 	{
-        setTimeouts(Settings.getConfiguration()
+		RequestConfig previous = setTimeouts(Settings.getConfiguration()
 			.getInteger("D1Client.D1Node.listObjects.timeout", getDefaultSoTimeout()));
         
-		return super.listObjects(session,fromDate,toDate,formatid,replicaStatus,start,count);
+		ObjectList ol = super.listObjects(session,fromDate,toDate,formatid,replicaStatus,start,count);
+		((HttpMultipartRestClient)this.restClient).setRequestConfig(previous);
+		return ol;
 	}
    
 
     public InputStream get(Identifier pid)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound, InsufficientResources
     {
-    	setTimeouts(Settings.getConfiguration()
-                .getInteger("D1Client.D1Node.get.timeout", getDefaultSoTimeout()));
-    	return super.get(pid);
+    	return this.get(this.session, pid);
     }  
 
     
     public InputStream get(Session session, Identifier pid)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound, InsufficientResources
     {
-    	setTimeouts(Settings.getConfiguration()
+    	RequestConfig previous = setTimeouts(Settings.getConfiguration()
                 .getInteger("D1Client.D1Node.get.timeout", getDefaultSoTimeout()));
-    	return super.get(session, pid);
+    	InputStream is = super.get(session, pid);
+    	return is;
     }
 
 
     public SystemMetadata getSystemMetadata(Identifier pid)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound
     {
-    	return this.getSystemMetadata(null, pid);
+    	return this.getSystemMetadata(this.session, pid);
     }   
     
     public SystemMetadata getSystemMetadata(Session session, Identifier pid)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound
     {
-    	setTimeouts(Settings.getConfiguration()
+    	RequestConfig previous = setTimeouts(Settings.getConfiguration()
                 .getInteger("D1Client.D1Node.getSystemMetadata.timeout", getDefaultSoTimeout()));
-    	return super.getSystemMetadata(session,pid);
+    	SystemMetadata smd = super.getSystemMetadata(session,pid);
+    	((HttpMultipartRestClient)this.restClient).setRequestConfig(previous);
+    	return smd;
     }
 
 	
@@ -279,10 +312,12 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
         	InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, UnsupportedType
     {
 
-        setTimeouts(Settings.getConfiguration()
+    	RequestConfig previous = setTimeouts(Settings.getConfiguration()
 			.getInteger("D1Client.MNode.create.timeout", getDefaultSoTimeout()));
 
-        return super.create(session, pid, object, sysmeta);
+        Identifier id = super.create(session, pid, object, sysmeta);
+        ((HttpMultipartRestClient)this.restClient).setRequestConfig(previous);
+        return id;
     }
 
 
@@ -309,12 +344,14 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
             NotFound
     {
     	  	
-        setTimeouts(Settings.getConfiguration()
+    	RequestConfig previous = setTimeouts(Settings.getConfiguration()
 			.getInteger("D1Client.MNode.update.timeout", getDefaultSoTimeout()));
-    	Identifier identifier = null;
     	
+    	Identifier id = super.update(pid, object, newPid, sysmeta);
+    	
+    	((HttpMultipartRestClient)this.restClient).setRequestConfig(previous);
 
-        return super.update(pid, object, newPid, sysmeta);
+        return id;
     }
 
 
@@ -339,10 +376,12 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
     throws NotImplemented, ServiceFailure, NotAuthorized, InvalidRequest, InvalidToken,
         InsufficientResources, UnsupportedType
     {  	
-        setTimeouts(Settings.getConfiguration()
+    	RequestConfig previous = setTimeouts(Settings.getConfiguration()
 			.getInteger("D1Client.MNode.replicate.timeout", getDefaultSoTimeout()));
       
-        return super.replicate(session, sysmeta, sourceNode);
+        boolean b = super.replicate(session, sysmeta, sourceNode);
+        ((HttpMultipartRestClient)this.restClient).setRequestConfig(previous);
+        return b;
     }
 
 
@@ -364,17 +403,19 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound,
     InsufficientResources
     {
-    	setTimeouts(Settings.getConfiguration()
+    	RequestConfig previous = setTimeouts(Settings.getConfiguration()
 			.getInteger("D1Client.MNode.getReplica.timeout", getDefaultSoTimeout()));
  
-        return super.getReplica(session, pid);
+        InputStream is = super.getReplica(session, pid);
+        ((HttpMultipartRestClient)this.restClient).setRequestConfig(previous);
+        return is;
     }
     
  
     
 	
-	protected void setTimeouts(Integer milliseconds) {
-		HttpUtils.setTimeouts(this.restClient, milliseconds);
+	protected RequestConfig setTimeouts(Integer milliseconds) {
+		return HttpUtils.setTimeouts(this.restClient, milliseconds);
 	}
 	
 	public Integer getDefaultSoTimeout() {

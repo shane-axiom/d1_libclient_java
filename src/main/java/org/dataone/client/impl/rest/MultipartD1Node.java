@@ -1,5 +1,5 @@
 /**
- * This work was created by participants in the DataONE project, and is
+  * This work was created by participants in the DataONE project, and is
  * jointly copyrighted by participating institutions in DataONE. For
  * more information on DataONE, see our web site at http://dataone.org.
  *
@@ -20,7 +20,7 @@
  * $Id$
  */
 
-package org.dataone.client;
+package org.dataone.client.impl.rest;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -28,7 +28,6 @@ import java.io.InputStream;
 import java.math.BigInteger;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
@@ -38,6 +37,8 @@ import org.apache.http.Header;
 import org.dataone.client.cache.LocalCache;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.exception.NotCached;
+import org.dataone.client.rest.MultipartRestClient;
+import org.dataone.client.utils.ExceptionUtils;
 import org.dataone.configuration.Settings;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.exceptions.BaseException;
@@ -82,9 +83,9 @@ import org.jibx.runtime.JiBXException;
  * D1Client.D1Node.getSystemMetadata.timeout
  * 
  */
-public abstract class D1Node {
+public abstract class MultipartD1Node {
 
-	protected static org.apache.commons.logging.Log log = LogFactory.getLog(D1Node.class);
+	protected static org.apache.commons.logging.Log log = LogFactory.getLog(MultipartD1Node.class);
 	
 	/** the adapter / connector to the RESTful service endpoints */
 	protected MultipartRestClient restClient;
@@ -100,8 +101,6 @@ public abstract class D1Node {
     
     /** flag that controls whether or not a local cache is used */
     private boolean useLocalCache = false;
-
-//	private String lastRequestUrl = null;
 
 	
 	
@@ -120,7 +119,7 @@ public abstract class D1Node {
     /**
  	 * Constructor to create a new instance.
  	 */
- 	public D1Node(MultipartRestClient client, String nodeBaseServiceUrl, Session session) {
+ 	public MultipartD1Node(MultipartRestClient client, String nodeBaseServiceUrl, Session session) {
  	    setNodeBaseServiceUrl(nodeBaseServiceUrl);
  	    this.restClient = client;
  	    this.session = session;
@@ -130,7 +129,7 @@ public abstract class D1Node {
 	/**
 	 * Constructor to create a new instance.
 	 */
-	public D1Node(MultipartRestClient client, String nodeBaseServiceUrl) {
+	public MultipartD1Node(MultipartRestClient client, String nodeBaseServiceUrl) {
 	    setNodeBaseServiceUrl(nodeBaseServiceUrl);
 	    this.restClient = client;
 	    this.session = null;
@@ -142,9 +141,10 @@ public abstract class D1Node {
     /**
 	 * Constructor to create a new instance.
 	 */
-	public D1Node(String nodeBaseServiceUrl, Session session) {
+	@Deprecated
+	public MultipartD1Node(String nodeBaseServiceUrl, Session session) {
 	    setNodeBaseServiceUrl(nodeBaseServiceUrl);
-	    this.restClient = new DefaultD1RestClient();
+	    this.restClient = new DefaultHttpMultipartRestClient(30);
 	    this.session = session;
 	    this.useLocalCache = Settings.getConfiguration().getBoolean("D1Client.useLocalCache",useLocalCache);
 	}
@@ -154,9 +154,10 @@ public abstract class D1Node {
 	/**
 	 * Constructor to create a new instance.
 	 */
-	public D1Node(String nodeBaseServiceUrl) {
+	@Deprecated
+	public MultipartD1Node(String nodeBaseServiceUrl) {
 	    setNodeBaseServiceUrl(nodeBaseServiceUrl);
-	    this.restClient = new DefaultD1RestClient();
+	    this.restClient = new DefaultHttpMultipartRestClient(30);
 	    this.session = null;
 	    this.useLocalCache = Settings.getConfiguration().getBoolean("D1Client.useLocalCache",useLocalCache);
 	}
@@ -166,10 +167,10 @@ public abstract class D1Node {
 	// No code calls it in Java, but it is called by the R client; evaluate if this can change
 	/**
 	 * default constructor needed by some clients.  This constructor will probably
-	 * go away so don't depend on it.  Use public D1Node(String nodeBaseServiceUrl) instead.
+	 * go away so don't depend on it.  Use public MultipartD1Node(String nodeBaseServiceUrl) instead.
 	 */
 	@Deprecated
-	public D1Node() {
+	public MultipartD1Node() {
 	}
 
 
@@ -228,10 +229,10 @@ public abstract class D1Node {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof InsufficientResources)  throw (InsufficientResources) be;
 	
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
 		catch (ClientSideException e) {
-			throw recastClientSideExceptionToServiceFailure(e); 
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
 		} 
 
 
@@ -318,9 +319,11 @@ public abstract class D1Node {
             if (be instanceof NotImplemented)         throw (NotImplemented) be;
             if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
                     
-            throw recastDataONEExceptionToServiceFailure(be);
+            throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
         } 
-        catch (ClientSideException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+        catch (ClientSideException e)            {
+        	throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
+        } 
  
         return objectList;
     }
@@ -383,9 +386,11 @@ public abstract class D1Node {
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 			if (be instanceof InsufficientResources)  throw (InsufficientResources) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+		catch (ClientSideException e)            {
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
+		} 
 
 		return log;
 	}
@@ -393,9 +398,9 @@ public abstract class D1Node {
 	
 	/**
      * Get the resource with the specified pid.  Used by both the CNode and 
-     * MNode subclasses. A LocalCache is used to cache objects in memory and in 
+     * MultipartMNode subclasses. A LocalCache is used to cache objects in memory and in 
      * a local disk cache if the "D1Client.useLocalCache" configuration property
-     * was set to true when the D1Node was created. Otherwise
+     * was set to true when the MultipartD1Node was created. Otherwise
      * InputStream is the Java native version of D1's OctetStream
      * 
      * @see <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.get">see DataONE API Reference (MemberNode API)</a>
@@ -411,9 +416,9 @@ public abstract class D1Node {
 	
 	/**
      * Get the resource with the specified pid.  Used by both the CNode and 
-     * MNode subclasses. A LocalCache is used to cache objects in memory and in 
+     * MultipartMNode subclasses. A LocalCache is used to cache objects in memory and in 
      * a local disk cache if the "D1Client.useLocalCache" configuration property
-     * was set to true when the D1Node was created. Otherwise
+     * was set to true when the MultipartD1Node was created. Otherwise
      * InputStream is the Java native version of D1's OctetStream
      * 
      * @see <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.get">see DataONE API Reference (MemberNode API)</a>
@@ -459,10 +464,14 @@ public abstract class D1Node {
             if (be instanceof NotFound)                throw (NotFound) be;
             if (be instanceof InsufficientResources)   throw (InsufficientResources) be;
                     
-            throw recastDataONEExceptionToServiceFailure(be);
+            throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
         } 
-        catch (ClientSideException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-        catch (IOException e)                    {throw recastClientSideExceptionToServiceFailure(e); }
+        catch (ClientSideException e) {
+        	throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
+        } 
+        catch (IOException e) {
+        	throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
+        }
         
         return is;
     }
@@ -471,7 +480,7 @@ public abstract class D1Node {
     
     /**
      * Get the system metadata from a resource with the specified guid. Used
-     * by both the CNode and MNode implementations. Note that this method defaults
+     * by both the CNode and MultipartMNode implementations. Note that this method defaults
      * to not using the local system metadata cache provided by the client, as
      * SystemMetadata is mutable and so caching can lead to issues.  In specific
      * cases where a client wants to utilize the same system metadata in rapid succession,
@@ -487,7 +496,7 @@ public abstract class D1Node {
 
     /**
      * Get the system metadata from a resource with the specified guid, potentially using the local
-     * system metadata cache if specified to do so. Used by both the CNode and MNode implementations. 
+     * system metadata cache if specified to do so. Used by both the CNode and MultipartMNode implementations. 
      * Because SystemMetadata is mutable, caching can lead to currency issues.  In specific
      * cases where a client wants to utilize the same system metadata in rapid succession,
      * it may make sense to temporarily use the local cache by setting useSystemMetadadataCache to true.
@@ -504,7 +513,7 @@ public abstract class D1Node {
     
     /**
      * Get the system metadata from a resource with the specified guid. Used
-     * by both the CNode and MNode implementations. Note that this method defaults
+     * by both the CNode and MultipartMNode implementations. Note that this method defaults
      * to not using the local system metadata cache provided by the client, as
      * SystemMetadata is mutable and so caching can lead to issues.  In specific
      * cases where a client wants to utilize the same system metadata in rapid succession,
@@ -520,7 +529,7 @@ public abstract class D1Node {
 
     /**
      * Get the system metadata from a resource with the specified guid, potentially using the local
-     * system metadata cache if specified to do so. Used by both the CNode and MNode implementations. 
+     * system metadata cache if specified to do so. Used by both the CNode and MultipartMNode implementations. 
      * Because SystemMetadata is mutable, caching can lead to currency issues.  In specific
      * cases where a client wants to utilize the same system metadata in rapid succession,
      * it may make sense to temporarily use the local cache by setting useSystemMetadadataCache to true.
@@ -562,10 +571,10 @@ public abstract class D1Node {
             if (be instanceof ServiceFailure)    throw (ServiceFailure) be;
             if (be instanceof NotFound)          throw (NotFound) be;
                     
-            throw recastDataONEExceptionToServiceFailure(be);
+            throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
         }
 		catch (ClientSideException e) {
-			throw recastClientSideExceptionToServiceFailure(e);
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
 		} 	
         return sysmeta;
 	}
@@ -607,9 +616,11 @@ public abstract class D1Node {
             if (be instanceof ServiceFailure)   throw (ServiceFailure) be;
             if (be instanceof NotFound)         throw (NotFound) be;
                     
-            throw recastDataONEExceptionToServiceFailure(be);
+            throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
         } 
-        catch (ClientSideException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+        catch (ClientSideException e)            {
+        	throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
+        } 
 
     	
  //   	DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
@@ -722,9 +733,9 @@ public abstract class D1Node {
             if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
             if (be instanceof NotFound)               throw (NotFound) be;
                     
-            throw recastDataONEExceptionToServiceFailure(be);
+            throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
         } 
-        catch (ClientSideException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+        catch (ClientSideException e)            {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); } 
 
         return checksum;
     }
@@ -763,10 +774,10 @@ public abstract class D1Node {
             if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
             if (be instanceof NotImplemented)         throw (NotImplemented) be;
                     
-            throw recastDataONEExceptionToServiceFailure(be);
+            throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
         } 
-        catch (ClientSideException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-        catch (IOException e)                    {throw recastClientSideExceptionToServiceFailure(e); } 
+        catch (ClientSideException e)            {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); } 
+        catch (IOException e)                    {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); } 
 		
         return true;
     }
@@ -807,9 +818,10 @@ public abstract class D1Node {
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+		catch (ClientSideException e)            {
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); } 
 
  		return identifier;
 	}
@@ -851,9 +863,10 @@ public abstract class D1Node {
             if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
             if (be instanceof NotFound)               throw (NotFound) be;
             if (be instanceof NotImplemented)         throw (NotImplemented) be;
-            throw recastDataONEExceptionToServiceFailure(be);
+            throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
         }
-        catch (ClientSideException e)            {throw recastClientSideExceptionToServiceFailure(e); }
+        catch (ClientSideException e)            {
+        	throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 
         return identifier;
     }
@@ -884,9 +897,10 @@ public abstract class D1Node {
             if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
             if (be instanceof NotFound)               throw (NotFound) be;
             if (be instanceof NotImplemented)         throw (NotImplemented) be;
-            throw recastDataONEExceptionToServiceFailure(be);
+            throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
         }
-        catch (ClientSideException e)            {throw recastClientSideExceptionToServiceFailure(e); }
+        catch (ClientSideException e)            {
+        	throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 
         return identifier;
     }
@@ -969,10 +983,12 @@ public abstract class D1Node {
 			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
 			if (be instanceof NotFound)               throw (NotFound) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		}
-		catch (ClientSideException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-        catch (IOException e)                    {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (ClientSideException e)            {
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); } 
+        catch (IOException e)                    {
+        	throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
         
 		return is;
 	}
@@ -1002,9 +1018,10 @@ public abstract class D1Node {
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
 			if (be instanceof NotFound)               throw (NotFound) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+		catch (ClientSideException e)            {
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); } 
         
 		return description;
 	}
@@ -1027,9 +1044,10 @@ public abstract class D1Node {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
 
-			throw recastDataONEExceptionToServiceFailure(be);
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
+		catch (ClientSideException e) {
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); } 
 
 		return engines;
 	}
@@ -1037,38 +1055,7 @@ public abstract class D1Node {
     
 
 
-    /**
-     * A helper function to preserve the stackTrace when catching one error and throwing a new one.
-     * Also has some descriptive text which makes it clientSide specific
-     * @param e
-     * @return
-     */
-    protected static ServiceFailure recastClientSideExceptionToServiceFailure(Exception e) {
-    	ServiceFailure sfe = new ServiceFailure("0 Client_Error", e.getClass() + ": "+ e.getMessage());
-                sfe.initCause(e);
-		sfe.setStackTrace(e.getStackTrace());
-    	return sfe;
-    }
-
-    
-    /**
-     * A helper function for recasting DataONE exceptions to ServiceFailures while
-     * preserving the detail code and TraceDetails.
-
-     * @param be - BaseException subclass to be recast
-     * @return ServiceFailure
-     */
-    protected static ServiceFailure recastDataONEExceptionToServiceFailure(BaseException be) {	
-    	ServiceFailure sfe = new ServiceFailure(be.getDetail_code(), 
-    			"Recasted unexpected exception from the service - " + be.getClass() + ": "+ be.getMessage());
-    	
-    	Iterator<String> it = be.getTraceKeySet().iterator();
-    	while (it.hasNext()) {
-    		String key = it.next();
-    		sfe.addTraceDetail(key, be.getTraceDetail(key));
-    	}
-    	return sfe;
-    }
+ 
 
     
 	/**

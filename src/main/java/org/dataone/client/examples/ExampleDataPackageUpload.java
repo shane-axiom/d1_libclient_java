@@ -37,10 +37,10 @@ import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.dataone.client.CNode;
-import org.dataone.client.D1Client;
-import org.dataone.client.MNode;
 import org.dataone.client.auth.ClientIdentityManager;
+import org.dataone.client.impl.rest.CNode;
+import org.dataone.client.impl.rest.MultipartMNode;
+import org.dataone.client.itk.D1Client;
 import org.dataone.client.types.D1TypeBuilder;
 import org.dataone.ore.ResourceMapFactory;
 import org.dataone.service.exceptions.BaseException;
@@ -73,7 +73,7 @@ import org.jibx.runtime.JiBXException;
  * The directory should also contain the system metadata document for each document in the package.
  * Suffix the class attribute SYSMETA_SUFFIX value (.SYSMETA) to the end of the system metadata documents.
  * 
- * Each file is uploaded to TARGET_MN_BASE_URL member node using java dataone libclient MNode class.
+ * Each file is uploaded to TARGET_MN_BASE_URL member node using java dataone libclient MultipartMNode class.
  * 
  * Can also be used to copy data packages from a CN to a MN using the copyDataPackages method.
  * 
@@ -102,7 +102,7 @@ public class ExampleDataPackageUpload {
      * @param args
      */
     public static void main(String[] args) {
-        MNode targetMN = D1Client.getMN(TARGET_MN_BASE_URL);
+        MultipartMNode targetMN = D1Client.getMN(TARGET_MN_BASE_URL);
         CNode sourceCN = new CNode(SOURCE_CN_BASE_URL);
 
         ExampleDataPackageUpload edpu = new ExampleDataPackageUpload();
@@ -137,7 +137,7 @@ public class ExampleDataPackageUpload {
      * @param targetMN
      * @param oreIdentifiers
      */
-    public void copyDataPackages(CNode sourceCN, MNode targetMN, List<Identifier> oreIdentifiers) {
+    public void copyDataPackages(CNode sourceCN, MultipartMNode targetMN, List<Identifier> oreIdentifiers) {
         try {
             int packageCount = 0;
             for (Identifier orePid : oreIdentifiers) {
@@ -190,7 +190,7 @@ public class ExampleDataPackageUpload {
      * @param targetMN
      * @param rootDir
      */
-    public void uploadDataPackages(MNode targetMN, File rootDir) {
+    public void uploadDataPackages(MultipartMNode targetMN, File rootDir) {
         File[] listOfFiles = rootDir.listFiles();
         for (int i = 0; i < listOfFiles.length; i++) {
             File file = listOfFiles[i];
@@ -213,7 +213,7 @@ public class ExampleDataPackageUpload {
      * @param uploadRetries
      * @return
      */
-    public boolean uploadDataPackageWithRetry(MNode targetMN, File tmpDir, int uploadRetries) {
+    public boolean uploadDataPackageWithRetry(MultipartMNode targetMN, File tmpDir, int uploadRetries) {
         boolean success = false;
         int trycount = 0;
         do {
@@ -242,7 +242,7 @@ public class ExampleDataPackageUpload {
         return idList;
     }
 
-    private boolean uploadDataPackageFromDir(MNode mn, File packageDir) {
+    private boolean uploadDataPackageFromDir(MultipartMNode mn, File packageDir) {
         File[] listOfFiles = packageDir.listFiles();
         boolean success = true;
         for (int i = 0; i < listOfFiles.length; i++) {

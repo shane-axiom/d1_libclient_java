@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-package org.dataone.client;
+package org.dataone.client.itk;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -27,6 +27,9 @@ import static org.junit.Assert.fail;
 import java.util.Arrays;
 import java.util.List;
 
+import org.dataone.client.impl.rest.CNode;
+import org.dataone.client.itk.D1Client;
+import org.dataone.client.itk.D1Object;
 import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.InvalidRequest;
 import org.dataone.service.exceptions.NotImplemented;

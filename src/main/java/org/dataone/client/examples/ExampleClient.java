@@ -23,9 +23,9 @@ import java.io.InputStream;
 import java.io.StringBufferInputStream;
 import java.math.BigInteger;
 
-import org.dataone.client.D1Client;
-import org.dataone.client.MNode;
 import org.dataone.client.auth.ClientIdentityManager;
+import org.dataone.client.impl.rest.MultipartMNode;
+import org.dataone.client.itk.D1Client;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.types.v1.Checksum;
 import org.dataone.service.types.v1.Identifier;
@@ -47,7 +47,7 @@ public class ExampleClient {
     public static void main(String[] args) {
         
         String currentUrl = "https://demo1.test.dataone.org:443/knb/d1/mn";
-        MNode mn = D1Client.getMN(currentUrl);
+        MultipartMNode mn = D1Client.getMN(currentUrl);
 
         runExampleCreate(mn);
     }
@@ -58,9 +58,9 @@ public class ExampleClient {
      * identifier based on the current date in milliseconds, so it probably 
      * should only be run against test servers, not production servers, to
      * avoid polluting production servers with test data.
-     * @param mn the MNode member node on which to create the object
+     * @param mn the MultipartMNode member node on which to create the object
      */
-    private static void runExampleCreate(MNode mn) {
+    private static void runExampleCreate(MultipartMNode mn) {
         try {
             Identifier newid = new Identifier();
             String idstr = new String("test:" + System.currentTimeMillis());
