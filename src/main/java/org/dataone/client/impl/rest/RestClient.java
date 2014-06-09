@@ -60,7 +60,7 @@ import org.dataone.service.util.Constants;
  * generally advised to not change the HttpClient once set.
  * 
  * */
-class RestClient {
+public class RestClient {
 
 	protected static Log log = LogFactory.getLog(RestClient.class);
 	

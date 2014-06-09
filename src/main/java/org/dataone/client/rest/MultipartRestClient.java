@@ -72,5 +72,7 @@ public interface MultipartRestClient {
 
 	public InputStream doPostRequest(String url, SimpleMultipartEntity entity) 
 		throws BaseException, ClientSideException;
+	
+	public String getLatestRequestUrl();
 
 }
