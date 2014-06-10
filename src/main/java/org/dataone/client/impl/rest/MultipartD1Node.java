@@ -54,6 +54,8 @@ import org.dataone.service.types.v1.DescribeResponse;
 import org.dataone.service.types.v1.Event;
 import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.types.v1.Log;
+import org.dataone.service.types.v1.NodeReference;
+import org.dataone.service.types.v1.NodeType;
 import org.dataone.service.types.v1.ObjectFormatIdentifier;
 import org.dataone.service.types.v1.ObjectList;
 import org.dataone.service.types.v1.Permission;
@@ -94,13 +96,15 @@ public abstract class MultipartD1Node {
     private String nodeBaseServiceUrl;
     
     /** The string representation of the NodeReference */
-    private String nodeId;
+    private NodeReference nodeId;
     
     /** this represents the session to be used for establishing the SSL connection */
     protected Session session;
     
     /** flag that controls whether or not a local cache is used */
     private boolean useLocalCache = false;
+    
+    protected NodeType nodeType;
 
 	
 	
@@ -200,17 +204,25 @@ public abstract class MultipartD1Node {
     /**
      * @return the nodeId
      */
-    public String getNodeId() {
+    public NodeReference getNodeId() {
         return nodeId;
     }
 
     /**
      * @param nodeId the nodeId to set
      */
-    public void setNodeId(String nodeId) {
+    public void setNodeId(NodeReference nodeId) {
         this.nodeId = nodeId;
     }
 
+    public void setNodeType(NodeType nodeType) {
+    	this.nodeType = nodeType;
+    }
+    
+    public NodeType getNodeType() {
+    	return this.nodeType;
+    }
+    
     
 	public Date ping() throws NotImplemented, ServiceFailure, InsufficientResources 
 	{

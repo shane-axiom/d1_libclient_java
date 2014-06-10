@@ -27,19 +27,14 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.logging.LogFactory;
-import org.apache.http.client.params.ClientPNames;
 import org.dataone.client.CNode;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.formats.ObjectFormatCache;
+import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.client.utils.ExceptionUtils;
 import org.dataone.configuration.Settings;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
-import org.dataone.service.cn.v1.CNAuthorization;
 import org.dataone.service.cn.v1.CNCore;
-import org.dataone.service.cn.v1.CNIdentity;
-import org.dataone.service.cn.v1.CNRead;
-import org.dataone.service.cn.v1.CNRegister;
-import org.dataone.service.cn.v1.CNReplication;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.IdentifierNotUnique;
 import org.dataone.service.exceptions.InsufficientResources;
@@ -64,6 +59,7 @@ import org.dataone.service.types.v1.Log;
 import org.dataone.service.types.v1.Node;
 import org.dataone.service.types.v1.NodeList;
 import org.dataone.service.types.v1.NodeReference;
+import org.dataone.service.types.v1.NodeType;
 import org.dataone.service.types.v1.ObjectFormat;
 import org.dataone.service.types.v1.ObjectFormatIdentifier;
 import org.dataone.service.types.v1.ObjectFormatList;
@@ -111,8 +107,7 @@ import org.jibx.runtime.JiBXException;
  * D1Client.D1Node.getSystemMetadata.timeout
  * 
  */
-public class MultipartCNode extends MultipartD1Node 
-implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplication, CNode 
+public class MultipartCNode extends MultipartD1Node implements CNode 
 {
 	protected static org.apache.commons.logging.Log log = LogFactory.getLog(MultipartCNode.class);
 
@@ -129,8 +124,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	 *
 	 * @param nodeBaseServiceUrl base url for constructing service endpoints.
 	 */
+    @Deprecated
 	public MultipartCNode(String nodeBaseServiceUrl) {
 		super(nodeBaseServiceUrl);
+        this.nodeType = NodeType.CN;
 		nodelistRefreshIntervalSeconds = Settings.getConfiguration()
 			.getInteger("CNode.nodemap.cache.refresh.interval.seconds", 
 						nodelistRefreshIntervalSeconds);
@@ -147,16 +144,40 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	 * @param session - the Session object passed to the CertificateManager
      *                  to be used for establishing connections
 	 */
+	@Deprecated
 	public MultipartCNode(String nodeBaseServiceUrl, Session session) {
 		super(nodeBaseServiceUrl, session);
+        this.nodeType = NodeType.CN;
 		nodelistRefreshIntervalSeconds = Settings.getConfiguration()
 			.getInteger("CNode.nodemap.cache.refresh.interval.seconds", 
 						nodelistRefreshIntervalSeconds);
 	}
 
-	
+    /**
+     * Construct a new client-side MultipartCNode (Coordinating Node) object, 
+     * passing in the base url of the member node for calling its services.
+     * @param nodeBaseServiceUrl base url for constructing service endpoints.
+     */
+    public MultipartCNode(MultipartRestClient mrc, String nodeBaseServiceUrl) {
+        super(mrc, nodeBaseServiceUrl);
+        this.nodeType = NodeType.CN;
+    }
+   
+    
+    /**
+     * Construct a new client-side MultipartCNode (Coordinating Node) object, 
+     * passing in the base url of the member node for calling its services,
+     * and the Session to use for connections to that node. 
+     * @param nodeBaseServiceUrl base url for constructing service endpoints.
+     * @param session - the Session object passed to the CertificateManager
+     *                  to be used for establishing connections
+     */
+    public MultipartCNode(MultipartRestClient mrc, String nodeBaseServiceUrl, Session session) {
+        super(mrc, nodeBaseServiceUrl, session);
+        this.nodeType = NodeType.CN;
+    }	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#getNodeBaseServiceUrl()
+	 * @see org.dataone.client.CNode#getNodeBaseServiceUrl()
 	 */
 	@Override
 	public String getNodeBaseServiceUrl() {
@@ -266,9 +287,13 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     { 		
     	nodeId2URLMap = NodelistUtil.mapNodeList(listNodes());
     }
+ 
     
-    /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#listNodeIds()
+	/**
+	 * Return the set of Node IDs for all of the nodes registered to the CN 
+	 * @return
+	 * @throws NotImplemented 
+	 * @throws ServiceFailure 
 	 */
 	public Set<String> listNodeIds() throws ServiceFailure, NotImplemented {
     	if (isNodeMapStale()) {
@@ -301,7 +326,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     
 
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#ping()
+	 * @see org.dataone.client.CNode#ping()
 	 */
     @Override
 	public Date ping() throws NotImplemented, ServiceFailure, InsufficientResources
@@ -310,7 +335,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     }
     
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#listFormats()
+	 * @see org.dataone.client.CNode#listFormats()
 	 */
 	@Override
 	public  ObjectFormatList listFormats()
@@ -337,8 +362,16 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 
 
-	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#getFormat(org.dataone.service.types.v1.ObjectFormatIdentifier)
+	/**
+	 *  Return the ObjectFormat for the given ObjectFormatIdentifier, obtained 
+	 *  either from a client-cached ObjectFormatList from the ObjectFormatCache,
+	 *  or from a call to the CN.
+	 *  Caching is enabled by default in production via the property 
+	 *  "CNode.useObjectFormatCache" accessed via org.dataone.configuration.Settings
+	 *  and the cn baseURL found in D1Client.CN_URL is used for the connection, 
+	 *  not the one held by this instance of CNode.
+	 *  
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNCore.getFormat">see DataONE API Reference</a> } 
 	 */
 	@Override
 	public  ObjectFormat getFormat(ObjectFormatIdentifier formatid)
@@ -388,7 +421,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 	
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#listChecksumAlgorithms()
+	 * @see org.dataone.client.CNode#listChecksumAlgorithms()
 	 */
 	@Override
 	public ChecksumAlgorithmList listChecksumAlgorithms() throws ServiceFailure, NotImplemented 
@@ -411,8 +444,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 
 
-	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#getLogRecords()
+	/**
+	 *  A convenience method for getLogRecords using no filtering parameters
+	 *  
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNCore.getLogRecords">see DataONE API Reference</a> } 
 	 */
 	@Override
 	public  Log getLogRecords() 
@@ -422,8 +457,10 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		return super.getLogRecords();
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#getLogRecords(org.dataone.service.types.v1.Session)
+	/**
+	 *  A convenience method for getLogRecords using no filtering parameters
+	 *  
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNCore.getLogRecords">see DataONE API Reference</a> } 
 	 */
 	@Override
 	public  Log getLogRecords(Session session) 
@@ -436,7 +473,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#getLogRecords(java.util.Date, java.util.Date, org.dataone.service.types.v1.Event, java.lang.String, java.lang.Integer, java.lang.Integer)
+	 * @see org.dataone.client.CNode#getLogRecords(java.util.Date, java.util.Date, org.dataone.service.types.v1.Event, String, Integer, Integer)
 	 */
 	@Override
 	public  Log getLogRecords(Date fromDate, Date toDate,
@@ -449,7 +486,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#getLogRecords(org.dataone.service.types.v1.Session, java.util.Date, java.util.Date, org.dataone.service.types.v1.Event, java.lang.String, java.lang.Integer, java.lang.Integer)
+	 * @see org.dataone.client.CNode#getLogRecords(org.dataone.service.types.v1.Session, java.util.Date, java.util.Date, org.dataone.service.types.v1.Event, String, Integer, Integer)
 	 */
 	@Override
 	public  Log getLogRecords(Session session, Date fromDate, Date toDate,
@@ -463,7 +500,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#listNodes()
+	 * @see org.dataone.client.CNode#listNodes()
 	 */
     @Override
 	public NodeList listNodes() throws NotImplemented, ServiceFailure
@@ -490,7 +527,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#reserveIdentifier(org.dataone.service.types.v1.Identifier)
+	 * @see org.dataone.client.CNode#reserveIdentifier(org.dataone.service.types.v1.Identifier)
 	 */
 	@Override
 	public Identifier reserveIdentifier(Identifier pid)
@@ -501,7 +538,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
     
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#reserveIdentifier(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier)
+	 * @see org.dataone.client.CNode#reserveIdentifier(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier)
 	 */
 	@Override
 	public Identifier reserveIdentifier(Session session, Identifier pid)
@@ -540,7 +577,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#generateIdentifier(java.lang.String, java.lang.String)
+	 * @see org.dataone.client.CNode#generateIdentifier(String, String)
 	 */
 	@Override
 	public  Identifier generateIdentifier(String scheme, String fragment)
@@ -551,7 +588,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#generateIdentifier(org.dataone.service.types.v1.Session, java.lang.String, java.lang.String)
+	 * @see org.dataone.client.CNode#generateIdentifier(org.dataone.service.types.v1.Session, String, String)
 	 */
 	@Override
 	public  Identifier generateIdentifier(Session session, String scheme, String fragment)
@@ -562,7 +599,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#hasReservation(org.dataone.service.types.v1.Subject, org.dataone.service.types.v1.Identifier)
+	 * @see org.dataone.client.CNode#hasReservation(org.dataone.service.types.v1.Subject, org.dataone.service.types.v1.Identifier)
 	 */
 	@Override
 	public boolean hasReservation(Subject subject, Identifier pid)
@@ -572,7 +609,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		return hasReservation(this.session, subject, pid);
 	}
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#hasReservation(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Subject, org.dataone.service.types.v1.Identifier)
+	 * @see org.dataone.client.CNode#hasReservation(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Subject, org.dataone.service.types.v1.Identifier)
 	 */
 	@Override
 	public boolean hasReservation(Session session, Subject subject, Identifier pid)
@@ -619,7 +656,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#create(org.dataone.service.types.v1.Identifier, java.io.InputStream, org.dataone.service.types.v1.SystemMetadata)
+	 * @see org.dataone.client.CNode#create(org.dataone.service.types.v1.Identifier, .InputStream, org.dataone.service.types.v1.SystemMetadata)
 	 */
 	@Override
 	public Identifier create(Identifier pid, InputStream object,
@@ -631,7 +668,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#create(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, java.io.InputStream, org.dataone.service.types.v1.SystemMetadata)
+	 * @see org.dataone.client.CNode#create(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, .InputStream, org.dataone.service.types.v1.SystemMetadata)
 	 */
 	@Override
 	public Identifier create(Session session, Identifier pid, InputStream object,
@@ -696,7 +733,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#registerSystemMetadata(org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.SystemMetadata)
+	 * @see org.dataone.client.CNode#registerSystemMetadata(org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.SystemMetadata)
 	 */
 	@Override
 	public Identifier registerSystemMetadata( Identifier pid, SystemMetadata sysmeta) 
@@ -708,7 +745,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#registerSystemMetadata(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.SystemMetadata)
+	 * @see org.dataone.client.CNode#registerSystemMetadata(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.SystemMetadata)
 	 */
 	@Override
 	public Identifier registerSystemMetadata(Session session, Identifier pid,
@@ -753,7 +790,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#setObsoletedBy(org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.Identifier, long)
+	 * @see org.dataone.client.CNode#setObsoletedBy(org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.Identifier, long)
 	 */
 	@Override
 	public boolean setObsoletedBy( Identifier pid,
@@ -766,7 +803,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#setObsoletedBy(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.Identifier, long)
+	 * @see org.dataone.client.CNode#setObsoletedBy(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.Identifier, long)
 	 */
 	@Override
 	public boolean setObsoletedBy(Session session, Identifier pid,
@@ -816,7 +853,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	////////////////   CN READ API  //////////////
 
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#listObjects()
+	 * @see org.dataone.client.CNode#listObjects()
 	 */
 	@Override
 	public ObjectList listObjects() 
@@ -828,7 +865,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#listObjects(org.dataone.service.types.v1.Session)
+	 * @see org.dataone.client.CNode#listObjects(org.dataone.service.types.v1.Session)
 	 */
 	@Override
 	public ObjectList listObjects(Session session) 
@@ -841,7 +878,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#listObjects(java.util.Date, java.util.Date, org.dataone.service.types.v1.ObjectFormatIdentifier, java.lang.Boolean, java.lang.Integer, java.lang.Integer)
+	 * @see org.dataone.client.CNode#listObjects(java.util.Date, java.util.Date, org.dataone.service.types.v1.ObjectFormatIdentifier, Boolean, Integer, Integer)
 	 */
 	@Override
 	public ObjectList listObjects(Date fromDate,
@@ -855,7 +892,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#listObjects(org.dataone.service.types.v1.Session, java.util.Date, java.util.Date, org.dataone.service.types.v1.ObjectFormatIdentifier, java.lang.Boolean, java.lang.Integer, java.lang.Integer)
+	 * @see org.dataone.client.CNode#listObjects(org.dataone.service.types.v1.Session, java.util.Date, java.util.Date, org.dataone.service.types.v1.ObjectFormatIdentifier, Boolean, Integer, Integer)
 	 */
 	@Override
 	public ObjectList listObjects(Session session, Date fromDate,
@@ -869,7 +906,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#get(org.dataone.service.types.v1.Identifier)
+	 * @see org.dataone.client.CNode#get(org.dataone.service.types.v1.Identifier)
 	 */
 	@Override
 	public InputStream get(Identifier pid)
@@ -883,7 +920,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#get(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier)
+	 * @see org.dataone.client.CNode#get(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier)
 	 */
 	@Override
 	public InputStream get(Session session, Identifier pid)
@@ -899,7 +936,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#getSystemMetadata(org.dataone.service.types.v1.Identifier)
+	 * @see org.dataone.client.CNode#getSystemMetadata(org.dataone.service.types.v1.Identifier)
 	 */
 	@Override
 	public SystemMetadata getSystemMetadata(Identifier pid)
@@ -909,7 +946,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#getSystemMetadata(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier)
+	 * @see org.dataone.client.CNode#getSystemMetadata(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier)
 	 */
 	@Override
 	public SystemMetadata getSystemMetadata(Session session, Identifier pid)
@@ -921,7 +958,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#describe(org.dataone.service.types.v1.Identifier)
+	 * @see org.dataone.client.CNode#describe(org.dataone.service.types.v1.Identifier)
 	 */
     @Override
 	public DescribeResponse describe(Identifier pid)
@@ -931,7 +968,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     }
     
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#describe(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier)
+	 * @see org.dataone.client.CNode#describe(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier)
 	 */
     @Override
 	public DescribeResponse describe(Session session, Identifier pid)
@@ -942,7 +979,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#resolve(org.dataone.service.types.v1.Identifier)
+	 * @see org.dataone.client.CNode#resolve(org.dataone.service.types.v1.Identifier)
 	 */
 	@Override
 	public ObjectLocationList resolve(Identifier pid)
@@ -952,7 +989,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
     
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#resolve(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier)
+	 * @see org.dataone.client.CNode#resolve(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier)
 	 */
 	@Override
 	public ObjectLocationList resolve(Session session, Identifier pid)
@@ -987,7 +1024,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#getChecksum(org.dataone.service.types.v1.Identifier)
+	 * @see org.dataone.client.CNode#getChecksum(org.dataone.service.types.v1.Identifier)
 	 */
 	@Override
 	public Checksum getChecksum(Identifier pid)
@@ -1004,7 +1041,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#getChecksum(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier)
+	 * @see org.dataone.client.CNode#getChecksum(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier)
 	 */
 	@Override
 	public Checksum getChecksum(Session session, Identifier pid)
@@ -1020,10 +1057,21 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 
 	
-	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#search(java.lang.String, org.dataone.service.util.D1Url)
+	/**
+	 *  A convenience method for creating a search command utilizing the D1Url
+	 *  class for building the value for the query parameter. The class D1Url 
+	 *  handles general URL escaping of individual url elements, but different
+	 *  search implementations, such as solr, may have extra requirements.
+	 *  
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.search">see DataONE API Reference</a> }
+	 *  
+	 *  solr escaping: {@link <a href="http://www.google.com/search?q=solr+escapequerychars+api">find ClientUtils</a> }
+	 * 
+	 * @param queryD1url - a D1Url object containing the path and/or query elements
+	 *                     that will be passed to the indicated queryType.  BaseUrl
+	 *                     and Resource segments contained in this object will be
+	 *                     removed/ignored.
 	 */
-	@Override
 	public  ObjectList search(String queryType, D1Url queryD1url)
 	throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest, 
 	NotImplemented
@@ -1032,10 +1080,19 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 	
 	
-	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#search(org.dataone.service.types.v1.Session, java.lang.String, org.dataone.service.util.D1Url)
+	/**
+	 *  A convenience method for creating a search command utilizing the D1Url
+	 *  class for building the value for the query parameter. The class D1Url 
+	 *  handles general URL escaping of individual url elements, but different
+	 *  search implementations, such as solr, may have extra requirements.
+	 *  
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.search">see DataONE API Reference</a> }
+	 *  
+	 *  solr escaping: {@link <a href="http://www.google.com/search?q=solr+escapequerychars+api">find ClientUtils</a> }
+	 * 
+	 * @param queryD1url - a D1Url object containing the path and/or query elements
+	 *                     that will be passed to the indicated queryType.  
 	 */
-	@Override
 	public  ObjectList search(Session session, String queryType, D1Url queryD1url)
 	throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest, 
 	NotImplemented
@@ -1044,9 +1101,29 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		return search(session, queryType, pathAndQueryString);
 	}
 	
-
-	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#search(java.lang.String, java.lang.String)
+	/**
+	 * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.search">see DataONE API Reference</a> }
+	 * 
+	 * This implementation handles URL-escaping for only the "queryType" parameter,
+	 * and always places a slash ('/') character after it.
+	 * <p>
+	 * For example, to invoke the following solr query:
+	 * <pre>"?q=id:MyStuff:*&start=0&rows=10&fl=id score"</pre>
+	 * 
+	 * one has to (1) escape appropriate characters according to the rules of
+	 * the queryType employed (in this case solr):
+	 * <pre>  "?q=id\:MyStuff\:\*&start=0&rows=10&fl=id\ score"</pre>
+	 *  
+	 * then (2) escape according to general url rules:
+	 * 
+	 * <pre>  "?q=id%5C:MyStuff%5C:%5C*&start=0&rows=10&fl=id%5C%20score"</pre>
+	 *
+	 * resulting in: 
+	 * <pre>cn.search(session,"solr","?q=id%5C:MyStuff%5C:%5C*&start=0&rows=10&fl=id%5C%20score")</pre> 
+	 *  
+	 *  For solr queries, a list of query terms employed can be found at the DataONE documentation on 
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/design/SearchMetadata.html"> Content Discovery</a> }
+	 *  solr escaping: {@link <a href="http://www.google.com/search?q=solr+escapequerychars+api">find ClientUtils</a> }
 	 */
 	@Override
 	public  ObjectList search(String queryType, String query)
@@ -1056,8 +1133,29 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		return search(this.session, queryType, query);
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#search(org.dataone.service.types.v1.Session, java.lang.String, java.lang.String)
+	/**
+	 * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.search">see DataONE API Reference</a> }
+	 * 
+	 * This implementation handles URL-escaping for only the "queryType" parameter,
+	 * and always places a slash ('/') character after it.
+	 * <p>
+	 * For example, to invoke the following solr query:
+	 * <pre>"?q=id:MyStuff:*&start=0&rows=10&fl=id score"</pre>
+	 * 
+	 * one has to (1) escape appropriate characters according to the rules of
+	 * the queryType employed (in this case solr):
+	 * <pre>  "?q=id\:MyStuff\:\*&start=0&rows=10&fl=id\ score"</pre>
+	 *  
+	 * then (2) escape according to general url rules:
+	 * 
+	 * <pre>  "?q=id%5C:MyStuff%5C:%5C*&start=0&rows=10&fl=id%5C%20score"</pre>
+	 *
+	 * resulting in: 
+	 * <pre>cn.search(session,"solr","?q=id%5C:MyStuff%5C:%5C*&start=0&rows=10&fl=id%5C%20score")</pre> 
+	 *  
+	 *  For solr queries, a list of query terms employed can be found at the DataONE documentation on 
+	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/design/SearchMetadata.html"> Content Discovery</a> }
+	 *  solr escaping: {@link <a href="http://www.google.com/search?q=solr+escapequerychars+api">find ClientUtils</a> }
 	 */
 	@Override
 	public  ObjectList search(Session session, String queryType, String query)
@@ -1093,7 +1191,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	////////// CN Authorization API //////////////
 
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#setRightsHolder(org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.Subject, long)
+	 * @see org.dataone.client.CNode#setRightsHolder(org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.Subject, long)
 	 */
 	@Override
 	public  Identifier setRightsHolder(Identifier pid, Subject userId, 
@@ -1106,7 +1204,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#setRightsHolder(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.Subject, long)
+	 * @see org.dataone.client.CNode#setRightsHolder(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.Subject, long)
 	 */
 	@Override
 	public  Identifier setRightsHolder(Session session, Identifier pid, Subject userId, 
@@ -1150,7 +1248,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#isAuthorized(org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.Permission)
+	 * @see org.dataone.client.CNode#isAuthorized(org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.Permission)
 	 */
 	@Override
 	public boolean isAuthorized(Identifier pid, Permission permission)
@@ -1161,7 +1259,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#isAuthorized(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.Permission)
+	 * @see org.dataone.client.CNode#isAuthorized(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.Permission)
 	 */
 	@Override
 	public boolean isAuthorized(Session session, Identifier pid, Permission permission)
@@ -1173,7 +1271,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#setAccessPolicy(org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.AccessPolicy, long)
+	 * @see org.dataone.client.CNode#setAccessPolicy(org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.AccessPolicy, long)
 	 */
 	@Override
 	public  boolean setAccessPolicy(Identifier pid, 
@@ -1186,7 +1284,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#setAccessPolicy(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.AccessPolicy, long)
+	 * @see org.dataone.client.CNode#setAccessPolicy(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.AccessPolicy, long)
 	 */
 	@Override
 	public  boolean setAccessPolicy(Session session, Identifier pid, 
@@ -1235,7 +1333,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	//////////  CN IDENTITY API  ///////////////
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#registerAccount(org.dataone.service.types.v1.Person)
+	 * @see org.dataone.client.CNode#registerAccount(org.dataone.service.types.v1.Person)
 	 */
 	@Override
 	public  Subject registerAccount(Person person) 
@@ -1247,7 +1345,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#registerAccount(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Person)
+	 * @see org.dataone.client.CNode#registerAccount(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Person)
 	 */
 	@Override
 	public  Subject registerAccount(Session session, Person person) 
@@ -1289,7 +1387,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#updateAccount(org.dataone.service.types.v1.Person)
+	 * @see org.dataone.client.CNode#updateAccount(org.dataone.service.types.v1.Person)
 	 */
 	@Override
 	public  Subject updateAccount(Person person) 
@@ -1301,7 +1399,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#updateAccount(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Person)
+	 * @see org.dataone.client.CNode#updateAccount(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Person)
 	 */
 	@Override
 	public  Subject updateAccount(Session session, Person person) 
@@ -1349,7 +1447,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#verifyAccount(org.dataone.service.types.v1.Subject)
+	 * @see org.dataone.client.CNode#verifyAccount(org.dataone.service.types.v1.Subject)
 	 */
 	@Override
 	public boolean verifyAccount(Subject subject) 
@@ -1360,7 +1458,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#verifyAccount(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Subject)
+	 * @see org.dataone.client.CNode#verifyAccount(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Subject)
 	 */
 	@Override
 	public boolean verifyAccount(Session session, Subject subject) 
@@ -1394,7 +1492,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#getSubjectInfo(org.dataone.service.types.v1.Subject)
+	 * @see org.dataone.client.CNode#getSubjectInfo(org.dataone.service.types.v1.Subject)
 	 */
 	@Override
 	public SubjectInfo getSubjectInfo(Subject subject)
@@ -1404,7 +1502,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#getSubjectInfo(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Subject)
+	 * @see org.dataone.client.CNode#getSubjectInfo(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Subject)
 	 */
 	@Override
 	public SubjectInfo getSubjectInfo(Session session, Subject subject)
@@ -1438,7 +1536,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#listSubjects(java.lang.String, java.lang.String, java.lang.Integer, java.lang.Integer)
+	 * @see org.dataone.client.CNode#listSubjects(String, String, Integer, Integer)
 	 */
 	@Override
 	public SubjectInfo listSubjects(String query, String status, Integer start, 
@@ -1450,7 +1548,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#listSubjects(org.dataone.service.types.v1.Session, java.lang.String, java.lang.String, java.lang.Integer, java.lang.Integer)
+	 * @see org.dataone.client.CNode#listSubjects(org.dataone.service.types.v1.Session, String, String, Integer, Integer)
 	 */
 	@Override
 	public SubjectInfo listSubjects(Session session, String query, String status, Integer start, 
@@ -1486,7 +1584,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#mapIdentity(org.dataone.service.types.v1.Subject, org.dataone.service.types.v1.Subject)
+	 * @see org.dataone.client.CNode#mapIdentity(org.dataone.service.types.v1.Subject, org.dataone.service.types.v1.Subject)
 	 */
 	@Override
 	public boolean mapIdentity(Subject primarySubject, Subject secondarySubject)
@@ -1498,7 +1596,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#mapIdentity(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Subject, org.dataone.service.types.v1.Subject)
+	 * @see org.dataone.client.CNode#mapIdentity(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Subject, org.dataone.service.types.v1.Subject)
 	 */
 	@Override
 	public boolean mapIdentity(Session session, Subject primarySubject, Subject secondarySubject)
@@ -1537,7 +1635,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#requestMapIdentity(org.dataone.service.types.v1.Subject)
+	 * @see org.dataone.client.CNode#requestMapIdentity(org.dataone.service.types.v1.Subject)
 	 */
 	@Override
 	public boolean requestMapIdentity(Subject subject) 
@@ -1549,7 +1647,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#requestMapIdentity(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Subject)
+	 * @see org.dataone.client.CNode#requestMapIdentity(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Subject)
 	 */
 	@Override
 	public boolean requestMapIdentity(Session session, Subject subject) 
@@ -1586,7 +1684,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#getPendingMapIdentity(org.dataone.service.types.v1.Subject)
+	 * @see org.dataone.client.CNode#getPendingMapIdentity(org.dataone.service.types.v1.Subject)
 	 */
     @Override
 	public SubjectInfo getPendingMapIdentity(Subject subject) 
@@ -1597,7 +1695,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     
     
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#getPendingMapIdentity(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Subject)
+	 * @see org.dataone.client.CNode#getPendingMapIdentity(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Subject)
 	 */
     @Override
 	public SubjectInfo getPendingMapIdentity(Session session, Subject subject) 
@@ -1629,7 +1727,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
     
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#confirmMapIdentity(org.dataone.service.types.v1.Subject)
+	 * @see org.dataone.client.CNode#confirmMapIdentity(org.dataone.service.types.v1.Subject)
 	 */
 	@Override
 	public boolean confirmMapIdentity(Subject subject) 
@@ -1641,7 +1739,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 	
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#confirmMapIdentity(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Subject)
+	 * @see org.dataone.client.CNode#confirmMapIdentity(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Subject)
 	 */
 	@Override
 	public boolean confirmMapIdentity(Session session, Subject subject) 
@@ -1673,7 +1771,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#denyMapIdentity(org.dataone.service.types.v1.Subject)
+	 * @see org.dataone.client.CNode#denyMapIdentity(org.dataone.service.types.v1.Subject)
 	 */
 	@Override
 	public boolean denyMapIdentity(Subject subject) 
@@ -1685,7 +1783,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#denyMapIdentity(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Subject)
+	 * @see org.dataone.client.CNode#denyMapIdentity(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Subject)
 	 */
 	@Override
 	public boolean denyMapIdentity(Session session, Subject subject) 
@@ -1718,7 +1816,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#removeMapIdentity(org.dataone.service.types.v1.Subject)
+	 * @see org.dataone.client.CNode#removeMapIdentity(org.dataone.service.types.v1.Subject)
 	 */
 	@Override
 	public  boolean removeMapIdentity(Subject subject) 
@@ -1730,7 +1828,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#removeMapIdentity(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Subject)
+	 * @see org.dataone.client.CNode#removeMapIdentity(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Subject)
 	 */
 	@Override
 	public  boolean removeMapIdentity(Session session, Subject subject) 
@@ -1762,7 +1860,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#createGroup(org.dataone.service.types.v1.Group)
+	 * @see org.dataone.client.CNode#createGroup(org.dataone.service.types.v1.Group)
 	 */
 	@Override
 	public Subject createGroup(Group group) 
@@ -1772,7 +1870,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#createGroup(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Group)
+	 * @see org.dataone.client.CNode#createGroup(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Group)
 	 */
 	@Override
 	public Subject createGroup(Session session, Group group) 
@@ -1813,7 +1911,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#updateGroup(org.dataone.service.types.v1.Group)
+	 * @see org.dataone.client.CNode#updateGroup(org.dataone.service.types.v1.Group)
 	 */
 	@Override
 	public boolean updateGroup(Group group) 
@@ -1825,7 +1923,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#updateGroup(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Group)
+	 * @see org.dataone.client.CNode#updateGroup(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Group)
 	 */
 	@Override
 	public boolean updateGroup(Session session, Group group) 
@@ -1868,7 +1966,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	///////////// CN REGISTER API   ////////////////
 
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#updateNodeCapabilities(org.dataone.service.types.v1.NodeReference, org.dataone.service.types.v1.Node)
+	 * @see org.dataone.client.CNode#updateNodeCapabilities(org.dataone.service.types.v1.NodeReference, org.dataone.service.types.v1.Node)
 	 */
 	@Override
 	public boolean updateNodeCapabilities(NodeReference nodeid, Node node) 
@@ -1879,7 +1977,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#updateNodeCapabilities(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.NodeReference, org.dataone.service.types.v1.Node)
+	 * @see org.dataone.client.CNode#updateNodeCapabilities(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.NodeReference, org.dataone.service.types.v1.Node)
 	 */
 	@Override
 	public boolean updateNodeCapabilities(Session session, NodeReference nodeid, Node node) 
@@ -1921,7 +2019,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#register(org.dataone.service.types.v1.Node)
+	 * @see org.dataone.client.CNode#register(org.dataone.service.types.v1.Node)
 	 */
 	@Override
 	public NodeReference register(Node node)
@@ -1932,7 +2030,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#register(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Node)
+	 * @see org.dataone.client.CNode#register(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Node)
 	 */
 	@Override
 	public NodeReference register(Session session, Node node)
@@ -1975,7 +2073,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#setReplicationStatus(org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.NodeReference, org.dataone.service.types.v1.ReplicationStatus, org.dataone.service.exceptions.BaseException)
+	 * @see org.dataone.client.CNode#setReplicationStatus(org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.NodeReference, org.dataone.service.types.v1.ReplicationStatus, org.dataone.service.exceptions.BaseException)
 	 */
 	@Override
 	public boolean setReplicationStatus(Identifier pid, 
@@ -1988,7 +2086,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#setReplicationStatus(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.NodeReference, org.dataone.service.types.v1.ReplicationStatus, org.dataone.service.exceptions.BaseException)
+	 * @see org.dataone.client.CNode#setReplicationStatus(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.NodeReference, org.dataone.service.types.v1.ReplicationStatus, org.dataone.service.exceptions.BaseException)
 	 */
 	@Override
 	public boolean setReplicationStatus(Session session, Identifier pid, 
@@ -2037,7 +2135,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#setReplicationPolicy(org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.ReplicationPolicy, long)
+	 * @see org.dataone.client.CNode#setReplicationPolicy(org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.ReplicationPolicy, long)
 	 */
 	@Override
 	public boolean setReplicationPolicy(Identifier pid, ReplicationPolicy policy, long serialVersion) 
@@ -2049,7 +2147,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#setReplicationPolicy(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.ReplicationPolicy, long)
+	 * @see org.dataone.client.CNode#setReplicationPolicy(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.ReplicationPolicy, long)
 	 */
 	@Override
 	public boolean setReplicationPolicy(Session session, Identifier pid, 
@@ -2096,7 +2194,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#isNodeAuthorized(org.dataone.service.types.v1.Subject, org.dataone.service.types.v1.Identifier)
+	 * @see org.dataone.client.CNode#isNodeAuthorized(org.dataone.service.types.v1.Subject, org.dataone.service.types.v1.Identifier)
 	 */
 	@Override
 	public boolean isNodeAuthorized(Subject targetNodeSubject, Identifier pid)
@@ -2108,7 +2206,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#isNodeAuthorized(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Subject, org.dataone.service.types.v1.Identifier)
+	 * @see org.dataone.client.CNode#isNodeAuthorized(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Subject, org.dataone.service.types.v1.Identifier)
 	 */
 	@Override
 	public  boolean isNodeAuthorized(Session session, 
@@ -2146,7 +2244,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#updateReplicationMetadata(org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.Replica, long)
+	 * @see org.dataone.client.CNode#updateReplicationMetadata(org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.Replica, long)
 	 */
 	@Override
 	public boolean updateReplicationMetadata( Identifier pid, Replica replicaMetadata, long serialVersion)
@@ -2158,7 +2256,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#updateReplicationMetadata(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.Replica, long)
+	 * @see org.dataone.client.CNode#updateReplicationMetadata(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.Replica, long)
 	 */
 	@Override
 	public boolean updateReplicationMetadata(Session session, 
@@ -2206,7 +2304,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#deleteReplicationMetadata(org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.NodeReference, long)
+	 * @see org.dataone.client.CNode#deleteReplicationMetadata(org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.NodeReference, long)
 	 */
 	@Override
 	public boolean deleteReplicationMetadata(Identifier pid, NodeReference nodeId, long serialVersion) 
@@ -2218,7 +2316,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#deleteReplicationMetadata(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.NodeReference, long)
+	 * @see org.dataone.client.CNode#deleteReplicationMetadata(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.NodeReference, long)
 	 */
 	@Override
 	public boolean deleteReplicationMetadata(Session session, Identifier pid,
@@ -2260,7 +2358,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 	
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#archive(org.dataone.service.types.v1.Identifier)
+	 * @see org.dataone.client.CNode#archive(org.dataone.service.types.v1.Identifier)
 	 */
     @Override
 	public  Identifier archive(Identifier pid)
@@ -2271,7 +2369,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
    
       
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#archive(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier)
+	 * @see org.dataone.client.CNode#archive(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier)
 	 */
     @Override
 	public  Identifier archive(Session session, Identifier pid)
@@ -2283,7 +2381,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 	
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#delete(org.dataone.service.types.v1.Identifier)
+	 * @see org.dataone.client.CNode#delete(org.dataone.service.types.v1.Identifier)
 	 */
 	@Override
     public Identifier delete(Identifier pid) throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented {
@@ -2291,7 +2389,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     }
     
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#delete(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier)
+	 * @see org.dataone.client.CNode#delete(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier)
 	 */
 	@Override
     public Identifier delete(Session session, Identifier pid) throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented {
@@ -2299,7 +2397,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
     }
 
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#query(java.lang.String, java.lang.String)
+	 * @see org.dataone.client.CNode#query(String, String)
 	 */   
 	@Override
 	public InputStream query(String queryEngine, String query)
@@ -2310,7 +2408,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#query(java.lang.String, org.dataone.service.util.D1Url)
+	 * @see org.dataone.client.CNode#query(String, org.dataone.service.util.D1Url)
 	 */   
 	@Override
 	public InputStream query(String queryEngine, D1Url queryD1Url)
@@ -2321,7 +2419,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#getQueryEngineDescription(java.lang.String)
+	 * @see org.dataone.client.CNode#getQueryEngineDescription(String)
 	 */
 	@Override
 	public QueryEngineDescription getQueryEngineDescription(String queryEngine)
@@ -2331,7 +2429,7 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	}
 
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.ICNode#listQueryEngines()
+	 * @see org.dataone.client.CNode#listQueryEngines()
 	 */
 	@Override
 	public QueryEngineList listQueryEngines() 

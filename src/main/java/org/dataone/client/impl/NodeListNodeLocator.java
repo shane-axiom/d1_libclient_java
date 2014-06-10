@@ -108,7 +108,7 @@ public class NodeListNodeLocator extends NodeLocator {
 				mn = new HttpMNode(this.restClient, 
 						this.baseUrlMap.get(nodeRef.getValue()) 
 						);
-				mn.setNodeId(nodeRef.getValue());
+				mn.setNodeId(nodeRef);
 				putMNode(nodeRef, mn);
 			}
 		}
@@ -136,7 +136,7 @@ public class NodeListNodeLocator extends NodeLocator {
 						this.restClient,
 						this.baseUrlMap.get(nodeRef.getValue()) 
 						);
-				cn.setNodeId(nodeRef.getValue());
+				cn.setNodeId(nodeRef);
 				putCNode(nodeRef, cn);			
 			}
 		}

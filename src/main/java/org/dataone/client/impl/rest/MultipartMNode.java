@@ -52,6 +52,7 @@ import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.types.v1.Log;
 import org.dataone.service.types.v1.Node;
 import org.dataone.service.types.v1.NodeReference;
+import org.dataone.service.types.v1.NodeType;
 import org.dataone.service.types.v1.ObjectFormatIdentifier;
 import org.dataone.service.types.v1.ObjectList;
 import org.dataone.service.types.v1.Permission;
@@ -79,7 +80,7 @@ import org.jibx.runtime.JiBXException;
  * pulled from the underlying filesystem of the local machine.
  * 
  * Java implementation of the following types:
- * Types.OctectStream - java.io.InputStream
+ * Types.OctectStream - InputStream
  * unsignedlong - we use long to keep to a native type, although only half capacity of unsigned
  * Types.DateTime - java.util.Date
  * 
@@ -113,6 +114,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 	@Deprecated
     public MultipartMNode(String nodeBaseServiceUrl) {
         super(nodeBaseServiceUrl); 
+        this.nodeType = NodeType.MN;
     }
    
     
@@ -126,7 +128,8 @@ public class MultipartMNode extends MultipartD1Node implements MNode
      */
 	@Deprecated
     public MultipartMNode(String nodeBaseServiceUrl, Session session) {
-        super(nodeBaseServiceUrl, session); 
+        super(nodeBaseServiceUrl, session);
+        this.nodeType = NodeType.MN;
     }
 	
     /**
@@ -135,7 +138,8 @@ public class MultipartMNode extends MultipartD1Node implements MNode
      * @param nodeBaseServiceUrl base url for constructing service endpoints.
      */
     public MultipartMNode(MultipartRestClient mrc, String nodeBaseServiceUrl) {
-        super(mrc, nodeBaseServiceUrl); 
+        super(mrc, nodeBaseServiceUrl);
+        this.nodeType = NodeType.MN;
     }
    
     
@@ -148,12 +152,13 @@ public class MultipartMNode extends MultipartD1Node implements MNode
      *                  to be used for establishing connections
      */
     public MultipartMNode(MultipartRestClient mrc, String nodeBaseServiceUrl, Session session) {
-        super(mrc, nodeBaseServiceUrl, session); 
+        super(mrc, nodeBaseServiceUrl, session);
+        this.nodeType = NodeType.MN;
     }
     
     
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#getNodeBaseServiceUrl()
+	 * @see org.dataone.client.MNode#getNodeBaseServiceUrl()
 	 */
     @Override
 	public String getNodeBaseServiceUrl() {
@@ -165,7 +170,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
     
 
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#ping()
+	 * @see org.dataone.client.MNode#ping()
 	 */
     @Override
 	public Date ping() throws NotImplemented, ServiceFailure, InsufficientResources
@@ -175,7 +180,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 
 
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#getLogRecords()
+	 * @see org.dataone.client.MNode#getLogRecords()
 	 */
 	@Override
 	public Log getLogRecords() 
@@ -192,7 +197,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 	
 	
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#getLogRecords(org.dataone.service.types.v1.Session)
+	 * @see org.dataone.client.MNode#getLogRecords(org.dataone.service.types.v1.Session)
 	 */
 	@Override
 	public Log getLogRecords(Session session) 
@@ -210,7 +215,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 
 	
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#getLogRecords(java.util.Date, java.util.Date, org.dataone.service.types.v1.Event, java.lang.String, java.lang.Integer, java.lang.Integer)
+	 * @see org.dataone.client.MNode#getLogRecords(java.util.Date, java.util.Date, org.dataone.service.types.v1.Event, String, Integer, Integer)
 	 */
     @Override
 	public Log getLogRecords(Date fromDate, Date toDate, Event event, String pidFilter, 
@@ -228,7 +233,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
     
     
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#getLogRecords(org.dataone.service.types.v1.Session, java.util.Date, java.util.Date, org.dataone.service.types.v1.Event, java.lang.String, java.lang.Integer, java.lang.Integer)
+	 * @see org.dataone.client.MNode#getLogRecords(org.dataone.service.types.v1.Session, java.util.Date, java.util.Date, org.dataone.service.types.v1.Event, String, Integer, Integer)
 	 */
     @Override
 	public Log getLogRecords(Session session, Date fromDate, Date toDate, 
@@ -246,7 +251,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 
     
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#listObjects()
+	 * @see org.dataone.client.MNode#listObjects()
 	 */
 	@Override
 	public ObjectList listObjects() 
@@ -257,7 +262,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 	}
     
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#listObjects(org.dataone.service.types.v1.Session)
+	 * @see org.dataone.client.MNode#listObjects(org.dataone.service.types.v1.Session)
 	 */
 	@Override
 	public ObjectList listObjects(Session session) 
@@ -269,7 +274,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 
 	
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#listObjects(java.util.Date, java.util.Date, org.dataone.service.types.v1.ObjectFormatIdentifier, java.lang.Boolean, java.lang.Integer, java.lang.Integer)
+	 * @see org.dataone.client.MNode#listObjects(java.util.Date, java.util.Date, org.dataone.service.types.v1.ObjectFormatIdentifier, Boolean, Integer, Integer)
 	 */	
 	@Override
 	public ObjectList listObjects(Date fromDate, Date toDate, ObjectFormatIdentifier formatid,
@@ -280,7 +285,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 	}
 	
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#listObjects(org.dataone.service.types.v1.Session, java.util.Date, java.util.Date, org.dataone.service.types.v1.ObjectFormatIdentifier, java.lang.Boolean, java.lang.Integer, java.lang.Integer)
+	 * @see org.dataone.client.MNode#listObjects(org.dataone.service.types.v1.Session, java.util.Date, java.util.Date, org.dataone.service.types.v1.ObjectFormatIdentifier, Boolean, Integer, Integer)
 	 */	
 	@Override
 	public ObjectList listObjects(Session session, Date fromDate,
@@ -294,7 +299,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#getCapabilities()
+	 * @see org.dataone.client.MNode#getCapabilities()
 	 */
     @Override
 	public Node getCapabilities() 
@@ -324,7 +329,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
     
 
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#get(org.dataone.service.types.v1.Identifier)
+	 * @see org.dataone.client.MNode#get(org.dataone.service.types.v1.Identifier)
 	 */
     @Override
 	public InputStream get(Identifier pid)
@@ -335,7 +340,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 
     
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#get(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier)
+	 * @see org.dataone.client.MNode#get(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier)
 	 */
     @Override
 	public InputStream get(Session session, Identifier pid)
@@ -346,7 +351,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 
 
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#getSystemMetadata(org.dataone.service.types.v1.Identifier)
+	 * @see org.dataone.client.MNode#getSystemMetadata(org.dataone.service.types.v1.Identifier)
 	 */
     @Override
 	public SystemMetadata getSystemMetadata(Identifier pid)
@@ -356,7 +361,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
     }   
     
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#getSystemMetadata(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier)
+	 * @see org.dataone.client.MNode#getSystemMetadata(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier)
 	 */
     @Override
 	public SystemMetadata getSystemMetadata(Session session, Identifier pid)
@@ -367,7 +372,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 
 
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#describe(org.dataone.service.types.v1.Identifier)
+	 * @see org.dataone.client.MNode#describe(org.dataone.service.types.v1.Identifier)
 	 */
     @Override
 	public DescribeResponse describe(Identifier pid)
@@ -377,7 +382,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
     }
     
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#describe(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier)
+	 * @see org.dataone.client.MNode#describe(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier)
 	 */
     @Override
 	public DescribeResponse describe(Session session, Identifier pid)
@@ -388,7 +393,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 
 
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#getChecksum(org.dataone.service.types.v1.Identifier, java.lang.String)
+	 * @see org.dataone.client.MNode#getChecksum(org.dataone.service.types.v1.Identifier, String)
 	 */
     @Override
 	public Checksum getChecksum(Identifier pid, String checksumAlgorithm)
@@ -399,7 +404,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
     
     
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#getChecksum(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, java.lang.String)
+	 * @see org.dataone.client.MNode#getChecksum(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, String)
 	 */
     @Override
 	public Checksum getChecksum(Session session, Identifier pid, String checksumAlgorithm)
@@ -411,7 +416,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
     
     
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#synchronizationFailed(org.dataone.service.exceptions.SynchronizationFailed)
+	 * @see org.dataone.client.MNode#synchronizationFailed(org.dataone.service.exceptions.SynchronizationFailed)
 	 */
     @Override
 	public boolean synchronizationFailed(SynchronizationFailed message)
@@ -422,7 +427,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
     
     
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#synchronizationFailed(org.dataone.service.types.v1.Session, org.dataone.service.exceptions.SynchronizationFailed)
+	 * @see org.dataone.client.MNode#synchronizationFailed(org.dataone.service.types.v1.Session, org.dataone.service.exceptions.SynchronizationFailed)
 	 */
     @Override
 	public boolean synchronizationFailed(Session session, SynchronizationFailed message)
@@ -460,7 +465,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 
 
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#isAuthorized(org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.Permission)
+	 * @see org.dataone.client.MNode#isAuthorized(org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.Permission)
 	 */
     @Override
 	public boolean isAuthorized(Identifier pid, Permission action)
@@ -471,7 +476,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
     
     
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#isAuthorized(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.Permission)
+	 * @see org.dataone.client.MNode#isAuthorized(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.Permission)
 	 */
     @Override
 	public boolean isAuthorized(Session session, Identifier pid, Permission action)
@@ -482,7 +487,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 
 
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#generateIdentifier(java.lang.String, java.lang.String)
+	 * @see org.dataone.client.MNode#generateIdentifier(String, String)
 	 */
 	@Override
 	public  Identifier generateIdentifier(String scheme, String fragment)
@@ -492,7 +497,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 	}
 	
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#generateIdentifier(org.dataone.service.types.v1.Session, java.lang.String, java.lang.String)
+	 * @see org.dataone.client.MNode#generateIdentifier(org.dataone.service.types.v1.Session, String, String)
 	 */
 	@Override
 	public  Identifier generateIdentifier(Session session, String scheme, String fragment)
@@ -504,7 +509,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 
 	
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#create(org.dataone.service.types.v1.Identifier, java.io.InputStream, org.dataone.service.types.v1.SystemMetadata)
+	 * @see org.dataone.client.MNode#create(org.dataone.service.types.v1.Identifier, InputStream, org.dataone.service.types.v1.SystemMetadata)
 	 */
     @Override
 	public  Identifier create(Identifier pid, InputStream object, 
@@ -517,7 +522,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
      
 		
 	/* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#create(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, java.io.InputStream, org.dataone.service.types.v1.SystemMetadata)
+	 * @see org.dataone.client.MNode#create(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, InputStream, org.dataone.service.types.v1.SystemMetadata)
 	 */
     @Override
 	public  Identifier create(Session session, Identifier pid, InputStream object, 
@@ -565,7 +570,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 
 
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#update(org.dataone.service.types.v1.Identifier, java.io.InputStream, org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.SystemMetadata)
+	 * @see org.dataone.client.MNode#update(org.dataone.service.types.v1.Identifier, InputStream, org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.SystemMetadata)
 	 */
     @Override
 	public  Identifier update(Identifier pid, InputStream object, 
@@ -579,7 +584,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
     
     
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#update(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, java.io.InputStream, org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.SystemMetadata)
+	 * @see org.dataone.client.MNode#update(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, InputStream, org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.SystemMetadata)
 	 */
     @Override
 	public  Identifier update(Session session, Identifier pid, InputStream object, 
@@ -631,7 +636,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 
 
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#archive(org.dataone.service.types.v1.Identifier)
+	 * @see org.dataone.client.MNode#archive(org.dataone.service.types.v1.Identifier)
 	 */
     @Override
 	public  Identifier archive(Identifier pid)
@@ -642,7 +647,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
    
     
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#archive(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier)
+	 * @see org.dataone.client.MNode#archive(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier)
 	 */
     @Override
 	public  Identifier archive(Session session, Identifier pid)
@@ -653,7 +658,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
     
     
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#delete(org.dataone.service.types.v1.Identifier)
+	 * @see org.dataone.client.MNode#delete(org.dataone.service.types.v1.Identifier)
 	 */
     @Override
 	public  Identifier delete(Identifier pid)
@@ -664,7 +669,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
    
     
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#delete(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier)
+	 * @see org.dataone.client.MNode#delete(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier)
 	 */
     @Override
 	public  Identifier delete(Session session, Identifier pid)
@@ -675,7 +680,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 
     
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#systemMetadataChanged(org.dataone.service.types.v1.Identifier, long, java.util.Date)
+	 * @see org.dataone.client.MNode#systemMetadataChanged(org.dataone.service.types.v1.Identifier, long, java.util.Date)
 	 */
     @Override
 	public boolean systemMetadataChanged(Identifier pid, long serialVersion,
@@ -687,7 +692,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
     
     
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#systemMetadataChanged(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, long, java.util.Date)
+	 * @see org.dataone.client.MNode#systemMetadataChanged(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, long, java.util.Date)
 	 */
     @Override
 	public boolean systemMetadataChanged(Session session, Identifier pid, long serialVersion,
@@ -725,7 +730,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
  
     
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#replicate(org.dataone.service.types.v1.SystemMetadata, org.dataone.service.types.v1.NodeReference)
+	 * @see org.dataone.client.MNode#replicate(org.dataone.service.types.v1.SystemMetadata, org.dataone.service.types.v1.NodeReference)
 	 */
     @Override
 	public boolean replicate(SystemMetadata sysmeta, NodeReference sourceNode) 
@@ -737,7 +742,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
     
     
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#replicate(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.SystemMetadata, org.dataone.service.types.v1.NodeReference)
+	 * @see org.dataone.client.MNode#replicate(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.SystemMetadata, org.dataone.service.types.v1.NodeReference)
 	 */
     @Override
 	public boolean replicate(Session session, SystemMetadata sysmeta, NodeReference sourceNode) 
@@ -786,7 +791,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 
 
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#getReplica(org.dataone.service.types.v1.Identifier)
+	 * @see org.dataone.client.MNode#getReplica(org.dataone.service.types.v1.Identifier)
 	 */
     @Override
 	public InputStream getReplica(Identifier pid)
@@ -798,7 +803,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
     
     
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#getReplica(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier)
+	 * @see org.dataone.client.MNode#getReplica(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier)
 	 */
     @Override
 	public InputStream getReplica(Session session, Identifier pid)
@@ -833,7 +838,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
     }
     
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#query(java.lang.String, java.lang.String)
+	 * @see org.dataone.client.MNode#query(String, String)
 	 */
 	@Override
 	public InputStream query(String queryEngine, String query)
@@ -844,7 +849,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 	}
 
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#getQueryEngineDescription(java.lang.String)
+	 * @see org.dataone.client.MNode#getQueryEngineDescription(String)
 	 */
 	@Override
 	public QueryEngineDescription getQueryEngineDescription(String queryEngine)
@@ -854,7 +859,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 	}
 
     /* (non-Javadoc)
-	 * @see org.dataone.client.impl.rest.MNode#listQueryEngines()
+	 * @see org.dataone.client.MNode#listQueryEngines()
 	 */
 	@Override
 	public QueryEngineList listQueryEngines() 

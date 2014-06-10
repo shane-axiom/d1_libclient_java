@@ -31,7 +31,6 @@ import org.dataone.client.impl.NodeListNodeLocator;
 import org.dataone.client.impl.rest.DefaultHttpMultipartRestClient;
 import org.dataone.client.impl.rest.HttpCNode;
 import org.dataone.client.impl.rest.HttpMNode;
-import org.dataone.client.impl.rest.MultipartCNode;
 import org.dataone.client.types.ObsoletesChain;
 import org.dataone.client.utils.ExceptionUtils;
 import org.dataone.configuration.Settings;
@@ -184,7 +183,7 @@ public class D1Client {
     		throw new ServiceFailure("0000", "Failed to find baseUrl for node "
     				 + nodeRef.getValue() + " in the NodeList");
     	}
-        mn.setNodeId(nodeRef.getValue());
+        mn.setNodeId(nodeRef);
         return mn;
     }
     
