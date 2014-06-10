@@ -222,68 +222,21 @@ public class ResourceMapFactory {
 		return resourceMap;
 		
 	}
-	
-	/**
-	 * adds a description of resources that are aggreagated by other resource maps. Useful for connecting resources to this graph in order to add triples about derived data
-	 * @param resourceMap
-	 * @param idMap
-	 * @return 
-	 * @throws OREException
-	 * @throws URISyntaxException
-	 */
-	public void addExternalResources(ResourceMap resourceMap, Map<Identifier, List<Identifier>> idMap)
-	throws OREException, URISyntaxException{
-				
-		// iterate through the resources
-		for (Identifier id: idMap.keySet()) {
-			System.out.println("Connecting: " + id.getValue());
-						
-			//iterate through each resource map this resource is aggregated by
-			List<Identifier> resourceMapIds = idMap.get(id);
-			for(Identifier resourceMapId: resourceMapIds){
-				System.out.println("resource map: " + resourceMapId.getValue());
-				
-				Aggregation primaryAggregation = OREFactory.createAggregation(new URI(D1_URI_PREFIX 
-						+ EncodingUtilities.encodeUrlPathSegment(resourceMapId.getValue()) 
-						+ "#aggregation"));
-				
-				ResourceMap primaryResourceMap = primaryAggregation.createResourceMap(new URI(D1_URI_PREFIX 
-						+ EncodingUtilities.encodeUrlPathSegment(resourceMapId.getValue())));
-				
-				AggregatedResource primaryResource = primaryAggregation.createAggregatedResource(new URI(D1_URI_PREFIX 
-						+ EncodingUtilities.encodeUrlPathSegment(id.getValue())));
-				
-				primaryAggregation.addAggregatedResource(primaryResource);
-				
-				// dcterms:identifier
-				Triple identifier = new TripleJena();
-				identifier.initialise(primaryResource);
-				identifier.relate(DC_TERMS_IDENTIFIER, id.getValue());
-				primaryResourceMap.addTriple(identifier);
-			}
-		}
-						
-	}
-	
+
 	//TODO: Make this take a map of identifiers -> list of identifiers
 	public void addWasDerivedFrom(ResourceMap resourceMap, Identifier primaryData, Identifier derivedData)
 	throws OREException, URISyntaxException{
 		
 		Predicate predicate = new Predicate(new URI("http://www.w3.org/ns/prov#wasDerivedFrom"));
 		Triple triple = OREFactory.createTriple(
-								new URI(D1_URI_PREFIX + derivedData.getValue()), 
+								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(derivedData.getValue())), 
 								predicate, 
-								new URI(D1_URI_PREFIX + primaryData.getValue()));
-	/*	Triple triple = new Triple();
-		triple.setSubjectURI(new URI(D1_URI_PREFIX + derivedData.getValue()));
-		triple.setPredicate(predicate);
-		triple.setObjectURI(new URI(D1_URI_PREFIX + primaryData.getValue()));*/
+								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(primaryData.getValue())));
 		System.out.println("Triple: " + triple.getSubjectURI() + " " + triple.getPredicate().getURI() + " " + triple.getObjectURI());
 		resourceMap.addTriple(triple);
 				
 	}
-	
-	
+
 	
 /*	/**
 	 * Experimental.  Do not use!  Creates a ResourceMap that does not contain the inverse

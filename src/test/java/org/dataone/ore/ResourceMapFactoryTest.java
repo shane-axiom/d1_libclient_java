@@ -164,10 +164,8 @@ public class ResourceMapFactoryTest {
 			Map<Identifier, List<Identifier>> primaryIdMap = new HashMap<Identifier, List<Identifier>>();
 			primaryIdMap.put(primaryDataId, resourceMaps);
 			
-			//Describe the primary resources in the derived resource map
-			rmf.addExternalResources(resourceMap, primaryIdMap);
-			
-			//rmf.addWasDerivedFrom(resourceMap, primaryData, dataId);
+			//
+			rmf.addWasDerivedFrom(resourceMap, primaryDataId, dataId);
 			
 			String rdfXml = ResourceMapFactory.getInstance().serializeResourceMap(resourceMap);
 			assertNotNull(rdfXml);
