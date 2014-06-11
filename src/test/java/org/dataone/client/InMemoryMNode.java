@@ -1,15 +1,21 @@
 package org.dataone.client;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TreeMap;
 
+import org.apache.commons.io.IOUtils;
+import org.dataone.client.formats.ObjectFormatCache;
 import org.dataone.client.types.D1TypeBuilder;
 import org.dataone.service.exceptions.IdentifierNotUnique;
 import org.dataone.service.exceptions.InsufficientResources;
@@ -31,24 +37,55 @@ import org.dataone.service.types.v1.LogEntry;
 import org.dataone.service.types.v1.Node;
 import org.dataone.service.types.v1.NodeReference;
 import org.dataone.service.types.v1.NodeType;
+import org.dataone.service.types.v1.ObjectFormat;
 import org.dataone.service.types.v1.ObjectFormatIdentifier;
 import org.dataone.service.types.v1.ObjectInfo;
 import org.dataone.service.types.v1.ObjectList;
 import org.dataone.service.types.v1.Permission;
 import org.dataone.service.types.v1.Session;
+import org.dataone.service.types.v1.Subject;
 import org.dataone.service.types.v1.SystemMetadata;
+import org.dataone.service.types.v1.util.AuthUtils;
 import org.dataone.service.types.v1.util.ChecksumUtil;
 import org.dataone.service.types.v1_1.QueryEngineDescription;
 import org.dataone.service.types.v1_1.QueryEngineList;
 
+/**
+ * Built primarily for testing, this class is an MNode implementation that 
+ * holds all of its content as SystemMetadata, LogEntries, and byte arrays (for 
+ * data objects)
+ * 
+ * All methods return either the expected type or throw a NotImplemented exception.
+ * Users should be cautious about object size.
+ * 
+ * @author rnahf
+ *
+ */
 public class InMemoryMNode implements MNode {
 	private NodeReference nodeId;
 	
-	private Map<Identifier, byte[]> objectStore;
-	private Map<Identifier, SystemMetadata> metaStore;
-	private List<LogEntry> eventLog;
-
-	private LogEntry buildLogEntry(Event v, Identifier pid, Session session) {
+	protected Map<Identifier, byte[]> objectStore;
+	protected Map<Identifier, SystemMetadata> metaStore;
+	protected List<LogEntry> eventLog;
+	protected Subject nodeAdministrator;
+	protected Subject cnClientUser;
+	
+	/** 
+	 * Instantiate a new InMemberMemberNode.  If the cnClientSubject is null, then
+	 * getLogRecords will authorize anyone.
+	 * 
+	 * @param nodeAdmin - the Subject of this MemberNode's administrator
+	 * @param cnClientSubject - the Subject of the CN.
+	 */
+	public InMemoryMNode(Subject nodeAdmin, Subject cnClientSubject) {
+		this.nodeAdministrator = nodeAdmin;
+		this.cnClientUser = cnClientSubject;
+		this.objectStore = new HashMap<Identifier, byte[]>();
+		this.metaStore = new HashMap<Identifier,SystemMetadata>();
+		this.eventLog = new ArrayList<LogEntry>();
+	}
+	
+	protected synchronized LogEntry buildLogEntry(Event v, Identifier pid, Session session) {
 		LogEntry le = new LogEntry();
 		le.setDateLogged(new Date());
 		le.setEvent(v);
@@ -59,10 +96,46 @@ public class InMemoryMNode implements MNode {
 		return le;
 	}
 	
+	private SystemMetadata checkAvailableAndAuthorized(Session session, Identifier id, Permission perm)
+	throws NotAuthorized, NotFound
+	{
+		SystemMetadata sysmeta = metaStore.get(id);
+		if (sysmeta == null) {
+			throw new NotFound("000",
+					String.format("Object with id %s could not be found", 
+							id.getValue())
+					);
+		}
+		Set<Subject> sessionSubjects = AuthUtils.authorizedClientSubjects(session);
+		sessionSubjects.add(nodeAdministrator);
+		if (!AuthUtils.isAuthorized(sessionSubjects, perm, sysmeta)) {
+			throw new NotAuthorized("000",String.format("Caller does not have %s" +
+					" permission on %s",
+					perm.xmlValue(),
+					sysmeta.getIdentifier().getValue()));
+		}
+		return sysmeta;
+	}
+	
+	/**
+	 * Validate that the systemMetadata follows the D1_Schema definitions
+	 * 
+	 * @param sysmeta
+	 * @throws InvalidSystemMetadata
+	 */
+	private void validateSystemMetadata(SystemMetadata sysmeta) 
+	throws InvalidSystemMetadata 
+	{
+		// TODO: how do we validate the sysmeta?  via clone (serialize, deserialize?)
+	}
+	
+	/**
+	 * We will use the NodeId value for the base service URL, too.
+	 */
 	@Override
 	public String getNodeBaseServiceUrl() {
-		// TODO Auto-generated method stub
-		return null;
+		
+		return this.nodeId.getValue();
 	}
 
 	@Override
@@ -109,10 +182,48 @@ public class InMemoryMNode implements MNode {
 	@Deprecated
 	public Log getLogRecords(Session session, Date fromDate, Date toDate,
 			Event event, String pidFilter, Integer start, Integer count)
-			throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented,
-			ServiceFailure {
-		// TODO Auto-generated method stub
-		return null;
+	throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure 
+	{
+		// restrict access to the CN client user subject
+		if (this.cnClientUser != null) {
+			Set<Subject> requestSubjects = AuthUtils.authorizedClientSubjects(session);
+		
+			if (!requestSubjects.contains(this.cnClientUser)) {
+				throw new NotAuthorized("000", "The requestor's session does not contain" +
+						"the known CN Client Subject: " + this.cnClientUser.getValue()); 
+			}
+		}
+		
+		Log result = new Log();
+		List<LogEntry> filteredLogs = new ArrayList<LogEntry>();
+			
+		for(LogEntry en : eventLog) {
+			if (event != null && !en.getEvent().equals(event))
+				continue;
+			if (fromDate != null && en.getDateLogged().before(fromDate))
+				continue;
+			if (toDate != null && en.getDateLogged().after(toDate))
+				continue;
+			if (toDate != null && en.getDateLogged().equals(toDate))
+				continue;
+			if (pidFilter != null && !en.getIdentifier().getValue().startsWith(pidFilter))
+				continue;
+			
+			// survived the filters
+			filteredLogs.add(en);
+		}
+		
+		int fromIndex = start == null ? 0 : start;
+				
+		int toIndex = filteredLogs.size();
+		if (count != null && (start + count < filteredLogs.size())) {
+			toIndex = start + count;
+		}
+		// note: to subList the entire list, use l.subList(0,l.size())
+		for (LogEntry le : filteredLogs.subList(fromIndex, toIndex)) {
+			result.addLogEntry(le);
+		}
+		return result;
 	}
 
 	
@@ -172,7 +283,7 @@ public class InMemoryMNode implements MNode {
 	public InputStream get(Session session, Identifier id)
 			throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure,
 			NotFound, InsufficientResources {
-		
+
 		InputStream is = getReplica(session, id);
 		eventLog.add(buildLogEntry(Event.READ, id, session));
 		return is;
@@ -184,43 +295,37 @@ public class InMemoryMNode implements MNode {
 	@Deprecated
 	public SystemMetadata getSystemMetadata(Session session, Identifier id)
 			throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure,
-			NotFound {
-		if (metaStore.containsKey(id)) 
-			return metaStore.get(id);
-		
-		throw new NotFound("000",
-				String.format("Sysmeta for id '%s' could not be found", 
-				id.getValue())
-				);
+			NotFound 
+	{
+		return checkAvailableAndAuthorized(session, id, Permission.READ);
 	}
 
+	
 	@Override
 	@Deprecated
 	public DescribeResponse describe(Session session, Identifier id)
-			throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure,
-			NotFound {
-		if (metaStore.containsKey(id)) {
-			SystemMetadata sysmeta =  metaStore.get(id);
-			return new DescribeResponse(
+	throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound 
+	{
+		SystemMetadata sysmeta =  checkAvailableAndAuthorized(session, id, Permission.READ);
+		return new DescribeResponse(
 					sysmeta.getFormatId(),
 					sysmeta.getSize(),
 					sysmeta.getDateSysMetadataModified(),
 					sysmeta.getChecksum(),
 					sysmeta.getSerialVersion());
-		}
-		
-		throw new NotFound("000",
-				String.format("Sysmeta for id '%s' could not be found", 
-				id.getValue())
-				);
+			
 	}
 
+	/**
+	 * This method calculates the checksum afresh every call;
+	 */
 	@Override
 	@Deprecated
 	public Checksum getChecksum(Session session, Identifier id,
 			String checksumAlgorithm) throws InvalidRequest, InvalidToken,
 			NotAuthorized, NotImplemented, ServiceFailure, NotFound {
 		
+		checkAvailableAndAuthorized(session, id, Permission.READ);
 		if (objectStore.containsKey(id)) {
 			try {
 				return ChecksumUtil.checksum(objectStore.get(id), checksumAlgorithm);
@@ -241,8 +346,9 @@ public class InMemoryMNode implements MNode {
 	@Deprecated
 	public ObjectList listObjects(Session session, Date fromDate, Date toDate,
 			ObjectFormatIdentifier formatid, Boolean replicaStatus,
-			Integer start, Integer count) throws InvalidRequest, InvalidToken,
-			NotAuthorized, NotImplemented, ServiceFailure {
+			Integer start, Integer count) 
+	throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure 
+	{
 		ObjectList ol = new ObjectList();
 		TreeMap<String, ObjectInfo> oiMap = new TreeMap<String,ObjectInfo>();
 		for(Entry<Identifier, SystemMetadata> en : metaStore.entrySet()) {
@@ -304,6 +410,7 @@ public class InMemoryMNode implements MNode {
 			throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure,
 			NotFound, InsufficientResources {
 		// TODO handle SIDs??
+		checkAvailableAndAuthorized(session, id, Permission.READ);
 		if (objectStore.containsKey(id)) 
 			return new ByteArrayInputStream(objectStore.get(id));
 
@@ -333,8 +440,9 @@ public class InMemoryMNode implements MNode {
 	public boolean isAuthorized(Session session, Identifier pid,
 			Permission action) throws ServiceFailure, InvalidRequest,
 			InvalidToken, NotFound, NotAuthorized, NotImplemented {
-		// TODO Auto-generated method stub
-		return false;
+
+		checkAvailableAndAuthorized(session, pid, action);
+		return true;
 	}
 
 	@Override
@@ -343,8 +451,8 @@ public class InMemoryMNode implements MNode {
 			long serialVersion, Date dateSystemMetadataLastModified)
 			throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented,
 			InvalidRequest {
-		// TODO Auto-generated method stub
-		return false;
+		//TODO implement
+		throw new NotImplemented("000","systemMetadataChanged is not implemented.");
 	}
 
 	@Override
@@ -395,44 +503,130 @@ public class InMemoryMNode implements MNode {
 			InvalidSystemMetadata, InvalidToken, NotAuthorized, NotImplemented,
 			ServiceFailure, UnsupportedType 
 	{
-		// TODO Auto-generated method stub
-		return null;
+		try {
+			checkAvailableAndAuthorized(session, pid, Permission.READ);
+			// not good
+			throw new IdentifierNotUnique("000", pid.getValue() +
+					": An object with this identifier already exists.");
+		} catch (NotFound nf) {
+			// good
+			byte[] objectBytes;
+			try {
+				objectBytes = IOUtils.toByteArray(object);
+				this.objectStore.put(pid,objectBytes);
+				sysmeta.setDateUploaded(new Date());
+				sysmeta.setOriginMemberNode(getNodeId());
+				validateSystemMetadata(sysmeta);
+				this.metaStore.put(pid, sysmeta);
+				eventLog.add(buildLogEntry(Event.CREATE, pid, session));
+				
+			} catch (IOException e) {
+				ServiceFailure sf = new ServiceFailure("000",pid.getValue() +
+						"Problem in create() converting the inputStream to byte[].");
+				sf.initCause(e);
+				throw sf;
+			}
+			
+		} catch (NotAuthorized na) {
+			// not good
+			throw new IdentifierNotUnique("000", pid.getValue() + 
+					": An object with this identifier already exists.");
+		}
+		
+		return pid;
 	}
 
 	@Override
 	@Deprecated
 	public Identifier update(Session session, Identifier pid,
 			InputStream object, Identifier newPid, SystemMetadata sysmeta)
-			throws IdentifierNotUnique, InsufficientResources, InvalidRequest,
+	throws IdentifierNotUnique, InsufficientResources, InvalidRequest,
 			InvalidSystemMetadata, InvalidToken, NotAuthorized, NotImplemented,
-			ServiceFailure, UnsupportedType, NotFound {
-		// TODO Auto-generated method stub
-		return null;
+			ServiceFailure, UnsupportedType, NotFound 
+			{
+		
+		// throws exception if the pid being update (obsoleted) can't be found
+		// or the requester doesn't have the permissions to do the update
+		checkAvailableAndAuthorized(session, pid, Permission.CHANGE_PERMISSION);			
+		
+		
+		// rule out existence of newPid
+		try {
+			checkAvailableAndAuthorized(session, newPid, Permission.READ);
+			
+			// newPid was found...
+			throw new IdentifierNotUnique("000", pid.getValue() +
+					": An object with this identifier already exists.");
+		} 
+		catch (NotAuthorized na) {
+			throw new IdentifierNotUnique("000", pid.getValue() +
+				": An object with this identifier already exists.");
+		}  
+		catch (NotFound nf) {
+		
+			byte[] objectBytes;
+			try {
+				objectBytes = IOUtils.toByteArray(object);
+				this.objectStore.put(newPid,objectBytes);
+				sysmeta.setDateUploaded(new Date());
+				sysmeta.setOriginMemberNode(getNodeId());
+				sysmeta.setAuthoritativeMemberNode(getNodeId());
+				sysmeta.setDateSysMetadataModified(new Date());
+				sysmeta.setObsoletes(pid);
+				ObjectFormat of = ObjectFormatCache.getInstance().getFormat(sysmeta.getFormatId());
+				if (of == null) {
+					throw new UnsupportedType("000","Cannot store data of the format " +
+							sysmeta.getFormatId().getValue());
+				}
+				validateSystemMetadata(sysmeta);
+
+				SystemMetadata oldSysMeta = metaStore.get(pid);
+				if (oldSysMeta.getArchived()) {
+					throw new InvalidRequest("000","Cannot update an archived object. pid = " 
+							+ pid.getValue());
+				}
+				oldSysMeta.setObsoletedBy(newPid);
+				oldSysMeta.setDateSysMetadataModified(new Date());
+
+				this.metaStore.put(newPid, sysmeta);
+				eventLog.add(buildLogEntry(Event.UPDATE, pid, session));
+
+			} catch (IOException e) {
+				ServiceFailure sf = new ServiceFailure("000",pid.getValue() +
+						"Problem in update() converting the inputStream to byte[].");
+				sf.initCause(e);
+				throw sf;
+			}
+		}
+		return pid;
 	}
 
+	
 	@Override
 	@Deprecated
 	public Identifier delete(Session session, Identifier pid)
-			throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
-			NotImplemented {
-		try {
-			if (isAuthorized(session, pid, Permission.CHANGE_PERMISSION)) {
-				objectStore.remove(pid);
-				eventLog.add(buildLogEntry(Event.DELETE, pid, session));
-			}
-		} catch (InvalidRequest e) {
-			throw new InvalidToken("000","User doesn't have authorization to delete");
-		}
-		return null;
+	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented 
+	{
+		SystemMetadata smd = checkAvailableAndAuthorized(session, pid, Permission.CHANGE_PERMISSION);
+		// TODO: what is the semantics of archived, here?  
+		archive(session, pid);
+		objectStore.remove(pid);
+		eventLog.add(buildLogEntry(Event.DELETE, pid, session));
+		return pid;
 	}
 
 	@Override
 	@Deprecated
 	public Identifier archive(Session session, Identifier pid)
 			throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
-			NotImplemented {
-		// TODO Auto-generated method stub
-		return null;
+			NotImplemented 
+	{
+		SystemMetadata sysmeta = 
+				checkAvailableAndAuthorized(session, pid, Permission.CHANGE_PERMISSION);
+		sysmeta.setArchived(true);
+		sysmeta.setDateSysMetadataModified(new Date());
+		
+		return pid;
 	}
 
 	@Override
@@ -440,8 +634,8 @@ public class InMemoryMNode implements MNode {
 	public Identifier generateIdentifier(Session session, String scheme,
 			String fragment) throws InvalidToken, ServiceFailure,
 			NotAuthorized, NotImplemented, InvalidRequest {
-		// TODO Auto-generated method stub
-		return null;
+		//TODO implement
+		throw new NotImplemented("000","generateIdentifier is not implemented.");
 	}
 
 	@Override
@@ -458,8 +652,8 @@ public class InMemoryMNode implements MNode {
 			NodeReference sourceNode) throws NotImplemented, ServiceFailure,
 			NotAuthorized, InvalidRequest, InvalidToken, InsufficientResources,
 			UnsupportedType {
-		// TODO Auto-generated method stub
-		return false;
+		//TODO implement
+		throw new NotImplemented("000","replicate is not implemented.");
 	}
 
 	
@@ -468,20 +662,23 @@ public class InMemoryMNode implements MNode {
 	public InputStream query(String queryEngine, String query)
 			throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest,
 			NotImplemented, NotFound {
-		return null;
+		//TODO implement
+		throw new NotImplemented("000","query is not implemented.");
 	}
 
 	@Override
 	public QueryEngineDescription getQueryEngineDescription(String queryEngine)
 			throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented,
 			NotFound {
-		return null;
+		//TODO implement
+		throw new NotImplemented("000","getQueryEngineDescription is not implemented.");
 	}
 
 	@Override
 	public QueryEngineList listQueryEngines() throws InvalidToken,
 			ServiceFailure, NotAuthorized, NotImplemented {
-		return null;
+		//TODO implement
+		throw new NotImplemented("000","listQueryEngines is not implemented.");
 	}
 
 }
