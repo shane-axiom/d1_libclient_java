@@ -1,4 +1,4 @@
-package org.dataone.client;
+package org.dataone.client.impl;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import org.apache.commons.io.IOUtils;
+import org.dataone.client.MNode;
 import org.dataone.client.formats.ObjectFormatCache;
 import org.dataone.client.types.D1TypeBuilder;
 import org.dataone.service.exceptions.IdentifierNotUnique;
@@ -497,9 +498,8 @@ public class InMemoryMNode implements MNode {
 
 	@Override
 	@Deprecated
-	public Identifier create(Session session, Identifier pid,
-			InputStream object, SystemMetadata sysmeta)
-			throws IdentifierNotUnique, InsufficientResources, InvalidRequest,
+	public Identifier create(Session session, Identifier pid, InputStream object, SystemMetadata sysmeta)
+	throws IdentifierNotUnique, InsufficientResources, InvalidRequest,
 			InvalidSystemMetadata, InvalidToken, NotAuthorized, NotImplemented,
 			ServiceFailure, UnsupportedType 
 	{
