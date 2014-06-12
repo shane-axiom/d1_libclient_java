@@ -97,6 +97,14 @@ public class ResourceMapFactory {
 	private static Predicate CITO_IS_DOCUMENTED_BY = null;
 	
 	private static Predicate CITO_DOCUMENTS = null;
+	
+	private static Predicate PROV_WAS_DERIVED_FROM = null;
+	
+	private static Predicate PROV_WAS_GENERATED_BY = null;
+	
+	private static Predicate PROV_WAS_INFORMED_BY = null;
+	
+	private static Predicate PROV_USED = null;
 
 	private static ResourceMapFactory instance = null;
 	
@@ -128,6 +136,38 @@ public class ResourceMapFactory {
 		CITO_DOCUMENTS.setName("documents");
 		CITO_DOCUMENTS.setURI(new URI(CITO_DOCUMENTS.getNamespace() 
 				+ CITO_DOCUMENTS.getName()));
+		
+		// create the PROV:wasDerivedFrom predicate
+		PROV_WAS_DERIVED_FROM = new Predicate();
+		PROV_WAS_DERIVED_FROM.setNamespace("http://www.w3.org/ns/prov#");
+		PROV_WAS_DERIVED_FROM.setPrefix("prov");
+		PROV_WAS_DERIVED_FROM.setName("wasDerivedFrom");
+		PROV_WAS_DERIVED_FROM.setURI(new URI(PROV_WAS_DERIVED_FROM.getNamespace() 
+						+ PROV_WAS_DERIVED_FROM.getName()));
+		
+		// create the PROV:wasGeneratedBy predicate
+		PROV_WAS_GENERATED_BY = new Predicate();
+		PROV_WAS_GENERATED_BY.setNamespace(PROV_WAS_DERIVED_FROM.getNamespace());
+		PROV_WAS_GENERATED_BY.setPrefix(PROV_WAS_DERIVED_FROM.getPrefix());
+		PROV_WAS_GENERATED_BY.setName("wasGeneratedBy");
+		PROV_WAS_GENERATED_BY.setURI(new URI(PROV_WAS_GENERATED_BY.getNamespace() 
+						+ PROV_WAS_GENERATED_BY.getName()));
+		
+		// create the PROV:wasInformedBy predicate
+		PROV_WAS_INFORMED_BY = new Predicate();
+		PROV_WAS_INFORMED_BY.setNamespace(PROV_WAS_DERIVED_FROM.getNamespace());
+		PROV_WAS_INFORMED_BY.setPrefix(PROV_WAS_DERIVED_FROM.getPrefix());
+		PROV_WAS_INFORMED_BY.setName("wasInformedBy");
+		PROV_WAS_INFORMED_BY.setURI(new URI(PROV_WAS_INFORMED_BY.getNamespace() 
+						+ PROV_WAS_INFORMED_BY.getName()));
+		
+		// create the PROV:used predicate
+		PROV_USED = new Predicate();
+		PROV_USED.setNamespace(PROV_WAS_DERIVED_FROM.getNamespace());
+		PROV_USED.setPrefix(PROV_WAS_DERIVED_FROM.getPrefix());
+		PROV_USED.setName("used");
+		PROV_USED.setURI(new URI(PROV_USED.getNamespace() 
+						+ PROV_USED.getName()));
 	}
 	
 	private ResourceMapFactory() {
@@ -223,20 +263,185 @@ public class ResourceMapFactory {
 		
 	}
 
-	//TODO: Make this take a map of identifiers -> list of identifiers
-	public void addWasDerivedFrom(ResourceMap resourceMap, Identifier primaryData, Identifier derivedData)
+	/**
+	 * Adds a wasDerivedFrom triple to the specified Resource Map
+	 * @param resourceMap
+	 * @param primaryDataId
+	 * @param derivedDataId
+	 * @return
+	 * @throws OREException
+	 * @throws URISyntaxException
+	 */
+	public void addWasDerivedFrom(ResourceMap resourceMap, Identifier primaryDataId, Identifier derivedDataId)
 	throws OREException, URISyntaxException{
 		
-		Predicate predicate = new Predicate(new URI("http://www.w3.org/ns/prov#wasDerivedFrom"));
 		Triple triple = OREFactory.createTriple(
-								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(derivedData.getValue())), 
-								predicate, 
-								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(primaryData.getValue())));
-		System.out.println("Triple: " + triple.getSubjectURI() + " " + triple.getPredicate().getURI() + " " + triple.getObjectURI());
-		resourceMap.addTriple(triple);
-				
+								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(derivedDataId.getValue())), 
+								PROV_WAS_DERIVED_FROM, 
+								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(primaryDataId.getValue())));
+		resourceMap.addTriple(triple);				
+	}
+	
+	
+	
+	/**
+	 * Add multiple wasDerivedFrom triples to the specified Resource Map
+	 * @param resourceMap
+	 * @param idMap
+	 * @return
+	 * @throws OREException
+	 * @throws URISyntaxException
+	 */
+	public void addWasDerivedFrom(ResourceMap resourceMap, Map<Identifier, List<Identifier>> idMap)
+	throws OREException, URISyntaxException{
+		
+		//Iterate over each derived data ID
+		for(Identifier derivedDataId: idMap.keySet()){
+			//Get the list of primary data IDs
+			List<Identifier> primaryDataIds = idMap.get(derivedDataId);
+				for(Identifier primaryDataId: primaryDataIds){
+				Triple triple = OREFactory.createTriple(
+										new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(derivedDataId.getValue())), 
+										PROV_WAS_DERIVED_FROM, 
+										new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(primaryDataId.getValue())));
+				resourceMap.addTriple(triple);
+			}
+		}		
+	}
+	
+	
+	/**
+	 * Adds a wasGeneratedBy triple to the specified Resource Map
+	 * @param resourceMap
+	 * @param subjectId
+	 * @param objectId
+	 * @return
+	 * @throws OREException
+	 * @throws URISyntaxException
+	 */
+	public void addWasGeneratedBy(ResourceMap resourceMap, Identifier subjectId, Identifier objectId)
+	throws OREException, URISyntaxException{
+		
+		Triple triple = OREFactory.createTriple(
+								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(subjectId.getValue())), 
+								PROV_WAS_GENERATED_BY, 
+								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(objectId.getValue())));
+		resourceMap.addTriple(triple);				
 	}
 
+	/**
+	 * Add multiple addWasGeneratedBy triples to the specified Resource Map
+	 * @param resourceMap
+	 * @param idMap
+	 * @return
+	 * @throws OREException
+	 * @throws URISyntaxException
+	 */
+	public void addWasGeneratedBy(ResourceMap resourceMap, Map<Identifier, List<Identifier>> idMap)
+	throws OREException, URISyntaxException{
+		
+		//Iterate over each subject ID
+		for(Identifier subjectId: idMap.keySet()){
+			//Get the list of primary data IDs
+			List<Identifier> objectIds = idMap.get(subjectId);
+				for(Identifier objectId: objectIds){
+				Triple triple = OREFactory.createTriple(
+										new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(subjectId.getValue())), 
+										PROV_WAS_GENERATED_BY, 
+										new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(objectId.getValue())));
+				resourceMap.addTriple(triple);
+			}
+		}		
+	}
+	
+	
+	/**
+	 * Adds a addWasInformedBy triple to the specified Resource Map
+	 * @param resourceMap
+	 * @param subjectId
+	 * @param objectId
+	 * @return
+	 * @throws OREException
+	 * @throws URISyntaxException
+	 */
+	public void addWasInformedBy(ResourceMap resourceMap, Identifier subjectId, Identifier objectId)
+	throws OREException, URISyntaxException{
+		
+		Triple triple = OREFactory.createTriple(
+								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(subjectId.getValue())), 
+								PROV_WAS_INFORMED_BY, 
+								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(objectId.getValue())));
+		resourceMap.addTriple(triple);				
+	}
+
+	/**
+	 * Add multiple addWasInformedBy triples to the specified Resource Map
+	 * @param resourceMap
+	 * @param idMap
+	 * @return
+	 * @throws OREException
+	 * @throws URISyntaxException
+	 */
+	public void addWasInformedBy(ResourceMap resourceMap, Map<Identifier, List<Identifier>> idMap)
+	throws OREException, URISyntaxException{
+		
+		//Iterate over each subject ID
+		for(Identifier subjectId: idMap.keySet()){
+			//Get the list of primary data IDs
+			List<Identifier> objectIds = idMap.get(subjectId);
+				for(Identifier objectId: objectIds){
+				Triple triple = OREFactory.createTriple(
+										new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(subjectId.getValue())), 
+										PROV_WAS_INFORMED_BY, 
+										new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(objectId.getValue())));
+				resourceMap.addTriple(triple);
+			}
+		}		
+	}
+	
+	/**
+	 * Adds a addUsed triple to the specified Resource Map
+	 * @param resourceMap
+	 * @param subjectId
+	 * @param objectId
+	 * @return
+	 * @throws OREException
+	 * @throws URISyntaxException
+	 */
+	public void addUsed(ResourceMap resourceMap, Identifier subjectId, Identifier objectId)
+	throws OREException, URISyntaxException{
+		
+		Triple triple = OREFactory.createTriple(
+								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(subjectId.getValue())), 
+								PROV_USED, 
+								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(objectId.getValue())));
+		resourceMap.addTriple(triple);				
+	}
+
+	/**
+	 * Add multiple addUsed triples to the specified Resource Map
+	 * @param resourceMap
+	 * @param idMap
+	 * @return
+	 * @throws OREException
+	 * @throws URISyntaxException
+	 */
+	public void addUsed(ResourceMap resourceMap, Map<Identifier, List<Identifier>> idMap)
+	throws OREException, URISyntaxException{
+		
+		//Iterate over each subject ID
+		for(Identifier subjectId: idMap.keySet()){
+			//Get the list of primary data IDs
+			List<Identifier> objectIds = idMap.get(subjectId);
+				for(Identifier objectId: objectIds){
+				Triple triple = OREFactory.createTriple(
+										new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(subjectId.getValue())), 
+										PROV_USED, 
+										new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(objectId.getValue())));
+				resourceMap.addTriple(triple);
+			}
+		}		
+	}
 	
 /*	/**
 	 * Experimental.  Do not use!  Creates a ResourceMap that does not contain the inverse
