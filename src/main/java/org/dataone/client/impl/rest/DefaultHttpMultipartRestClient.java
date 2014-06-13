@@ -24,6 +24,7 @@ import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.LayeredConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
@@ -41,29 +42,27 @@ public class DefaultHttpMultipartRestClient extends HttpMultipartRestClient {
 
 	private static HttpClient buildHttpClient(Session session)  
 	{		
-		String scheme = null;
-		ConnectionSocketFactory socketFactory = null;
+		RegistryBuilder<ConnectionSocketFactory> rb = RegistryBuilder.<ConnectionSocketFactory>create();		
+		rb.register("http", PlainConnectionSocketFactory.getSocketFactory());
+
 		try {
 			String subjectString = null;
 			if (session != null && session.getSubject() != null) {
 				subjectString = session.getSubject().getValue();
 			}
-//			LayeredConnectionSocketFactory sslsf;
 					
-			socketFactory = CertificateManager.getInstance().getSSLConnectionSocketFactory(subjectString);
-			scheme = "https";
-			
-		} catch (Exception e) {
+			LayeredConnectionSocketFactory sslSocketFactory = 
+					CertificateManager.getInstance().getSSLConnectionSocketFactory(subjectString);
+			rb.register("https", sslSocketFactory);
+		} 
+		catch (Exception e) {
 			// this is likely more severe
 			log.warn("Exception from CertificateManager at SSL setup - client will be anonymous: " + 
 					e.getClass() + ":: " + e.getMessage());
-			socketFactory = PlainConnectionSocketFactory.getSocketFactory();
-			scheme = "http";
+			
 		}
-		
-		Registry<ConnectionSocketFactory> sfRegistry = RegistryBuilder.<ConnectionSocketFactory>create()
-				.register(scheme, socketFactory)
-				.build();
+		 
+		Registry<ConnectionSocketFactory> sfRegistry = rb.build();
 
 		HttpClientConnectionManager connMan = new PoolingHttpClientConnectionManager(sfRegistry);
 		HttpClient hc = HttpClients.custom()
