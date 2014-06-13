@@ -74,4 +74,6 @@ public interface D1Node {
      */
     public NodeType getNodeType();
 	
+    
+    public String getLatestRequestUrl();
 }

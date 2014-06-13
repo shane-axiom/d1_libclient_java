@@ -223,6 +223,10 @@ public abstract class MultipartD1Node {
     	return this.nodeType;
     }
     
+    public String getLatestRequestUrl() {
+    	return this.restClient.getLatestRequestUrl();
+    }
+    
     
 	public Date ping() throws NotImplemented, ServiceFailure, InsufficientResources 
 	{

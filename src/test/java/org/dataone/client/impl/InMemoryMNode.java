@@ -160,6 +160,13 @@ public class InMemoryMNode implements MNode {
 	}
 
 	@Override
+	public String getLatestRequestUrl() {
+		return "No request info available";
+	}
+
+	
+	
+	@Override
 	public Date ping() throws NotImplemented, ServiceFailure,
 			InsufficientResources {
 		return new Date();
@@ -680,5 +687,4 @@ public class InMemoryMNode implements MNode {
 		//TODO implement
 		throw new NotImplemented("000","listQueryEngines is not implemented.");
 	}
-
 }

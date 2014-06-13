@@ -147,13 +147,6 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
     }
     
     
-    public String getNodeBaseServiceUrl() {
-    	D1Url url = new D1Url(super.getNodeBaseServiceUrl());
-    	url.addNextPathElement(MNCore.SERVICE_VERSION);
-    	log.debug("Node base service URL is: " + url.getUrl());
-    	return url.getUrl();
-    }
-    
 
     /**
      * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNCore.getLogRecords">see DataONE API Reference</a> }
