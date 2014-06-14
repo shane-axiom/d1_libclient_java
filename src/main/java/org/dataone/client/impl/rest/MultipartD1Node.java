@@ -324,7 +324,6 @@ public abstract class MultipartD1Node {
 		
         // send the request
         ObjectList objectList = null;
-
         try {
         	InputStream is = this.restClient.doGetRequest(url.getUrl());
         	objectList =  deserializeServiceType(ObjectList.class, is);
@@ -444,52 +443,62 @@ public abstract class MultipartD1Node {
     throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, 
       NotImplemented, InsufficientResources
     {
-        InputStream is = null;        
+        InputStream remoteStream = null;
+        InputStream localStream = null;
+        
         boolean cacheMissed = false;
         
         if (useLocalCache) {
             try {
                 byte[] data = LocalCache.instance().getData(pid);
-                is = new ByteArrayInputStream(data);
-                return is;
+                localStream = new ByteArrayInputStream(data);
+                
             } catch (NotCached e) {
                 cacheMissed = true;
             }
-        }
-       	D1Url url = new D1Url(this.getNodeBaseServiceUrl(),Constants.RESOURCE_OBJECTS);
-       	
-       	try {
-       		url.addNextPathElement(pid.getValue());
-       	} catch (IllegalArgumentException e) {
-       		throw new NotFound("0000", "'pid' cannot be null nor empty");
-       	}
-       	
-        try {
-        	byte[] bytes = IOUtils.toByteArray(this.restClient.doGetRequest(url.getUrl()));
-        	is = new ByteArrayInputStream(bytes); 
-		
-			if (cacheMissed) {
-			    // Cache the result, and reset the stream mark
-			    LocalCache.instance().putData(pid, bytes);
-			}
-		} catch (BaseException be) {
-            if (be instanceof InvalidToken)      throw (InvalidToken) be;
-            if (be instanceof NotAuthorized)     throw (NotAuthorized) be;
-            if (be instanceof NotImplemented)    throw (NotImplemented) be;
-            if (be instanceof ServiceFailure)    throw (ServiceFailure) be;
-            if (be instanceof NotFound)                throw (NotFound) be;
-            if (be instanceof InsufficientResources)   throw (InsufficientResources) be;
-                    
-            throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
         } 
-        catch (ClientSideException e) {
-        	throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
-        } 
-        catch (IOException e) {
-        	throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
+        else {
+        
+        	D1Url url = new D1Url(this.getNodeBaseServiceUrl(),Constants.RESOURCE_OBJECTS);
+
+        	try {
+        		url.addNextPathElement(pid.getValue());
+        	} catch (IllegalArgumentException e) {
+        		throw new NotFound("0000", "'pid' cannot be null nor empty");
+        	}
+
+        	try {
+        		remoteStream = this.restClient.doGetRequest(url.getUrl());
+        		byte[] bytes = IOUtils.toByteArray(remoteStream);
+
+        		if (cacheMissed) {
+        			// Cache the result, and reset the stream mark
+        			LocalCache.instance().putData(pid, bytes);
+        		}
+        		localStream = new ByteArrayInputStream(bytes); 
+
+        	} catch (BaseException be) {
+        		if (be instanceof InvalidToken)      throw (InvalidToken) be;
+        		if (be instanceof NotAuthorized)     throw (NotAuthorized) be;
+        		if (be instanceof NotImplemented)    throw (NotImplemented) be;
+        		if (be instanceof ServiceFailure)    throw (ServiceFailure) be;
+        		if (be instanceof NotFound)                throw (NotFound) be;
+        		if (be instanceof InsufficientResources)   throw (InsufficientResources) be;
+
+        		throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
+        	} 
+        	catch (ClientSideException e) {
+        		throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
+        	} 
+        	catch (IOException e) {
+        		throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
+        	}
+        	finally {
+        		IOUtils.closeQuietly(remoteStream);
+        	}
         }
         
-        return is;
+        return localStream;
     }
  
     
@@ -591,7 +600,7 @@ public abstract class MultipartD1Node {
         }
 		catch (ClientSideException e) {
 			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
-		} 	
+		} 
         return sysmeta;
 	}
 
@@ -751,7 +760,9 @@ public abstract class MultipartD1Node {
                     
             throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
         } 
-        catch (ClientSideException e)            {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); } 
+        catch (ClientSideException e) {
+        	throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
+        }
 
         return checksum;
     }
@@ -774,12 +785,9 @@ public abstract class MultipartD1Node {
         	url.addNextPathElement(pid.getValue());
         if (action != null)
         	url.addNonEmptyParamPair("action", action.xmlValue());
-    	
-        // send the request
-        
-        InputStream is = null;
+
         try {
-        	is = this.restClient.doGetRequest(url.getUrl());
+        	InputStream is = this.restClient.doGetRequest(url.getUrl());
         	if (is != null)
 				is.close();
         } catch (BaseException be) {
@@ -794,7 +802,7 @@ public abstract class MultipartD1Node {
         } 
         catch (ClientSideException e)            {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); } 
         catch (IOException e)                    {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); } 
-		
+        
         return true;
     }
 
@@ -820,9 +828,9 @@ public abstract class MultipartD1Node {
 		if (fragment != null) {
 			smpe.addParamPart("fragment", fragment);
 		}
-		// send the request
+		
 		Identifier identifier = null;
-
+		
 		try {
 			InputStream is = this.restClient.doPostRequest(url.getUrl(),smpe);
 			identifier = deserializeServiceType(Identifier.class, is);
@@ -837,7 +845,8 @@ public abstract class MultipartD1Node {
 			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
 		catch (ClientSideException e)            {
-			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); } 
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
+		}
 
  		return identifier;
 	}
@@ -988,8 +997,7 @@ public abstract class MultipartD1Node {
 
         InputStream is = null;
         try {
-        	byte[] bytes = IOUtils.toByteArray(this.restClient.doGetRequest(finalUrl));
-        	is = new ByteArrayInputStream(bytes); 
+        	is = localizeInputStream(this.restClient.doGetRequest(finalUrl));
 		}
         catch (BaseException be) {
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
@@ -1002,9 +1010,11 @@ public abstract class MultipartD1Node {
 			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		}
 		catch (ClientSideException e)            {
-			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); } 
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
+		} 
         catch (IOException e)                    {
-        	throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
+        	throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
+        }
         
 		return is;
 	}
@@ -1068,12 +1078,7 @@ public abstract class MultipartD1Node {
 		return engines;
 	}
     
-    
-
-
- 
-
-    
+        
 	/**
 	 * deserialize an object of type from the inputstream
 	 * This is a wrapper method of the standard common Unmarshalling method
@@ -1106,4 +1111,25 @@ public abstract class MultipartD1Node {
                     "Could not deserialize the " + domainClass.getCanonicalName() + ": " + e.getMessage());
 		}
 	}   
+	
+	/** 
+	 * Use this method to consume (presumably) a remote inputstream and effectively
+	 * release any connections and system resources.
+	 * 
+	 * @param is
+	 * @return a localized input stream
+	 * @throws IOException 
+	 */
+	protected InputStream localizeInputStream(InputStream is) throws IOException 
+	{
+		InputStream localizedStream = null;
+		try {
+			byte[] bytes = IOUtils.toByteArray(is);
+			localizedStream = new ByteArrayInputStream(bytes);
+		}
+		finally {
+			IOUtils.closeQuietly(is);
+		}
+		return localizedStream;
+	}
 }

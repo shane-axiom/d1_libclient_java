@@ -20,12 +20,10 @@
 
 package org.dataone.client.impl.rest;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.LogFactory;
 import org.dataone.client.MNode;
 import org.dataone.client.exception.ClientSideException;
@@ -814,13 +812,12 @@ public class MultipartMNode extends MultipartD1Node implements MNode
         if (pid != null)
         	url.addNextPathElement(pid.getValue());
 
-        // send the request
 //                client.setTimeouts(Settings.getConfiguration()
 //			.getInteger("D1Client.MNode.getReplica.timeout", getDefaultSoTimeout()));
-        ByteArrayInputStream bais = null;
+        InputStream is = null;
         try {
-        	byte[] bytes = IOUtils.toByteArray(this.restClient.doGetRequest(url.getUrl()));
-        	bais = new ByteArrayInputStream(bytes);     	
+        	is = localizeInputStream(this.restClient.doGetRequest(url.getUrl()));
+    	
         } catch (BaseException be) {
             if (be instanceof InvalidToken)           throw (InvalidToken) be;
             if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
@@ -834,7 +831,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
         catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
         catch (IOException e)              {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 
-        return bais;
+        return is;
     }
     
     /* (non-Javadoc)

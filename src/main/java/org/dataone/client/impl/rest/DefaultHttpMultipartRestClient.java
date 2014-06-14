@@ -27,6 +27,7 @@ import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.LayeredConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.BasicHttpClientConnectionManager;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.dataone.client.auth.CertificateManager;
 import org.dataone.client.utils.HttpUtils;
@@ -65,6 +66,7 @@ public class DefaultHttpMultipartRestClient extends HttpMultipartRestClient {
 		Registry<ConnectionSocketFactory> sfRegistry = rb.build();
 
 		HttpClientConnectionManager connMan = new PoolingHttpClientConnectionManager(sfRegistry);
+//		HttpClientConnectionManager connMan = new BasicHttpClientConnectionManager(sfRegistry);
 		HttpClient hc = HttpClients.custom()
 				.setConnectionManager(connMan)
 				.build();
