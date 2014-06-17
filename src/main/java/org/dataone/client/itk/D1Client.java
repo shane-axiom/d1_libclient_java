@@ -27,6 +27,7 @@ import java.io.IOException;
 import org.dataone.client.CNode;
 import org.dataone.client.MNode;
 import org.dataone.client.NodeLocator;
+import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.impl.NodeListNodeLocator;
 import org.dataone.client.impl.rest.DefaultHttpMultipartRestClient;
 import org.dataone.client.impl.rest.HttpCNode;
@@ -178,7 +179,13 @@ public class D1Client {
 				throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
 			}
     	}
-    	MNode mn = nodeLocator.getMNode(nodeRef);
+    	MNode mn;
+		try {
+			mn = nodeLocator.getMNode(nodeRef);
+		} catch (ClientSideException e) {
+			throw new ServiceFailure("0000", "Node is not an MNode: "
+   				 + nodeRef.getValue());
+		}
     	if (mn == null) {
     		throw new ServiceFailure("0000", "Failed to find baseUrl for node "
     				 + nodeRef.getValue() + " in the NodeList");

@@ -20,8 +20,11 @@
 package org.dataone.client;
 
 import java.util.Map;
+import java.util.Set;
 
+import org.dataone.client.exception.ClientSideException;
 import org.dataone.service.types.v1.NodeReference;
+import org.dataone.service.types.v1.NodeType;
 
 /**
  * An abstract Service Locator class to resolve NodeReferences into MNode or 
@@ -33,25 +36,37 @@ import org.dataone.service.types.v1.NodeReference;
  */
 public abstract class NodeLocator {
 
-	private Map<String, MNode> MNodeMap;
+	private Map<NodeReference, D1Node> nodeMap;
 	
-	private Map<String, CNode> CNodeMap;
-	
-	
+
 	public void putMNode(NodeReference nodeRef, MNode mnode) {
-		MNodeMap.put(nodeRef.getValue(), mnode);
+		nodeMap.put(nodeRef, mnode);
 	}
 	
 	public void putCNode(NodeReference nodeRef, CNode cnode) {
-		CNodeMap.put(nodeRef.getValue(), cnode);
+		nodeMap.put(nodeRef, cnode);
 	}
 	  	
-	public MNode getMNode(NodeReference nodeReference) {
-		return MNodeMap.get(nodeReference);
+	public MNode getMNode(NodeReference nodeReference) 
+	throws ClientSideException 
+	{
+		if (nodeMap.get(nodeReference).getNodeType() != NodeType.MN) {
+			throw new ClientSideException("The node is not of type Member Node.",null);
+		}
+		return (MNode) nodeMap.get(nodeReference);
 	}
 	
-	public CNode getCNode(NodeReference nodeReference) {
-		return CNodeMap.get(nodeReference);
+	public CNode getCNode(NodeReference nodeReference) 
+	throws ClientSideException 
+	{
+		if (nodeMap.get(nodeReference).getNodeType() != NodeType.CN) {
+			throw new ClientSideException("The node is not of type Coordinating Node.",null);
+		}
+		return (CNode) nodeMap.get(nodeReference);
+	}
+	
+	public Set<NodeReference> listD1Nodes() {
+		return nodeMap.keySet();
 	}
 	
 	

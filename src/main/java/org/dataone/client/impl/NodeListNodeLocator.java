@@ -24,6 +24,7 @@ import java.util.Map;
 import org.dataone.client.CNode;
 import org.dataone.client.MNode;
 import org.dataone.client.NodeLocator;
+import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.impl.rest.DefaultHttpMultipartRestClient;
 import org.dataone.client.impl.rest.HttpCNode;
 import org.dataone.client.impl.rest.HttpMNode;
@@ -39,6 +40,10 @@ import org.dataone.service.types.v1.util.NodelistUtil;
  * the internal maps that have all of the registered MNodes and CNodes, instead
  * of relying on the put methods.  The MNode and CNode objects are 
  * instantiated the first time they are requested from the get methods.
+ * 
+ * While most applications require / desire to have only one instance of a NodeLocator,
+ * (that is Singleton behavior) this class does not do that, to support applications
+ * that work across environments.     See NodeLocatorSingleton for this 
  * 
  * Calling putMNode, for example, will replace the current MNode associated with
  * the NodeReference, so use with care.  
@@ -94,9 +99,11 @@ public class NodeListNodeLocator extends NodeLocator {
 	 * instantiated at the first request.  If the NodeReference does not exist
 	 * in the NodeList passed into the constructor, and an instantiated MNode is
 	 * not put into the registry, and an MNode is not returned. 
+	 * 
+	 * @throws ClientSideException if the NodeReference is not for an MNode
 	 */
 	@Override
-	public MNode getMNode(NodeReference nodeRef) 
+	public MNode getMNode(NodeReference nodeRef) throws ClientSideException 
 	{ 	
 		MNode mn = super.getMNode(nodeRef);
 		
@@ -120,10 +127,12 @@ public class NodeListNodeLocator extends NodeLocator {
 	 * Gets the CNode associated with the NodeReference.  The CNode is lazy-
 	 * instantiated at the first request.  If the NodeReference does not exist
 	 * in the NodeList passed into the constructor, and an instantiated CNode is
-	 * not put into the registry, and a CNode is not returned. 
+	 * not put into the registry, and a CNode is not returned.
+	 *  
+	 * @throws ClientSideException if the NodeReference is not for a CNode
 	 */
 	@Override
-	public CNode getCNode(NodeReference nodeRef) 
+	public CNode getCNode(NodeReference nodeRef) throws ClientSideException 
 	{	
 		CNode cn = super.getCNode(nodeRef);
 		
