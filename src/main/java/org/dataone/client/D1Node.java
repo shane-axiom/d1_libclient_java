@@ -75,5 +75,11 @@ public interface D1Node {
     public NodeType getNodeType();
 	
     
+    /**
+     * A method to provide information about the latestRequest from the D1Node
+     * 
+     * @return
+     */
     public String getLatestRequestUrl();
+
 }
