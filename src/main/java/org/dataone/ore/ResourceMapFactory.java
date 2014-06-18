@@ -30,6 +30,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +62,7 @@ import org.dspace.foresite.TripleSelector;
 import org.dspace.foresite.Vocab;
 import org.dspace.foresite.jena.JenaOREFactory;
 import org.dspace.foresite.jena.ORE;
+import org.dspace.foresite.jena.ResourceMapJena;
 import org.dspace.foresite.jena.TripleJena;
 
 import com.hp.hpl.jena.ontology.OntModelSpec;
@@ -673,10 +675,21 @@ public class ResourceMapFactory {
 	 * @param resourceMap
 	 * @return
 	 * @throws ORESerialiserException
+	 * @throws OREException 
 	 */
-	public String serializeResourceMap(ResourceMap resourceMap) throws ORESerialiserException {
+	public String serializeResourceMap(ResourceMap resourceMap) throws ORESerialiserException, OREException {
 		// serialize
 		ORESerialiser serializer = ORESerialiserFactory.getInstance(RESOURCE_MAP_SERIALIZATION_FORMAT);
+		
+		// set the NS prefixes we use in the predicates
+		if (resourceMap instanceof ResourceMapJena) {
+			Iterator<Triple> tripleIter = resourceMap.listAllTriples().iterator();
+			while (tripleIter.hasNext()) {
+				Predicate predicate = tripleIter.next().getPredicate();
+				((ResourceMapJena) resourceMap).getModel().setNsPrefix(predicate.getPrefix(), predicate.getNamespace());
+			}
+		}
+		
 		ResourceMapDocument doc = serializer.serialise(resourceMap);
 		String serialisation = doc.toString();
 		return serialisation;
