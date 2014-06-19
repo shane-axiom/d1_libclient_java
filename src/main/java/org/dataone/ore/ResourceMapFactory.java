@@ -107,6 +107,8 @@ public class ResourceMapFactory {
 	private static Predicate PROV_WAS_INFORMED_BY = null;
 	
 	private static Predicate PROV_USED = null;
+	
+	private static List<Predicate> predicates = null;
 
 	private static ResourceMapFactory instance = null;
 	
@@ -115,6 +117,8 @@ public class ResourceMapFactory {
 	private static Log log = LogFactory.getLog(ResourceMapFactory.class);
 	
 	private void init() throws URISyntaxException {
+		predicates = new ArrayList<Predicate>();
+		
 		// use as much as we can from the included Vocab for dcterms:Agent
 		DC_TERMS_IDENTIFIER = new Predicate();
 		DC_TERMS_IDENTIFIER.setNamespace(Vocab.dcterms_Agent.ns().toString());
@@ -170,6 +174,10 @@ public class ResourceMapFactory {
 		PROV_USED.setName("used");
 		PROV_USED.setURI(new URI(PROV_USED.getNamespace() 
 						+ PROV_USED.getName()));
+		
+		// include predicates from each namespace we want to support
+		predicates.add(CITO_DOCUMENTS);
+		predicates.add(PROV_WAS_DERIVED_FROM);
 	}
 	
 	private ResourceMapFactory() {
@@ -675,18 +683,19 @@ public class ResourceMapFactory {
 	 * @param resourceMap
 	 * @return
 	 * @throws ORESerialiserException
-	 * @throws OREException 
 	 */
-	public String serializeResourceMap(ResourceMap resourceMap) throws ORESerialiserException, OREException {
+	public String serializeResourceMap(ResourceMap resourceMap) throws ORESerialiserException {
 		// serialize
 		ORESerialiser serializer = ORESerialiserFactory.getInstance(RESOURCE_MAP_SERIALIZATION_FORMAT);
 		
 		// set the NS prefixes we use in the predicates
 		if (resourceMap instanceof ResourceMapJena) {
-			Iterator<Triple> tripleIter = resourceMap.listAllTriples().iterator();
+			Iterator<Predicate> tripleIter = predicates.iterator();
 			while (tripleIter.hasNext()) {
-				Predicate predicate = tripleIter.next().getPredicate();
-				((ResourceMapJena) resourceMap).getModel().setNsPrefix(predicate.getPrefix(), predicate.getNamespace());
+				Predicate predicate = tripleIter.next();
+				if (predicate != null && predicate.getPrefix() != null) {
+					((ResourceMapJena) resourceMap).getModel().setNsPrefix(predicate.getPrefix(), predicate.getNamespace());
+				}
 			}
 		}
 		
