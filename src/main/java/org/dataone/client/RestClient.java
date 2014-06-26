@@ -318,10 +318,24 @@ public class RestClient {
 	private HttpResponse doRequest(HttpUriRequest req) 
 	throws ClientProtocolException, IOException
 	{
+		// Later versions of HttpClient check that 
+		// the "host" parameter is set as a compliance to rfc2616, indicating 
+		// that we need to set it.  However, shouldn't it happen for us?
+		// TODO: double-check that it is needed.  commented out until then.
+		
+//		String host = req.getURI().getHost();
+//		if (host == null) host = "";
+//		req.setHeader("host", host);
+		
+		// set the other headers
 		for (String n: headers.keySet())
 		{
 			req.setHeader(n,(String)headers.get(n));
 		}
+		
+		
+//		System.out.println("========== Request host parameter: " + host);
+//		System.out.println("       " + req.getURI().toString());
 		
 		return httpClient.execute(req);
 	}
