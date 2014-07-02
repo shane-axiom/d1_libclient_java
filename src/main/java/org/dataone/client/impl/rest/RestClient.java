@@ -40,10 +40,6 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.methods.HttpUriRequest;
-//import org.apache.http.impl.client.AbstractHttpClient;
-//import org.apache.http.impl.client.DefaultHttpClient;
-//import org.apache.http.params.HttpConnectionParams;
-//import org.apache.http.params.HttpParams;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.util.Constants;
 

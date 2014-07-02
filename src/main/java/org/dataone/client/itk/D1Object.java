@@ -36,6 +36,7 @@ import org.apache.commons.io.input.CountingInputStream;
 import org.apache.commons.lang.StringUtils;
 import org.dataone.client.CNode;
 import org.dataone.client.MNode;
+import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.formats.ObjectFormatCache;
 import org.dataone.client.types.AccessPolicyEditor;
 import org.dataone.service.exceptions.BaseException;
@@ -335,9 +336,10 @@ public class D1Object {
      * @throws NotImplemented 
      * @throws InsufficientResources 
      * @throws InvalidRequest - thrown when the data is retrieved but null
+     * @throws ClientSideException 
      */
     public static D1Object download(Identifier id) throws InvalidToken, ServiceFailure, 
-    NotAuthorized, NotFound, NotImplemented, InsufficientResources, InvalidRequest 
+    NotAuthorized, NotFound, NotImplemented, InsufficientResources, InvalidRequest, ClientSideException 
     {
         
         D1Object o = null;
@@ -659,10 +661,11 @@ public class D1Object {
      * @throws NotAuthorized 
      * @throws InvalidToken 
      * @throws InterruptedException
+     * @throws ClientSideException 
      * @since v1.2
      */
     public boolean refreshSystemMetadata(Integer retryTimeoutMS) 
-    throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, InterruptedException 
+    throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, InterruptedException, ClientSideException 
     {
     	SystemMetadata smd = null;
     	if (retryTimeoutMS == null) 

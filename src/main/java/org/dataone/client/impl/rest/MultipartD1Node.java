@@ -34,6 +34,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.Header;
+import org.dataone.client.D1Node;
 import org.dataone.client.cache.LocalCache;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.exception.NotCached;
@@ -85,7 +86,7 @@ import org.jibx.runtime.JiBXException;
  * D1Client.D1Node.getSystemMetadata.timeout
  * 
  */
-public abstract class MultipartD1Node {
+public abstract class MultipartD1Node implements D1Node {
 
 	protected static org.apache.commons.logging.Log log = LogFactory.getLog(MultipartD1Node.class);
 	

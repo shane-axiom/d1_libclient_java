@@ -25,6 +25,7 @@ import java.util.Date;
 
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.client.config.RequestConfig;
+import org.dataone.client.MNode;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.client.utils.HttpUtils;
 import org.dataone.configuration.Settings;
@@ -38,12 +39,6 @@ import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.exceptions.UnsupportedType;
-import org.dataone.service.mn.tier1.v1.MNCore;
-import org.dataone.service.mn.tier1.v1.MNRead;
-import org.dataone.service.mn.tier2.v1.MNAuthorization;
-import org.dataone.service.mn.tier3.v1.MNStorage;
-import org.dataone.service.mn.tier4.v1.MNReplication;
-import org.dataone.service.mn.v1.MNQuery;
 import org.dataone.service.types.v1.Event;
 import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.types.v1.Log;
@@ -52,7 +47,6 @@ import org.dataone.service.types.v1.ObjectFormatIdentifier;
 import org.dataone.service.types.v1.ObjectList;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1.SystemMetadata;
-import org.dataone.service.util.D1Url;
 
 /**
  * MultipartMNode represents a MemberNode, and exposes the services associated with a
@@ -90,8 +84,7 @@ import org.dataone.service.util.D1Url;
  *  @author Rob Nahf
  */
 
-public class HttpMNode extends MultipartMNode 
-implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery 
+public class HttpMNode extends MultipartMNode implements MNode
 {
   
 	protected static org.apache.commons.logging.Log log = LogFactory.getLog(HttpMNode.class);

@@ -168,8 +168,9 @@ public class D1Client {
      * @param nodeRef
      * @return
      * @throws ServiceFailure
+     * @throws ClientSideException 
      */
-    public static MNode getMN(NodeReference nodeRef) throws ServiceFailure 
+    public static MNode getMN(NodeReference nodeRef) throws ServiceFailure, ClientSideException 
     {  	
     	if (nodeLocator == null) {
     		try {
@@ -213,9 +214,10 @@ public class D1Client {
      * @throws InvalidSystemMetadata
      * @throws NotImplemented
      * @throws InvalidRequest
+     * @throws ClientSideException 
      */
     public static Identifier create(Session session, D1Object d1object) throws InvalidToken, ServiceFailure, NotAuthorized, 
-    IdentifierNotUnique, UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented, InvalidRequest 
+    IdentifierNotUnique, UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented, InvalidRequest, ClientSideException 
     {
     	SystemMetadata sysmeta = d1object.getSystemMetadata();
     	if (sysmeta == null) 
@@ -258,12 +260,13 @@ public class D1Client {
      * @throws NotImplemented
      * @throws InvalidRequest
      * @throws NotFound 
+     * @throws ClientSideException 
      * @since v1.2
      */
     public static Identifier update(Session session, D1Object d1object) 
     throws InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, 
     UnsupportedType, InsufficientResources, InvalidSystemMetadata, NotImplemented, 
-    InvalidRequest, NotFound 
+    InvalidRequest, NotFound, ClientSideException 
     {
     	SystemMetadata sysmeta = d1object.getSystemMetadata();
     	if (sysmeta == null) 
@@ -296,10 +299,11 @@ public class D1Client {
      * @throws NotImplemented
      * @throws InvalidRequest
      * @throws NotFound
+     * @throws ClientSideException 
      * @since v1.2 
      */
     public static Identifier archive(Session session, D1Object d1object) 
-    throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented, InvalidRequest 
+    throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented, InvalidRequest, ClientSideException 
     {
     	SystemMetadata sysmeta = d1object.getSystemMetadata();
     	if (sysmeta == null) 

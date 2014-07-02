@@ -25,15 +25,10 @@ import java.util.Date;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.params.ClientPNames;
+import org.dataone.client.CNode;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.client.utils.HttpUtils;
 import org.dataone.configuration.Settings;
-import org.dataone.service.cn.v1.CNAuthorization;
-import org.dataone.service.cn.v1.CNCore;
-import org.dataone.service.cn.v1.CNIdentity;
-import org.dataone.service.cn.v1.CNRead;
-import org.dataone.service.cn.v1.CNRegister;
-import org.dataone.service.cn.v1.CNReplication;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.IdentifierNotUnique;
 import org.dataone.service.exceptions.InsufficientResources;
@@ -87,8 +82,7 @@ import org.dataone.service.util.D1Url;
  * D1Client.D1Node.getSystemMetadata.timeout
  * 
  */
-public class HttpCNode extends MultipartCNode 
-implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplication 
+public class HttpCNode extends MultipartCNode implements CNode 
 {
 	protected static org.apache.commons.logging.Log log = LogFactory.getLog(HttpCNode.class);
 	
