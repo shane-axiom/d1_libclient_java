@@ -104,6 +104,8 @@ public class NodeListNodeLocatorTest {
 		nodeLoc.putMNode(node,mn);
 		MNode x = nodeLoc.getMNode(node);
 		assertTrue("Got MNode through NodeLocator", mn.equals(x));
+		assertEquals("Should now have 6 Nodes registered", 6, nodeLoc.listD1Nodes().size());
+		assertEquals("Should now have 4 MNodes registered", 4, nodeLoc.listD1Nodes(NodeType.MN).size());
 	}
 
 	@Test
@@ -115,6 +117,8 @@ public class NodeListNodeLocatorTest {
 		nodeLoc.putCNode(node,cn);
 		CNode x = nodeLoc.getCNode(node);
 		assertTrue("Got MNode through NodeLocator", cn.equals(x));
+		assertEquals("Should now have 6 Nodes registered", 6, nodeLoc.listD1Nodes().size());
+		assertEquals("Should now have 3 MNodes registered", 3, nodeLoc.listD1Nodes(NodeType.CN).size());
 
 	}
 
