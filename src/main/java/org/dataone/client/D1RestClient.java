@@ -230,7 +230,6 @@ public class D1RestClient {
 	UnsupportedMetadataType, UnsupportedType,
 	IllegalStateException, ClientProtocolException, IOException, HttpException, VersionMismatch 
 	{
-		rc.setHeader("Accept", "text/xml");
 		return ExceptionHandler.filterErrors(rc.doGetRequest(url), allowRedirect);
 	}
 
@@ -241,7 +240,6 @@ public class D1RestClient {
 	UnsupportedMetadataType, UnsupportedType,
 	IllegalStateException, ClientProtocolException, IOException, HttpException, VersionMismatch 
 	{
-		rc.setHeader("Accept", "text/xml");
 		return ExceptionHandler.filterErrorsHeader(rc.doGetRequest(url),Constants.GET);
 	}
 	
@@ -252,7 +250,6 @@ public class D1RestClient {
 	UnsupportedMetadataType, UnsupportedType,
 	IllegalStateException, ClientProtocolException, IOException, HttpException, VersionMismatch 
 	{
-		rc.setHeader("Accept", "text/xml");
 		return ExceptionHandler.filterErrors(rc.doDeleteRequest(url));
 	}
 	
@@ -263,7 +260,6 @@ public class D1RestClient {
 //	UnsupportedMetadataType, UnsupportedQueryType, UnsupportedType,
 //	IllegalStateException, ClientProtocolException, IOException, HttpException, VersionMismatch 
 //	{
-//		rc.setHeader("Accept", "text/xml");
 //		return ExceptionHandler.filterErrors(rc.doDeleteRequest(url, mpe));
 //	}
 	
@@ -274,7 +270,6 @@ public class D1RestClient {
 	UnsupportedMetadataType, UnsupportedType,
 	IllegalStateException, ClientProtocolException, IOException, HttpException, VersionMismatch 
 	{
-		rc.setHeader("Accept", "text/xml");
 		return ExceptionHandler.filterErrorsHeader(rc.doHeadRequest(url),Constants.HEAD);
 	}
 	
@@ -285,7 +280,6 @@ public class D1RestClient {
 	UnsupportedMetadataType, UnsupportedType,
 	IllegalStateException, ClientProtocolException, IOException, HttpException, VersionMismatch 
 	{
-		rc.setHeader("Accept", "text/xml");
 		return ExceptionHandler.filterErrors(rc.doPutRequest(url, entity));
 	}
 	
@@ -296,7 +290,6 @@ public class D1RestClient {
 	UnsupportedMetadataType, UnsupportedType,
 	IllegalStateException, ClientProtocolException, IOException, HttpException, VersionMismatch 
 	{
-		rc.setHeader("Accept", "text/xml");
 		return ExceptionHandler.filterErrors(rc.doPostRequest(url,entity));
 	}
 	
