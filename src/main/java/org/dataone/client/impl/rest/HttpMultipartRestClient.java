@@ -151,7 +151,6 @@ public class HttpMultipartRestClient implements MultipartRestClient {
 	public InputStream doGetRequest(String url, boolean allowRedirect) 
 			throws BaseException, ClientSideException
 	{
-		rc.setHeader("Accept", "text/xml");
 		try {
 			return ExceptionHandler.filterErrors(rc.doGetRequest(url, this.reqConfig), allowRedirect);
 		} catch (IllegalStateException e) {
@@ -172,7 +171,6 @@ public class HttpMultipartRestClient implements MultipartRestClient {
 	public Header[] doGetRequestForHeaders(String url) 
 			throws BaseException, ClientSideException
 	{
-		rc.setHeader("Accept", "text/xml");
 		try {
 			return ExceptionHandler.filterErrorsHeader(rc.doGetRequest(url, this.reqConfig),Constants.GET);
 		} catch (IllegalStateException e) {
@@ -214,7 +212,6 @@ public class HttpMultipartRestClient implements MultipartRestClient {
 //	UnsupportedMetadataType, UnsupportedQueryType, UnsupportedType,
 //	IllegalStateException, ClientProtocolException, IOException, HttpException, VersionMismatch 
 //	{
-//		rc.setHeader("Accept", "text/xml");
 //		return ExceptionHandler.filterErrors(rc.doDeleteRequest(url, mpe));
 //	}
 	
@@ -225,7 +222,6 @@ public class HttpMultipartRestClient implements MultipartRestClient {
 	public Header[] doHeadRequest(String url) 
 			throws BaseException, ClientSideException
 	{
-		rc.setHeader("Accept", "text/xml");
 		try {
 			return ExceptionHandler.filterErrorsHeader(rc.doHeadRequest(url, this.reqConfig),Constants.HEAD);
 		} catch (IllegalStateException e) {
@@ -246,7 +242,6 @@ public class HttpMultipartRestClient implements MultipartRestClient {
 	public InputStream doPutRequest(String url, SimpleMultipartEntity entity) 
 			throws BaseException, ClientSideException
 	{
-		rc.setHeader("Accept", "text/xml");
 		try {
 			return ExceptionHandler.filterErrors(rc.doPutRequest(url, entity, this.reqConfig));
 		} catch (IllegalStateException e) {
@@ -267,7 +262,6 @@ public class HttpMultipartRestClient implements MultipartRestClient {
 	public InputStream doPostRequest(String url, SimpleMultipartEntity entity) 
 			throws BaseException, ClientSideException
 	{
-		rc.setHeader("Accept", "text/xml");
 		try {
 			return ExceptionHandler.filterErrors(rc.doPostRequest(url,entity, this.reqConfig));
 		} catch (IllegalStateException e) {
