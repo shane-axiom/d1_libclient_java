@@ -22,11 +22,17 @@ package org.dataone.client.examples;
 import java.io.InputStream;
 import java.io.StringBufferInputStream;
 import java.math.BigInteger;
+import java.net.URI;
 
 import org.dataone.client.MNode;
 import org.dataone.client.auth.ClientIdentityManager;
+import org.dataone.client.exception.ClientSideException;
+import org.dataone.client.impl.D1NodeFactory;
+import org.dataone.client.impl.rest.DefaultHttpMultipartRestClient;
 import org.dataone.client.itk.D1Client;
+import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.service.exceptions.BaseException;
+import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.types.v1.Checksum;
 import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.types.v1.ObjectFormatIdentifier;
@@ -43,8 +49,10 @@ public class ExampleClient {
 
     /**
      * Execute the examples.
+     * @throws ServiceFailure 
+     * @throws ClientSideException 
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ServiceFailure, ClientSideException {
         
         String currentUrl = "https://demo1.test.dataone.org:443/knb/d1/mn";
         MNode mn = D1Client.getMN(currentUrl);

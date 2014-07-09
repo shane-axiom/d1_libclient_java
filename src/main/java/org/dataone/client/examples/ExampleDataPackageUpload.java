@@ -37,9 +37,9 @@ import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.dataone.client.CNode;
 import org.dataone.client.MNode;
 import org.dataone.client.auth.ClientIdentityManager;
-import org.dataone.client.impl.rest.MultipartCNode;
 import org.dataone.client.itk.D1Client;
 import org.dataone.client.types.D1TypeBuilder;
 import org.dataone.ore.ResourceMapFactory;
@@ -100,10 +100,11 @@ public class ExampleDataPackageUpload {
      * identifiers.
      * 
      * @param args
+     * @throws ServiceFailure 
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ServiceFailure {
         MNode targetMN = D1Client.getMN(TARGET_MN_BASE_URL);
-        MultipartCNode sourceCN = new MultipartCNode(SOURCE_CN_BASE_URL);
+        CNode sourceCN = D1Client.getCN(SOURCE_CN_BASE_URL);
 
         ExampleDataPackageUpload edpu = new ExampleDataPackageUpload();
         String query = buildQueryString();
@@ -137,7 +138,7 @@ public class ExampleDataPackageUpload {
      * @param targetMN
      * @param oreIdentifiers
      */
-    public void copyDataPackages(MultipartCNode sourceCN, MNode targetMN, List<Identifier> oreIdentifiers) {
+    public void copyDataPackages(CNode sourceCN, MNode targetMN, List<Identifier> oreIdentifiers) {
         try {
             int packageCount = 0;
             for (Identifier orePid : oreIdentifiers) {
@@ -228,7 +229,7 @@ public class ExampleDataPackageUpload {
         return success;
     }
 
-    private List<Identifier> getDataPackagesToCopy(MultipartCNode cn, String queryString) {
+    private List<Identifier> getDataPackagesToCopy(CNode cn, String queryString) {
         List<Identifier> idList = new ArrayList<Identifier>();
         ObjectList objects = new ObjectList();
         try {
@@ -290,7 +291,7 @@ public class ExampleDataPackageUpload {
         return smd;
     }
 
-    private void writeSystemMetadataToDir(MultipartCNode cn, Identifier pid, String docFilePath)
+    private void writeSystemMetadataToDir(CNode cn, Identifier pid, String docFilePath)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented,
             JiBXException, FileNotFoundException, IOException {
         SystemMetadata smd = cn.getSystemMetadata(pid);
@@ -303,7 +304,7 @@ public class ExampleDataPackageUpload {
         IOUtils.copy(is, os);
     }
 
-    private InputStream getDocumentFromCnResolve(MultipartCNode cn, Identifier pid) throws InvalidToken,
+    private InputStream getDocumentFromCnResolve(CNode cn, Identifier pid) throws InvalidToken,
             ServiceFailure, NotAuthorized, NotFound, NotImplemented {
         InputStream is = null;
         ObjectLocationList oll = cn.resolve(pid);
@@ -344,7 +345,7 @@ public class ExampleDataPackageUpload {
         return smd;
     }
 
-    private Set<String> getUniqueIdsFromOre(Identifier orePid, MultipartCNode cn) {
+    private Set<String> getUniqueIdsFromOre(Identifier orePid, CNode cn) {
         Set<String> uniquePids = new HashSet<String>();
         try {
             InputStream oreDoc = cn.get(orePid);

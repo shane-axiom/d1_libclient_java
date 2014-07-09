@@ -22,6 +22,7 @@ package org.dataone.client;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.dataone.client.exception.ClientSideException;
@@ -38,8 +39,8 @@ import org.dataone.service.types.v1.NodeType;
  */
 public abstract class NodeLocator {
 
-	/** this property needs to be initialized by concrete subclasses */
-	protected Map<NodeReference, D1Node> nodeMap;
+	/** this property can be re-initialized by concrete subclasses */
+	protected Map<NodeReference, D1Node> nodeMap = new TreeMap<NodeReference,D1Node>();
 	
 
 	public void putMNode(NodeReference nodeRef, MNode mnode) {
@@ -51,7 +52,14 @@ public abstract class NodeLocator {
 		nodeMap.put(nodeRef, cnode);
 	}
 	
-	
+	/**
+	 * Return an MNode associated with the nodeReference parameter, or 
+	 * throw a ClientSideException
+	 * 
+	 * @param nodeReference
+	 * @return
+	 * @throws ClientSideException
+	 */
 	public MNode getMNode(NodeReference nodeReference) 
 	throws ClientSideException 
 	{
@@ -65,7 +73,14 @@ public abstract class NodeLocator {
 		return (MNode) nodeMap.get(nodeReference);
 	}
 	
-	
+	/**
+	 * Return a CNode associated with the nodeReference parameter, or 
+	 * throw a ClientSideException.
+	 * 
+	 * @param nodeReference
+	 * @return
+	 * @throws ClientSideException
+	 */
 	public CNode getCNode(NodeReference nodeReference) 
 	throws ClientSideException 
 	{
@@ -80,12 +95,60 @@ public abstract class NodeLocator {
 	}
 	
 	
+	/**
+	 * Return an MNode associated with the baseUrl parameter, or 
+	 * throw a ClientSideException
+	 * 
+	 * @param baseUrl
+	 * @return
+	 * @throws ClientSideException
+	 */
+	public MNode getMNode(String baseUrl) 
+	throws ClientSideException
+	{
+		for (Entry<NodeReference, D1Node> en : nodeMap.entrySet()) {
+			if (baseUrl.equals(en.getValue().getNodeBaseServiceUrl())) {
+				return (MNode) en.getValue();
+			}
+		}
+		throw new ClientSideException("No node found for " + baseUrl);
+	}
+	
+	
+	/**
+	 * Return a CNode associated with the baseUrl parameter, or 
+	 * throw a ClientSideException
+	 * 
+	 * @param baseUrl
+	 * @return
+	 * @throws ClientSideException
+	 */
+	public CNode getCNode(String baseUrl) 
+	throws ClientSideException
+	{
+		for (Entry<NodeReference, D1Node> en : nodeMap.entrySet()) {
+			if (baseUrl.equals(en.getValue().getNodeBaseServiceUrl())) {
+				return (CNode) en.getValue();
+			}
+		}
+		throw new ClientSideException("No node found for " + baseUrl);
+	}
+	
+	/**
+	 * Returns the set of NodeReferences in the NodeLocator
+	 * 
+	 * @return
+	 */
 	public Set<NodeReference> listD1Nodes() 
 	{
 		return nodeMap.keySet();
 	}
 	
-	 
+	/**
+	 * Returns the set of NodeReferences of D1Nodes matching the nodeType parameter 
+	 * @param nodeType
+	 * @return
+	 */
 	public Set<NodeReference> listD1Nodes(NodeType nodeType) 
 	{
 		Set<NodeReference> resultSet = new TreeSet<NodeReference>();

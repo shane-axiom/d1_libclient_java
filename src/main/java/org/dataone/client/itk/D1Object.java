@@ -36,7 +36,6 @@ import org.apache.commons.io.input.CountingInputStream;
 import org.apache.commons.lang.StringUtils;
 import org.dataone.client.CNode;
 import org.dataone.client.MNode;
-import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.formats.ObjectFormatCache;
 import org.dataone.client.types.AccessPolicyEditor;
 import org.dataone.service.exceptions.BaseException;
@@ -310,9 +309,9 @@ public class D1Object {
         ap.addAllow(ar);
         
         if (alreadyCreated) {
-            // The object was already created on a MN, so we must set access policies on the CN
-            SystemMetadata smd = D1Client.getCN().getSystemMetadata(token, getIdentifier());
-            D1Client.getCN().setAccessPolicy(token, sysmeta.getIdentifier(), ap, smd.getSerialVersion().longValue());
+        	// The object was already created on a MN, so we must set access policies on the CN
+        	SystemMetadata smd = D1Client.getCN().getSystemMetadata(token, getIdentifier());
+        	D1Client.getCN().setAccessPolicy(token, sysmeta.getIdentifier(), ap, smd.getSerialVersion().longValue());
         } else {
             // The object only exists locally, so we can set the access policy locally and it will be uploaded on create()
             sysmeta.setAccessPolicy(ap);
@@ -336,10 +335,9 @@ public class D1Object {
      * @throws NotImplemented 
      * @throws InsufficientResources 
      * @throws InvalidRequest - thrown when the data is retrieved but null
-     * @throws ClientSideException 
      */
     public static D1Object download(Identifier id) throws InvalidToken, ServiceFailure, 
-    NotAuthorized, NotFound, NotImplemented, InsufficientResources, InvalidRequest, ClientSideException 
+    NotAuthorized, NotFound, NotImplemented, InsufficientResources, InvalidRequest 
     {
         
         D1Object o = null;
@@ -661,11 +659,10 @@ public class D1Object {
      * @throws NotAuthorized 
      * @throws InvalidToken 
      * @throws InterruptedException
-     * @throws ClientSideException 
      * @since v1.2
      */
     public boolean refreshSystemMetadata(Integer retryTimeoutMS) 
-    throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, InterruptedException, ClientSideException 
+    throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, InterruptedException 
     {
     	SystemMetadata smd = null;
     	if (retryTimeoutMS == null) 

@@ -19,6 +19,8 @@
  */
 package org.dataone.client.impl;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
@@ -90,12 +92,31 @@ public class SettingsContextNodeLocator extends NodeListNodeLocator {
 		
 		// get the CN URI
         String cnUri = Settings.getConfiguration().getString("D1Client.CN_URL");
-        
-        CNode cn;
+            
+        // use the alternate implementation class from properties file in case it's set
+		String cnClassName = Settings.getConfiguration().getString("D1Client.cnClassName");
+		
+		CNode cn;
+		String uri = null;
 		try {
-			cn = buildCNode( mrc, new URI(cnUri) );
+			if (cnClassName == null) {
+				uri = cnUri;
+				cn = D1NodeFactory.buildCNode( mrc, new URI(cnUri) );
+			} else {
+				uri = cnClassName;
+				cn = D1NodeFactory.buildCNode( mrc, new URI(cnClassName) );
+				Method setBaseUrlMethod = cn.getClass().getMethod("setNodeBaseServiceUrl", new Class[]{String.class});
+				setBaseUrlMethod.invoke(cn, cnUri);
+			}
+			
 		} catch (URISyntaxException e) {
-			throw new ClientSideException("Failed to build a CNode from provided class name.",e);
+			throw new ClientSideException("Failed to build a CNode from provided CN baseUri: " + uri,e);
+		} catch (NoSuchMethodException e) {
+			throw new ClientSideException("Failed to find the setNodeBaseServiceUrl via reflection from the instantiated CN class: " + cnClassName,e);
+		} catch (IllegalAccessException e) {
+			throw new ClientSideException("Failed to set the nodeBaseServiceUrl via reflection from the instantiated CN class: " + cnClassName,e);
+		} catch (InvocationTargetException e) {
+			throw new ClientSideException("Failed to set the nodeBaseServiceUrl via reflection from the instantiated CN class: " + cnClassName,e);
 		}
 
         return cn.listNodes();
