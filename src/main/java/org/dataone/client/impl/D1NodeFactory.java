@@ -16,7 +16,28 @@ import org.dataone.client.types.D1TypeBuilder;
 import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.types.v1.NodeReference;
 import org.dataone.service.types.v1.Subject;
-
+/**
+ * D1NodeFactory contains methods for building CNode and MNode instances from
+ * a URI.  In production context, the URI is a URL for the base service location
+ * for that node (and begins with the scheme "http" or "https").  Alternate 
+ * implementations are predominantly for testing, and can be built using the 
+ * same notation, but with the scheme "java" to indicate building via Reflection.
+ * 
+ * Examples:
+ *   D1NodeFactory.buildMNode("https://tla.institute.org/mn");
+ *   D1NodeFactory.buildMNode("java:org.dataone.client.impl.rest.InMemoryMemberNode#Subject=mnAdmin&Subject=cnClient);
+ * 
+ * The first builds a standard MNode that communicates with the networked Member Node
+ * The second instantiates an InMemoryMemberNode that takes the MemberNode admin and
+ * CN client Subjects as parameters in the constructor.
+ * 
+ * The only parameters supported at this first implementation are:
+ *  String, Integer, Identifier, NodeReference and Subject
+ *  
+ *  
+ * @author rnahf
+ *
+ */
 public class D1NodeFactory {
 
 	private MultipartRestClient restClient;
@@ -37,20 +58,38 @@ public class D1NodeFactory {
 		return this.restClient;
 	}
 	
-	
+	/**
+	 * Instantiate a CNode instance of the right type from the given URI
+	 * @param uri
+	 * @return
+	 * @throws ClientSideException
+	 */
 	public CNode buildCNode(URI uri)
 	throws ClientSideException
 	{
 		return D1NodeFactory.buildCNode(restClient, uri);
 	}
 	
+	/**
+	 * Instantiate an MNode instance of the right type from the given URI
+	 * @param uri
+	 * @return
+	 * @throws ClientSideException
+	 */
 	public MNode buildMNode(URI uri)
 	throws ClientSideException
 	{
 		return D1NodeFactory.buildMNode(restClient, uri);
 	}
 	
-	
+	/**
+	 * Instantiate a CNode instance of the right type from the given URI
+	 * and the provided MultipartRestClient
+	 * @param mrc
+	 * @param uri
+	 * @return
+	 * @throws ClientSideException
+	 */
 	public static CNode buildCNode(MultipartRestClient mrc, URI uri) 
 	throws ClientSideException 
 	{
@@ -72,7 +111,14 @@ public class D1NodeFactory {
 		return builtCNode;
 	} 
 
-	
+	/**
+	 * Instantiate an MNode instance of the right type from the given URI
+	 * and the provided MultipartRestClient
+	 * @param mrc
+	 * @param uri
+	 * @return
+	 * @throws ClientSideException
+	 */
 	public static MNode buildMNode(MultipartRestClient mrc, URI uri) 
 	throws ClientSideException 
 	{
@@ -90,9 +136,15 @@ public class D1NodeFactory {
 		return builtMNode;
 	} 
 	
-	/*
-	 * 
+	/**
+	 * This function instantiates a CNode or MNode implementation via reflection
+	 * from the information given in the URI.  The name of the class to instantiate
+	 * is given in the scheme-specific part, and parameters for the constructor
+	 * in the URI fragment.  java:fully.qualified.className#String=name&Subject=admin 
 	 */
+	//TODO: find different separator for fragment, because '=' is in most Subject strings
+	//  don't use ':' because colon in NodeReference string, maybe '#' will work or '/'?
+	// or make it the first (non alpha) character encountered.	
 	@SuppressWarnings("rawtypes")
 	private static <T> T buildJavaD1Node(Class<T> domainClass, URI uri) throws ClientSideException 
 	{
