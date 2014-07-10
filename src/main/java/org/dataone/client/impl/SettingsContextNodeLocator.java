@@ -43,11 +43,11 @@ import org.dataone.service.types.v1.NodeList;
  * they are requested from the get methods.
  * 
  * Use of the put methods will replace the current D1Node associated with the NodeReference,
- * so should be used with care care.
+ * so should be used with care.
  * 
  * While most applications require / desire to have only one instance of a NodeLocator,
- * (that is Singleton behavior) this class does not do that, to support applications
- * that work across environments.     See NodeLocatorSingleton for this.
+ * with Singleton or Monostate behavior, this class does not do that, to support applications
+ * that work across environments.     See org.dataone.client.itk.D1Client for this.
  * 
  
  * 

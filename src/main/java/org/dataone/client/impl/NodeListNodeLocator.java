@@ -37,12 +37,12 @@ import org.dataone.service.types.v1.util.NodelistUtil;
  * of relying on the put methods.  The MNode and CNode objects are 
  * instantiated the first time they are requested from the get methods.
  * 
- * While most applications require / desire to have only one instance of a NodeLocator,
- * (that is Singleton behavior) this class does not do that, to support applications
- * that work across environments.     See NodeLocatorSingleton for this 
+ * Use of the put methods will replace the current D1Node associated with the NodeReference,
+ * so should be used with care.
  * 
- * Calling putMNode, for example, will replace the current MNode associated with
- * the NodeReference, so use with care.  
+ * While most applications require / desire to have only one instance of a NodeLocator,
+ * with Singleton or Monostate behavior, this class does not do that, to support applications
+ * that work across environments.     See org.dataone.client.itk.D1Client for this.
  * 
  * @author rnahf
  *
