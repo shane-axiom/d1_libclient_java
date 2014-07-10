@@ -40,14 +40,26 @@ import org.dataone.service.types.v1.NodeType;
 public abstract class NodeLocator {
 
 	/** this property can be re-initialized by concrete subclasses */
+	// TODO: this is here to avoid needing to check for NPEs in methods, 
+	// but should it be a tree map? or the simpler HashMap?  
 	protected Map<NodeReference, D1Node> nodeMap = new TreeMap<NodeReference,D1Node>();
 	
-
+	/**
+	 * Puts a constructed MNode into the NodeLocator.
+	 * @param nodeRef
+	 * @param mnode
+	 */
+	//TODO: is the NodeReference parameter necessary, if contained in the MNode itself?
 	public void putMNode(NodeReference nodeRef, MNode mnode) {
 		nodeMap.put(nodeRef, mnode);
 	}
 	
-	
+	/**
+	 * Puts a constructed CNode into the NodeLocator.
+	 * @param nodeRef
+	 * @param cnode
+	 */
+	//TODO: is the NodeReference parameter necessary, if contained in the CNode itself?
 	public void putCNode(NodeReference nodeRef, CNode cnode) {
 		nodeMap.put(nodeRef, cnode);
 	}

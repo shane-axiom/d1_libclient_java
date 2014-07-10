@@ -69,7 +69,8 @@ public class D1Client {
 	 * Get the cached CNode object for calling Coordinating Node services.
 	 * By default returns the production context CN, defined via the property 
 	 * "D1Client.CN_URL". Use of D1Client in other contexts (non-production) 
-	 * requires overriding or changing this property name.  
+	 * requires overriding or changing this property name, or calling the setCN
+	 * method.
 	 * See org.dataone.configuration.Settings class for details.
 	 * 
 	 * Connects using the default session / certificate 
@@ -88,7 +89,8 @@ public class D1Client {
 	 * Get the cached CNode object for calling Coordinating Node services.
 	 * By default returns the production context CN, defined via the property 
 	 * "D1Client.CN_URL".  Use of D1Client in other contexts (non-production) 
-	 * requires overriding or changing this property name.  
+	 * requires overriding or changing this property name, or calling the setCN
+	 * method  
 	 * See org.dataone.configuration.Settings class for details.
 	 * 
 	 * @param session - the client session to be used in connections, null uses default behavior. 
@@ -115,7 +117,8 @@ public class D1Client {
     
     /**
      * Use this method to set the environment via the baseUrl to the environment's
-     * Coordinating Node.  Doing so affects future calls to getMNode and getCNode.
+     * Coordinating Node.  Doing so affects future calls using the NodeReferences -
+     * only nodes registered in the context of the current CN will be findable.
      * 
      * @param cnUrl
      * @throws NotImplemented
