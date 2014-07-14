@@ -71,7 +71,7 @@ public class ResourceMapFactoryTest {
 		
 		try {
 			Identifier resourceMapId = new Identifier();
-			resourceMapId.setValue("doi://1234/AA/map.1.1");
+			resourceMapId.setValue("doi://1234/AA/map.1.1");		
 			Identifier metadataId = new Identifier();
 			metadataId.setValue("doi://1234/AA/meta.1.1");
 			List<Identifier> dataIds = new ArrayList<Identifier>();
@@ -83,6 +83,7 @@ public class ResourceMapFactoryTest {
 			dataIds.add(dataId2);
 			Map<Identifier, List<Identifier>> idMap = new HashMap<Identifier, List<Identifier>>();
 			idMap.put(metadataId, dataIds);
+			
 			ResourceMapFactory rmf = ResourceMapFactory.getInstance();
 			ResourceMap resourceMap = rmf.createResourceMap(resourceMapId, idMap);
 			assertNotNull(resourceMap);
@@ -123,9 +124,12 @@ public class ResourceMapFactoryTest {
 			
 		} catch (Exception e) {
 			e.printStackTrace();
+			System.out.println(e.getMessage());
 			fail();
 		}
 	}
+	
+
 	
 //	@Test
 	public void resourceMapChecker() 
@@ -170,7 +174,7 @@ public class ResourceMapFactoryTest {
 	}
 	
 	
-	@Test 
+//	@Test 
 	public void testParseResourceMap() 
 	{
 		String[] files = new String[]{
@@ -226,7 +230,7 @@ public class ResourceMapFactoryTest {
 	
 	
 	
-	@Test
+//	@Test
 	public void testValidateResourceMap_Valid_PythonGenerated() 
 	throws UnsupportedEncodingException, OREException, URISyntaxException, OREParserException 
 	{
@@ -234,7 +238,7 @@ public class ResourceMapFactoryTest {
 				"ResourceMap should validate", true);
 	}
 	
-	@Test
+//	@Test
 	public void testValidateResourceMap_Valid_JavaGenerated() 
 	throws UnsupportedEncodingException, OREException, URISyntaxException, OREParserException 
 	{
@@ -242,7 +246,7 @@ public class ResourceMapFactoryTest {
 				"ResourceMap should validate", true);
 	}
 	
-	@Test
+//	@Test
 	public void testValidateResourceMap_MissingIdentifier() 
 	throws UnsupportedEncodingException, OREException, URISyntaxException, OREParserException 
 	{
@@ -250,7 +254,7 @@ public class ResourceMapFactoryTest {
 				"ResourceMap missing an identifier triple should fail", false);
 	}
 	
-	@Test
+//	@Test
 	public void testValidateResourceMap_nonStandardAggregation() 
 	throws UnsupportedEncodingException, OREException, URISyntaxException, OREParserException 
 	{
@@ -258,7 +262,7 @@ public class ResourceMapFactoryTest {
 				"ResourceMap without standard aggregation URI should fail", false);
 	}
  
-	@Test
+//	@Test
 	public void testValidateResourceMap_notCnResolveResources() 
 	throws UnsupportedEncodingException, OREException, URISyntaxException, OREParserException 
 	{
@@ -266,7 +270,7 @@ public class ResourceMapFactoryTest {
 				"ResourceMap without CN_Read.resolve Resources should fail",false);
 	}
 	
-	@Test
+//	@Test
 	public void testValidateResourceMap_miscodedIdentifier() 
 	throws UnsupportedEncodingException, OREException, URISyntaxException, OREParserException 
 	{
@@ -300,7 +304,7 @@ public class ResourceMapFactoryTest {
 	}
 	
 	
-	@Test 
+//	@Test 
 	public void testRDFReasoningIsDescribedBy() 
 	throws OREException, URISyntaxException, OREParserException, IOException 
 	{
@@ -345,7 +349,7 @@ public class ResourceMapFactoryTest {
 		
 	}
 	
-	@Test
+//	@Test
 	public void testOREModelReusability() 
 	throws UnsupportedEncodingException, OREException, URISyntaxException, OREParserException 
 	{

@@ -196,6 +196,7 @@ public class DataoneEMLParser
                 // determine the data mime type
                 String mimeType = "";
                 Node physicalNode = result.item(i).getParentNode();
+                NodeList nlCompressionMethod = runXPath("compressionMethod", physicalNode);
                 NodeList nl1 = runXPath("dataFormat/textFormat", physicalNode);
                 NodeList nl2 = runXPath("dataFormat/binaryRasterFormat", physicalNode);
                 NodeList nl3 = runXPath("dataFormat/externallyDefinedFormat", physicalNode);
@@ -235,6 +236,20 @@ public class DataoneEMLParser
                       formatId.setValue(formatName);
                     }
                     
+                }
+                
+                // is it compressed?
+                if (nlCompressionMethod != null && nlCompressionMethod.getLength() > 0) {
+                	String compression = nlCompressionMethod.item(0).getFirstChild().getNodeValue();
+                	if (compression.equals("zip")) {
+                		formatId.setValue("application/zip");
+                	}
+                	if (compression.equals("gzip")) {
+                		formatId.setValue("application/x-gzip");
+                	}
+                	if (compression.equals("bzip2")) {
+                		formatId.setValue("application/x-bzip2");
+                	}
                 }
                 
                 // make sure we have a possible format to look up
