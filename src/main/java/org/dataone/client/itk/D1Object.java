@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-package org.dataone.client;
+package org.dataone.client.itk;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,6 +34,10 @@ import javax.mail.util.ByteArrayDataSource;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.CountingInputStream;
 import org.apache.commons.lang.StringUtils;
+import org.dataone.client.CNode;
+import org.dataone.client.MNode;
+import org.dataone.client.formats.ObjectFormatCache;
+import org.dataone.client.types.AccessPolicyEditor;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.InsufficientResources;
 import org.dataone.service.exceptions.InvalidRequest;
@@ -305,9 +309,9 @@ public class D1Object {
         ap.addAllow(ar);
         
         if (alreadyCreated) {
-            // The object was already created on a MN, so we must set access policies on the CN
-            SystemMetadata smd = D1Client.getCN().getSystemMetadata(token, getIdentifier());
-            D1Client.getCN().setAccessPolicy(token, sysmeta.getIdentifier(), ap, smd.getSerialVersion().longValue());
+        	// The object was already created on a MN, so we must set access policies on the CN
+        	SystemMetadata smd = D1Client.getCN().getSystemMetadata(token, getIdentifier());
+        	D1Client.getCN().setAccessPolicy(token, sysmeta.getIdentifier(), ap, smd.getSerialVersion().longValue());
         } else {
             // The object only exists locally, so we can set the access policy locally and it will be uploaded on create()
             sysmeta.setAccessPolicy(ap);

@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-package org.dataone.client;
+package org.dataone.client.itk;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
+import org.dataone.client.exception.ClientSideException;
 import org.dataone.ore.ResourceMapFactory;
 import org.dataone.service.exceptions.InsufficientResources;
 import org.dataone.service.exceptions.InvalidRequest;
@@ -118,9 +119,10 @@ public class DataPackage {
      * @throws NotAuthorized 
      * @throws ServiceFailure 
      * @throws InvalidToken 
+     * @throws ClientSideException 
      */
     public void addAndDownloadData(Identifier id) throws InvalidToken, ServiceFailure, 
-    NotAuthorized, NotFound, NotImplemented, InsufficientResources, InvalidRequest 
+    NotAuthorized, NotFound, NotImplemented, InsufficientResources, InvalidRequest, ClientSideException 
     {
         if (!contains(id)) {
         	D1Object o = D1Object.download(id);
@@ -297,11 +299,12 @@ public class DataPackage {
      * @throws URISyntaxException
      * @throws OREParserException
      * @throws IOException
+     * @throws ClientSideException 
      */
     public static DataPackage download(Identifier pid) 
     throws InvalidToken, ServiceFailure, NotAuthorized,
     NotFound, NotImplemented, InsufficientResources, InvalidRequest, OREException, 
-    URISyntaxException, OREParserException, IOException
+    URISyntaxException, OREParserException, IOException, ClientSideException
     {
     	D1Object packageObject = D1Object.download(pid);
     	
@@ -330,11 +333,12 @@ public class DataPackage {
      * @throws NotAuthorized 
      * @throws ServiceFailure 
      * @throws InvalidToken 
+     * @throws ClientSideException 
      */
     public static DataPackage deserializePackage(String resourceMap) 
     throws UnsupportedEncodingException, OREException, URISyntaxException, OREParserException, 
     InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented, InsufficientResources, 
-    InvalidRequest 
+    InvalidRequest, ClientSideException 
     {
         
         Map<Identifier, Map<Identifier, List<Identifier>>> packageMap = 

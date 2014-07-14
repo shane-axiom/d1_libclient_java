@@ -40,7 +40,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
 import org.apache.http.conn.ssl.SSLSocketFactory;
-import org.dataone.client.CNode;
+import org.dataone.client.impl.rest.MultipartCNode;
 import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.types.v1.Session;
@@ -94,11 +94,13 @@ public class CertificateManagerTest {
     			"https://cn-dev-orc-1.test.dataone.org/cn"};
     	for (String url : cns) {
     		System.out.println(url);
-    		CNode cn = new CNode("https://cn-dev-unm-1.test.dataone.org/cn");
+    		MultipartCNode cn = new MultipartCNode("https://cn-dev-unm-1.test.dataone.org/cn");
     		try {
     			cn.ping();
     		} catch (BaseException e) {
-    			System.out.println("Failed: " + cn.getLatestRequestUrl());
+    			// TODO:  get getLatestRequestUrl to work again
+ //   			System.out.println("Failed: " + cn.getLatestRequestUrl());
+    			System.out.println("Failed: " + e.getDescription());
     		}
     	}
     	

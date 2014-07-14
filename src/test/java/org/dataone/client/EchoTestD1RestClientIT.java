@@ -32,6 +32,10 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpException;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.dataone.client.exception.ClientSideException;
+import org.dataone.client.impl.rest.HttpMultipartRestClient;
+import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.NotFound;
@@ -48,12 +52,12 @@ public class EchoTestD1RestClientIT {
 	
 	@Test
 	public void testDoGetRequest() 
-	throws ClientProtocolException, IOException, HttpException, BaseException
+	throws ClientProtocolException, IOException, BaseException, ClientSideException
 	{
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		D1RestClient rc = new D1RestClient();
+		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient(), null);
 		String contentString = null;
 		try {
 			InputStream is = rc.doGetRequest(u.getUrl());
@@ -69,12 +73,12 @@ public class EchoTestD1RestClientIT {
 
 	@Test
 	public void testdoDeleteRequest() 
-	throws ClientProtocolException, IOException, HttpException, BaseException
+	throws ClientProtocolException, IOException, BaseException, ClientSideException
 	{
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		D1RestClient rc = new D1RestClient();
+		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient(), null);
 		String contentString = null;
 		try {
 			InputStream is = rc.doDeleteRequest(u.getUrl());
@@ -91,12 +95,12 @@ public class EchoTestD1RestClientIT {
 	@Ignore("need to rewrite for returns of exceptions from echo service")
 	@Test
 	public void testDoHeadRequest() 
-	throws ClientProtocolException, IOException, HttpException, BaseException
+	throws ClientProtocolException, IOException, BaseException, ClientSideException
 	{
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		D1RestClient rc = new D1RestClient();
+		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient(), null);
 		Header[] headers = null;
 		try {
 			headers = rc.doHeadRequest(u.getUrl());
@@ -113,12 +117,12 @@ public class EchoTestD1RestClientIT {
 	
 	@Test
 	public void testdoPutRequestNullBody() 
-	throws ClientProtocolException, IOException, HttpException, BaseException
+	throws ClientProtocolException, IOException, BaseException, ClientSideException
 	{
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		D1RestClient rc = new D1RestClient();
+		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient(), null);
 		String contentString = null;
 		try {
 			InputStream is = rc.doPutRequest(u.getUrl(),null);
@@ -134,12 +138,12 @@ public class EchoTestD1RestClientIT {
 	
 	@Test
 	public void testdoPostRequestNullBody() 
-	throws ClientProtocolException, IOException, HttpException, BaseException
+	throws ClientProtocolException, IOException, BaseException, ClientSideException
 	{
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		D1RestClient rc = new D1RestClient();
+		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient(), null);
 		String contentString = null;
 		try {
 			InputStream is = rc.doPostRequest(u.getUrl(),null);
@@ -156,7 +160,7 @@ public class EchoTestD1RestClientIT {
 	@Ignore("Django doesn't handle PUT requests with mime-multipart")
 	@Test
 	public void testdoPutRequest() 
-	throws ClientProtocolException, IOException, HttpException, BaseException
+	throws ClientProtocolException, IOException, BaseException, ClientSideException
 	{
 		D1Url u = new D1Url(echoNode, mmEchoResource);
 		u.addNextPathElement("bizz");
@@ -164,7 +168,7 @@ public class EchoTestD1RestClientIT {
 		SimpleMultipartEntity ent = new SimpleMultipartEntity();
 		ent.addParamPart("Jabberwocky", "Twas brillig and the slithy tove, did gyre and gimble in the wabe");
 		ent.addFilePart("Jabberwocky2", "All mimsy was the borogrove, and the mome wrath ungrabe.");
-		D1RestClient rc = new D1RestClient();
+		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient(), null);
 		String contentString = null;
 		try {
 			InputStream is = rc.doPutRequest(u.getUrl(),ent);
@@ -180,7 +184,7 @@ public class EchoTestD1RestClientIT {
 	
 	@Test
 	public void testdoPostRequest() 
-	throws ClientProtocolException, IOException, HttpException, BaseException
+	throws ClientProtocolException, IOException, BaseException, ClientSideException
 	{
 		D1Url u = new D1Url(echoNode, mmEchoResource);
 		u.addNextPathElement("bizz");
@@ -188,7 +192,7 @@ public class EchoTestD1RestClientIT {
 		SimpleMultipartEntity ent = new SimpleMultipartEntity();
 		ent.addParamPart("Jabberwocky", "Twas brillig and the slithy tove, did gyre and gimble in the wabe");
 		ent.addFilePart("Jabberwocky2", "All mimsy was the borogrove, and the mome wrath ungrabe.");
-		D1RestClient rc = new D1RestClient();
+		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient(), null);
 		String contentString = null;
 		try {
 			InputStream is = rc.doPostRequest(u.getUrl(),ent);
@@ -209,7 +213,7 @@ public class EchoTestD1RestClientIT {
 		D1Url u = new D1Url(echoNode + "xx", "fakeResource");
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		D1RestClient rc = new D1RestClient();
+		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient(), null);
 
 		try {
 			InputStream is = rc.doGetRequest(u.getUrl());
@@ -224,7 +228,7 @@ public class EchoTestD1RestClientIT {
 			System.out.println("Exception thrown = " + e.getClass());
 			System.out.println("Description = " + e.getDescription());
 			assertTrue("exception thrown",  e instanceof ServiceFailure);
-		} catch (HttpException e) {
+		} catch (ClientSideException e) {
 			System.out.println("Exception thrown = " + e.getClass());
 			System.out.println("Message = " + e.getMessage());
 			assertTrue("http exception thrown:",  e.getMessage().startsWith("Not Found"));

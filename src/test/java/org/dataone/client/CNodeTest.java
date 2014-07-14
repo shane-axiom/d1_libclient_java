@@ -25,6 +25,8 @@ package org.dataone.client;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.dataone.client.impl.rest.MultipartCNode;
+import org.dataone.client.itk.D1Client;
 import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
@@ -62,7 +64,7 @@ public class CNodeTest {
 	//@Test
 	public void testLookupNodeBehavior_Null() throws ServiceFailure, NotImplemented 
 	{
-		CNode cn = new CNode("");
+		MultipartCNode cn = new MultipartCNode("");
 		String returnedUrl = cn.lookupNodeBaseUrl((String) null);
 		assertTrue("null string as parameter returns null string",returnedUrl == null);
 	}
@@ -70,7 +72,7 @@ public class CNodeTest {
 //	@Test
 	public void testLookupNodeBehavior_Nonsense() throws ServiceFailure, NotImplemented 
 	{
-		CNode cn = new CNode("");
+		MultipartCNode cn = new MultipartCNode("");
 		String returnedUrl = cn.lookupNodeBaseUrl("foo");
 		assertTrue("nonsense ID as parameter returns null string",returnedUrl == null);
 	}

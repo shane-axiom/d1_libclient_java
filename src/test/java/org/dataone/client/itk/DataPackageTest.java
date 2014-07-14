@@ -20,7 +20,7 @@
  * $Id$
  */
 
-package org.dataone.client;
+package org.dataone.client.itk;
 
 
 import static org.junit.Assert.assertNotNull;
@@ -31,6 +31,9 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.dataone.client.exception.ClientSideException;
+import org.dataone.client.itk.DataPackage;
+import org.dataone.client.types.D1TypeBuilder;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.types.v1.Identifier;
 import org.dspace.foresite.OREException;
@@ -49,7 +52,7 @@ public class DataPackageTest {
 	@Ignore("test cannot run as a unit test, as the method calls the CN and MNs")
 	@Test
 	public void testSerializePackage() throws OREException, URISyntaxException, 
-	ORESerialiserException, UnsupportedEncodingException, BaseException, OREParserException
+	ORESerialiserException, UnsupportedEncodingException, BaseException, OREParserException, ClientSideException
 	{
 	    Identifier packageId = D1TypeBuilder.buildIdentifier("myPackageID");
 	    DataPackage dataPackage = new DataPackage(packageId);

@@ -20,12 +20,23 @@
  * $Id$
  */
 
-package org.dataone.client;
+package org.dataone.client.itk;
 
 import java.io.IOException;
+import java.net.URI;
 
+import org.dataone.client.CNode;
+import org.dataone.client.MNode;
+import org.dataone.client.NodeLocator;
+import org.dataone.client.exception.ClientSideException;
+import org.dataone.client.impl.D1NodeFactory;
+import org.dataone.client.impl.NodeListNodeLocator;
+import org.dataone.client.impl.SettingsContextNodeLocator;
+import org.dataone.client.impl.rest.DefaultHttpMultipartRestClient;
+import org.dataone.client.impl.rest.HttpCNode;
+import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.client.types.ObsoletesChain;
-import org.dataone.configuration.Settings;
+import org.dataone.client.utils.ExceptionUtils;
 import org.dataone.service.exceptions.IdentifierNotUnique;
 import org.dataone.service.exceptions.InsufficientResources;
 import org.dataone.service.exceptions.InvalidRequest;
@@ -49,102 +60,152 @@ import org.dataone.service.types.v1.SystemMetadata;
  */
 public class D1Client {
 
-    private static CNode cn = null;
+    private static NodeLocator nodeLocator;
+    protected static MultipartRestClient restClient;
+    private static final int DEFAULT_TIMEOUT_MILLIS = 30000; 
     
-	/**
-	 * Get the client instance of the Coordinating Node object for calling Coordinating Node services.
-	 * By default returns the production context CN, defined via the property "D1Client.CN_URL".
-	 * Use of D1Client in other contexts (non-production) requires overriding or changing this 
-	 * property name.  See org.dataone.configuration.Settings class for details.
-	 * 
-	 * @param session - the client session to be used in connections, null uses default behavior. 
-     * @return the cn
-	 * @throws ServiceFailure 
-     */
-    public static CNode getCN(Session session) throws ServiceFailure {
-        if (cn == null) {
-        	// get the CN URL
-            String cnUrl = Settings.getConfiguration().getString("D1Client.CN_URL");
-
-        	// determine which implementation to instantiate
-        	String cnClassName = Settings.getConfiguration().getString("D1Client.cnClassName");
-        	
-        	if (cnClassName != null) {
-        		// construct it using reflection
-            	try {
-					cn = (CNode) Class.forName(cnClassName).newInstance();
-				} catch (Exception e) {
-					throw D1Node.recastClientSideExceptionToServiceFailure(e);
-
-				}
-            	cn.setNodeBaseServiceUrl(cnUrl);
-        	} else {
-        		// default
-                cn = new CNode(cnUrl, session);
-        	}
-        }
-        return cn;
-    }
-    
-	/**
-	 * Get the client instance of the Coordinating Node object for calling
-	 * Coordinating Node services. Allows caller to specify the CN URL. NOTE:
-	 * this will be used by the shared static instance.
-	 * 
-	 * @param cnUrl the CN' baseUrl
-	 * @return the cn
-	 * @throws ServiceFailure
-	 */
-	public static CNode getCN(String cnUrl) throws ServiceFailure {
-
-		// determine which implementation to instantiate
-		String cnClassName = Settings.getConfiguration().getString("D1Client.cnClassName");
-
-		if (cnClassName != null) {
-			// construct it using reflection
-			try {
-				cn = (CNode) Class.forName(cnClassName).newInstance();
-			} catch (Exception e) {
-				throw D1Node.recastClientSideExceptionToServiceFailure(e);
-			}
-			cn.setNodeBaseServiceUrl(cnUrl);
-		} else {
-			// default
-			cn = new CNode(cnUrl, null);
-		}
-
-		return cn;
-	}
     
     /**
-	 * Get the client instance of the Coordinating Node object for calling Coordinating Node services.
-	 * By default returns the production context CN, defined via the property "D1Client.CN_URL".
-	 * Use of D1Client in other contexts (non-production) requires overriding or changing this 
-	 * property name.  See org.dataone.configuration.Settings class for details.
+	 * Get the cached CNode object for calling Coordinating Node services.
+	 * By default returns the production context CN, defined via the property 
+	 * "D1Client.CN_URL". Use of D1Client in other contexts (non-production) 
+	 * requires overriding or changing this property name, or calling the setCN
+	 * method.
+	 * See org.dataone.configuration.Settings class for details.
 	 * 
 	 * Connects using the default session / certificate 
      * @return the cn
 	 * @throws ServiceFailure 
+     * @throws NotImplemented 
      */
-    public static CNode getCN() throws ServiceFailure {
+    public static CNode getCN() 
+    throws ServiceFailure, NotImplemented 
+    {
         return getCN((Session)null);
     }
     
     
+	/**
+	 * Get the cached CNode object for calling Coordinating Node services.
+	 * By default returns the production context CN, defined via the property 
+	 * "D1Client.CN_URL".  Use of D1Client in other contexts (non-production) 
+	 * requires overriding or changing this property name, or calling the setCN
+	 * method  
+	 * See org.dataone.configuration.Settings class for details.
+	 * 
+	 * @param session - the client session to be used in connections, null uses default behavior. 
+     * @return the cn
+	 * @throws ServiceFailure 
+	 * @throws NotImplemented 
+     */
+    public static CNode getCN(Session session) 
+    throws ServiceFailure, NotImplemented {
+        if (restClient == null) {
+        	//TODO work session into restClient
+        	restClient = new DefaultHttpMultipartRestClient(DEFAULT_TIMEOUT_MILLIS);
+        }
+        try { 
+        	if (nodeLocator == null) {
+        		nodeLocator = new SettingsContextNodeLocator(restClient);	
+        	}
+        	return nodeLocator.getCNode();
+        } catch (ClientSideException e) {
+			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
+		}
+    }
+
     
     /**
-     * Construct and return a Member Node using the base service URL for the node.
+     * Use this method to set the environment via the baseUrl to the environment's
+     * Coordinating Node.  Doing so affects future calls using the NodeReferences -
+     * only nodes registered in the context of the current CN will be findable.
+     * 
+     * @param cnUrl
+     * @throws NotImplemented
+     * @throws ServiceFailure
+     */
+    public static void setCN(String cnUrl) 
+    throws NotImplemented, ServiceFailure 
+    {         	
+    	if (restClient == null) {
+    		restClient = new DefaultHttpMultipartRestClient(DEFAULT_TIMEOUT_MILLIS);
+    	}
+    	try {
+    		CNode cn = D1NodeFactory.buildCNode(restClient, URI.create(cnUrl));
+    		nodeLocator = new NodeListNodeLocator(cn.listNodes(), restClient);
+    	} catch (ClientSideException e) {
+			ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
+		}
+    }
+
+
+    /**
+     * Returns a Member Node using the base service URL for the node.
      * @param mnBaseUrl the service URL for the Member Node
      * @return the mn at a particular URL
+     * @throws ServiceFailure 
      */
-    public static MNode getMN(String mnBaseUrl) {
-        MNode mn = new MNode( mnBaseUrl);
-        return mn;
+    public static MNode getMN(String mnBaseUrl) throws ServiceFailure {
+    	MNode mn = null;
+    	if (restClient == null) {
+    		restClient = new DefaultHttpMultipartRestClient(DEFAULT_TIMEOUT_MILLIS);
+    	}
+    	try {
+    		if (nodeLocator != null) {
+    			mn = nodeLocator.getMNode(mnBaseUrl);	
+    		} 
+    		mn = D1NodeFactory.buildMNode(restClient, URI.create(mnBaseUrl));
+		} catch (ClientSideException e) {
+			try {
+				mn = D1NodeFactory.buildMNode(restClient, URI.create(mnBaseUrl));
+				if (nodeLocator != null) {
+					nodeLocator.putMNode(mn.getNodeId(), mn);
+				}
+			}
+			catch (ClientSideException cse) {
+				throw ExceptionUtils.recastClientSideExceptionToServiceFailure(cse);
+			}
+		}
+    	return mn;
     }
-    
-    
+
+
     /**
-     * Construct and return a Member Node using the nodeReference
+     * Returns a Coordinating Node using the base service URL to look up the node
+     * in the existing environment.
+     *  
+     * @param cnBaseUrl
+     * @return
+     * @throws ServiceFailure 
+     */
+    //TODO: do we need this method?  When do we need to micro-manage which CN to connect to?
+    public static CNode getCN(String cnBaseUrl) throws ServiceFailure {
+    	CNode cn = null;
+    	if (restClient == null) {
+    		restClient = new DefaultHttpMultipartRestClient(DEFAULT_TIMEOUT_MILLIS);
+    	}
+    	try {
+    		if (nodeLocator != null) {
+    			cn = nodeLocator.getCNode(cnBaseUrl);
+    		}
+    		cn = D1NodeFactory.buildCNode(restClient, URI.create(cnBaseUrl));
+		} catch (ClientSideException e) {
+			try {
+				cn = D1NodeFactory.buildCNode(restClient, URI.create(cnBaseUrl));
+				if (nodeLocator != null) {
+					nodeLocator.putCNode(cn.getNodeId(), cn);
+				}
+			}
+			catch (ClientSideException cse) {
+				throw ExceptionUtils.recastClientSideExceptionToServiceFailure(cse);
+			}
+		}
+    	return cn;
+    }
+
+
+    /**
+     * Return an MNode using the nodeReference
      * for the member node.  D1Client's cn instance will look up the
      * member node's baseURL from the passed in nodeReference
      * 
@@ -152,23 +213,30 @@ public class D1Client {
      * @return
      * @throws ServiceFailure
      */
-    public static MNode getMN(NodeReference nodeRef) throws ServiceFailure {
-    	CNode cn;
+    public static MNode getMN(NodeReference nodeRef) throws ServiceFailure 
+    {  	
+    	if (nodeLocator == null) {
+    		try {
+				nodeLocator = new NodeListNodeLocator(D1Client.getCN().listNodes(), 
+						new DefaultHttpMultipartRestClient(30));
+			} catch (NotImplemented e) {
+				throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
+			} catch (ClientSideException e) {
+				ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
+			}
+    	}
+    	MNode mn;
 		try {
-			cn = getCN();
-		} catch (Exception e) {
-			throw D1Node.recastClientSideExceptionToServiceFailure(e);
+			mn = nodeLocator.getMNode(nodeRef);
+		} catch (ClientSideException e) {
+			throw new ServiceFailure("0000", "Node is not an MNode: "
+   				 + nodeRef.getValue());
 		}
-    	String mnBaseUrl = null;
-		try {
-			mnBaseUrl = cn.lookupNodeBaseUrl(nodeRef.getValue());
-			if (mnBaseUrl == null) 
-				throw new ServiceFailure("0000","Failed to find baseUrl for node " + nodeRef.getValue() + " in the NodeList");
-		} catch (NotImplemented e) {
-			throw D1Node.recastClientSideExceptionToServiceFailure(e);
-		}
-        MNode mn = new MNode(mnBaseUrl);
-        mn.setNodeId(nodeRef.getValue());
+    	if (mn == null) {
+    		throw new ServiceFailure("0000", "Failed to find baseUrl for node "
+    				 + nodeRef.getValue() + " in the NodeList");
+    	}
+        mn.setNodeId(nodeRef);
         return mn;
     }
     
@@ -199,8 +267,7 @@ public class D1Client {
     	if (sysmeta == null) 
     		throw new InvalidRequest("Client Error", "systemMetadata of the D1Object cannot be null");
 
-    	String mn_url = D1Client.getCN().lookupNodeBaseUrl(sysmeta.getOriginMemberNode().getValue());
-    	MNode mn = D1Client.getMN(mn_url);
+    	MNode mn = D1Client.getMN(sysmeta.getOriginMemberNode());
     	Identifier rGuid;
 		try {
 			rGuid = mn.create(session, sysmeta.getIdentifier(), 
@@ -248,8 +315,7 @@ public class D1Client {
     	if (sysmeta == null) 
     		throw new InvalidRequest("Client Error", "systemMetadata of the D1Object cannot be null");
 
-    	String mn_url = D1Client.getCN().lookupNodeBaseUrl(sysmeta.getOriginMemberNode().getValue());
-    	MNode mn = D1Client.getMN(mn_url);
+    	MNode mn = D1Client.getMN(sysmeta.getOriginMemberNode());
     	Identifier rGuid;
 		try {
 			rGuid = mn.update(sysmeta.getObsoletes(), d1object.getDataSource().getInputStream(), 
@@ -276,6 +342,7 @@ public class D1Client {
      * @throws NotImplemented
      * @throws InvalidRequest
      * @throws NotFound
+     * @throws ClientSideException 
      * @since v1.2 
      */
     public static Identifier archive(Session session, D1Object d1object) 
@@ -285,8 +352,7 @@ public class D1Client {
     	if (sysmeta == null) 
     		throw new InvalidRequest("Client Error", "systemMetadata of the D1Object cannot be null");
 
-    	String mn_url = D1Client.getCN().lookupNodeBaseUrl(sysmeta.getAuthoritativeMemberNode().getValue());
-    	MNode mn = D1Client.getMN(mn_url);
+    	MNode mn = D1Client.getMN(sysmeta.getAuthoritativeMemberNode());
     	Identifier rGuid;
 		rGuid = mn.archive(d1object.getIdentifier());
     	return rGuid;
@@ -327,6 +393,7 @@ public class D1Client {
      * @throws NotAuthorized
      * @throws NotFound
      * @throws NotImplemented
+     * @throws ClientSideException 
      * @since v1.2
      */
     public static ObsoletesChain listUpdateHistory(Identifier pid) 
@@ -337,7 +404,7 @@ public class D1Client {
 
     	SystemMetadata smd = null;
     	try {
-    		smd = getCN().getSystemMetadata(startingPid, true);
+    		smd = getSysmeta(startingPid);
     		chain.addObject(
     			pid, 
     			smd.getDateUploaded(), 
@@ -349,7 +416,7 @@ public class D1Client {
     		Identifier bpid = smd.getObsoletes();
 		
     		while (fpid != null) {
-    			smd = getCN().getSystemMetadata(fpid, true);
+    			smd = getSysmeta(fpid);
     			chain.addObject(
         			fpid, 
         			smd.getDateUploaded(), 
@@ -361,7 +428,7 @@ public class D1Client {
     	
     		// get the first obsoletes by looking up in the stored list
     		while (bpid != null) {
-    			smd = getCN().getSystemMetadata(bpid, true);
+    			smd = getSysmeta(bpid);
     			chain.addObject(
         			bpid, 
         			smd.getDateUploaded(), 
@@ -378,5 +445,16 @@ public class D1Client {
     		throw sf;
     	}
     	return chain;
+    }
+    
+    private static SystemMetadata getSysmeta(Identifier pid) 
+    throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented 
+    {
+    	if (getCN() instanceof HttpCNode) {
+    		return ((HttpCNode)getCN()).getSystemMetadata(pid, true);
+    	
+    	} else {
+    		return getCN().getSystemMetadata(pid);
+    	}
     }
 }
