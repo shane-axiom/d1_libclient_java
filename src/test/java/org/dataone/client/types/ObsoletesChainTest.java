@@ -4,7 +4,6 @@ import static org.junit.Assert.*;
 
 import java.util.Date;
 
-import org.dataone.client.D1TypeBuilder;
 import org.dataone.service.types.v1.Identifier;
 import org.junit.Before;
 import org.junit.Test;

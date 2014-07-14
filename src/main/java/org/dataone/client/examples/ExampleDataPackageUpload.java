@@ -38,10 +38,10 @@ import java.util.Set;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.dataone.client.CNode;
-import org.dataone.client.D1Client;
-import org.dataone.client.D1TypeBuilder;
 import org.dataone.client.MNode;
 import org.dataone.client.auth.ClientIdentityManager;
+import org.dataone.client.itk.D1Client;
+import org.dataone.client.types.D1TypeBuilder;
 import org.dataone.ore.ResourceMapFactory;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.IdentifierNotUnique;
@@ -100,10 +100,11 @@ public class ExampleDataPackageUpload {
      * identifiers.
      * 
      * @param args
+     * @throws ServiceFailure 
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ServiceFailure {
         MNode targetMN = D1Client.getMN(TARGET_MN_BASE_URL);
-        CNode sourceCN = new CNode(SOURCE_CN_BASE_URL);
+        CNode sourceCN = D1Client.getCN(SOURCE_CN_BASE_URL);
 
         ExampleDataPackageUpload edpu = new ExampleDataPackageUpload();
         String query = buildQueryString();

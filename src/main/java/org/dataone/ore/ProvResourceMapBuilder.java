@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and 
  * limitations under the License.
  * 
- * $Id$
+ * $Id: ResourceMapFactory.java 13886 2014-05-28 20:26:50Z rnahf $
  */
 
 package org.dataone.ore;
@@ -30,6 +30,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +62,7 @@ import org.dspace.foresite.TripleSelector;
 import org.dspace.foresite.Vocab;
 import org.dspace.foresite.jena.JenaOREFactory;
 import org.dspace.foresite.jena.ORE;
+import org.dspace.foresite.jena.ResourceMapJena;
 import org.dspace.foresite.jena.TripleJena;
 
 import com.hp.hpl.jena.ontology.OntModelSpec;
@@ -73,18 +75,18 @@ import com.hp.hpl.jena.rdf.model.SimpleSelector;
 import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.rdf.model.StmtIterator;
 /**
- *  A utility for serializing and deserializing Resource Maps used by DataONE,
- *  following the conventions and constraints detailed in 
- *  http://mule1.dataone.org/ArchitectureDocs-current/design/DataPackage.html
+ *  A Resource Map builder with methods for adding providence-related statements. 
+ *  Uses ResourceMapFactory...
  *  
- *  Note: DataONE uses the serialized form of ResourceMaps to persist the relationships
- *  between metadata objects and the data objects they document, and builds a
- *  ResourceMap as an intermediate form to derive the relationships into a simpler
- *  "identifier map" representation.  There are methods for getting to both 
- *  intermediate and final forms.
- *
  */
-public class ResourceMapFactory {
+//TODO:  This is a straight-up copy of the ResourceMapFactory in turnk as of July 12, 2014
+// The new methods found suggest a builder pattern, whereas ResourceMapFactory is 
+// only a serialization and deserialization class for our package relationships.
+// Further design work needed to determine the best relationships between the two
+// classes and their proper placement.  The first question is whether or not this
+// belongs in libclient or to the application.
+
+public class ProvResourceMapBuilder {
 	
 	// TODO: will this always resolve?
 	private static final String D1_URI_PREFIX = Settings.getConfiguration()
@@ -97,14 +99,26 @@ public class ResourceMapFactory {
 	private static Predicate CITO_IS_DOCUMENTED_BY = null;
 	
 	private static Predicate CITO_DOCUMENTS = null;
+	
+	private static Predicate PROV_WAS_DERIVED_FROM = null;
+	
+	private static Predicate PROV_WAS_GENERATED_BY = null;
+	
+	private static Predicate PROV_WAS_INFORMED_BY = null;
+	
+	private static Predicate PROV_USED = null;
+	
+	private static List<Predicate> predicates = null;
 
-	private static ResourceMapFactory instance = null;
+	private static ProvResourceMapBuilder instance = null;
 	
 	private static Model oreModel = null;
 	
-	private static Log log = LogFactory.getLog(ResourceMapFactory.class);
+	private static Log log = LogFactory.getLog(ProvResourceMapBuilder.class);
 	
 	private void init() throws URISyntaxException {
+		predicates = new ArrayList<Predicate>();
+		
 		// use as much as we can from the included Vocab for dcterms:Agent
 		DC_TERMS_IDENTIFIER = new Predicate();
 		DC_TERMS_IDENTIFIER.setNamespace(Vocab.dcterms_Agent.ns().toString());
@@ -128,9 +142,45 @@ public class ResourceMapFactory {
 		CITO_DOCUMENTS.setName("documents");
 		CITO_DOCUMENTS.setURI(new URI(CITO_DOCUMENTS.getNamespace() 
 				+ CITO_DOCUMENTS.getName()));
+		
+		// create the PROV:wasDerivedFrom predicate
+		PROV_WAS_DERIVED_FROM = new Predicate();
+		PROV_WAS_DERIVED_FROM.setNamespace("http://www.w3.org/ns/prov#");
+		PROV_WAS_DERIVED_FROM.setPrefix("prov");
+		PROV_WAS_DERIVED_FROM.setName("wasDerivedFrom");
+		PROV_WAS_DERIVED_FROM.setURI(new URI(PROV_WAS_DERIVED_FROM.getNamespace() 
+						+ PROV_WAS_DERIVED_FROM.getName()));
+		
+		// create the PROV:wasGeneratedBy predicate
+		PROV_WAS_GENERATED_BY = new Predicate();
+		PROV_WAS_GENERATED_BY.setNamespace(PROV_WAS_DERIVED_FROM.getNamespace());
+		PROV_WAS_GENERATED_BY.setPrefix(PROV_WAS_DERIVED_FROM.getPrefix());
+		PROV_WAS_GENERATED_BY.setName("wasGeneratedBy");
+		PROV_WAS_GENERATED_BY.setURI(new URI(PROV_WAS_GENERATED_BY.getNamespace() 
+						+ PROV_WAS_GENERATED_BY.getName()));
+		
+		// create the PROV:wasInformedBy predicate
+		PROV_WAS_INFORMED_BY = new Predicate();
+		PROV_WAS_INFORMED_BY.setNamespace(PROV_WAS_DERIVED_FROM.getNamespace());
+		PROV_WAS_INFORMED_BY.setPrefix(PROV_WAS_DERIVED_FROM.getPrefix());
+		PROV_WAS_INFORMED_BY.setName("wasInformedBy");
+		PROV_WAS_INFORMED_BY.setURI(new URI(PROV_WAS_INFORMED_BY.getNamespace() 
+						+ PROV_WAS_INFORMED_BY.getName()));
+		
+		// create the PROV:used predicate
+		PROV_USED = new Predicate();
+		PROV_USED.setNamespace(PROV_WAS_DERIVED_FROM.getNamespace());
+		PROV_USED.setPrefix(PROV_WAS_DERIVED_FROM.getPrefix());
+		PROV_USED.setName("used");
+		PROV_USED.setURI(new URI(PROV_USED.getNamespace() 
+						+ PROV_USED.getName()));
+		
+		// include predicates from each namespace we want to support
+		predicates.add(CITO_DOCUMENTS);
+		predicates.add(PROV_WAS_DERIVED_FROM);
 	}
 	
-	private ResourceMapFactory() {
+	private ProvResourceMapBuilder() {
 		try {
 			init();
 		} catch (URISyntaxException e) {
@@ -142,9 +192,9 @@ public class ResourceMapFactory {
 	 * Returns the singleton instance for this class.
 	 * @return
 	 */
-	public static ResourceMapFactory getInstance() {
+	public static ProvResourceMapBuilder getInstance() {
 		if (instance == null) {
-			instance = new ResourceMapFactory();
+			instance = new ProvResourceMapBuilder();
 		}
 		return instance;
 	}
@@ -161,7 +211,7 @@ public class ResourceMapFactory {
 			Identifier resourceMapId, 
 			Map<Identifier, List<Identifier>> idMap) 
 		throws OREException, URISyntaxException {
-		
+				
 		// create the resource map and the aggregation
 		// NOTE: use distinct, but related URI for the aggregation
 		Aggregation aggregation = OREFactory.createAggregation(new URI(D1_URI_PREFIX 
@@ -222,10 +272,186 @@ public class ResourceMapFactory {
 		return resourceMap;
 		
 	}
+
+	/**
+	 * Adds a wasDerivedFrom triple to the specified Resource Map
+	 * @param resourceMap
+	 * @param primaryDataId
+	 * @param derivedDataId
+	 * @return
+	 * @throws OREException
+	 * @throws URISyntaxException
+	 */
+	public void addWasDerivedFrom(ResourceMap resourceMap, Identifier primaryDataId, Identifier derivedDataId)
+	throws OREException, URISyntaxException{
+		
+		Triple triple = OREFactory.createTriple(
+								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(derivedDataId.getValue())), 
+								PROV_WAS_DERIVED_FROM, 
+								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(primaryDataId.getValue())));
+		resourceMap.addTriple(triple);				
+	}
 	
 	
 	
+	/**
+	 * Add multiple wasDerivedFrom triples to the specified Resource Map
+	 * @param resourceMap
+	 * @param idMap
+	 * @return
+	 * @throws OREException
+	 * @throws URISyntaxException
+	 */
+	public void addWasDerivedFrom(ResourceMap resourceMap, Map<Identifier, List<Identifier>> idMap)
+	throws OREException, URISyntaxException{
+		
+		//Iterate over each derived data ID
+		for(Identifier derivedDataId: idMap.keySet()){
+			//Get the list of primary data IDs
+			List<Identifier> primaryDataIds = idMap.get(derivedDataId);
+				for(Identifier primaryDataId: primaryDataIds){
+				Triple triple = OREFactory.createTriple(
+										new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(derivedDataId.getValue())), 
+										PROV_WAS_DERIVED_FROM, 
+										new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(primaryDataId.getValue())));
+				resourceMap.addTriple(triple);
+			}
+		}		
+	}
 	
+	
+	/**
+	 * Adds a wasGeneratedBy triple to the specified Resource Map
+	 * @param resourceMap
+	 * @param subjectId
+	 * @param objectId
+	 * @return
+	 * @throws OREException
+	 * @throws URISyntaxException
+	 */
+	public void addWasGeneratedBy(ResourceMap resourceMap, Identifier subjectId, Identifier objectId)
+	throws OREException, URISyntaxException{
+		
+		Triple triple = OREFactory.createTriple(
+								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(subjectId.getValue())), 
+								PROV_WAS_GENERATED_BY, 
+								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(objectId.getValue())));
+		resourceMap.addTriple(triple);				
+	}
+
+	/**
+	 * Add multiple addWasGeneratedBy triples to the specified Resource Map
+	 * @param resourceMap
+	 * @param idMap
+	 * @return
+	 * @throws OREException
+	 * @throws URISyntaxException
+	 */
+	public void addWasGeneratedBy(ResourceMap resourceMap, Map<Identifier, List<Identifier>> idMap)
+	throws OREException, URISyntaxException{
+		
+		//Iterate over each subject ID
+		for(Identifier subjectId: idMap.keySet()){
+			//Get the list of primary data IDs
+			List<Identifier> objectIds = idMap.get(subjectId);
+				for(Identifier objectId: objectIds){
+				Triple triple = OREFactory.createTriple(
+										new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(subjectId.getValue())), 
+										PROV_WAS_GENERATED_BY, 
+										new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(objectId.getValue())));
+				resourceMap.addTriple(triple);
+			}
+		}		
+	}
+	
+	
+	/**
+	 * Adds a addWasInformedBy triple to the specified Resource Map
+	 * @param resourceMap
+	 * @param subjectId
+	 * @param objectId
+	 * @return
+	 * @throws OREException
+	 * @throws URISyntaxException
+	 */
+	public void addWasInformedBy(ResourceMap resourceMap, Identifier subjectId, Identifier objectId)
+	throws OREException, URISyntaxException{
+		
+		Triple triple = OREFactory.createTriple(
+								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(subjectId.getValue())), 
+								PROV_WAS_INFORMED_BY, 
+								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(objectId.getValue())));
+		resourceMap.addTriple(triple);				
+	}
+
+	/**
+	 * Add multiple addWasInformedBy triples to the specified Resource Map
+	 * @param resourceMap
+	 * @param idMap
+	 * @return
+	 * @throws OREException
+	 * @throws URISyntaxException
+	 */
+	public void addWasInformedBy(ResourceMap resourceMap, Map<Identifier, List<Identifier>> idMap)
+	throws OREException, URISyntaxException{
+		
+		//Iterate over each subject ID
+		for(Identifier subjectId: idMap.keySet()){
+			//Get the list of primary data IDs
+			List<Identifier> objectIds = idMap.get(subjectId);
+				for(Identifier objectId: objectIds){
+				Triple triple = OREFactory.createTriple(
+										new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(subjectId.getValue())), 
+										PROV_WAS_INFORMED_BY, 
+										new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(objectId.getValue())));
+				resourceMap.addTriple(triple);
+			}
+		}		
+	}
+	
+	/**
+	 * Adds a addUsed triple to the specified Resource Map
+	 * @param resourceMap
+	 * @param subjectId
+	 * @param objectId
+	 * @return
+	 * @throws OREException
+	 * @throws URISyntaxException
+	 */
+	public void addUsed(ResourceMap resourceMap, Identifier subjectId, Identifier objectId)
+	throws OREException, URISyntaxException{
+		
+		Triple triple = OREFactory.createTriple(
+								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(subjectId.getValue())), 
+								PROV_USED, 
+								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(objectId.getValue())));
+		resourceMap.addTriple(triple);				
+	}
+
+	/**
+	 * Add multiple addUsed triples to the specified Resource Map
+	 * @param resourceMap
+	 * @param idMap
+	 * @return
+	 * @throws OREException
+	 * @throws URISyntaxException
+	 */
+	public void addUsed(ResourceMap resourceMap, Map<Identifier, List<Identifier>> idMap)
+	throws OREException, URISyntaxException{
+		
+		//Iterate over each subject ID
+		for(Identifier subjectId: idMap.keySet()){
+			//Get the list of primary data IDs
+			List<Identifier> objectIds = idMap.get(subjectId);
+				for(Identifier objectId: objectIds){
+				Triple triple = OREFactory.createTriple(
+										new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(subjectId.getValue())), 
+										PROV_USED, 
+										new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(objectId.getValue())));
+				resourceMap.addTriple(triple);
+			}
+		}		
+	}
 	
 /*	/**
 	 * Experimental.  Do not use!  Creates a ResourceMap that does not contain the inverse
@@ -461,6 +687,18 @@ public class ResourceMapFactory {
 	public String serializeResourceMap(ResourceMap resourceMap) throws ORESerialiserException {
 		// serialize
 		ORESerialiser serializer = ORESerialiserFactory.getInstance(RESOURCE_MAP_SERIALIZATION_FORMAT);
+		
+		// set the NS prefixes we use in the predicates
+		if (resourceMap instanceof ResourceMapJena) {
+			Iterator<Predicate> tripleIter = predicates.iterator();
+			while (tripleIter.hasNext()) {
+				Predicate predicate = tripleIter.next();
+				if (predicate != null && predicate.getPrefix() != null) {
+					((ResourceMapJena) resourceMap).getModel().setNsPrefix(predicate.getPrefix(), predicate.getNamespace());
+				}
+			}
+		}
+		
 		ResourceMapDocument doc = serializer.serialise(resourceMap);
 		String serialisation = doc.toString();
 		return serialisation;
