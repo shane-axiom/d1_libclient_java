@@ -21,40 +21,33 @@ package org.dataone.client.impl.rest;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.config.Registry;
-import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
-import org.apache.http.conn.socket.LayeredConnectionSocketFactory;
-import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.BasicHttpClientConnectionManager;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.dataone.client.auth.CertificateManager;
 import org.dataone.client.utils.HttpUtils;
 import org.dataone.service.types.v1.Session;
 
+
 public class DefaultHttpMultipartRestClient extends HttpMultipartRestClient {
 
-	public DefaultHttpMultipartRestClient(Integer timeoutSeconds) 
+	public DefaultHttpMultipartRestClient() 
 	{	
-		super(buildHttpClient(null),null);
-		HttpUtils.setTimeouts(this, timeoutSeconds*1000);
+		super(buildHttpClient(null));
+	}
+	
+	public DefaultHttpMultipartRestClient(Session session) 
+	{
+		super(buildHttpClient(session));
 	}
 
+	
 	private static HttpClient buildHttpClient(Session session)  
 	{		
-		RegistryBuilder<ConnectionSocketFactory> rb = RegistryBuilder.<ConnectionSocketFactory>create();		
-		rb.register("http", PlainConnectionSocketFactory.getSocketFactory());
-
+		
+		Registry<ConnectionSocketFactory> sfRegistry = null;
 		try {
-			String subjectString = null;
-			if (session != null && session.getSubject() != null) {
-				subjectString = session.getSubject().getValue();
-			}
-					
-			LayeredConnectionSocketFactory sslSocketFactory = 
-					CertificateManager.getInstance().getSSLConnectionSocketFactory(subjectString);
-			rb.register("https", sslSocketFactory);
+			sfRegistry = HttpUtils.buildConnectionRegistry(session);
 		} 
 		catch (Exception e) {
 			// this is likely more severe
@@ -62,11 +55,8 @@ public class DefaultHttpMultipartRestClient extends HttpMultipartRestClient {
 					e.getClass() + ":: " + e.getMessage());
 			
 		}
-		 
-		Registry<ConnectionSocketFactory> sfRegistry = rb.build();
 
 		HttpClientConnectionManager connMan = new PoolingHttpClientConnectionManager(sfRegistry);
-//		HttpClientConnectionManager connMan = new BasicHttpClientConnectionManager(sfRegistry);
 		HttpClient hc = HttpClients.custom()
 				.setConnectionManager(connMan)
 				.build();

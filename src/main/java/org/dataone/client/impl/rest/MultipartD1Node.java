@@ -149,7 +149,7 @@ public abstract class MultipartD1Node implements D1Node {
 	@Deprecated
 	public MultipartD1Node(String nodeBaseServiceUrl, Session session) {
 	    setNodeBaseServiceUrl(nodeBaseServiceUrl);
-	    this.restClient = new DefaultHttpMultipartRestClient(30);
+	    this.restClient = new DefaultHttpMultipartRestClient();
 	    this.session = session;
 	    this.useLocalCache = Settings.getConfiguration().getBoolean("D1Client.useLocalCache",useLocalCache);
 	}
@@ -162,7 +162,7 @@ public abstract class MultipartD1Node implements D1Node {
 	@Deprecated
 	public MultipartD1Node(String nodeBaseServiceUrl) {
 	    setNodeBaseServiceUrl(nodeBaseServiceUrl);
-	    this.restClient = new DefaultHttpMultipartRestClient(30);
+	    this.restClient = new DefaultHttpMultipartRestClient();
 	    this.session = null;
 	    this.useLocalCache = Settings.getConfiguration().getBoolean("D1Client.useLocalCache",useLocalCache);
 	}
@@ -240,7 +240,7 @@ public abstract class MultipartD1Node implements D1Node {
 		Header[] headers = null;
 	
 	    try {
-	    	headers = this.restClient.doGetRequestForHeaders(url.getUrl());
+	    	headers = this.restClient.doGetRequestForHeaders(url.getUrl(), null);
 		} catch (BaseException be) {
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
@@ -326,7 +326,7 @@ public abstract class MultipartD1Node implements D1Node {
         // send the request
         ObjectList objectList = null;
         try {
-        	InputStream is = this.restClient.doGetRequest(url.getUrl());
+        	InputStream is = this.restClient.doGetRequest(url.getUrl(), null);
         	objectList =  deserializeServiceType(ObjectList.class, is);
         } catch (BaseException be) {
             if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
@@ -392,7 +392,8 @@ public abstract class MultipartD1Node implements D1Node {
 		Log log = null;
 
 		try {
-			InputStream is = this.restClient.doGetRequest(url.getUrl());
+			InputStream is = this.restClient.doGetRequest(url.getUrl(),
+					Settings.getConfiguration().getInteger("D1Client.D1Node.getLogRecords.timeout", null));
 			log = deserializeServiceType(Log.class, is);
 		} catch (BaseException be) {
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
@@ -469,7 +470,8 @@ public abstract class MultipartD1Node implements D1Node {
         	}
 
         	try {
-        		remoteStream = this.restClient.doGetRequest(url.getUrl());
+        		remoteStream = this.restClient.doGetRequest(url.getUrl(),
+        				Settings.getConfiguration().getInteger("D1Client.D1Node.get.timeout", null));
         		byte[] bytes = IOUtils.toByteArray(remoteStream);
 
         		if (cacheMissed) {
@@ -584,7 +586,8 @@ public abstract class MultipartD1Node implements D1Node {
 		SystemMetadata sysmeta = null;
 		
 		try {
-			is = this.restClient.doGetRequest(url.getUrl());
+			is = this.restClient.doGetRequest(url.getUrl(),
+					Settings.getConfiguration().getInteger("D1Client.D1Node.getSystemMetadata.timeout", null));
 			sysmeta = deserializeServiceType(SystemMetadata.class,is);
 			if (cacheMissed) {
                 // Cache the result in the system metadata cache
@@ -627,7 +630,7 @@ public abstract class MultipartD1Node implements D1Node {
     	Header[] headers = null;
     	Map<String, String> headersMap = new HashMap<String,String>();
     	try {
-    		headers = this.restClient.doHeadRequest(url.getUrl());
+    		headers = this.restClient.doHeadRequest(url.getUrl(),null);
     		for (Header header: headers) {
     			if (log.isDebugEnabled())
     				log.debug(String.format("header: %s = %s", 
@@ -749,7 +752,7 @@ public abstract class MultipartD1Node implements D1Node {
         Checksum checksum = null;
 
         try {
-        	InputStream is = this.restClient.doGetRequest(url.getUrl());
+        	InputStream is = this.restClient.doGetRequest(url.getUrl(),null);
         	checksum = deserializeServiceType(Checksum.class, is);
         } catch (BaseException be) {
             if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
@@ -788,7 +791,7 @@ public abstract class MultipartD1Node implements D1Node {
         	url.addNonEmptyParamPair("action", action.xmlValue());
 
         try {
-        	InputStream is = this.restClient.doGetRequest(url.getUrl());
+        	InputStream is = this.restClient.doGetRequest(url.getUrl(),null);
         	if (is != null)
 				is.close();
         } catch (BaseException be) {
@@ -833,7 +836,7 @@ public abstract class MultipartD1Node implements D1Node {
 		Identifier identifier = null;
 		
 		try {
-			InputStream is = this.restClient.doPostRequest(url.getUrl(),smpe);
+			InputStream is = this.restClient.doPostRequest(url.getUrl(),smpe,null);
 			identifier = deserializeServiceType(Identifier.class, is);
 			
 		} catch (BaseException be) {
@@ -881,7 +884,7 @@ public abstract class MultipartD1Node implements D1Node {
 
      	Identifier identifier = null;
     	try {
-    		InputStream is = this.restClient.doPutRequest(url.getUrl(), null);
+    		InputStream is = this.restClient.doPutRequest(url.getUrl(), null, null);
     		identifier = deserializeServiceType(Identifier.class, is);
         } catch (BaseException be) {
             if (be instanceof InvalidToken)           throw (InvalidToken) be;
@@ -915,7 +918,7 @@ public abstract class MultipartD1Node implements D1Node {
 
      	Identifier identifier = null;
     	try {
-    		InputStream is = this.restClient.doDeleteRequest(url.getUrl());
+    		InputStream is = this.restClient.doDeleteRequest(url.getUrl(), null);
     		identifier = deserializeServiceType(Identifier.class, is);
         } catch (BaseException be) {
             if (be instanceof InvalidToken)           throw (InvalidToken) be;
@@ -998,7 +1001,7 @@ public abstract class MultipartD1Node implements D1Node {
 
         InputStream is = null;
         try {
-        	is = localizeInputStream(this.restClient.doGetRequest(finalUrl));
+        	is = localizeInputStream(this.restClient.doGetRequest(finalUrl, null));
 		}
         catch (BaseException be) {
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
@@ -1035,7 +1038,7 @@ public abstract class MultipartD1Node implements D1Node {
 
         QueryEngineDescription description = null;
         try {
-        	InputStream is = this.restClient.doGetRequest(url.getUrl());
+        	InputStream is = this.restClient.doGetRequest(url.getUrl(), null);
              description = deserializeServiceType(QueryEngineDescription.class, is);
 		}
         catch (BaseException be) {
@@ -1062,7 +1065,7 @@ public abstract class MultipartD1Node implements D1Node {
 		InputStream is = null;
         QueryEngineList engines = null;
         try {
-             is = this.restClient.doGetRequest(url.getUrl());
+             is = this.restClient.doGetRequest(url.getUrl(), null);
              engines = deserializeServiceType(QueryEngineList.class, is);
 		}
         catch (BaseException be) {

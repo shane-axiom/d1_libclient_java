@@ -265,10 +265,16 @@ public class RestClient {
 			if (mpe != null) {
 				req.setEntity(mpe);
 				latestCall += "; MMP message has: " + mpe.getDescription();
-			} else {
+			} 
+			else {
 				latestCall += "; MMP entity is null";
 			}
-			req.setConfig(requestConfig);
+			
+			// HttpClient (v4.3.x) uses a default RequestConfig and allows an 
+			// overriding one to be passed in on the request.
+			if (requestConfig != null) 
+				req.setConfig(requestConfig);
+			
 			response = doRequest(req);
 		} 
 		finally { 

@@ -33,7 +33,7 @@ import org.dataone.client.impl.D1NodeFactory;
 import org.dataone.client.impl.NodeListNodeLocator;
 import org.dataone.client.impl.SettingsContextNodeLocator;
 import org.dataone.client.impl.rest.DefaultHttpMultipartRestClient;
-import org.dataone.client.impl.rest.HttpCNode;
+import org.dataone.client.impl.rest.MultipartCNode;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.client.types.ObsoletesChain;
 import org.dataone.client.utils.ExceptionUtils;
@@ -102,7 +102,7 @@ public class D1Client {
     throws ServiceFailure, NotImplemented {
         if (restClient == null) {
         	//TODO work session into restClient
-        	restClient = new DefaultHttpMultipartRestClient(DEFAULT_TIMEOUT_MILLIS);
+        	restClient = new DefaultHttpMultipartRestClient();
         }
         try { 
         	if (nodeLocator == null) {
@@ -128,7 +128,7 @@ public class D1Client {
     throws NotImplemented, ServiceFailure 
     {         	
     	if (restClient == null) {
-    		restClient = new DefaultHttpMultipartRestClient(DEFAULT_TIMEOUT_MILLIS);
+    		restClient = new DefaultHttpMultipartRestClient();
     	}
     	try {
     		CNode cn = D1NodeFactory.buildCNode(restClient, URI.create(cnUrl));
@@ -148,7 +148,7 @@ public class D1Client {
     public static MNode getMN(String mnBaseUrl) throws ServiceFailure {
     	MNode mn = null;
     	if (restClient == null) {
-    		restClient = new DefaultHttpMultipartRestClient(DEFAULT_TIMEOUT_MILLIS);
+    		restClient = new DefaultHttpMultipartRestClient();
     	}
     	try {
     		if (nodeLocator != null) {
@@ -182,7 +182,7 @@ public class D1Client {
     public static CNode getCN(String cnBaseUrl) throws ServiceFailure {
     	CNode cn = null;
     	if (restClient == null) {
-    		restClient = new DefaultHttpMultipartRestClient(DEFAULT_TIMEOUT_MILLIS);
+    		restClient = new DefaultHttpMultipartRestClient();
     	}
     	try {
     		if (nodeLocator != null) {
@@ -218,7 +218,7 @@ public class D1Client {
     	if (nodeLocator == null) {
     		try {
 				nodeLocator = new NodeListNodeLocator(D1Client.getCN().listNodes(), 
-						new DefaultHttpMultipartRestClient(30));
+						new DefaultHttpMultipartRestClient());
 			} catch (NotImplemented e) {
 				throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
 			} catch (ClientSideException e) {
@@ -450,8 +450,8 @@ public class D1Client {
     private static SystemMetadata getSysmeta(Identifier pid) 
     throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, NotImplemented 
     {
-    	if (getCN() instanceof HttpCNode) {
-    		return ((HttpCNode)getCN()).getSystemMetadata(pid, true);
+    	if (getCN() instanceof MultipartCNode) {
+    		return ((MultipartCNode)getCN()).getSystemMetadata(pid, true);
     	
     	} else {
     		return getCN().getSystemMetadata(pid);

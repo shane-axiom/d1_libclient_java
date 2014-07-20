@@ -20,7 +20,7 @@
  * $Id$
  */
 
-package org.dataone.client;
+package org.dataone.client.impl.rest;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -45,7 +45,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 
-public class EchoTestD1RestClientIT {
+public class EchoTestMultipartRestClientIT {
 	private static String echoNode = "http://dev-testing.dataone.org/testsvc";
 	private static String echoResource = "echo";
 	private static String mmEchoResource = "echomm";
@@ -57,10 +57,10 @@ public class EchoTestD1RestClientIT {
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient(), null);
+		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient());
 		String contentString = null;
 		try {
-			InputStream is = rc.doGetRequest(u.getUrl());
+			InputStream is = rc.doGetRequest(u.getUrl(), null);
 			contentString = IOUtils.toString(is);
 		} catch (ServiceFailure e) {	
 			contentString = e.getDescription();
@@ -78,10 +78,10 @@ public class EchoTestD1RestClientIT {
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient(), null);
+		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient());
 		String contentString = null;
 		try {
-			InputStream is = rc.doDeleteRequest(u.getUrl());
+			InputStream is = rc.doDeleteRequest(u.getUrl(), null);
 			contentString = IOUtils.toString(is);
 		} catch (ServiceFailure e) {	
 			contentString = e.getDescription();
@@ -100,10 +100,10 @@ public class EchoTestD1RestClientIT {
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient(), null);
+		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient());
 		Header[] headers = null;
 		try {
-			headers = rc.doHeadRequest(u.getUrl());
+			headers = rc.doHeadRequest(u.getUrl(), null);
 		} catch (ServiceFailure e) {	
 			String contentString = e.getDescription();
 			System.out.println(contentString);
@@ -122,10 +122,10 @@ public class EchoTestD1RestClientIT {
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient(), null);
+		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient());
 		String contentString = null;
 		try {
-			InputStream is = rc.doPutRequest(u.getUrl(),null);
+			InputStream is = rc.doPutRequest(u.getUrl(),null, null);
 			contentString = IOUtils.toString(is);
 		} catch (ServiceFailure e) {	
 			contentString = e.getDescription();
@@ -143,10 +143,10 @@ public class EchoTestD1RestClientIT {
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient(), null);
+		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient());
 		String contentString = null;
 		try {
-			InputStream is = rc.doPostRequest(u.getUrl(),null);
+			InputStream is = rc.doPostRequest(u.getUrl(),null, null);
 			contentString = IOUtils.toString(is);
 		} catch (ServiceFailure e) {	
 			contentString = e.getDescription();
@@ -168,10 +168,10 @@ public class EchoTestD1RestClientIT {
 		SimpleMultipartEntity ent = new SimpleMultipartEntity();
 		ent.addParamPart("Jabberwocky", "Twas brillig and the slithy tove, did gyre and gimble in the wabe");
 		ent.addFilePart("Jabberwocky2", "All mimsy was the borogrove, and the mome wrath ungrabe.");
-		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient(), null);
+		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient());
 		String contentString = null;
 		try {
-			InputStream is = rc.doPutRequest(u.getUrl(),ent);
+			InputStream is = rc.doPutRequest(u.getUrl(),ent, null);
 			contentString = IOUtils.toString(is);
 		} catch (ServiceFailure e) {	
 			contentString = e.getDescription();
@@ -192,10 +192,10 @@ public class EchoTestD1RestClientIT {
 		SimpleMultipartEntity ent = new SimpleMultipartEntity();
 		ent.addParamPart("Jabberwocky", "Twas brillig and the slithy tove, did gyre and gimble in the wabe");
 		ent.addFilePart("Jabberwocky2", "All mimsy was the borogrove, and the mome wrath ungrabe.");
-		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient(), null);
+		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient());
 		String contentString = null;
 		try {
-			InputStream is = rc.doPostRequest(u.getUrl(),ent);
+			InputStream is = rc.doPostRequest(u.getUrl(),ent, null);
 			contentString = IOUtils.toString(is);
 		} catch (ServiceFailure e) {	
 			contentString = e.getDescription();
@@ -213,10 +213,10 @@ public class EchoTestD1RestClientIT {
 		D1Url u = new D1Url(echoNode + "xx", "fakeResource");
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient(), null);
+		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient());
 
 		try {
-			InputStream is = rc.doGetRequest(u.getUrl());
+			InputStream is = rc.doGetRequest(u.getUrl(), null);
 			String contentString = IOUtils.toString(is);
 			System.out.println(contentString);
 			fail("should not have reached here");
