@@ -9,8 +9,8 @@ import org.dataone.client.CNode;
 import org.dataone.client.MNode;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.impl.rest.DefaultHttpMultipartRestClient;
-import org.dataone.client.impl.rest.HttpCNode;
-import org.dataone.client.impl.rest.HttpMNode;
+import org.dataone.client.impl.rest.MultipartCNode;
+import org.dataone.client.impl.rest.MultipartMNode;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.client.types.D1TypeBuilder;
 import org.dataone.service.types.v1.Identifier;
@@ -47,7 +47,7 @@ public class D1NodeFactory {
 	}
 	
 	public D1NodeFactory() {
-		this.restClient = new DefaultHttpMultipartRestClient(30000);
+		this.restClient = new DefaultHttpMultipartRestClient();
 	}
 	
 	/**
@@ -105,7 +105,7 @@ public class D1NodeFactory {
 		}
 		else if (uri.getScheme().equals("http") || uri.getScheme().equals("https")) {
 			// build the standard implementation
-			builtCNode = new HttpCNode( mrc, uri.toString());
+			builtCNode = new MultipartCNode( mrc, uri.toString());
 		}
 		
 		return builtCNode;
@@ -128,7 +128,7 @@ public class D1NodeFactory {
 		}
 		else if (uri.getScheme().equals("http") || uri.getScheme().equals("https")) {
 			// build the standard implementation
-			builtMNode = new HttpMNode( mrc, uri.toString());
+			builtMNode = new MultipartMNode( mrc, uri.toString());
 		} else {
 			throw new ClientSideException("No corresponding builder for URI scheme: " + uri.getScheme());
 		}

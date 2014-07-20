@@ -34,6 +34,8 @@ import org.apache.http.HttpException;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.client.utils.HttpUtils;
@@ -47,6 +49,9 @@ import org.dataone.service.util.ExceptionHandler;
  * This class wraps the RestClient, adding uniform exception deserialization and
  * the setup of SSL for standard DataONE communications.
  * 
+ * Timeouts are converted into RequestConfigs in this class, and produced by copying
+ * the existing default one and setting connection request, connection, and socket timeouts
+ * with the supplied value.
  * 
  */
 public class HttpMultipartRestClient implements MultipartRestClient {
@@ -54,37 +59,44 @@ public class HttpMultipartRestClient implements MultipartRestClient {
 	protected static Log log = LogFactory.getLog(HttpMultipartRestClient.class);
 	
     protected RestClient rc;
-    protected RequestConfig reqConfig;
+    
+    protected RequestConfig baseRequestConfig;
 
 	/**
 	 * Default constructor to create a new instance.  SSL is setup using
 	 * the default location for the client certificate.
 	 */
-	public HttpMultipartRestClient(HttpClient httpClient, RequestConfig reqConfig) {
-		this.rc = new RestClient(httpClient);
-		this.reqConfig = reqConfig;
-		HttpUtils.setupSSL(httpClient, null);
+	public HttpMultipartRestClient(HttpClient httpClient) {
+		this(httpClient, null, null);
 	}
 	
 	
 	/**
-	 * Constructor to create a new instance with given session/subject.
-	 * The session's subject is used to find the registered certificate and key
+	 * An alternate constructor for special-case situations.  See explanation
+	 * in parameter descriptions.  
 	 * 
-	 */	
-	public HttpMultipartRestClient(HttpClient httpClient, Session session, RequestConfig reqConfig) {
+	 * @param httpClient 
+	 * @param requestConfig - set this parameter with the custom ReqeustConfig used
+	 * to build the HttpClient (v4.3.x or later), so per-request configurations can
+	 * use those configurations while at the same time overriding timeout ones. 
+	 * @param session - if using a v4.1.x httpClient (DefaultHttpClient), providing a
+	 * Session object sets up the SSL using the certificate associated with that session's subject.
+	 * 
+	 */
+	public HttpMultipartRestClient(HttpClient httpClient, RequestConfig requestConfig, Session session) {
 		this.rc = new RestClient(httpClient);
-		this.reqConfig = reqConfig;
-		HttpUtils.setupSSL(httpClient, session);
+		this.baseRequestConfig = requestConfig;
+		if (httpClient instanceof DefaultHttpClient)
+			HttpUtils.setupSSL_v4_1((DefaultHttpClient)httpClient, session);
 	}
 
-	public void setRequestConfig(RequestConfig reqConfig) {
-		this.reqConfig = reqConfig;
-	}
-	
-	public RequestConfig getRequestConfig() {
-		return this.reqConfig;
-	}
+//	public void setRequestConfig(RequestConfig reqConfig) {
+//		this.reqConfig = reqConfig;
+//	}
+//	
+//	public RequestConfig getRequestConfig() {
+//		return this.reqConfig;
+//	}
 	
 	/**
 	 * Gets the HttpClient instance used to make the connection
@@ -115,6 +127,7 @@ public class HttpMultipartRestClient implements MultipartRestClient {
 	{
 		getHttpClient().getConnectionManager().closeIdleConnections(0,TimeUnit.MILLISECONDS);
 	}
+	
 
 //	/**
 //	 * Sets the CONNECTION_TIMEOUT and SO_TIMEOUT values for the underlying httpClient.
@@ -138,21 +151,23 @@ public class HttpMultipartRestClient implements MultipartRestClient {
 	 * @see org.dataone.client.MultipartRestClient#doGetRequest(java.lang.String)
 	 */
 	@Override
-	public InputStream doGetRequest(String url) 
+	public InputStream doGetRequest(String url, Integer timeoutMillisecs) 
 	throws BaseException, ClientSideException
 	{
-		return doGetRequest(url,false);
+		return doGetRequest(url, timeoutMillisecs, false);
 	}
 	
 	/* (non-Javadoc)
 	 * @see org.dataone.client.MultipartRestClient#doGetRequest(java.lang.String, boolean)
 	 */
 	@Override
-	public InputStream doGetRequest(String url, boolean allowRedirect) 
+	public InputStream doGetRequest(String url, Integer timeoutMillisecs, boolean allowRedirect) 
 			throws BaseException, ClientSideException
 	{
 		try {
-			return ExceptionHandler.filterErrors(rc.doGetRequest(url, this.reqConfig), allowRedirect);
+			return ExceptionHandler.filterErrors( 
+					rc.doGetRequest(url,determineTimeoutConfig(timeoutMillisecs)), 
+					allowRedirect);
 		} catch (IllegalStateException e) {
 			throw new ClientSideException("", e);
 		} catch (ClientProtocolException e) {
@@ -168,11 +183,14 @@ public class HttpMultipartRestClient implements MultipartRestClient {
 	 * @see org.dataone.client.MultipartRestClient#doGetRequestForHeaders(java.lang.String)
 	 */
 	@Override
-	public Header[] doGetRequestForHeaders(String url) 
+	public Header[] doGetRequestForHeaders(String url, Integer timeoutMillisecs) 
 			throws BaseException, ClientSideException
 	{
+		determineTimeoutConfig(timeoutMillisecs);
 		try {
-			return ExceptionHandler.filterErrorsHeader(rc.doGetRequest(url, this.reqConfig),Constants.GET);
+			return ExceptionHandler.filterErrorsHeader( 
+					rc.doGetRequest(url,determineTimeoutConfig(timeoutMillisecs)), 
+					Constants.GET);
 		} catch (IllegalStateException e) {
 			throw new ClientSideException("", e);
 		} catch (ClientProtocolException e) {
@@ -188,12 +206,13 @@ public class HttpMultipartRestClient implements MultipartRestClient {
 	 * @see org.dataone.client.MultipartRestClient#doDeleteRequest(java.lang.String)
 	 */
 	@Override
-	public InputStream doDeleteRequest(String url) 
+	public InputStream doDeleteRequest(String url, Integer timeoutMillisecs) 
 			throws BaseException, ClientSideException
 	{
-		rc.setHeader("Accept", "text/xml");
+		determineTimeoutConfig(timeoutMillisecs);
 		try {
-			return ExceptionHandler.filterErrors(rc.doDeleteRequest(url, this.reqConfig));
+			return ExceptionHandler.filterErrors( 
+					rc.doDeleteRequest(url, determineTimeoutConfig(timeoutMillisecs)) );
 		} catch (IllegalStateException e) {
 			throw new ClientSideException("", e);
 		} catch (ClientProtocolException e) {
@@ -219,11 +238,13 @@ public class HttpMultipartRestClient implements MultipartRestClient {
 	 * @see org.dataone.client.MultipartRestClient#doHeadRequest(java.lang.String)
 	 */
 	@Override
-	public Header[] doHeadRequest(String url) 
+	public Header[] doHeadRequest(String url, Integer timeoutMillisecs) 
 			throws BaseException, ClientSideException
 	{
 		try {
-			return ExceptionHandler.filterErrorsHeader(rc.doHeadRequest(url, this.reqConfig),Constants.HEAD);
+			return ExceptionHandler.filterErrorsHeader( 
+					rc.doHeadRequest(url,determineTimeoutConfig(timeoutMillisecs)), 
+					Constants.HEAD);
 		} catch (IllegalStateException e) {
 			throw new ClientSideException("", e);
 		} catch (ClientProtocolException e) {
@@ -239,11 +260,13 @@ public class HttpMultipartRestClient implements MultipartRestClient {
 	 * @see org.dataone.client.MultipartRestClient#doPutRequest(java.lang.String, org.dataone.mimemultipart.SimpleMultipartEntity)
 	 */
 	@Override
-	public InputStream doPutRequest(String url, SimpleMultipartEntity entity) 
+	public InputStream doPutRequest(String url, SimpleMultipartEntity entity, Integer timeoutMillisecs) 
 			throws BaseException, ClientSideException
 	{
+		determineTimeoutConfig(timeoutMillisecs);
 		try {
-			return ExceptionHandler.filterErrors(rc.doPutRequest(url, entity, this.reqConfig));
+			return ExceptionHandler.filterErrors( 
+					rc.doPutRequest(url,entity,determineTimeoutConfig(timeoutMillisecs)) );
 		} catch (IllegalStateException e) {
 			throw new ClientSideException("", e);
 		} catch (ClientProtocolException e) {
@@ -259,11 +282,13 @@ public class HttpMultipartRestClient implements MultipartRestClient {
 	 * @see org.dataone.client.MultipartRestClient#doPostRequest(java.lang.String, org.dataone.mimemultipart.SimpleMultipartEntity)
 	 */
 	@Override
-	public InputStream doPostRequest(String url, SimpleMultipartEntity entity) 
+	public InputStream doPostRequest(String url, SimpleMultipartEntity entity, Integer timeoutMillisecs) 
 			throws BaseException, ClientSideException
 	{
+		determineTimeoutConfig(timeoutMillisecs);
 		try {
-			return ExceptionHandler.filterErrors(rc.doPostRequest(url,entity, this.reqConfig));
+			return ExceptionHandler.filterErrors( 
+					rc.doPostRequest(url,entity,determineTimeoutConfig(timeoutMillisecs)) );
 		} catch (IllegalStateException e) {
 			throw new ClientSideException("", e);
 		} catch (ClientProtocolException e) {
@@ -283,4 +308,47 @@ public class HttpMultipartRestClient implements MultipartRestClient {
 	public HashMap<String, String> getAddedHeaders() {
 		return rc.getAddedHeaders();
 	}
+	
+	
+	/*
+	 * function to either build a RequestConfig based on a base RequestConfig
+	 * passed in on the constructor, or one from scratch.
+	 */
+	private RequestConfig determineTimeoutConfig(Integer milliseconds) 
+	{     
+		RequestConfig config= null;
+		
+		if (milliseconds != null) {
+			RequestConfig.Builder rcBuilder = null;
+			if (this.baseRequestConfig != null) {
+				rcBuilder = RequestConfig.copy(this.baseRequestConfig);
+			} else {
+				rcBuilder = RequestConfig.custom();
+			}
+			config = rcBuilder
+        		.setConnectTimeout(milliseconds)
+        		.setConnectionRequestTimeout(milliseconds)
+        		.setSocketTimeout(milliseconds)
+        		.build();
+		}
+		return config;
+	}
+	
+        	
+// for httpClient v4.1.x 
+//	private void setTimeoutConfig(Integer milliseconds) 
+//	{  
+//        	HttpClient hc = this.getHttpClient();
+//        
+//        	HttpParams params = hc.getParams();
+//        	// the timeout in milliseconds until a connection is established.
+//        	HttpConnectionParams.setConnectionTimeout(params, timeout);
+//        
+//        	//defines the socket timeout (SO_TIMEOUT) in milliseconds, which is the timeout
+//        	// for waiting for data or, put differently, a maximum period inactivity between
+//        	// two consecutive data packets).
+//        	HttpConnectionParams.setSoTimeout(params, timeout);
+//  	
+//        	this.setParams(params);
+//	}
 }

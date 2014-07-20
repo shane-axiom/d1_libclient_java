@@ -1,6 +1,7 @@
 package org.dataone.client.impl;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Set;
 
@@ -9,7 +10,7 @@ import org.dataone.client.MNode;
 import org.dataone.client.NodeLocator;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.impl.rest.DefaultHttpMultipartRestClient;
-import org.dataone.client.impl.rest.HttpCNode;
+import org.dataone.client.impl.rest.MultipartCNode;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.client.types.D1TypeBuilder;
 import org.dataone.service.types.v1.Node;
@@ -19,7 +20,6 @@ import org.dataone.service.types.v1.NodeType;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class NodeListNodeLocatorTest {
@@ -52,7 +52,7 @@ public class NodeListNodeLocatorTest {
 		nodeList.addNode(buildNode("http://mn2.baz.org/knb/d1/mn", NodeType.MN, "urn:node:MNhttp"));
 		nodeList.addNode(buildNode("java:org.dataone.client.impl.InMemoryMNode#Subject=mnAdmin&Subject=cnAdmin,", 
 				 NodeType.MN, "urn:node:MNjava"));
-		mrc = new DefaultHttpMultipartRestClient(30000);
+		mrc = new DefaultHttpMultipartRestClient();
 		
 		nodeLoc = new NodeListNodeLocator(nodeList, mrc);
 	}
@@ -112,7 +112,7 @@ public class NodeListNodeLocatorTest {
 	public void testPutCNode() throws ClientSideException {
 		NodeReference node = D1TypeBuilder.buildNodeReference("beep");
 		
-		CNode cn = new HttpCNode(mrc, "someBaseUrl");
+		CNode cn = new MultipartCNode(mrc, "someBaseUrl");
 		
 		nodeLoc.putCNode(node,cn);
 		CNode x = nodeLoc.getCNode(node);

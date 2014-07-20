@@ -347,7 +347,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		ObjectFormatList formatList = null;
 		
 		try {			
-			InputStream is = this.restClient.doGetRequest(url.getUrl());
+			InputStream is = this.restClient.doGetRequest(url.getUrl(), null);
 			formatList = deserializeServiceType(ObjectFormatList.class, is);
 
 		} catch (BaseException be) {
@@ -402,7 +402,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 			// send the request
 
 			try {
-				InputStream is = this.restClient.doGetRequest(url.getUrl());
+				InputStream is = this.restClient.doGetRequest(url.getUrl(), null);
 				objectFormat = deserializeServiceType(ObjectFormat.class, is);
 
 			} catch (BaseException be) {
@@ -430,7 +430,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 		ChecksumAlgorithmList algorithmList = null;
 		try {
-			InputStream is = this.restClient.doGetRequest(url.getUrl());
+			InputStream is = this.restClient.doGetRequest(url.getUrl(), null);
 			algorithmList = deserializeServiceType(ChecksumAlgorithmList.class, is);
 		} catch (BaseException be) {
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
@@ -511,7 +511,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		NodeList nodelist = null;
 
 		try {
-			InputStream is = this.restClient.doGetRequest(url.getUrl());
+			InputStream is = this.restClient.doGetRequest(url.getUrl(), null);
 			nodelist = deserializeServiceType(NodeList.class, is);
 			
 		} catch (BaseException be) {
@@ -556,7 +556,8 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		
 		Identifier identifier = null;
  		try {
- 			InputStream is = this.restClient.doPostRequest(url.getUrl(),smpe);
+ 			InputStream is = this.restClient.doPostRequest(url.getUrl(),smpe,
+ 					Settings.getConfiguration().getInteger("D1Client.CNode.reserveIdentifier.timeout", null));
  			identifier = deserializeServiceType(Identifier.class, is);
  			
 		} catch (BaseException be) {
@@ -630,7 +631,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		// send the request
 		
 		try {
-			InputStream is = this.restClient.doGetRequest(url.getUrl());
+			InputStream is = this.restClient.doGetRequest(url.getUrl(), null);
 			if (is != null)
 				is.close();
 			
@@ -709,7 +710,8 @@ public class MultipartCNode extends MultipartD1Node implements CNode
         Identifier identifier = null;
 
         try {
-        	InputStream is = this.restClient.doPostRequest(url.getUrl(), mpe);
+        	InputStream is = this.restClient.doPostRequest(url.getUrl(), mpe,
+        			Settings.getConfiguration().getInteger("D1Client.CNode.create.timeouts", null));
         	identifier = deserializeServiceType(Identifier.class, is);
         	
 		} catch (BaseException be) {
@@ -770,7 +772,8 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 		Identifier identifier = null;
 		try {
-			InputStream is = this.restClient.doPostRequest(url.getUrl(),mpe);
+			InputStream is = this.restClient.doPostRequest(url.getUrl(),mpe,
+					Settings.getConfiguration().getInteger("D1Client.CNode.registerSystemMetadata.timeouts", null));
 			identifier = deserializeServiceType(Identifier.class, is);
 		} catch (BaseException be) {
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
@@ -825,7 +828,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
 
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(), mpe);
+			InputStream is = this.restClient.doPutRequest(url.getUrl(), mpe, null);
 			if (is != null)
 				is.close();
 
@@ -1005,7 +1008,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 		try {
 			// set flag to true to allow redirects (http.SEE_OTHER) to represent success
-			InputStream is = this.restClient.doGetRequest(url.getUrl(),true);
+			InputStream is = this.restClient.doGetRequest(url.getUrl(),null, true);
 			oll = deserializeServiceType(ObjectLocationList.class, is);
 			
 		} catch (BaseException be) {
@@ -1170,7 +1173,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
         ObjectList objectList = null;
         try {
-            InputStream is = this.restClient.doGetRequest(finalUrl);
+            InputStream is = this.restClient.doGetRequest(finalUrl, null);
             objectList = deserializeServiceType(ObjectList.class, is);
             
 		} catch (BaseException be) {
@@ -1227,7 +1230,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		Identifier identifier = null;
 
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe);
+			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe, null);
 			identifier = deserializeServiceType(Identifier.class, is);
 			
 		} catch (BaseException be) {
@@ -1308,7 +1311,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		}
 
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe);
+			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe, null);
 			if (is != null)
 				is.close();
 
@@ -1365,7 +1368,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 		Subject subject = null;
 		try {
-			InputStream is = this.restClient.doPostRequest(url.getUrl(),mpe);
+			InputStream is = this.restClient.doPostRequest(url.getUrl(),mpe, null);
 			subject = deserializeServiceType(Subject.class, is);
 			
 		} catch (BaseException be) {
@@ -1425,7 +1428,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 		Subject subject = null;
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe);
+			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe, null);
 			subject = deserializeServiceType(Subject.class, is);
 			
 		} catch (BaseException be) {
@@ -1472,7 +1475,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		url.addNextPathElement(subject.getValue());
 		
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(),null);
+			InputStream is = this.restClient.doPutRequest(url.getUrl(),null, null);
 			if (is != null)
 				is.close();
 		
@@ -1517,7 +1520,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		SubjectInfo subjectInfo = null;
 
 		try {
-			InputStream is = this.restClient.doGetRequest(url.getUrl());
+			InputStream is = this.restClient.doGetRequest(url.getUrl(), null);
 			subjectInfo = deserializeServiceType(SubjectInfo.class, is);
 			
 		} catch (BaseException be) {
@@ -1564,7 +1567,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		SubjectInfo subjectInfo = null;
 
 		try {
-			InputStream is = this.restClient.doGetRequest(url.getUrl());
+			InputStream is = this.restClient.doGetRequest(url.getUrl(), null);
 			subjectInfo = deserializeServiceType(SubjectInfo.class, is);
 			
 		} catch (BaseException be) {
@@ -1612,7 +1615,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
     		mpe.addParamPart("secondarySubject", secondarySubject.getValue());
 
 		try {
-			InputStream is = this.restClient.doPostRequest(url.getUrl(),mpe);
+			InputStream is = this.restClient.doPostRequest(url.getUrl(),mpe, null);
 			if (is != null)
 				is.close();
 			
@@ -1660,7 +1663,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		mpe.addParamPart("subject", subject.getValue());
 
 		try {
-			InputStream is = this.restClient.doPostRequest(url.getUrl(), mpe);
+			InputStream is = this.restClient.doPostRequest(url.getUrl(), mpe, null);
 			if (is != null)
 				is.close();
 		
@@ -1707,7 +1710,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		SubjectInfo subjectInfo = null;
 
 		try {
-			InputStream is = this.restClient.doGetRequest(url.getUrl());
+			InputStream is = this.restClient.doGetRequest(url.getUrl(), null);
 			subjectInfo = deserializeServiceType(SubjectInfo.class, is);
 			
 		} catch (BaseException be) {
@@ -1750,7 +1753,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
     	url.addNextPathElement(subject.getValue());
 
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(), null);
+			InputStream is = this.restClient.doPutRequest(url.getUrl(), null, null);
 			if (is != null)
 				is.close();
 
@@ -1794,7 +1797,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
     	url.addNextPathElement(subject.getValue());
 		
 		try {
-			InputStream is = this.restClient.doDeleteRequest(url.getUrl());
+			InputStream is = this.restClient.doDeleteRequest(url.getUrl(), null);
 			if (is != null)
 				is.close();
 
@@ -1839,7 +1842,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
     	url.addNextPathElement(subject.getValue());
 
 		try {
-			InputStream is = this.restClient.doDeleteRequest(url.getUrl());
+			InputStream is = this.restClient.doDeleteRequest(url.getUrl(), null);
 			if (is != null)
 				is.close();
 
@@ -1891,7 +1894,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		Subject subject = null;
 
 		try {
-			InputStream is = this.restClient.doPostRequest(url.getUrl(), mpe);
+			InputStream is = this.restClient.doPostRequest(url.getUrl(), mpe, null);
 			subject = deserializeServiceType(Subject.class, is);
 			
 		} catch (BaseException be) {
@@ -1942,7 +1945,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		}
 
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe);
+			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe, null);
 			if (is != null)
 				is.close();
 			
@@ -1997,7 +2000,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		}
 
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe);
+			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe, null);
 			if (is != null)
 				is.close();
 
@@ -2050,7 +2053,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 		NodeReference nodeRef = null;
 		try {
-			InputStream is = this.restClient.doPostRequest(url.getUrl(),mpe);
+			InputStream is = this.restClient.doPostRequest(url.getUrl(),mpe, null);
 			nodeRef = deserializeServiceType(NodeReference.class, is);
 			
 		} catch (BaseException be) {
@@ -2112,7 +2115,8 @@ public class MultipartCNode extends MultipartD1Node implements CNode
         }
 
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe);
+			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe,
+					Settings.getConfiguration().getInteger("D1Client.CNode.replication.timeout", null));
 			if (is != null) 
 				is.close();
 			
@@ -2170,7 +2174,8 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		}
 
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe);
+			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe,
+					Settings.getConfiguration().getInteger("D1Client.CNode.replication.timeout", null));
 			if (is != null) 
 				is.close();
 	
@@ -2221,7 +2226,8 @@ public class MultipartCNode extends MultipartD1Node implements CNode
         	url.addNonEmptyParamPair("targetNodeSubject", targetNodeSubject.getValue());
 
 		try {
-			InputStream is = this.restClient.doGetRequest(url.getUrl());
+			InputStream is = this.restClient.doGetRequest(url.getUrl(),
+					Settings.getConfiguration().getInteger("D1Client.CNode.replication.timeout", null));
 			if (is != null) 
 				is.close();
 
@@ -2281,7 +2287,8 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		}
 
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe);
+			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe,
+					Settings.getConfiguration().getInteger("D1Client.CNode.replication.timeout", null));
 			if (is != null)
 				is.close();
 
@@ -2335,7 +2342,8 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
 
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe);
+			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe,
+					Settings.getConfiguration().getInteger("D1Client.CNode.replication.timeout", null));
 			if (is != null)
 				is.close();
 

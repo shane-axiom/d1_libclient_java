@@ -51,26 +51,26 @@ public interface MultipartRestClient {
 	 * @throws BaseException
 	 * @throws ClientSideException
 	 */
-	public InputStream doGetRequest(String url) 
+	public InputStream doGetRequest(String url, Integer timeoutMillisecs) 
 		throws BaseException, ClientSideException;
 
-	public InputStream doGetRequest(String url, boolean allowRedirect)
+	public InputStream doGetRequest(String url, Integer timeoutMillisecs, boolean allowRedirect)
 		throws BaseException, ClientSideException;
 
 	// TODO: remove Header from the signature to remove dependency on org.apache.http
-	public Header[] doGetRequestForHeaders(String url)
+	public Header[] doGetRequestForHeaders(String url, Integer timeoutMillisecs)
 		throws BaseException, ClientSideException;
 
-	public InputStream doDeleteRequest(String url)
+	public InputStream doDeleteRequest(String url, Integer timeoutMillisecs)
 		throws BaseException, ClientSideException;
 
-	public Header[] doHeadRequest(String url) 
+	public Header[] doHeadRequest(String url, Integer timeoutMillisecs) 
 		throws BaseException, ClientSideException;
 
-	public InputStream doPutRequest(String url, SimpleMultipartEntity entity) 
+	public InputStream doPutRequest(String url, SimpleMultipartEntity entity, Integer timeoutMillisecs) 
 		throws BaseException, ClientSideException;
 
-	public InputStream doPostRequest(String url, SimpleMultipartEntity entity) 
+	public InputStream doPostRequest(String url, SimpleMultipartEntity entity, Integer timeoutMillisecs) 
 		throws BaseException, ClientSideException;
 	
 	public String getLatestRequestUrl();

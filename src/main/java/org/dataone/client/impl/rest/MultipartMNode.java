@@ -29,6 +29,7 @@ import org.dataone.client.MNode;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.client.utils.ExceptionUtils;
+import org.dataone.configuration.Settings;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.IdentifierNotUnique;
@@ -310,7 +311,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
         Node node = null;
 
         try {
-        	InputStream is = this.restClient.doGetRequest(url.getUrl());
+        	InputStream is = this.restClient.doGetRequest(url.getUrl(),null);
         	node = deserializeServiceType(Node.class, is);
         } catch (BaseException be) {
             if (be instanceof NotImplemented)    throw (NotImplemented) be;
@@ -444,7 +445,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 
         InputStream is = null;
         try {
-        	is = this.restClient.doPostRequest(url.getUrl(),mpe);
+        	is = this.restClient.doPostRequest(url.getUrl(),mpe, null);
         	if (is != null)
 				is.close();
         } catch (BaseException be) {
@@ -541,12 +542,11 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);	
 		}
 
-//        client.setTimeouts(Settings.getConfiguration()
-//			.getInteger("D1Client.MNode.create.timeout", getDefaultSoTimeout()));
     	Identifier identifier = null;
 
     	try {
-    		InputStream is = this.restClient.doPostRequest(url.getUrl(),mpe);
+    		InputStream is = this.restClient.doPostRequest(url.getUrl(),mpe, 
+    				Settings.getConfiguration().getInteger("D1Client.MNode.create.timeout", null));
     		 identifier = deserializeServiceType(Identifier.class, is);
         } catch (BaseException be) {
             if (be instanceof IdentifierNotUnique)    throw (IdentifierNotUnique) be;
@@ -606,12 +606,13 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);	
 		}
     	  	
-//        client.setTimeouts(Settings.getConfiguration()
-//			.getInteger("D1Client.MNode.update.timeout", getDefaultSoTimeout()));
     	Identifier identifier = null;
     	
     	try {
-    		InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe);
+    		InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe, 
+    				Settings.getConfiguration()
+    				.getInteger("D1Client.MNode.update.timeout",null));
+    		
     		identifier = deserializeServiceType(Identifier.class, is);
         } catch (BaseException be) {
             if (be instanceof IdentifierNotUnique)    throw (IdentifierNotUnique) be;
@@ -708,7 +709,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 		    	
 		InputStream is = null;
 		try {
-			is = this.restClient.doPostRequest(url.getUrl(), mpe);
+			is = this.restClient.doPostRequest(url.getUrl(), mpe, null);
 			if (is != null)
 				is.close();
         } catch (BaseException be) {
@@ -763,11 +764,10 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
 		}
     	
-//        client.setTimeouts(Settings.getConfiguration()
-//			.getInteger("D1Client.MNode.replicate.timeout", getDefaultSoTimeout()));
     	InputStream is = null;
     	try {
-			is = this.restClient.doPostRequest(url.getUrl(),smpe);
+			is = this.restClient.doPostRequest(url.getUrl(),smpe, 
+					Settings.getConfiguration() .getInteger("D1Client.MNode.replicate.timeout",null));
 			if (is != null)
 				is.close();
         } catch (BaseException be) {
@@ -812,11 +812,10 @@ public class MultipartMNode extends MultipartD1Node implements MNode
         if (pid != null)
         	url.addNextPathElement(pid.getValue());
 
-//                client.setTimeouts(Settings.getConfiguration()
-//			.getInteger("D1Client.MNode.getReplica.timeout", getDefaultSoTimeout()));
         InputStream is = null;
         try {
-        	is = localizeInputStream(this.restClient.doGetRequest(url.getUrl()));
+        	is = localizeInputStream(this.restClient.doGetRequest(url.getUrl(), 
+        			Settings.getConfiguration().getInteger("D1Client.MNode.getReplica.timeout", null)));
     	
         } catch (BaseException be) {
             if (be instanceof InvalidToken)           throw (InvalidToken) be;
