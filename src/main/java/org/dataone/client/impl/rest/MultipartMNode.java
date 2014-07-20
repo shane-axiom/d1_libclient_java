@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
 
+import org.apache.commons.io.input.AutoCloseInputStream;
 import org.apache.commons.logging.LogFactory;
 import org.dataone.client.MNode;
 import org.dataone.client.exception.ClientSideException;
@@ -814,7 +815,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 
         InputStream is = null;
         try {
-        	is = localizeInputStream(this.restClient.doGetRequest(url.getUrl(), 
+        	is = new AutoCloseInputStream(this.restClient.doGetRequest(url.getUrl(), 
         			Settings.getConfiguration().getInteger("D1Client.MNode.getReplica.timeout", null)));
     	
         } catch (BaseException be) {
@@ -828,7 +829,6 @@ public class MultipartMNode extends MultipartD1Node implements MNode
             throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
         } 
         catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-        catch (IOException e)              {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 
         return is;
     }

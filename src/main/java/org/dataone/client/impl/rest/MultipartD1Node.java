@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.input.AutoCloseInputStream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.Header;
@@ -445,41 +446,46 @@ public abstract class MultipartD1Node implements D1Node {
     throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, 
       NotImplemented, InsufficientResources
     {
-        InputStream remoteStream = null;
-        InputStream localStream = null;
+        AutoCloseInputStream is = null;
         
-        boolean cacheMissed = false;
-        
+        // if we have it, stay local
+        boolean cacheMissed = false;        
         if (useLocalCache) {
             try {
                 byte[] data = LocalCache.instance().getData(pid);
-                localStream = new ByteArrayInputStream(data);
+                is = new AutoCloseInputStream(new ByteArrayInputStream(data));
+                return is;
                 
             } catch (NotCached e) {
                 cacheMissed = true;
             }
-        } 
-        else {
+        }
         
+        if (cacheMissed || !useLocalCache) 
+        {
         	D1Url url = new D1Url(this.getNodeBaseServiceUrl(),Constants.RESOURCE_OBJECTS);
-
         	try {
         		url.addNextPathElement(pid.getValue());
         	} catch (IllegalArgumentException e) {
+        		// can't throw InvalidRequest, so use NotFound (technically not invalid, but listObjects call)
         		throw new NotFound("0000", "'pid' cannot be null nor empty");
         	}
-
+        	InputStream remoteStream = null;
         	try {
         		remoteStream = this.restClient.doGetRequest(url.getUrl(),
         				Settings.getConfiguration().getInteger("D1Client.D1Node.get.timeout", null));
-        		byte[] bytes = IOUtils.toByteArray(remoteStream);
-
+        		
+        		
         		if (cacheMissed) {
-        			// Cache the result, and reset the stream mark
+        			// only get here if we useLocalCache is true
+        			// (we want to add it to the cache)
+        			byte[] bytes = IOUtils.toByteArray(is);
         			LocalCache.instance().putData(pid, bytes);
-        		}
-        		localStream = new ByteArrayInputStream(bytes); 
 
+        			is = new AutoCloseInputStream(new ByteArrayInputStream(bytes)); 
+        		} else {
+        			is = new AutoCloseInputStream(remoteStream);
+        		}
         	} catch (BaseException be) {
         		if (be instanceof InvalidToken)      throw (InvalidToken) be;
         		if (be instanceof NotAuthorized)     throw (NotAuthorized) be;
@@ -501,7 +507,7 @@ public abstract class MultipartD1Node implements D1Node {
         	}
         }
         
-        return localStream;
+        return is;
     }
  
     
@@ -999,9 +1005,9 @@ public abstract class MultipartD1Node implements D1Node {
         }
     	String finalUrl = url.getUrl() + "/" + encodedQuery;
 
-        InputStream is = null;
+        AutoCloseInputStream is = null;
         try {
-        	is = localizeInputStream(this.restClient.doGetRequest(finalUrl, null));
+        	is = new AutoCloseInputStream(this.restClient.doGetRequest(finalUrl, null));
 		}
         catch (BaseException be) {
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
@@ -1016,9 +1022,6 @@ public abstract class MultipartD1Node implements D1Node {
 		catch (ClientSideException e)            {
 			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
 		} 
-        catch (IOException e)                    {
-        	throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
-        }
         
 		return is;
 	}
@@ -1115,25 +1118,4 @@ public abstract class MultipartD1Node implements D1Node {
                     "Could not deserialize the " + domainClass.getCanonicalName() + ": " + e.getMessage());
 		}
 	}   
-	
-	/** 
-	 * Use this method to consume (presumably) a remote inputstream and effectively
-	 * release any connections and system resources.
-	 * 
-	 * @param is
-	 * @return a localized input stream
-	 * @throws IOException 
-	 */
-	protected InputStream localizeInputStream(InputStream is) throws IOException 
-	{
-		InputStream localizedStream = null;
-		try {
-			byte[] bytes = IOUtils.toByteArray(is);
-			localizedStream = new ByteArrayInputStream(bytes);
-		}
-		finally {
-			IOUtils.closeQuietly(is);
-		}
-		return localizedStream;
-	}
 }
