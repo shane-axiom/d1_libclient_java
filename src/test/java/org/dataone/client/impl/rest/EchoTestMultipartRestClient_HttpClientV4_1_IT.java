@@ -32,7 +32,9 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpException;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.dataone.client.exception.ClientSideException;
+import org.dataone.client.impl.rest.HttpMultipartRestClient;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.exceptions.BaseException;
@@ -42,8 +44,15 @@ import org.dataone.service.util.D1Url;
 import org.junit.Ignore;
 import org.junit.Test;
 
+/**
+ * This class uses httpclient v4.1.x era DefaultHttpClients to build MultipartRestClients
+ * with.
+ * @author rnahf
+ *
+ */
+//TODO: come up with tests for https schemes
 
-public class EchoTestMultipartRestClientIT {
+public class EchoTestMultipartRestClient_HttpClientV4_1_IT {
 	private static String echoNode = "http://dev-testing.dataone.org/testsvc";
 	private static String echoResource = "echo";
 	private static String mmEchoResource = "echomm";
@@ -55,7 +64,7 @@ public class EchoTestMultipartRestClientIT {
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		MultipartRestClient rc = new DefaultHttpMultipartRestClient();
+		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient());
 		String contentString = null;
 		try {
 			InputStream is = rc.doGetRequest(u.getUrl(), null);
@@ -76,7 +85,7 @@ public class EchoTestMultipartRestClientIT {
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		MultipartRestClient rc = new DefaultHttpMultipartRestClient();
+		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient());
 		String contentString = null;
 		try {
 			InputStream is = rc.doDeleteRequest(u.getUrl(), null);
@@ -98,7 +107,7 @@ public class EchoTestMultipartRestClientIT {
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		MultipartRestClient rc = new DefaultHttpMultipartRestClient();
+		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient());
 		Header[] headers = null;
 		try {
 			headers = rc.doHeadRequest(u.getUrl(), null);
@@ -120,7 +129,7 @@ public class EchoTestMultipartRestClientIT {
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		MultipartRestClient rc = new DefaultHttpMultipartRestClient();
+		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient());
 		String contentString = null;
 		try {
 			InputStream is = rc.doPutRequest(u.getUrl(),null, null);
@@ -141,7 +150,7 @@ public class EchoTestMultipartRestClientIT {
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		MultipartRestClient rc = new DefaultHttpMultipartRestClient();
+		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient());
 		String contentString = null;
 		try {
 			InputStream is = rc.doPostRequest(u.getUrl(),null, null);
@@ -166,7 +175,7 @@ public class EchoTestMultipartRestClientIT {
 		SimpleMultipartEntity ent = new SimpleMultipartEntity();
 		ent.addParamPart("Jabberwocky", "Twas brillig and the slithy tove, did gyre and gimble in the wabe");
 		ent.addFilePart("Jabberwocky2", "All mimsy was the borogrove, and the mome wrath ungrabe.");
-		MultipartRestClient rc = new DefaultHttpMultipartRestClient();
+		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient());
 		String contentString = null;
 		try {
 			InputStream is = rc.doPutRequest(u.getUrl(),ent, null);
@@ -190,7 +199,7 @@ public class EchoTestMultipartRestClientIT {
 		SimpleMultipartEntity ent = new SimpleMultipartEntity();
 		ent.addParamPart("Jabberwocky", "Twas brillig and the slithy tove, did gyre and gimble in the wabe");
 		ent.addFilePart("Jabberwocky2", "All mimsy was the borogrove, and the mome wrath ungrabe.");
-		MultipartRestClient rc = new DefaultHttpMultipartRestClient();
+		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient());
 		String contentString = null;
 		try {
 			InputStream is = rc.doPostRequest(u.getUrl(),ent, null);
@@ -211,7 +220,7 @@ public class EchoTestMultipartRestClientIT {
 		D1Url u = new D1Url(echoNode + "xx", "fakeResource");
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		MultipartRestClient rc = new DefaultHttpMultipartRestClient();
+		MultipartRestClient rc = new HttpMultipartRestClient(new DefaultHttpClient());
 
 		try {
 			InputStream is = rc.doGetRequest(u.getUrl(), null);
