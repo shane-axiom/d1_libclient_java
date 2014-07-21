@@ -5,12 +5,13 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Set;
 
+import org.dataone.client.D1Node;
+import org.dataone.client.NodeLocator;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.client.rest.impl.DefaultHttpMultipartRestClient;
 import org.dataone.client.v1.CNode;
 import org.dataone.client.v1.MNode;
-import org.dataone.client.v1.NodeLocator;
 import org.dataone.client.v1.impl.MultipartCNode;
 import org.dataone.client.v1.impl.NodeListNodeLocator;
 import org.dataone.client.v1.types.D1TypeBuilder;
@@ -71,27 +72,27 @@ public class NodeListNodeLocatorTest {
 	
 	@Test
 	public void testGetMNode_https() throws ClientSideException {
-		MNode mn = nodeLoc.getMNode(D1TypeBuilder.buildNodeReference("urn:node:MNhttps"));
+		D1Node mn = nodeLoc.getNode(D1TypeBuilder.buildNodeReference("urn:node:MNhttps"));
 	}
 	
 	@Test
 	public void testGetMNode_http() throws ClientSideException {
-		MNode mn = nodeLoc.getMNode(D1TypeBuilder.buildNodeReference("urn:node:MNhttp"));	
+		D1Node mn = nodeLoc.getNode(D1TypeBuilder.buildNodeReference("urn:node:MNhttp"));	
 	}
 	
 	@Test
 	public void testGetMNode_javaClass() throws ClientSideException {
-		MNode mn = nodeLoc.getMNode(D1TypeBuilder.buildNodeReference("urn:node:MNjava"));	
+		D1Node mn = nodeLoc.getNode(D1TypeBuilder.buildNodeReference("urn:node:MNjava"));	
 	}
 
 	@Test
 	public void testGetCNode_byNodeReference() throws ClientSideException {
-		CNode cn = nodeLoc.getCNode(D1TypeBuilder.buildNodeReference("urn:node:CN1foo"));
+		D1Node cn = nodeLoc.getNode(D1TypeBuilder.buildNodeReference("urn:node:CN1foo"));
 	}
 
 	@Test
 	public void testGetCNode() throws ClientSideException {
-		CNode cn = nodeLoc.getCNode();
+		D1Node cn = nodeLoc.getCNode();
 	}
 
 	@Test
@@ -102,8 +103,8 @@ public class NodeListNodeLocatorTest {
 						D1TypeBuilder.buildSubject("admin2")
 						);
 		
-		nodeLoc.putMNode(node,mn);
-		MNode x = nodeLoc.getMNode(node);
+		nodeLoc.putNode(node,mn);
+		D1Node x = nodeLoc.getNode(node);
 		assertTrue("Got MNode through NodeLocator", mn.equals(x));
 		assertEquals("Should now have 6 Nodes registered", 6, nodeLoc.listD1Nodes().size());
 		assertEquals("Should now have 4 MNodes registered", 4, nodeLoc.listD1Nodes(NodeType.MN).size());
@@ -115,8 +116,8 @@ public class NodeListNodeLocatorTest {
 		
 		CNode cn = new MultipartCNode(mrc, "someBaseUrl");
 		
-		nodeLoc.putCNode(node,cn);
-		CNode x = nodeLoc.getCNode(node);
+		nodeLoc.putNode(node,cn);
+		D1Node x = nodeLoc.getNode(node);
 		assertTrue("Got MNode through NodeLocator", cn.equals(x));
 		assertEquals("Should now have 6 Nodes registered", 6, nodeLoc.listD1Nodes().size());
 		assertEquals("Should now have 3 MNodes registered", 3, nodeLoc.listD1Nodes(NodeType.CN).size());

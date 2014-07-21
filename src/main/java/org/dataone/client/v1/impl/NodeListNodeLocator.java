@@ -22,10 +22,10 @@ package org.dataone.client.v1.impl;
 import java.net.URI;
 import java.util.Set;
 
+import org.dataone.client.NodeLocator;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.client.v1.CNode;
-import org.dataone.client.v1.NodeLocator;
 import org.dataone.service.types.v1.Node;
 import org.dataone.service.types.v1.NodeList;
 import org.dataone.service.types.v1.NodeType;
@@ -62,12 +62,12 @@ public class NodeListNodeLocator extends NodeLocator {
 		if (this.nodeList != null) {
 			for (Node node: nl.getNodeList()) {
 				if (node.getType().equals(NodeType.MN)) {
-					super.putMNode(
+					super.putNode(
 							node.getIdentifier(),
 							D1NodeFactory.buildMNode(this.restClient, URI.create(node.getBaseURL()))
 							);
 				} else if (node.getType().equals(NodeType.CN)) {
-					super.putCNode(
+					super.putNode(
 							node.getIdentifier(),
 							D1NodeFactory.buildCNode(this.restClient, URI.create(node.getBaseURL()))
 							);
