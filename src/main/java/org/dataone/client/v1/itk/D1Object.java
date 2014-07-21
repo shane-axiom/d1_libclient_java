@@ -589,7 +589,7 @@ public class D1Object {
      * @param objects the List of objects to check
      * @throws InvalidRequest if any Object in the list is null
      */
-    protected static void checkNotNull(List<Object> objects) throws InvalidRequest {
+    public static void checkNotNull(List<Object> objects) throws InvalidRequest {
         for (Object obj : objects) {
             if (obj == null) {
                 throw new InvalidRequest("0", "Parameter was null.  Provide all parameters.");

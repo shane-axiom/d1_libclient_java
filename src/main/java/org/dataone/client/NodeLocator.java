@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.dataone.client.v1;
+package org.dataone.client;
 
 import java.util.Map;
 import java.util.Map.Entry;
@@ -25,8 +25,9 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import org.dataone.client.D1Node;
 import org.dataone.client.exception.ClientSideException;
+import org.dataone.client.v1.CNode;
+import org.dataone.client.v1.MNode;
 import org.dataone.service.types.v1.NodeReference;
 import org.dataone.service.types.v1.NodeType;
 
@@ -45,107 +46,55 @@ public abstract class NodeLocator {
 	// but should it be a tree map? or the simpler HashMap?  
 	protected Map<NodeReference, D1Node> nodeMap = new TreeMap<NodeReference,D1Node>();
 	
-	/**
-	 * Puts a constructed MNode into the NodeLocator.
-	 * @param nodeRef
-	 * @param mnode
-	 */
-	//TODO: is the NodeReference parameter necessary, if contained in the MNode itself?
-	public void putMNode(NodeReference nodeRef, MNode mnode) {
-		nodeMap.put(nodeRef, mnode);
-	}
 	
 	/**
-	 * Puts a constructed CNode into the NodeLocator.
+	 * Puts a constructed node into the NodeLocator.
 	 * @param nodeRef
-	 * @param cnode
+	 * @param node
 	 */
 	//TODO: is the NodeReference parameter necessary, if contained in the CNode itself?
-	public void putCNode(NodeReference nodeRef, CNode cnode) {
-		nodeMap.put(nodeRef, cnode);
+	public void putNode(NodeReference nodeRef, D1Node node) {
+		nodeMap.put(nodeRef, node);
 	}
 	
 	/**
-	 * Return an MNode associated with the nodeReference parameter, or 
+	 * Return a Node associated with the nodeReference parameter, or 
 	 * throw a ClientSideException
 	 * 
 	 * @param nodeReference
 	 * @return
 	 * @throws ClientSideException
 	 */
-	public MNode getMNode(NodeReference nodeReference) 
+	public D1Node getNode(NodeReference nodeReference) 
 	throws ClientSideException 
 	{
 		D1Node d1n = nodeMap.get(nodeReference);
 		if (d1n == null) 
 			throw new ClientSideException("No node found for " + nodeReference.getValue(), null);
-		
-		if (d1n.getNodeType() != NodeType.MN) 
-			throw new ClientSideException("The node is not of type Member Node.", null);
 		
 		return (MNode) nodeMap.get(nodeReference);
 	}
 	
-	/**
-	 * Return a CNode associated with the nodeReference parameter, or 
-	 * throw a ClientSideException.
-	 * 
-	 * @param nodeReference
-	 * @return
-	 * @throws ClientSideException
-	 */
-	public CNode getCNode(NodeReference nodeReference) 
-	throws ClientSideException 
-	{
-		D1Node d1n = nodeMap.get(nodeReference);
-		if (d1n == null) 
-			throw new ClientSideException("No node found for " + nodeReference.getValue(), null);
-		
-		if (d1n.getNodeType() != NodeType.CN) 
-			throw new ClientSideException("The node is not of type Coordinating Node.",null);
-		
-		return (CNode) nodeMap.get(nodeReference);
-	}
-	
 	
 	/**
-	 * Return an MNode associated with the baseUrl parameter, or 
+	 * Return a node associated with the baseUrl parameter, or 
 	 * throw a ClientSideException
 	 * 
 	 * @param baseUrl
 	 * @return
 	 * @throws ClientSideException
 	 */
-	public MNode getMNode(String baseUrl) 
+	public D1Node getNode(String baseUrl) 
 	throws ClientSideException
 	{
 		for (Entry<NodeReference, D1Node> en : nodeMap.entrySet()) {
 			if (baseUrl.equals(en.getValue().getNodeBaseServiceUrl())) {
-				return (MNode) en.getValue();
+				return en.getValue();
 			}
 		}
 		throw new ClientSideException("No node found for " + baseUrl);
 	}
-	
-	
-	/**
-	 * Return a CNode associated with the baseUrl parameter, or 
-	 * throw a ClientSideException
-	 * 
-	 * @param baseUrl
-	 * @return
-	 * @throws ClientSideException
-	 */
-	public CNode getCNode(String baseUrl) 
-	throws ClientSideException
-	{
-		for (Entry<NodeReference, D1Node> en : nodeMap.entrySet()) {
-			if (baseUrl.equals(en.getValue().getNodeBaseServiceUrl())) {
-				return (CNode) en.getValue();
-			}
-		}
-		throw new ClientSideException("No node found for " + baseUrl);
-	}
+
 	
 	/**
 	 * Returns the set of NodeReferences in the NodeLocator
@@ -180,5 +129,5 @@ public abstract class NodeLocator {
 	 * 
 	 * @return
 	 */
-	public abstract CNode getCNode() throws ClientSideException;
+	public abstract D1Node getCNode() throws ClientSideException;
 }
