@@ -26,8 +26,8 @@ import java.net.URISyntaxException;
 import java.util.Map;
 
 import org.dataone.client.exception.ClientSideException;
+import org.dataone.client.rest.DefaultHttpMultipartRestClient;
 import org.dataone.client.rest.MultipartRestClient;
-import org.dataone.client.rest.impl.DefaultHttpMultipartRestClient;
 import org.dataone.client.v1.CNode;
 import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.NotImplemented;

@@ -28,7 +28,6 @@ import org.apache.commons.io.input.AutoCloseInputStream;
 import org.apache.commons.logging.LogFactory;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.rest.MultipartRestClient;
-import org.dataone.client.rest.impl.MultipartD1Node;
 import org.dataone.client.utils.ExceptionUtils;
 import org.dataone.client.v1.MNode;
 import org.dataone.configuration.Settings;

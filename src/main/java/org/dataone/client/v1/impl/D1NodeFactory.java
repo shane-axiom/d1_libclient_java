@@ -6,8 +6,8 @@ import java.net.URI;
 
 import org.apache.commons.lang.StringUtils;
 import org.dataone.client.exception.ClientSideException;
+import org.dataone.client.rest.DefaultHttpMultipartRestClient;
 import org.dataone.client.rest.MultipartRestClient;
-import org.dataone.client.rest.impl.DefaultHttpMultipartRestClient;
 import org.dataone.client.v1.CNode;
 import org.dataone.client.v1.MNode;
 import org.dataone.client.v1.types.D1TypeBuilder;

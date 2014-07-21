@@ -20,7 +20,7 @@
  * $Id$
  */
 
-package org.dataone.client.rest.impl;
+package org.dataone.client.rest;
 
 
 import java.io.IOException;

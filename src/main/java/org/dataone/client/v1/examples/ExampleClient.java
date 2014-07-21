@@ -22,14 +22,10 @@ package org.dataone.client.v1.examples;
 import java.io.InputStream;
 import java.io.StringBufferInputStream;
 import java.math.BigInteger;
-import java.net.URI;
 
 import org.dataone.client.auth.ClientIdentityManager;
 import org.dataone.client.exception.ClientSideException;
-import org.dataone.client.rest.MultipartRestClient;
-import org.dataone.client.rest.impl.DefaultHttpMultipartRestClient;
 import org.dataone.client.v1.MNode;
-import org.dataone.client.v1.impl.D1NodeFactory;
 import org.dataone.client.v1.itk.D1Client;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.ServiceFailure;
