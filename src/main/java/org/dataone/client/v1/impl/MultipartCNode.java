@@ -29,7 +29,6 @@ import java.util.Set;
 import org.apache.commons.logging.LogFactory;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.rest.MultipartRestClient;
-import org.dataone.client.rest.impl.MultipartD1Node;
 import org.dataone.client.utils.ExceptionUtils;
 import org.dataone.client.v1.CNode;
 import org.dataone.client.v1.formats.ObjectFormatCache;
