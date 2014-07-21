@@ -20,23 +20,23 @@
  * $Id$
  */
 
-package org.dataone.client.itk;
+package org.dataone.client.v1.itk;
 
 import java.io.IOException;
 import java.net.URI;
 
-import org.dataone.client.CNode;
-import org.dataone.client.MNode;
-import org.dataone.client.NodeLocator;
 import org.dataone.client.exception.ClientSideException;
-import org.dataone.client.impl.D1NodeFactory;
-import org.dataone.client.impl.NodeListNodeLocator;
-import org.dataone.client.impl.SettingsContextNodeLocator;
-import org.dataone.client.impl.rest.DefaultHttpMultipartRestClient;
-import org.dataone.client.impl.rest.MultipartCNode;
 import org.dataone.client.rest.MultipartRestClient;
+import org.dataone.client.rest.impl.DefaultHttpMultipartRestClient;
 import org.dataone.client.types.ObsoletesChain;
 import org.dataone.client.utils.ExceptionUtils;
+import org.dataone.client.v1.CNode;
+import org.dataone.client.v1.MNode;
+import org.dataone.client.v1.NodeLocator;
+import org.dataone.client.v1.impl.D1NodeFactory;
+import org.dataone.client.v1.impl.MultipartCNode;
+import org.dataone.client.v1.impl.NodeListNodeLocator;
+import org.dataone.client.v1.impl.SettingsContextNodeLocator;
 import org.dataone.service.exceptions.IdentifierNotUnique;
 import org.dataone.service.exceptions.InsufficientResources;
 import org.dataone.service.exceptions.InvalidRequest;

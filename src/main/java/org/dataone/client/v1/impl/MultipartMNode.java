@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-package org.dataone.client.impl.rest;
+package org.dataone.client.v1.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,10 +26,11 @@ import java.util.Date;
 
 import org.apache.commons.io.input.AutoCloseInputStream;
 import org.apache.commons.logging.LogFactory;
-import org.dataone.client.MNode;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.rest.MultipartRestClient;
+import org.dataone.client.rest.impl.MultipartD1Node;
 import org.dataone.client.utils.ExceptionUtils;
+import org.dataone.client.v1.MNode;
 import org.dataone.configuration.Settings;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.exceptions.BaseException;

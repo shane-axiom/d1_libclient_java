@@ -32,8 +32,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.dataone.client.exception.ClientSideException;
-import org.dataone.client.itk.DataPackage;
-import org.dataone.client.types.D1TypeBuilder;
+import org.dataone.client.v1.itk.DataPackage;
+import org.dataone.client.v1.types.D1TypeBuilder;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.types.v1.Identifier;
 import org.dspace.foresite.OREException;

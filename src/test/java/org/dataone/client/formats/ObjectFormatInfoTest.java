@@ -24,6 +24,7 @@ package org.dataone.client.formats;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import org.dataone.client.v1.formats.ObjectFormatInfo;
 import org.dataone.service.types.v1.ObjectFormat;
 import org.dataone.service.types.v1.ObjectFormatIdentifier;
 import org.junit.Test;

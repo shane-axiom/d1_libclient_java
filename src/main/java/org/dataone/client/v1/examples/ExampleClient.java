@@ -17,20 +17,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.dataone.client.examples;
+package org.dataone.client.v1.examples;
 
 import java.io.InputStream;
 import java.io.StringBufferInputStream;
 import java.math.BigInteger;
 import java.net.URI;
 
-import org.dataone.client.MNode;
 import org.dataone.client.auth.ClientIdentityManager;
 import org.dataone.client.exception.ClientSideException;
-import org.dataone.client.impl.D1NodeFactory;
-import org.dataone.client.impl.rest.DefaultHttpMultipartRestClient;
-import org.dataone.client.itk.D1Client;
 import org.dataone.client.rest.MultipartRestClient;
+import org.dataone.client.rest.impl.DefaultHttpMultipartRestClient;
+import org.dataone.client.v1.MNode;
+import org.dataone.client.v1.impl.D1NodeFactory;
+import org.dataone.client.v1.itk.D1Client;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.types.v1.Checksum;

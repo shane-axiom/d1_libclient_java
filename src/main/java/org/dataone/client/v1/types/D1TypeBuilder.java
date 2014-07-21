@@ -20,7 +20,7 @@
  * $Id$
  */
 
-package org.dataone.client.types;
+package org.dataone.client.v1.types;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,7 +29,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 
 import org.apache.commons.io.input.CountingInputStream;
-import org.dataone.client.formats.ObjectFormatCache;
+import org.dataone.client.v1.formats.ObjectFormatCache;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.ServiceFailure;

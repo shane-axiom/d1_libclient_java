@@ -18,8 +18,9 @@
  * limitations under the License.
  */
 
-package org.dataone.client;
+package org.dataone.client.v1;
 
+import org.dataone.client.D1Node;
 import org.dataone.service.cn.v1.CNAuthorization;
 import org.dataone.service.cn.v1.CNCore;
 import org.dataone.service.cn.v1.CNIdentity;

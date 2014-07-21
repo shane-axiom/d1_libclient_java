@@ -25,7 +25,7 @@ package org.dataone.client;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import org.dataone.client.formats.ObjectFormatCache;
+import org.dataone.client.v1.formats.ObjectFormatCache;
 import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.InsufficientResources;
 import org.dataone.service.exceptions.InvalidRequest;

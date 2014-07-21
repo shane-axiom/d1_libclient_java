@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-package org.dataone.client.itk;
+package org.dataone.client.v1.itk;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;

@@ -32,7 +32,7 @@ import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.dataone.client.impl.rest.RestClient;
+import org.dataone.client.rest.impl.RestClient;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.util.D1Url;
 import org.junit.Test;

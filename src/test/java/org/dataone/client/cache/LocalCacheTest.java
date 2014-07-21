@@ -27,6 +27,7 @@ import java.util.Random;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.dataone.client.exception.NotCached;
+import org.dataone.client.v1.cache.LocalCache;
 import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.types.v1.SystemMetadata;
 import org.junit.Test;

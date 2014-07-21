@@ -27,7 +27,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.commons.io.IOUtils;
-import org.dataone.client.impl.rest.MultipartCNode;
+import org.dataone.client.v1.impl.MultipartCNode;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;

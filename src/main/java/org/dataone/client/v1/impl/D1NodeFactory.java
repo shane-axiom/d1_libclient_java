@@ -1,18 +1,16 @@
-package org.dataone.client.impl;
+package org.dataone.client.v1.impl;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 
 import org.apache.commons.lang.StringUtils;
-import org.dataone.client.CNode;
-import org.dataone.client.MNode;
 import org.dataone.client.exception.ClientSideException;
-import org.dataone.client.impl.rest.DefaultHttpMultipartRestClient;
-import org.dataone.client.impl.rest.MultipartCNode;
-import org.dataone.client.impl.rest.MultipartMNode;
 import org.dataone.client.rest.MultipartRestClient;
-import org.dataone.client.types.D1TypeBuilder;
+import org.dataone.client.rest.impl.DefaultHttpMultipartRestClient;
+import org.dataone.client.v1.CNode;
+import org.dataone.client.v1.MNode;
+import org.dataone.client.v1.types.D1TypeBuilder;
 import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.types.v1.NodeReference;
 import org.dataone.service.types.v1.Subject;

@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.dataone.client.impl.rest;
+package org.dataone.client.v1.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,11 +27,12 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.logging.LogFactory;
-import org.dataone.client.CNode;
 import org.dataone.client.exception.ClientSideException;
-import org.dataone.client.formats.ObjectFormatCache;
 import org.dataone.client.rest.MultipartRestClient;
+import org.dataone.client.rest.impl.MultipartD1Node;
 import org.dataone.client.utils.ExceptionUtils;
+import org.dataone.client.v1.CNode;
+import org.dataone.client.v1.formats.ObjectFormatCache;
 import org.dataone.configuration.Settings;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.cn.v1.CNCore;
