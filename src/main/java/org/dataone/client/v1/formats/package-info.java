@@ -17,28 +17,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.dataone.client;
-
-import org.dataone.service.mn.tier1.v1.MNCore;
-import org.dataone.service.mn.tier1.v1.MNRead;
-import org.dataone.service.mn.tier2.v1.MNAuthorization;
-import org.dataone.service.mn.tier3.v1.MNStorage;
-import org.dataone.service.mn.tier4.v1.MNReplication;
-import org.dataone.service.mn.v1.MNQuery;
-
 
 /**
- * An aggregated API that represents all of the possible services reachable at 
- * a Member Node, defined in the org.dataone.service.mn package.  
- * 
- * It also extends the D1Node interface which is used to associate the baseUrl
- * and NodeId / NodeReference.
- * 
- * @author rnahf
- *
+ * Package org.dataone.client.formats defines a set of utility classes for
+ * accessing information about ObjectFormats that is useful in constructing
+ * nodes and clients.
  */
-public interface MNode 
-extends D1Node,
-/* and all of the MN service interfaces */
-MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery 
-{}
+package org.dataone.client.v1.formats;

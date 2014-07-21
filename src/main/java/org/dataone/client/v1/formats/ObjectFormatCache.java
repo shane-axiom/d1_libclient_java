@@ -20,14 +20,14 @@
  * $Id$
  */
 
-package org.dataone.client.formats;
+package org.dataone.client.v1.formats;
 
 import java.util.Date;
 
 import org.apache.log4j.Logger;
-import org.dataone.client.CNode;
-import org.dataone.client.impl.rest.MultipartCNode;
-import org.dataone.client.itk.D1Client;
+import org.dataone.client.v1.CNode;
+import org.dataone.client.v1.impl.MultipartCNode;
+import org.dataone.client.v1.itk.D1Client;
 import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.NotImplemented;

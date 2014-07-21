@@ -19,7 +19,7 @@
  * 
  * $Id$
  */
-package org.dataone.client.formats;
+package org.dataone.client.v1.formats;
 
 import java.io.BufferedReader;
 import java.io.File;

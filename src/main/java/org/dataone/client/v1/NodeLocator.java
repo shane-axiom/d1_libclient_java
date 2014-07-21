@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.dataone.client;
+package org.dataone.client.v1;
 
 import java.util.Map;
 import java.util.Map.Entry;
@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import org.dataone.client.D1Node;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.service.types.v1.NodeReference;
 import org.dataone.service.types.v1.NodeType;

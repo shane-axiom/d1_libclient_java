@@ -15,9 +15,9 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import org.apache.commons.io.IOUtils;
-import org.dataone.client.MNode;
-import org.dataone.client.formats.ObjectFormatCache;
-import org.dataone.client.types.D1TypeBuilder;
+import org.dataone.client.v1.MNode;
+import org.dataone.client.v1.formats.ObjectFormatCache;
+import org.dataone.client.v1.types.D1TypeBuilder;
 import org.dataone.service.exceptions.IdentifierNotUnique;
 import org.dataone.service.exceptions.InsufficientResources;
 import org.dataone.service.exceptions.InvalidRequest;

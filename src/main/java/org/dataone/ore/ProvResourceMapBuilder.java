@@ -39,7 +39,6 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.dataone.client.types.D1TypeBuilder;
 import org.dataone.configuration.Settings;
 import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.util.EncodingUtilities;
@@ -607,7 +606,8 @@ public class ProvResourceMapBuilder {
 		for (AggregatedResource ar: resources) {
 			List<Triple> idTriples = ar.listTriples(idSelector);
 			if (!idTriples.isEmpty()) {  // need an identifier to do anything
-				Identifier arId = D1TypeBuilder.buildIdentifier(idTriples.get(0).getObjectLiteral());
+				Identifier arId = new Identifier();
+				arId.setValue(idTriples.get(0).getObjectLiteral());
 				idHash.put(ar.getURI().toString(), arId);
 			} else {
 				throw new OREException("Aggregated resource '" + ar.getURI().toString() + 

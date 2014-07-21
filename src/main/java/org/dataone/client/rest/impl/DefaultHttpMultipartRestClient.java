@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.dataone.client.impl.rest;
+package org.dataone.client.rest.impl;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.config.Registry;

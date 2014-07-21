@@ -16,6 +16,6 @@ public class ExampleClientTest {
 
   @Test
   public void runExample() throws Exception {
-	  org.dataone.client.examples.ExampleClient.main(new String[]{});
+	  org.dataone.client.v1.examples.ExampleClient.main(new String[]{});
   }
 }

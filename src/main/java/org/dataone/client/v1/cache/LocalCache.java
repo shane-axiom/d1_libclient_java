@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-package org.dataone.client.cache;
+package org.dataone.client.v1.cache;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

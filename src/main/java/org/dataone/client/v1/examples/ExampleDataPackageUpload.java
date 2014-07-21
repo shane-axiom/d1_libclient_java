@@ -19,7 +19,7 @@
  * 
  * $Id$
  */
-package org.dataone.client.examples;
+package org.dataone.client.v1.examples;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -37,11 +37,11 @@ import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.dataone.client.CNode;
-import org.dataone.client.MNode;
 import org.dataone.client.auth.ClientIdentityManager;
-import org.dataone.client.itk.D1Client;
-import org.dataone.client.types.D1TypeBuilder;
+import org.dataone.client.v1.CNode;
+import org.dataone.client.v1.MNode;
+import org.dataone.client.v1.itk.D1Client;
+import org.dataone.client.v1.types.D1TypeBuilder;
 import org.dataone.ore.ResourceMapFactory;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.IdentifierNotUnique;

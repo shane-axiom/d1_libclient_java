@@ -27,9 +27,9 @@ import static org.junit.Assert.fail;
 import java.util.Arrays;
 import java.util.List;
 
-import org.dataone.client.CNode;
-import org.dataone.client.itk.D1Client;
-import org.dataone.client.itk.D1Object;
+import org.dataone.client.v1.CNode;
+import org.dataone.client.v1.itk.D1Client;
+import org.dataone.client.v1.itk.D1Object;
 import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.InvalidRequest;
 import org.dataone.service.exceptions.NotImplemented;

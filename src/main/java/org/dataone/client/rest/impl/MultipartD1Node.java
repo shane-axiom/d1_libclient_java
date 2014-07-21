@@ -20,7 +20,7 @@
  * $Id$
  */
 
-package org.dataone.client.impl.rest;
+package org.dataone.client.rest.impl;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -36,11 +36,11 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.Header;
 import org.dataone.client.D1Node;
-import org.dataone.client.cache.LocalCache;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.exception.NotCached;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.client.utils.ExceptionUtils;
+import org.dataone.client.v1.cache.LocalCache;
 import org.dataone.configuration.Settings;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.exceptions.BaseException;

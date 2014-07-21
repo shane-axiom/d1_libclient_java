@@ -17,15 +17,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.dataone.client.impl;
+package org.dataone.client.v1.impl;
 
 import java.net.URI;
 import java.util.Set;
 
-import org.dataone.client.CNode;
-import org.dataone.client.NodeLocator;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.rest.MultipartRestClient;
+import org.dataone.client.v1.CNode;
+import org.dataone.client.v1.NodeLocator;
 import org.dataone.service.types.v1.Node;
 import org.dataone.service.types.v1.NodeList;
 import org.dataone.service.types.v1.NodeType;

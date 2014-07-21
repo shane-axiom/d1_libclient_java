@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.dataone.client.impl;
+package org.dataone.client.v1.impl;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -25,10 +25,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
 
-import org.dataone.client.CNode;
 import org.dataone.client.exception.ClientSideException;
-import org.dataone.client.impl.rest.DefaultHttpMultipartRestClient;
 import org.dataone.client.rest.MultipartRestClient;
+import org.dataone.client.rest.impl.DefaultHttpMultipartRestClient;
+import org.dataone.client.v1.CNode;
 import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
