@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.dataone.client.v1.impl;
+package org.dataone.client.v2.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,12 +32,12 @@ import org.dataone.client.exception.NotCached;
 import org.dataone.client.rest.MultipartD1Node;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.client.utils.ExceptionUtils;
-import org.dataone.client.v1.CNode;
+import org.dataone.client.v2.CNode;
 import org.dataone.client.v1.cache.LocalCache;
 import org.dataone.client.v2.formats.ObjectFormatCache;
 import org.dataone.configuration.Settings;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
-import org.dataone.service.cn.v1.CNCore;
+import org.dataone.service.cn.v2.CNCore;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.IdentifierNotUnique;
 import org.dataone.service.exceptions.InsufficientResources;
@@ -54,17 +54,16 @@ import org.dataone.service.exceptions.VersionMismatch;
 import org.dataone.service.types.v1.AccessPolicy;
 import org.dataone.service.types.v1.Checksum;
 import org.dataone.service.types.v1.ChecksumAlgorithmList;
-import org.dataone.service.types.v1.Event;
 import org.dataone.service.types.v1.Group;
 import org.dataone.service.types.v1.Identifier;
-import org.dataone.service.types.v1.Log;
-import org.dataone.service.types.v1.Node;
-import org.dataone.service.types.v1.NodeList;
+import org.dataone.service.types.v2.Log;
+import org.dataone.service.types.v2.Node;
+import org.dataone.service.types.v2.NodeList;
 import org.dataone.service.types.v1.NodeReference;
 import org.dataone.service.types.v1.NodeType;
-import org.dataone.service.types.v1.ObjectFormat;
+import org.dataone.service.types.v2.ObjectFormat;
 import org.dataone.service.types.v1.ObjectFormatIdentifier;
-import org.dataone.service.types.v1.ObjectFormatList;
+import org.dataone.service.types.v2.ObjectFormatList;
 import org.dataone.service.types.v1.ObjectList;
 import org.dataone.service.types.v1.ObjectLocationList;
 import org.dataone.service.types.v1.Person;
@@ -74,10 +73,8 @@ import org.dataone.service.types.v1.ReplicationStatus;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1.Subject;
 import org.dataone.service.types.v1.SubjectInfo;
-import org.dataone.service.types.v1.SystemMetadata;
+import org.dataone.service.types.v2.SystemMetadata;
 import org.dataone.service.types.v1.util.NodelistUtil;
-import org.dataone.service.types.v1_1.QueryEngineDescription;
-import org.dataone.service.types.v1_1.QueryEngineList;
 import org.dataone.service.util.Constants;
 import org.dataone.service.util.D1Url;
 import org.jibx.runtime.JiBXException;
@@ -112,8 +109,6 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 {
 	protected static org.apache.commons.logging.Log log = LogFactory.getLog(MultipartCNode.class);
 
-	private Map<String, String> nodeId2URLMap;
-	private long lastNodeListRefreshTimeMS = 0;
     private Integer nodelistRefreshIntervalSeconds = 2 * 60;
 	
  //   private static final String REPLICATION_TIMEOUT_PROPERTY = "D1Client.CNode.replication.timeout";
@@ -186,144 +181,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		url.addNextPathElement(CNCore.SERVICE_VERSION);
 		return url.getUrl();
 	}
-
-	/**
-     * Find the base URL for a Node based on the Node's identifier as it was 
-     * registered with the Coordinating Node.  This method does the lookup on
-     * cached NodeList information.  The cache is refreshed periodically.
-     *  
-     * @param nodeId the identifier value of the node to look up
-     * @return the base URL of the node's service endpoints
-     * @throws ServiceFailure 
-     * @throws NotImplemented 
-     */
-    public String lookupNodeBaseUrl(String nodeId) throws ServiceFailure, NotImplemented {
-    	
-    	// prevents null pointer exception from being thrown at the map get(nodeId) call
-    	if (nodeId == null) {
-    		nodeId = "";
-    	}
-    	String url = null;
-    	if (isNodeMapStale()) {
-    		refreshNodeMap();           
-    		url = nodeId2URLMap.get(nodeId);
-    	} else {
-    		url = nodeId2URLMap.get(nodeId);
-    		if (url == null) {
-    			// refresh the nodeMap, maybe that will help.
-    			refreshNodeMap();
-    			url = nodeId2URLMap.get(nodeId);
-    		}
-    	}
-        return url;
-    }
     
-    /**
-     * Find the base URL for a Node based on the Node's identifier as it was 
-     * registered with the Coordinating Node.  This method does the lookup on
-     * cached NodeList information.
-     *  
-     * @param nodeRef a NodeReference for the node to look up
-     * @return the base URL of the node's service endpoints
-     * @throws ServiceFailure 
-     * @throws NotImplemented 
-     */
-    public String lookupNodeBaseUrl(NodeReference nodeRef) throws ServiceFailure, NotImplemented {
-    	
-    	// prevents null pointer exception from being thrown at the map get(nodeId) call
-    	String nodeId = (nodeRef == null) ? "" : nodeRef.getValue();
-    	if (nodeId == null)
-    		nodeId = "";
-    		
-    	String url = null;
-    	if (isNodeMapStale()) {
-    		refreshNodeMap();           
-    		url = nodeId2URLMap.get(nodeId);
-    	} else {
-    		url = nodeId2URLMap.get(nodeId);
-    		if (url == null) {
-    			// refresh the nodeMap, maybe that will help.
-    			refreshNodeMap();
-    			url = nodeId2URLMap.get(nodeId);
-    		}
-    	}
-        return url;
-    }
-	
-    /**
-     * Find the node identifier for a Node based on the base URL that is used to
-     * access its services by looking up the registration for the node at the 
-     * Coordinating Node.  This method does the lookup on
-     * cached NodeList information.
-     * @param nodeBaseUrl the base url for Node service access
-     * @return the identifier of the Node
-     * @throws NotImplemented 
-     * @throws ServiceFailure 
-     */
-    // TODO: check other packages to see if we can return null instead of empty string
-    // (one dependency is d1_client_r D1Client)
-    public String lookupNodeId(String nodeBaseUrl) throws ServiceFailure, NotImplemented {
-        String nodeId = "";
-        if (isNodeMapStale()) {
-    		refreshNodeMap();
-        }
-        for (String key : nodeId2URLMap.keySet()) {
-            if (nodeBaseUrl.equals(nodeId2URLMap.get(key))) {
-                // We have a match, so record it and break
-                nodeId = key;
-                break;
-            }
-        }
-        return nodeId;
-    }
-
-    /**
-     * Initialize the map of nodes (pairs of NodeId/NodeUrl) by doing a listNodes() call
-     * and mapping baseURLs to the Identifiers.  These values are used later to
-     * look up a node's URL based on its ID, or its ID based on its URL.
-     * @throws ServiceFailure 
-     * @throws NotImplemented 
-     */
-    private void refreshNodeMap() throws ServiceFailure, NotImplemented
-    { 		
-    	nodeId2URLMap = NodelistUtil.mapNodeList(listNodes());
-    }
- 
-    
-	/**
-	 * Return the set of Node IDs for all of the nodes registered to the CN 
-	 * @return
-	 * @throws NotImplemented 
-	 * @throws ServiceFailure 
-	 */
-	public Set<String> listNodeIds() throws ServiceFailure, NotImplemented {
-    	if (isNodeMapStale()) {
-    		refreshNodeMap();
-    	}
-    	return nodeId2URLMap.keySet();
-    }
-	
-    
-    private boolean isNodeMapStale()
-    {
-    	if (nodeId2URLMap == null) 
-    		return true;
-    	
-    	Date now = new Date();
-    	long nowMS = now.getTime();
-        DateFormat df = DateFormat.getDateTimeInstance();
-        df.format(now);
-
-        // convert seconds to milliseconds
-        long refreshIntervalMS = this.nodelistRefreshIntervalSeconds * 1000L;
-        if (nowMS - this.lastNodeListRefreshTimeMS > refreshIntervalMS) {
-            this.lastNodeListRefreshTimeMS = nowMS;
-            log.info("  CNode nodelist refresh: new cached time: " + df.format(now));
-            return true;
-        } else {
-            return false;
-        }
-    }
     
 	/* (non-Javadoc)
 	 * @see org.dataone.client.CNode#listFormats()
@@ -412,7 +270,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	
 	@Override
     public ObjectList listObjects(Session session, Date fromDate, Date toDate, 
-      ObjectFormatIdentifier formatid, Boolean replicaStatus, Integer start, Integer count) 
+      ObjectFormatIdentifier formatid, Identifier identifier, Boolean replicaStatus, Integer start, Integer count) 
     		  throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
     {
     	
@@ -426,6 +284,8 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		url.addDateParamPair("toDate", toDate);
 		if (formatid != null) 
 			url.addNonEmptyParamPair("formatId", formatid.getValue());
+		if (identifier != null) 
+			url.addNonEmptyParamPair("identifier", identifier.getValue());
 		if (replicaStatus != null) {
 			if (replicaStatus) {
 				url.addNonEmptyParamPair("replicaStatus", 1);
@@ -457,14 +317,6 @@ public class MultipartCNode extends MultipartD1Node implements CNode
         return objectList;
     }
 	
-	@Override
-    public ObjectList listObjects(Date fromDate, Date toDate, 
-      ObjectFormatIdentifier formatid, Boolean replicaStatus, Integer start, Integer count) 
-    		  throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
-    {
-		return this.listObjects(null, fromDate, toDate, formatid, replicaStatus, start, count);
-    }
-	
 	
     /* (non-Javadoc)
 	 * @see org.dataone.client.CNode#listChecksumAlgorithms()
@@ -491,7 +343,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 
 	public Log getLogRecords(Session session, Date fromDate, Date toDate,
-			Event event, String pidFilter, Integer start, Integer count) 
+			String event, String pidFilter, Integer start, Integer count) 
 	throws InvalidToken, InvalidRequest, ServiceFailure,
 	NotAuthorized, NotImplemented, InsufficientResources
 	{
@@ -502,7 +354,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		url.addDateParamPair("toDate", toDate);
             
     	if (event != null)
-            url.addNonEmptyParamPair("event", event.xmlValue());
+            url.addNonEmptyParamPair("event", event);
     	
     	url.addNonEmptyParamPair("start", start);  
     	url.addNonEmptyParamPair("count", count);
@@ -532,14 +384,29 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		return log;
 	}
 	
-	public Log getLogRecords(Date fromDate, Date toDate,
-			Event event, String pidFilter, Integer start, Integer count) 
-	throws InvalidToken, InvalidRequest, ServiceFailure,
-	NotAuthorized, NotImplemented, InsufficientResources
-	{
-		return this.getLogRecords(null, fromDate, toDate, event, pidFilter, start, count);
-	}
-		
+	@Override
+	public Node getCapabilities() 
+    	    throws NotImplemented, ServiceFailure
+    {
+    	// assemble the url
+        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_NODE);
+
+        // send the request
+        Node node = null;
+
+        try {
+        	InputStream is = this.restClient.doGetRequest(url.getUrl(),null);
+        	node = deserializeServiceType(Node.class, is);
+        } catch (BaseException be) {
+            if (be instanceof NotImplemented)    throw (NotImplemented) be;
+            if (be instanceof ServiceFailure)    throw (ServiceFailure) be;
+                    
+            throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
+        } 
+        catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
+
+        return node;
+    }
 
 	
 	/* (non-Javadoc)
@@ -567,18 +434,34 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 		return nodelist;
 	}
-
-
-	/* (non-Javadoc)
-	 * @see org.dataone.client.CNode#reserveIdentifier(org.dataone.service.types.v1.Identifier)
+    
+    /* (non-Javadoc)
+	 * @see org.dataone.client.CNode#listNodes()
 	 */
-	@Override
-	public Identifier reserveIdentifier(Identifier pid)
-	throws InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, 
-	NotImplemented, InvalidRequest
-	{
-		return reserveIdentifier(this.session, pid);
+    @Override
+	public Node getNodeCapabilities(NodeReference nodeRef) throws NotImplemented, ServiceFailure
+    {
+        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_NODE);
+        url.addNextPathElement(nodeRef.getValue());
+        
+		// send the request
+		Node node = null;
+
+		try {
+			InputStream is = this.restClient.doGetRequest(url.getUrl(), null);
+			node = deserializeServiceType(Node.class, is);
+			
+		} catch (BaseException be) {
+			if (be instanceof NotImplemented)         throw (NotImplemented) be;
+			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
+
+			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
+		} 
+		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
+
+		return node;
 	}
+
     
 	/* (non-Javadoc)
 	 * @see org.dataone.client.CNode#reserveIdentifier(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier)
@@ -619,16 +502,6 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	}
 	
 
-	/* (non-Javadoc)
-	 * @see org.dataone.client.CNode#hasReservation(org.dataone.service.types.v1.Subject, org.dataone.service.types.v1.Identifier)
-	 */
-	@Override
-	public boolean hasReservation(Subject subject, Identifier pid)
-	throws InvalidToken, ServiceFailure,  NotFound, NotAuthorized, 
-	NotImplemented, IdentifierNotUnique
-	{
-		return hasReservation(this.session, subject, pid);
-	}
 	/* (non-Javadoc)
 	 * @see org.dataone.client.CNode#hasReservation(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Subject, org.dataone.service.types.v1.Identifier)
 	 */
@@ -673,19 +546,6 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		}
 
 		return true;
-	}
-
-
-	/* (non-Javadoc)
-	 * @see org.dataone.client.CNode#create(org.dataone.service.types.v1.Identifier, .InputStream, org.dataone.service.types.v1.SystemMetadata)
-	 */
-	@Override
-	public Identifier create(Identifier pid, InputStream object,
-			SystemMetadata sysmeta) 
-	throws InvalidToken, ServiceFailure,NotAuthorized, IdentifierNotUnique, UnsupportedType,
-	InsufficientResources, InvalidSystemMetadata, NotImplemented, InvalidRequest
-	{
-		return create(this.session, pid, object, sysmeta);
 	}
 	
 	/* (non-Javadoc)
@@ -751,19 +611,6 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
  		return identifier;
 	}
-
-
-	
-	/* (non-Javadoc)
-	 * @see org.dataone.client.CNode#registerSystemMetadata(org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.SystemMetadata)
-	 */
-	@Override
-	public Identifier registerSystemMetadata( Identifier pid, SystemMetadata sysmeta) 
-	throws NotImplemented, NotAuthorized,ServiceFailure, InvalidRequest, 
-	InvalidSystemMetadata, InvalidToken
-	{
-		return registerSystemMetadata(this.session, pid,sysmeta);
-	}
 	
 	
 	/* (non-Javadoc)
@@ -809,20 +656,47 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
  		return identifier;
 	}
-
 	
-
-	/* (non-Javadoc)
-	 * @see org.dataone.client.CNode#setObsoletedBy(org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.Identifier, long)
-	 */
 	@Override
-	public boolean setObsoletedBy( Identifier pid,
-			Identifier obsoletedByPid, long serialVersion)
-			throws NotImplemented, NotFound, NotAuthorized, ServiceFailure,
-			InvalidRequest, InvalidToken, VersionMismatch 
-			{
-		return setObsoletedBy(this.session, pid, obsoletedByPid, serialVersion);
-	}
+	public boolean updateSystemMetadata(Session session, Identifier pid,
+			SystemMetadata sysmeta) 
+		throws NotImplemented, NotAuthorized,ServiceFailure, InvalidRequest, 
+		InvalidSystemMetadata, InvalidToken
+		{
+			D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_META);
+			if (pid == null) {
+				throw new InvalidRequest("0000","'pid' cannot be null");
+			}
+	    	
+	    	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
+	    	try {
+	    		mpe.addParamPart("pid", pid.getValue());
+	    		mpe.addFilePart("sysmeta", sysmeta);
+	    	} catch (IOException e1) {
+				throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
+			} catch (JiBXException e1) {
+				throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
+			}
+
+			Identifier identifier = null;
+			try {
+				InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe,
+						Settings.getConfiguration().getInteger("D1Client.CNode.registerSystemMetadata.timeouts", null));
+				identifier = deserializeServiceType(Identifier.class, is);
+			} catch (BaseException be) {
+				if (be instanceof NotImplemented)         throw (NotImplemented) be;
+				if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
+				if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
+				if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
+				if (be instanceof InvalidSystemMetadata)  throw (InvalidSystemMetadata) be;
+				if (be instanceof InvalidToken)	          throw (InvalidToken) be;
+
+				throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
+			} 
+			catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
+
+	 		return true;
+		}
 
 	
 	/* (non-Javadoc)
@@ -883,19 +757,10 @@ public class MultipartCNode extends MultipartD1Node implements CNode
      * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.getSystemMetadata"> DataONE API Reference (MemberNode API)</a> 
      * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.getSystemMetadata"> DataONE API Reference (CoordinatingNode API)</a> 
      */
-	protected SystemMetadata getSystemMetadata(Session session, Identifier pid, boolean useSystemMetadataCache)
+	public SystemMetadata getSystemMetadata(Session session, Identifier pid)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented 
 	{
-        boolean cacheMissed = false;
 
-	    if (useSystemMetadataCache) {
-            try {
-                SystemMetadata sysmeta = LocalCache.instance().getSystemMetadata(pid);
-                return sysmeta;
-            } catch (NotCached e) {
-                cacheMissed = true;
-            }
-        }
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(),Constants.RESOURCE_META);
 		if (pid != null)
 			url.addNextPathElement(pid.getValue());
@@ -908,10 +773,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 			is = this.restClient.doGetRequest(url.getUrl(),
 					Settings.getConfiguration().getInteger("D1Client.D1Node.getSystemMetadata.timeout", null));
 			sysmeta = deserializeServiceType(SystemMetadata.class,is);
-			if (cacheMissed) {
-                // Cache the result in the system metadata cache
-                LocalCache.instance().putSystemMetadata(pid, sysmeta);
-            }
+			
 		} catch (BaseException be) {
             if (be instanceof InvalidToken)      throw (InvalidToken) be;
             if (be instanceof NotAuthorized)     throw (NotAuthorized) be;
@@ -927,28 +789,13 @@ public class MultipartCNode extends MultipartD1Node implements CNode
         return sysmeta;
 	}
 	
-	public SystemMetadata getSystemMetadata(Session session, Identifier pid)
-			throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented 
-	{
-		return this.getSystemMetadata(session, pid, false);
-	}
-	
 	public SystemMetadata getSystemMetadata(Identifier pid)
 			throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented 
 	{
-		return this.getSystemMetadata(null, pid, false);
+		return this.getSystemMetadata(null, pid);
 	}
 
 
-	/* (non-Javadoc)
-	 * @see org.dataone.client.CNode#resolve(org.dataone.service.types.v1.Identifier)
-	 */
-	@Override
-	public ObjectLocationList resolve(Identifier pid)
-	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
-	{
-		return resolve(this.session, pid);
-	}
     
     /* (non-Javadoc)
 	 * @see org.dataone.client.CNode#resolve(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier)
@@ -1010,22 +857,6 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		} catch (InsufficientResources e) {
 			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(e);
 		}
-	}
-
-	/* (non-Javadoc)
-	 * @see org.dataone.client.CNode#getChecksum(org.dataone.service.types.v1.Identifier)
-	 */
-	@Override
-	public Checksum getChecksum(Identifier pid)
-	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
-	{
-		Checksum cs = null;
-		try {
-			cs = super.getChecksum(pid, null);
-		} catch (InvalidRequest e) {
-			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(e);
-		}
-    	return cs;
 	}
 	
 	
@@ -1090,37 +921,6 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		return search(session, queryType, pathAndQueryString);
 	}
 	
-	/**
-	 * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.search">see DataONE API Reference</a> }
-	 * 
-	 * This implementation handles URL-escaping for only the "queryType" parameter,
-	 * and always places a slash ('/') character after it.
-	 * <p>
-	 * For example, to invoke the following solr query:
-	 * <pre>"?q=id:MyStuff:*&start=0&rows=10&fl=id score"</pre>
-	 * 
-	 * one has to (1) escape appropriate characters according to the rules of
-	 * the queryType employed (in this case solr):
-	 * <pre>  "?q=id\:MyStuff\:\*&start=0&rows=10&fl=id\ score"</pre>
-	 *  
-	 * then (2) escape according to general url rules:
-	 * 
-	 * <pre>  "?q=id%5C:MyStuff%5C:%5C*&start=0&rows=10&fl=id%5C%20score"</pre>
-	 *
-	 * resulting in: 
-	 * <pre>cn.search(session,"solr","?q=id%5C:MyStuff%5C:%5C*&start=0&rows=10&fl=id%5C%20score")</pre> 
-	 *  
-	 *  For solr queries, a list of query terms employed can be found at the DataONE documentation on 
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/design/SearchMetadata.html"> Content Discovery</a> }
-	 *  solr escaping: {@link <a href="http://www.google.com/search?q=solr+escapequerychars+api">find ClientUtils</a> }
-	 */
-	@Override
-	public  ObjectList search(String queryType, String query)
-			throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest, 
-			NotImplemented
-	{
-		return search(this.session, queryType, query);
-	}
 	
 	/**
 	 * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.search">see DataONE API Reference</a> }
@@ -1175,21 +975,6 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 		return objectList;
 	}
-
-	
-	////////// CN Authorization API //////////////
-
-	/* (non-Javadoc)
-	 * @see org.dataone.client.CNode#setRightsHolder(org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.Subject, long)
-	 */
-	@Override
-	public  Identifier setRightsHolder(Identifier pid, Subject userId, 
-			long serialVersion)
-	throws InvalidToken, ServiceFailure, NotFound, NotAuthorized, NotImplemented, 
-	InvalidRequest, VersionMismatch
-	{
-		return setRightsHolder(this.session, pid, userId, serialVersion);
-	}
 	
 	
 	/* (non-Javadoc)
@@ -1234,19 +1019,6 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 		return identifier;
 	}
-
-	/* (non-Javadoc)
-	 * @see org.dataone.client.CNode#setAccessPolicy(org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.AccessPolicy, long)
-	 */
-	@Override
-	public  boolean setAccessPolicy(Identifier pid, 
-			AccessPolicy accessPolicy, long serialVersion) 
-	throws InvalidToken, NotFound, NotImplemented, NotAuthorized, 
-		ServiceFailure, InvalidRequest, VersionMismatch
-	{
-		return setAccessPolicy(this.session, pid, accessPolicy, serialVersion);
-	}
-	
 	
 	/* (non-Javadoc)
 	 * @see org.dataone.client.CNode#setAccessPolicy(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.AccessPolicy, long)
@@ -1297,16 +1069,6 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	
 	//////////  CN IDENTITY API  ///////////////
 	
-	/* (non-Javadoc)
-	 * @see org.dataone.client.CNode#registerAccount(org.dataone.service.types.v1.Person)
-	 */
-	@Override
-	public  Subject registerAccount(Person person) 
-			throws ServiceFailure, NotAuthorized, IdentifierNotUnique, InvalidCredentials, 
-			NotImplemented, InvalidRequest, InvalidToken
-	{
-		return registerAccount(this.session, person); 
-	}
 	
 	
 	/* (non-Javadoc)
@@ -1349,19 +1111,6 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		return subject;
 	}
 
-
-	
-	/* (non-Javadoc)
-	 * @see org.dataone.client.CNode#updateAccount(org.dataone.service.types.v1.Person)
-	 */
-	@Override
-	public  Subject updateAccount(Person person) 
-			throws ServiceFailure, NotAuthorized, InvalidCredentials, 
-			NotImplemented, InvalidRequest, InvalidToken, NotFound
-	{
-		return updateAccount(this.session, person);
-	}
-	
 	
 	/* (non-Javadoc)
 	 * @see org.dataone.client.CNode#updateAccount(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Person)
@@ -1409,18 +1158,6 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		return subject;
 	}
 
-
-	
-	/* (non-Javadoc)
-	 * @see org.dataone.client.CNode#verifyAccount(org.dataone.service.types.v1.Subject)
-	 */
-	@Override
-	public boolean verifyAccount(Subject subject) 
-			throws ServiceFailure, NotAuthorized, NotImplemented, InvalidToken, 
-			InvalidRequest
-	{
-		return verifyAccount(this.session, subject);
-	}
 	
 	/* (non-Javadoc)
 	 * @see org.dataone.client.CNode#verifyAccount(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Subject)
@@ -1455,16 +1192,6 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		return true;
 	}
 
-
-	/* (non-Javadoc)
-	 * @see org.dataone.client.CNode#getSubjectInfo(org.dataone.service.types.v1.Subject)
-	 */
-	@Override
-	public SubjectInfo getSubjectInfo(Subject subject)
-	throws ServiceFailure, NotAuthorized, NotImplemented, NotFound, InvalidToken
-	{
-		return getSubjectInfo(this.session, subject);
-	}
 	
 	/* (non-Javadoc)
 	 * @see org.dataone.client.CNode#getSubjectInfo(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Subject)
@@ -1497,18 +1224,6 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 
 		return subjectInfo;
-	}
-
-
-	/* (non-Javadoc)
-	 * @see org.dataone.client.CNode#listSubjects(String, String, Integer, Integer)
-	 */
-	@Override
-	public SubjectInfo listSubjects(String query, String status, Integer start, 
-			Integer count) throws InvalidRequest, ServiceFailure, InvalidToken, NotAuthorized, 
-			NotImplemented
-	{
-		return listSubjects(this.session, query, status, start, count);
 	}
 	
 	
@@ -1544,19 +1259,6 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 
 		return subjectInfo;
-	}
-
-
-	
-	/* (non-Javadoc)
-	 * @see org.dataone.client.CNode#mapIdentity(org.dataone.service.types.v1.Subject, org.dataone.service.types.v1.Subject)
-	 */
-	@Override
-	public boolean mapIdentity(Subject primarySubject, Subject secondarySubject)
-	throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
-			NotImplemented, InvalidRequest, IdentifierNotUnique
-	{
-		return mapIdentity(this.session, primarySubject, secondarySubject);
 	}
 	
 	
@@ -1597,19 +1299,6 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 		return true;
 	}
-
-
-	/* (non-Javadoc)
-	 * @see org.dataone.client.CNode#requestMapIdentity(org.dataone.service.types.v1.Subject)
-	 */
-	@Override
-	public boolean requestMapIdentity(Subject subject) 
-			throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
-			NotImplemented, InvalidRequest, IdentifierNotUnique
-	{
-		return requestMapIdentity(this.session, subject);
-	}
-	
 	
 	/* (non-Javadoc)
 	 * @see org.dataone.client.CNode#requestMapIdentity(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Subject)
@@ -1645,18 +1334,6 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		
 		return true;
 	}
-
-
-	
-	/* (non-Javadoc)
-	 * @see org.dataone.client.CNode#getPendingMapIdentity(org.dataone.service.types.v1.Subject)
-	 */
-    @Override
-	public SubjectInfo getPendingMapIdentity(Subject subject) 
-        throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented 
-    {  	
-    	return getPendingMapIdentity(this.session, subject);
-    }
     
     
 	/* (non-Javadoc)
@@ -1688,19 +1365,6 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 		return subjectInfo;
     }
-    
-
-    
-	/* (non-Javadoc)
-	 * @see org.dataone.client.CNode#confirmMapIdentity(org.dataone.service.types.v1.Subject)
-	 */
-	@Override
-	public boolean confirmMapIdentity(Subject subject) 
-			throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
-			NotImplemented
-	{
-		return confirmMapIdentity(this.session, subject) ;
-	}
 	
 	
     /* (non-Javadoc)
@@ -1731,19 +1395,6 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 		catch (IOException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 		return true;
-	}
-
-
-	
-	/* (non-Javadoc)
-	 * @see org.dataone.client.CNode#denyMapIdentity(org.dataone.service.types.v1.Subject)
-	 */
-	@Override
-	public boolean denyMapIdentity(Subject subject) 
-	throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
-			NotImplemented
-	{
-		return denyMapIdentity(this.session, subject);
 	}
 	
 	
@@ -1776,19 +1427,6 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		catch (IOException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 		
 		return true;
-	}
-
-
-	
-	/* (non-Javadoc)
-	 * @see org.dataone.client.CNode#removeMapIdentity(org.dataone.service.types.v1.Subject)
-	 */
-	@Override
-	public  boolean removeMapIdentity(Subject subject) 
-			throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
-			NotImplemented
-	{
-		return removeMapIdentity(this.session, subject);
 	}
 	
 	
@@ -1823,16 +1461,6 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		return true;
 	}
 
-
-	/* (non-Javadoc)
-	 * @see org.dataone.client.CNode#createGroup(org.dataone.service.types.v1.Group)
-	 */
-	@Override
-	public Subject createGroup(Group group) 
-	throws ServiceFailure, InvalidToken, NotAuthorized, NotImplemented, IdentifierNotUnique
-	{
-		return createGroup(this.session, group);
-	}
 	
 	/* (non-Javadoc)
 	 * @see org.dataone.client.CNode#createGroup(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Group)
@@ -1871,19 +1499,6 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 
 		return subject;
-	}
-
-
-	
-	/* (non-Javadoc)
-	 * @see org.dataone.client.CNode#updateGroup(org.dataone.service.types.v1.Group)
-	 */
-	@Override
-	public boolean updateGroup(Group group) 
-		throws ServiceFailure, InvalidToken, 
-			NotAuthorized, NotFound, NotImplemented, InvalidRequest
-	{
-		return updateGroup(this.session, group);
 	}
 	
 	
@@ -1929,16 +1544,6 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 
 	///////////// CN REGISTER API   ////////////////
-
-	/* (non-Javadoc)
-	 * @see org.dataone.client.CNode#updateNodeCapabilities(org.dataone.service.types.v1.NodeReference, org.dataone.service.types.v1.Node)
-	 */
-	@Override
-	public boolean updateNodeCapabilities(NodeReference nodeid, Node node) 
-	throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, NotFound, InvalidToken
-	{
-		return updateNodeCapabilities(this.session, nodeid, node);
-	}
 	
 	
 	/* (non-Javadoc)
@@ -1983,16 +1588,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	}
 
 
-	/* (non-Javadoc)
-	 * @see org.dataone.client.CNode#register(org.dataone.service.types.v1.Node)
-	 */
-	@Override
-	public NodeReference register(Node node)
-	throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, 
-	IdentifierNotUnique, InvalidToken
-	{
-		return register(this.session, node);
-	}
+
 	
 	/* (non-Javadoc)
 	 * @see org.dataone.client.CNode#register(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Node)
@@ -2034,20 +1630,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	}
 
 
-	////////////  CN REPLICATION API    ////////////////////
-	
-
-	/* (non-Javadoc)
-	 * @see org.dataone.client.CNode#setReplicationStatus(org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.NodeReference, org.dataone.service.types.v1.ReplicationStatus, org.dataone.service.exceptions.BaseException)
-	 */
-	@Override
-	public boolean setReplicationStatus(Identifier pid, 
-			NodeReference nodeRef, ReplicationStatus status, BaseException failure) 
-					throws ServiceFailure, NotImplemented, InvalidToken, NotAuthorized, 
-					InvalidRequest, NotFound
-	{
-		return setReplicationStatus(this.session, pid, nodeRef, status, failure);
-	}
+	////////////  CN REPLICATION API    ///////////////////
 	
 	
 	/* (non-Javadoc)
@@ -2097,19 +1680,6 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		
 		return true;
 	}
-
-
-	
-	/* (non-Javadoc)
-	 * @see org.dataone.client.CNode#setReplicationPolicy(org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.ReplicationPolicy, long)
-	 */
-	@Override
-	public boolean setReplicationPolicy(Identifier pid, ReplicationPolicy policy, long serialVersion) 
-		throws NotImplemented, NotFound, NotAuthorized, ServiceFailure, 
-		InvalidRequest, InvalidToken, VersionMismatch
-	{
-		return setReplicationPolicy(this.session, pid, policy, serialVersion);
-	}
 	
 	
 	/* (non-Javadoc)
@@ -2157,19 +1727,6 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		
 		return true;
 	}
-
-
-	
-	/* (non-Javadoc)
-	 * @see org.dataone.client.CNode#isNodeAuthorized(org.dataone.service.types.v1.Subject, org.dataone.service.types.v1.Identifier)
-	 */
-	@Override
-	public boolean isNodeAuthorized(Subject targetNodeSubject, Identifier pid)
-	throws NotImplemented, NotAuthorized, InvalidToken, ServiceFailure, 
-		NotFound, InvalidRequest
-	{
-		return isNodeAuthorized(this.session, targetNodeSubject, pid);
-	}
 	
 	
 	/* (non-Javadoc)
@@ -2207,19 +1764,6 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		catch (IOException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 		
 		return true;
-	}
-
-
-	
-	/* (non-Javadoc)
-	 * @see org.dataone.client.CNode#updateReplicationMetadata(org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.Replica, long)
-	 */
-	@Override
-	public boolean updateReplicationMetadata( Identifier pid, Replica replicaMetadata, long serialVersion)
-	throws NotImplemented, NotAuthorized, ServiceFailure, NotFound, 
-		InvalidRequest, InvalidToken, VersionMismatch
-	{
-		return updateReplicationMetadata(this.session, pid, replicaMetadata, serialVersion);
 	}
 
 	
@@ -2271,18 +1815,6 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		return true;
 	}
 
-
-	/* (non-Javadoc)
-	 * @see org.dataone.client.CNode#deleteReplicationMetadata(org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.NodeReference, long)
-	 */
-	@Override
-	public boolean deleteReplicationMetadata(Identifier pid, NodeReference nodeId, long serialVersion) 
-	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented,
-			VersionMismatch, InvalidRequest 
-	{
-		return deleteReplicationMetadata(this.session, pid,nodeId, serialVersion);
-	}
-	
 	
 	/* (non-Javadoc)
 	 * @see org.dataone.client.CNode#deleteReplicationMetadata(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.NodeReference, long)
@@ -2324,37 +1856,6 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		catch (IOException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 		
 		return true;
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.dataone.client.MNode#query(String, String)
-	 */
-	@Override
-	public InputStream query(String queryEngine, String query)
-	throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest,
-	NotImplemented, NotFound 
-	{
-		return super.query(null, queryEngine, query);
-	}
-
-    /* (non-Javadoc)
-	 * @see org.dataone.client.MNode#getQueryEngineDescription(String)
-	 */
-	@Override
-	public QueryEngineDescription getQueryEngineDescription(String queryEngine)
-    throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented, NotFound 
-	{
-		return super.getQueryEngineDescription(null, queryEngine);
-	}
-
-    /* (non-Javadoc)
-	 * @see org.dataone.client.MNode#listQueryEngines()
-	 */
-	@Override
-	public QueryEngineList listQueryEngines() 
-	throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented 
-	{
-		return super.listQueryEngines(null);
 	}
 
 

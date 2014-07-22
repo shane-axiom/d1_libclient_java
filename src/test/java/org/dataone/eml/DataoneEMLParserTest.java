@@ -30,7 +30,7 @@ import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.types.v1.ObjectFormatIdentifier;
-import org.dataone.service.types.v1.util.ObjectFormatServiceImpl;
+import org.dataone.service.types.v2.util.ObjectFormatServiceImpl;
 import org.junit.Test;
 
 

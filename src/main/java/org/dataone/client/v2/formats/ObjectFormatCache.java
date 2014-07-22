@@ -20,22 +20,21 @@
  * $Id$
  */
 
-package org.dataone.client.v1.formats;
+package org.dataone.client.v2.formats;
 
 import java.util.Date;
 
 import org.apache.log4j.Logger;
-import org.dataone.client.v1.CNode;
-import org.dataone.client.v1.impl.MultipartCNode;
-import org.dataone.client.v1.itk.D1Client;
+import org.dataone.client.v2.CNode;
+import org.dataone.client.v2.itk.D1Client;
 import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
-import org.dataone.service.types.v1.ObjectFormat;
+import org.dataone.service.types.v2.ObjectFormat;
 import org.dataone.service.types.v1.ObjectFormatIdentifier;
-import org.dataone.service.types.v1.ObjectFormatList;
-import org.dataone.service.types.v1.util.ObjectFormatServiceImpl;
+import org.dataone.service.types.v2.ObjectFormatList;
+import org.dataone.service.types.v2.util.ObjectFormatServiceImpl;
 
 /**
  * The ObjectFormatCache is a wrapper class for the DataONE ObjectFormatList
@@ -192,7 +191,7 @@ public class ObjectFormatCache extends ObjectFormatServiceImpl {
 			CNode cn = null;
 			String overridingCN = Settings.getConfiguration().getString("ObjectFormatCache.overriding.CN_URL");
 			if (overridingCN != null) {
-				cn = new MultipartCNode(overridingCN, null);
+				cn = D1Client.getCN(overridingCN);
 			} else {
 				cn = D1Client.getCN();
 			}

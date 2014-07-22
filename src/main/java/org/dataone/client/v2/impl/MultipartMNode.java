@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-package org.dataone.client.v1.impl;
+package org.dataone.client.v2.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,7 +31,7 @@ import org.dataone.client.exception.NotCached;
 import org.dataone.client.rest.MultipartD1Node;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.client.utils.ExceptionUtils;
-import org.dataone.client.v1.MNode;
+import org.dataone.client.v2.MNode;
 import org.dataone.client.v1.cache.LocalCache;
 import org.dataone.configuration.Settings;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
@@ -47,20 +47,19 @@ import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.exceptions.SynchronizationFailed;
 import org.dataone.service.exceptions.UnsupportedType;
-import org.dataone.service.mn.tier1.v1.MNCore;
+import org.dataone.service.mn.tier1.v2.MNCore;
 import org.dataone.service.types.v1.Checksum;
 import org.dataone.service.types.v1.DescribeResponse;
-import org.dataone.service.types.v1.Event;
 import org.dataone.service.types.v1.Identifier;
-import org.dataone.service.types.v1.Log;
-import org.dataone.service.types.v1.Node;
+import org.dataone.service.types.v2.Log;
+import org.dataone.service.types.v2.Node;
 import org.dataone.service.types.v1.NodeReference;
 import org.dataone.service.types.v1.NodeType;
 import org.dataone.service.types.v1.ObjectFormatIdentifier;
 import org.dataone.service.types.v1.ObjectList;
 import org.dataone.service.types.v1.Permission;
 import org.dataone.service.types.v1.Session;
-import org.dataone.service.types.v1.SystemMetadata;
+import org.dataone.service.types.v2.SystemMetadata;
 import org.dataone.service.types.v1_1.QueryEngineDescription;
 import org.dataone.service.types.v1_1.QueryEngineList;
 import org.dataone.service.util.Constants;
@@ -183,7 +182,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 
     @Override
     public ObjectList listObjects(Session session, Date fromDate, Date toDate, 
-      ObjectFormatIdentifier formatid, Boolean replicaStatus, Integer start, Integer count) 
+      ObjectFormatIdentifier formatid, Identifier identifier, Boolean replicaStatus, Integer start, Integer count) 
     		  throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
     {
     	
@@ -197,6 +196,8 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 		url.addDateParamPair("toDate", toDate);
 		if (formatid != null) 
 			url.addNonEmptyParamPair("formatId", formatid.getValue());
+		if (identifier != null) 
+			url.addNonEmptyParamPair("identifier", identifier.getValue());
 		if (replicaStatus != null) {
 			if (replicaStatus) {
 				url.addNonEmptyParamPair("replicaStatus", 1);
@@ -226,14 +227,6 @@ public class MultipartMNode extends MultipartD1Node implements MNode
         } 
  
         return objectList;
-    }
-    
-    @Override
-    public ObjectList listObjects(Date fromDate, Date toDate, 
-      ObjectFormatIdentifier formatid, Boolean replicaStatus, Integer start, Integer count) 
-    		  throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
-    {
-    	return this.listObjects(null, fromDate, toDate, formatid, replicaStatus, start, count);
     }
 
 	
@@ -288,7 +281,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
     }
     
 	public Log getLogRecords(Session session, Date fromDate, Date toDate,
-			Event event, String pidFilter, Integer start, Integer count) 
+			String event, String pidFilter, Integer start, Integer count) 
 	throws InvalidToken, InvalidRequest, ServiceFailure,
 	NotAuthorized, NotImplemented
 	{
@@ -299,7 +292,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 		url.addDateParamPair("toDate", toDate);
             
     	if (event != null)
-            url.addNonEmptyParamPair("event", event.xmlValue());
+            url.addNonEmptyParamPair("event", event);
     	
     	url.addNonEmptyParamPair("start", start);  
     	url.addNonEmptyParamPair("count", count);
@@ -327,14 +320,6 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 
 		return log;
 	}
-	
-	public Log getLogRecords(Date fromDate, Date toDate,
-			Event event, String pidFilter, Integer start, Integer count) 
-	throws InvalidToken, InvalidRequest, ServiceFailure,
-	NotAuthorized, NotImplemented
-	{
-		return this.getLogRecords(null, fromDate, toDate, event, pidFilter, start, count);
-	}
 
 
     /**
@@ -349,16 +334,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 	protected SystemMetadata getSystemMetadata(Session session, Identifier pid, boolean useSystemMetadataCache)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented 
 	{
-        boolean cacheMissed = false;
-
-	    if (useSystemMetadataCache) {
-            try {
-                SystemMetadata sysmeta = LocalCache.instance().getSystemMetadata(pid);
-                return sysmeta;
-            } catch (NotCached e) {
-                cacheMissed = true;
-            }
-        }
+        
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(),Constants.RESOURCE_META);
 		if (pid != null)
 			url.addNextPathElement(pid.getValue());
@@ -371,10 +347,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 			is = this.restClient.doGetRequest(url.getUrl(),
 					Settings.getConfiguration().getInteger("D1Client.D1Node.getSystemMetadata.timeout", null));
 			sysmeta = deserializeServiceType(SystemMetadata.class,is);
-			if (cacheMissed) {
-                // Cache the result in the system metadata cache
-                LocalCache.instance().putSystemMetadata(pid, sysmeta);
-            }
+			
 		} catch (BaseException be) {
             if (be instanceof InvalidToken)      throw (InvalidToken) be;
             if (be instanceof NotAuthorized)     throw (NotAuthorized) be;
@@ -446,24 +419,12 @@ public class MultipartMNode extends MultipartD1Node implements MNode
     }
     
     
-    
-    /* (non-Javadoc)
-	 * @see org.dataone.client.MNode#synchronizationFailed(org.dataone.service.exceptions.SynchronizationFailed)
-	 */
-    @Override
-	public boolean synchronizationFailed(SynchronizationFailed message)
-    throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
-    { 
-        return synchronizationFailed(this.session, message);
-    }
-    
-    
     /* (non-Javadoc)
 	 * @see org.dataone.client.MNode#synchronizationFailed(org.dataone.service.types.v1.Session, org.dataone.service.exceptions.SynchronizationFailed)
 	 */
     @Override
-	public boolean synchronizationFailed(Session session, SynchronizationFailed message)
-    throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
+    public boolean synchronizationFailed(Session session, SynchronizationFailed message)
+    	    throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
     {   	
     	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ERROR);
     	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
@@ -539,19 +500,6 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 	}
 
 
-	
-    /* (non-Javadoc)
-	 * @see org.dataone.client.MNode#create(org.dataone.service.types.v1.Identifier, InputStream, org.dataone.service.types.v1.SystemMetadata)
-	 */
-    @Override
-	public  Identifier create(Identifier pid, InputStream object, 
-            SystemMetadata sysmeta) 
-    throws IdentifierNotUnique, InsufficientResources, InvalidRequest, InvalidSystemMetadata, 
-        	InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, UnsupportedType
-    {
-        return create(this.session, pid, object,  sysmeta);
-    }
-     
 		
 	/* (non-Javadoc)
 	 * @see org.dataone.client.MNode#create(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, InputStream, org.dataone.service.types.v1.SystemMetadata)
@@ -599,19 +547,46 @@ public class MultipartMNode extends MultipartD1Node implements MNode
         return identifier;
     }
 
+	@Override
+	public boolean updateSystemMetadata(Session session, Identifier pid,
+			SystemMetadata sysmeta) 
+		throws NotImplemented, NotAuthorized,ServiceFailure, InvalidRequest, 
+		InvalidSystemMetadata, InvalidToken
+		{
+			D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_META);
+			if (pid == null) {
+				throw new InvalidRequest("0000","'pid' cannot be null");
+			}
+	    	
+	    	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
+	    	try {
+	    		mpe.addParamPart("pid", pid.getValue());
+	    		mpe.addFilePart("sysmeta", sysmeta);
+	    	} catch (IOException e1) {
+				throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
+			} catch (JiBXException e1) {
+				throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
+			}
 
-    /* (non-Javadoc)
-	 * @see org.dataone.client.MNode#update(org.dataone.service.types.v1.Identifier, InputStream, org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.SystemMetadata)
-	 */
-    @Override
-	public  Identifier update(Identifier pid, InputStream object, 
-            Identifier newPid, SystemMetadata sysmeta) 
-        throws IdentifierNotUnique, InsufficientResources, InvalidRequest, InvalidSystemMetadata, 
-            InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, UnsupportedType,
-            NotFound
-    {
-        return update(this.session, pid, object, newPid, sysmeta);
-    }
+			Identifier identifier = null;
+			try {
+				InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe,
+						Settings.getConfiguration().getInteger("D1Client.CNode.registerSystemMetadata.timeouts", null));
+				identifier = deserializeServiceType(Identifier.class, is);
+			} catch (BaseException be) {
+				if (be instanceof NotImplemented)         throw (NotImplemented) be;
+				if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
+				if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
+				if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
+				if (be instanceof InvalidSystemMetadata)  throw (InvalidSystemMetadata) be;
+				if (be instanceof InvalidToken)	          throw (InvalidToken) be;
+
+				throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
+			} 
+			catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
+
+	 		return true;
+		}
     
     
     /* (non-Javadoc)
@@ -709,31 +684,6 @@ public class MultipartMNode extends MultipartD1Node implements MNode
     {
     	 return super.delete(session, pid);
     }
-
-    
-    /* (non-Javadoc)
-	 * @see org.dataone.client.MNode#systemMetadataChanged(org.dataone.service.types.v1.Identifier, long, java.util.Date)
-	 */
-    @Override
-	public boolean systemMetadataChanged(Identifier pid, long serialVersion,
-        	Date dateSystemMetadataLastModified)
-        throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented, InvalidRequest
-    {
-        return systemMetadataChanged(this.session, pid, serialVersion, dateSystemMetadataLastModified);
-    }
-   
- 
-    
-    /* (non-Javadoc)
-	 * @see org.dataone.client.MNode#replicate(org.dataone.service.types.v1.SystemMetadata, org.dataone.service.types.v1.NodeReference)
-	 */
-    @Override
-	public boolean replicate(SystemMetadata sysmeta, NodeReference sourceNode) 
-    throws NotImplemented, ServiceFailure, NotAuthorized, InvalidRequest, InvalidToken,
-        InsufficientResources, UnsupportedType
-    {
-        return replicate(this.session, sysmeta, sourceNode);
-    }
     
     
     /* (non-Javadoc)
@@ -784,16 +734,6 @@ public class MultipartMNode extends MultipartD1Node implements MNode
     }
 
 
-    /* (non-Javadoc)
-	 * @see org.dataone.client.MNode#getReplica(org.dataone.service.types.v1.Identifier)
-	 */
-    @Override
-	public InputStream getReplica(Identifier pid)
-    throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound,
-    InsufficientResources
-    {
-       return getReplica(this.session, pid);
-    }
     
     
     /* (non-Javadoc)
@@ -828,35 +768,5 @@ public class MultipartMNode extends MultipartD1Node implements MNode
         return is;
     }
     
-    /* (non-Javadoc)
-	 * @see org.dataone.client.MNode#query(String, String)
-	 */
-	@Override
-	public InputStream query(String queryEngine, String query)
-	throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest,
-	NotImplemented, NotFound 
-	{
-		return super.query(null, queryEngine, query);
-	}
-
-    /* (non-Javadoc)
-	 * @see org.dataone.client.MNode#getQueryEngineDescription(String)
-	 */
-	@Override
-	public QueryEngineDescription getQueryEngineDescription(String queryEngine)
-    throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented, NotFound 
-	{
-		return super.getQueryEngineDescription(null, queryEngine);
-	}
-
-    /* (non-Javadoc)
-	 * @see org.dataone.client.MNode#listQueryEngines()
-	 */
-	@Override
-	public QueryEngineList listQueryEngines() 
-	throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented 
-	{
-		return super.listQueryEngines(null);
-	}
 
 }
