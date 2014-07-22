@@ -20,7 +20,7 @@
  * $Id$
  */
 
-package org.dataone.client.v1.impl;
+package org.dataone.client.rest;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -38,8 +38,6 @@ import org.apache.http.Header;
 import org.dataone.client.D1Node;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.exception.NotCached;
-import org.dataone.client.rest.DefaultHttpMultipartRestClient;
-import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.client.utils.ExceptionUtils;
 import org.dataone.client.v1.cache.LocalCache;
 import org.dataone.configuration.Settings;
@@ -54,16 +52,14 @@ import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.types.v1.Checksum;
 import org.dataone.service.types.v1.DescribeResponse;
-import org.dataone.service.types.v1.Event;
 import org.dataone.service.types.v1.Identifier;
-import org.dataone.service.types.v1.Log;
+import org.dataone.service.types.v1.Node;
 import org.dataone.service.types.v1.NodeReference;
 import org.dataone.service.types.v1.NodeType;
 import org.dataone.service.types.v1.ObjectFormatIdentifier;
 import org.dataone.service.types.v1.ObjectList;
 import org.dataone.service.types.v1.Permission;
 import org.dataone.service.types.v1.Session;
-import org.dataone.service.types.v1.SystemMetadata;
 import org.dataone.service.types.v1_1.QueryEngineDescription;
 import org.dataone.service.types.v1_1.QueryEngineList;
 import org.dataone.service.util.BigIntegerMarshaller;
@@ -274,148 +270,6 @@ public abstract class MultipartD1Node implements D1Node {
 
 	
 	/**
-     * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.listObjects">see DataONE API Reference</a> }
-     */
-	public ObjectList listObjects() 
-			throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented,
-			ServiceFailure 
-	{
-		return listObjects(this.session);
-	}
-	
-	
-    public ObjectList listObjects(Session session) 
-    throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
-    {
-    	return listObjects(session,null,null,null,null,null,null);
-    }
-
-	public ObjectList listObjects(Date fromDate,
-			Date toDate, ObjectFormatIdentifier formatid,
-			Boolean replicaStatus, Integer start, Integer count)
-			throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented,
-			ServiceFailure 
-	{
-		return listObjects(this.session,fromDate,toDate,formatid,replicaStatus,start,count);
-	}
-
-
-    public ObjectList listObjects(Session session, Date fromDate, Date toDate, 
-      ObjectFormatIdentifier formatid, Boolean replicaStatus, Integer start, Integer count) 
-    throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
-    {
-    	
-    	if (toDate != null && fromDate != null && !toDate.after(fromDate))
-			throw new InvalidRequest("1000", "fromDate must be before toDate in listObjects() call. "
-					+ fromDate + " " + toDate);
-
-		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_OBJECTS);
-		
-		url.addDateParamPair("fromDate", fromDate);
-		url.addDateParamPair("toDate", toDate);
-		if (formatid != null) 
-			url.addNonEmptyParamPair("formatId", formatid.getValue());
-		if (replicaStatus != null) {
-			if (replicaStatus) {
-				url.addNonEmptyParamPair("replicaStatus", 1);
-			} else {
-				url.addNonEmptyParamPair("replicaStatus", 0);
-			}
-		}
-		url.addNonEmptyParamPair("start",start);
-		url.addNonEmptyParamPair("count",count);
-		
-        // send the request
-        ObjectList objectList = null;
-        try {
-        	InputStream is = this.restClient.doGetRequest(url.getUrl(), null);
-        	objectList =  deserializeServiceType(ObjectList.class, is);
-        } catch (BaseException be) {
-            if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
-            if (be instanceof InvalidToken)           throw (InvalidToken) be;
-            if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
-            if (be instanceof NotImplemented)         throw (NotImplemented) be;
-            if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
-                    
-            throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
-        } 
-        catch (ClientSideException e)            {
-        	throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
-        } 
- 
-        return objectList;
-    }
-
-    
-    public Log getLogRecords() 
-	throws InvalidToken, InvalidRequest, ServiceFailure,
-	NotAuthorized, NotImplemented, InsufficientResources
-	{
-    	return getLogRecords(null, null, null, null, null, null);
-	}   
-    
-    
-    public Log getLogRecords(Session session) 
-	throws InvalidToken, InvalidRequest, ServiceFailure,
-	NotAuthorized, NotImplemented, InsufficientResources
-	{
-    	return getLogRecords(session, null, null, null, null, null, null);
-	}
-    
-	
-	public Log getLogRecords(Date fromDate, Date toDate,
-			Event event, String pidFilter, Integer start, Integer count) 
-	throws InvalidToken, InvalidRequest, ServiceFailure,
-	NotAuthorized, NotImplemented, InsufficientResources
-	{
-		return getLogRecords(this.session, fromDate, toDate, event, pidFilter, start, count);
-	}
-  
-	
-	public Log getLogRecords(Session session, Date fromDate, Date toDate,
-			Event event, String pidFilter, Integer start, Integer count) 
-	throws InvalidToken, InvalidRequest, ServiceFailure,
-	NotAuthorized, NotImplemented, InsufficientResources
-	{
-
-		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_LOG);
-
-		url.addDateParamPair("fromDate", fromDate);
-		url.addDateParamPair("toDate", toDate);
-            
-    	if (event != null)
-            url.addNonEmptyParamPair("event", event.xmlValue());
-    	
-    	url.addNonEmptyParamPair("start", start);  
-    	url.addNonEmptyParamPair("count", count);
-    	url.addNonEmptyParamPair("pidFilter", pidFilter);
-    	
-		// send the request
-		Log log = null;
-
-		try {
-			InputStream is = this.restClient.doGetRequest(url.getUrl(),
-					Settings.getConfiguration().getInteger("D1Client.D1Node.getLogRecords.timeout", null));
-			log = deserializeServiceType(Log.class, is);
-		} catch (BaseException be) {
-			if (be instanceof InvalidToken)           throw (InvalidToken) be;
-			if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
-			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
-			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
-			if (be instanceof NotImplemented)         throw (NotImplemented) be;
-			if (be instanceof InsufficientResources)  throw (InsufficientResources) be;
-
-			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
-		} 
-		catch (ClientSideException e)            {
-			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
-		} 
-
-		return log;
-	}
-    
-	
-	/**
      * Get the resource with the specified pid.  Used by both the CNode and 
      * MultipartMNode subclasses. A LocalCache is used to cache objects in memory and in 
      * a local disk cache if the "D1Client.useLocalCache" configuration property
@@ -511,109 +365,40 @@ public abstract class MultipartD1Node implements D1Node {
         return is;
     }
  
-    
-    
-    /**
-     * Get the system metadata from a resource with the specified guid. Used
-     * by both the CNode and MultipartMNode implementations. Note that this method defaults
-     * to not using the local system metadata cache provided by the client, as
-     * SystemMetadata is mutable and so caching can lead to issues.  In specific
-     * cases where a client wants to utilize the same system metadata in rapid succession,
-     * it may make sense to temporarily use the local cache by calling @see #getSystemMetadata(Session, Identifier, boolean).
-     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.getSystemMetadata"> DataONE API Reference (MemberNode API)</a> 
-     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.getSystemMetadata"> DataONE API Reference (CoordinatingNode API)</a> 
-     */
-    public SystemMetadata getSystemMetadata(Identifier pid)
-    throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented 
+
+	public boolean systemMetadataChanged(Session session, Identifier pid, long serialVersion,
+        	Date dateSystemMetadataLastModified)
+        throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented, InvalidRequest
     {
-        return getSystemMetadata(this.session, pid, false);
-    }
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_META_CHANGED);
 
-    /**
-     * Get the system metadata from a resource with the specified guid, potentially using the local
-     * system metadata cache if specified to do so. Used by both the CNode and MultipartMNode implementations. 
-     * Because SystemMetadata is mutable, caching can lead to currency issues.  In specific
-     * cases where a client wants to utilize the same system metadata in rapid succession,
-     * it may make sense to temporarily use the local cache by setting useSystemMetadadataCache to true.
-     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.getSystemMetadata"> DataONE API Reference (MemberNode API)</a> 
-     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.getSystemMetadata"> DataONE API Reference (CoordinatingNode API)</a> 
-     */
-	public SystemMetadata getSystemMetadata(Identifier pid, boolean useSystemMetadataCache)
-	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented 
-	{
-		return getSystemMetadata(this.session, pid, useSystemMetadataCache);
-	}
-    
-    
-    
-    /**
-     * Get the system metadata from a resource with the specified guid. Used
-     * by both the CNode and MultipartMNode implementations. Note that this method defaults
-     * to not using the local system metadata cache provided by the client, as
-     * SystemMetadata is mutable and so caching can lead to issues.  In specific
-     * cases where a client wants to utilize the same system metadata in rapid succession,
-     * it may make sense to temporarily use the local cache by calling @see #getSystemMetadata(Session, Identifier, boolean).
-     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.getSystemMetadata"> DataONE API Reference (MemberNode API)</a> 
-     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.getSystemMetadata"> DataONE API Reference (CoordinatingNode API)</a> 
-     */
-    public SystemMetadata getSystemMetadata(Session session, Identifier pid)
-    throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented 
-    {
-        return getSystemMetadata(session, pid, false);
-    }
-
-    /**
-     * Get the system metadata from a resource with the specified guid, potentially using the local
-     * system metadata cache if specified to do so. Used by both the CNode and MultipartMNode implementations. 
-     * Because SystemMetadata is mutable, caching can lead to currency issues.  In specific
-     * cases where a client wants to utilize the same system metadata in rapid succession,
-     * it may make sense to temporarily use the local cache by setting useSystemMetadadataCache to true.
-     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.getSystemMetadata"> DataONE API Reference (MemberNode API)</a> 
-     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.getSystemMetadata"> DataONE API Reference (CoordinatingNode API)</a> 
-     */
-	public SystemMetadata getSystemMetadata(Session session, Identifier pid, boolean useSystemMetadataCache)
-	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented 
-	{
-        boolean cacheMissed = false;
-
-	    if (useSystemMetadataCache) {
-            try {
-                SystemMetadata sysmeta = LocalCache.instance().getSystemMetadata(pid);
-                return sysmeta;
-            } catch (NotCached e) {
-                cacheMissed = true;
-            }
-        }
-		D1Url url = new D1Url(this.getNodeBaseServiceUrl(),Constants.RESOURCE_META);
+		SimpleMultipartEntity mpe = new SimpleMultipartEntity();
 		if (pid != null)
-			url.addNextPathElement(pid.getValue());
-
-
+			mpe.addParamPart("pid", pid.getValue());
+        mpe.addParamPart("dateSysMetaLastModified", 
+                DateTimeMarshaller.serializeDateToUTC(dateSystemMetadataLastModified));
+        mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
+		    	
 		InputStream is = null;
-		SystemMetadata sysmeta = null;
-		
 		try {
-			is = this.restClient.doGetRequest(url.getUrl(),
-					Settings.getConfiguration().getInteger("D1Client.D1Node.getSystemMetadata.timeout", null));
-			sysmeta = deserializeServiceType(SystemMetadata.class,is);
-			if (cacheMissed) {
-                // Cache the result in the system metadata cache
-                LocalCache.instance().putSystemMetadata(pid, sysmeta);
-            }
-		} catch (BaseException be) {
-            if (be instanceof InvalidToken)      throw (InvalidToken) be;
-            if (be instanceof NotAuthorized)     throw (NotAuthorized) be;
-            if (be instanceof NotImplemented)    throw (NotImplemented) be;
-            if (be instanceof ServiceFailure)    throw (ServiceFailure) be;
-            if (be instanceof NotFound)          throw (NotFound) be;
+			is = this.restClient.doPostRequest(url.getUrl(), mpe, null);
+			if (is != null)
+				is.close();
+        } catch (BaseException be) {
+            if (be instanceof InvalidToken)           throw (InvalidToken) be;
+            if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
+            if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
+            if (be instanceof NotImplemented)         throw (NotImplemented) be;
+            if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
                     
             throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
-        }
-		catch (ClientSideException e) {
-			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
-		} 
-        return sysmeta;
-	}
+        } 
+        catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
+        catch (IOException e)          {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
+		return true;
+    }
+
+    
 
 	
 	public DescribeResponse describe(Identifier pid)
@@ -940,37 +725,7 @@ public abstract class MultipartD1Node implements D1Node {
 
         return identifier;
     }
-    
-    
-    /**
-     * A convenience method for building the query going to the queryEngine.  A D1Url
-     * will build the portion of the url needed and properly url-encode any unsafe
-     * characters.  The caller is responsible for encoding/escaping any special 
-     * characters required by the queryEngine, but not for providing any url reserved
-     * characters ('/' or '?') that join path or query elements.
-     * 
-     * As with the sister query() method that takes an encoded string, the contents
-     * will be joined to the url with as follows: /{queryEngine}/{queryUrlElements}
-	 *
-     * @param queryEngine
-     * @param queryUrlElements a D1Url object that contains the necessary query bits
-     * @return
-     * @throws InvalidToken
-     * @throws ServiceFailure
-     * @throws NotAuthorized
-     * @throws InvalidRequest
-     * @throws NotImplemented
-     * @throws NotFound
-     */
-    public InputStream query(String queryEngine, D1Url queryUrlElements)
-    throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest,
-	NotImplemented, NotFound 
-	{
-    	return query(queryEngine, queryUrlElements.getUrl());
-	}
-    
-    
-    
+   
     /**
      * As with the sister query() method that takes a D1Url, the contents of 
      * encodedQuery will be joined to the url with as follows:
@@ -991,7 +746,7 @@ public abstract class MultipartD1Node implements D1Node {
      * @throws NotImplemented
      * @throws NotFound
      */
-	public InputStream query(String queryEngine, String encodedQuery)
+	public InputStream query(Session session, String queryEngine, String encodedQuery)
 			throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest,
 			NotImplemented, NotFound 
 	{
@@ -1029,9 +784,8 @@ public abstract class MultipartD1Node implements D1Node {
 
 
 
-	public QueryEngineDescription getQueryEngineDescription(String queryEngine)
-			throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented,
-			NotFound 
+	public QueryEngineDescription getQueryEngineDescription(Session session, String queryEngine)
+	        throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented, NotFound
 	{
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_QUERY);
         try {
@@ -1062,7 +816,7 @@ public abstract class MultipartD1Node implements D1Node {
 
 
 
-	public QueryEngineList listQueryEngines() throws InvalidToken, ServiceFailure,
+	public QueryEngineList listQueryEngines(Session session) throws InvalidToken, ServiceFailure,
 			NotAuthorized, NotImplemented {
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_QUERY);
         

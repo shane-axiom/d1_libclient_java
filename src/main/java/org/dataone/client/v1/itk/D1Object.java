@@ -37,7 +37,7 @@ import org.apache.commons.lang.StringUtils;
 import org.dataone.client.types.AccessPolicyEditor;
 import org.dataone.client.v1.CNode;
 import org.dataone.client.v1.MNode;
-import org.dataone.client.v1.formats.ObjectFormatCache;
+import org.dataone.client.v2.formats.ObjectFormatCache;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.InsufficientResources;
 import org.dataone.service.exceptions.InvalidRequest;

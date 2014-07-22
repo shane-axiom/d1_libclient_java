@@ -72,7 +72,7 @@ public abstract class NodeLocator {
 		if (d1n == null) 
 			throw new ClientSideException("No node found for " + nodeReference.getValue(), null);
 		
-		return (MNode) nodeMap.get(nodeReference);
+		return nodeMap.get(nodeReference);
 	}
 	
 	

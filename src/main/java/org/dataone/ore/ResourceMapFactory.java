@@ -382,6 +382,7 @@ public class ResourceMapFactory {
 			if (!idTriples.isEmpty()) {  // need an identifier to do anything
 				Identifier arId = new Identifier();
 				arId.setValue(idTriples.get(0).getObjectLiteral());
+				idHash.put(ar.getURI().toString(), arId);
 			} else {
 				throw new OREException("Aggregated resource '" + ar.getURI().toString() + 
 						"' in the resource map is missing the required Identifier statement");
