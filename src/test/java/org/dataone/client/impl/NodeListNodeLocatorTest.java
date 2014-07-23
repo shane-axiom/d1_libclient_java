@@ -12,6 +12,7 @@ import org.dataone.client.rest.DefaultHttpMultipartRestClient;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.client.v1.CNode;
 import org.dataone.client.v1.MNode;
+import org.dataone.client.v1.impl.InMemoryMNode;
 import org.dataone.client.v1.impl.MultipartCNode;
 import org.dataone.client.v1.impl.NodeListNodeLocator;
 import org.dataone.client.v1.types.D1TypeBuilder;
@@ -52,7 +53,7 @@ public class NodeListNodeLocatorTest {
 		nodeList.addNode(buildNode("https://cn2.bar.org/cn", NodeType.CN, "urn:node:CN1bar"));
 		nodeList.addNode(buildNode("https://mn1.biz.org/mn", NodeType.MN, "urn:node:MNhttps"));
 		nodeList.addNode(buildNode("http://mn2.baz.org/knb/d1/mn", NodeType.MN, "urn:node:MNhttp"));
-		nodeList.addNode(buildNode("java:org.dataone.client.impl.InMemoryMNode#Subject=mnAdmin&Subject=cnAdmin,", 
+		nodeList.addNode(buildNode("java:org.dataone.client.v1.impl.InMemoryMNode#Subject=mnAdmin&Subject=cnAdmin,", 
 				 NodeType.MN, "urn:node:MNjava"));
 		mrc = new DefaultHttpMultipartRestClient();
 		

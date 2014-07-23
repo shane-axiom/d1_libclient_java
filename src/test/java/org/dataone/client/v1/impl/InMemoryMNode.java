@@ -1,4 +1,4 @@
-package org.dataone.client.impl;
+package org.dataone.client.v1.impl;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
