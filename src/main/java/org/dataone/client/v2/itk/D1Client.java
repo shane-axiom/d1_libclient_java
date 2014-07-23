@@ -29,7 +29,7 @@ import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.rest.DefaultHttpMultipartRestClient;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.client.utils.ExceptionUtils;
-import org.dataone.client.v1.impl.SettingsContextNodeLocator;
+import org.dataone.client.v2.impl.SettingsContextNodeLocator;
 import org.dataone.client.v2.CNode;
 import org.dataone.client.v2.MNode;
 import org.dataone.client.v2.impl.D1NodeFactory;
