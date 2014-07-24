@@ -26,8 +26,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.dataone.client.exception.ClientSideException;
-import org.dataone.client.v1.CNode;
-import org.dataone.client.v1.MNode;
 import org.dataone.service.types.v1.NodeReference;
 import org.dataone.service.types.v1.NodeType;
 
