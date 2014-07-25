@@ -157,8 +157,8 @@ public class D1TypeBuilder {
 	/**
 	 * Builds a minimal and 'typical' SystemMetadata object containing all of the required fields needed
 	 * for submission to DataONE at time of create.  'Typical' in this case denotes
-	 * that the rightsHolder and submitter are the same Subject. The formatId is nd the The Checksum and content length are 
-	 * derived from the InputStream.  
+	 * that the rightsHolder and submitter are the same Subject. The Checksum and 
+	 * content length are derived from the InputStream.  
 	 * @param id
 	 * @param data
 	 * @param formatId
