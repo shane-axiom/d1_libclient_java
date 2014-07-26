@@ -96,16 +96,13 @@ public class SettingsContextNodeLocator extends NodeListNodeLocator {
 		try {
 			if (cnClassName == null) {
 				uri = cnUri;
-				cn = D1NodeFactory.buildCNode( mrc, new URI(cnUri) );
+				cn = D1NodeFactory.buildCNode( mrc, URI.create(cnUri) );
 			} else {
 				uri = cnClassName;
-				cn = D1NodeFactory.buildCNode( mrc, new URI(cnClassName) );
+				cn = D1NodeFactory.buildCNode( mrc, URI.create(cnClassName));
 				Method setBaseUrlMethod = cn.getClass().getMethod("setNodeBaseServiceUrl", new Class[]{String.class});
 				setBaseUrlMethod.invoke(cn, cnUri);
-			}
-			
-		} catch (URISyntaxException e) {
-			throw new ClientSideException("Failed to build a CNode from provided CN baseUri: " + uri,e);
+			}			
 		} catch (NoSuchMethodException e) {
 			throw new ClientSideException("Failed to find the setNodeBaseServiceUrl via reflection from the instantiated CN class: " + cnClassName,e);
 		} catch (IllegalAccessException e) {
