@@ -61,8 +61,9 @@ public class D1ClientUnitTest  {
     
     @Test
     public void testNullCNUrlBehavior() throws ServiceFailure, NotImplemented {
-    	Settings.getConfiguration().setProperty("D1Client.CN_URL","");
     	
+//    	Settings.getConfiguration().setProperty("D1Client.CN_URL","");
+    	D1Client.setCN("");
     	D1Client.getMN("http://someMN.org/mn");
     	System.out.println("got an MN by url");
     	D1Client.getCN("http://someCN.org/cn");
