@@ -80,11 +80,13 @@ public class NodeListNodeLocator extends NodeLocator {
 	public CNode getCNode() throws ClientSideException
 	{
 		Node n = null;
-		for (Node node : nodeList.getNodeList()) {
-			if (node.getType().equals(NodeType.CN)) {
-				n = node;
-				if (node.getDescription() != null && node.getDescription().contains("Robin")) {
-					return D1NodeFactory.buildCNode(restClient, URI.create(node.getBaseURL()));
+		if (nodeList != null) {
+			for (Node node : nodeList.getNodeList()) {
+				if (node.getType().equals(NodeType.CN)) {
+					n = node;
+					if (node.getDescription() != null && node.getDescription().contains("Robin")) {
+						return D1NodeFactory.buildCNode(restClient, URI.create(node.getBaseURL()));
+					}
 				}
 			}
 		}
@@ -92,8 +94,6 @@ public class NodeListNodeLocator extends NodeLocator {
 			return D1NodeFactory.buildCNode(restClient, URI.create(n.getBaseURL()));
 		}
 		throw new ClientSideException("No CNs are registered in the NodeLocator");
-		
-
 	}
 }
 	

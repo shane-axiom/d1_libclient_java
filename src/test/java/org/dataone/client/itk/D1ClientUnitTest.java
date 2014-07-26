@@ -20,16 +20,15 @@
 
 package org.dataone.client.itk;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.List;
 
-import org.dataone.client.v1.CNode;
-import org.dataone.client.v1.itk.D1Client;
+import org.dataone.client.v2.CNode;
+import org.dataone.client.v2.itk.D1Client;
 import org.dataone.client.v1.itk.D1Object;
+import org.dataone.client.v1.types.D1TypeBuilder;
 import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.InvalidRequest;
 import org.dataone.service.exceptions.NotImplemented;
@@ -59,7 +58,29 @@ public class D1ClientUnitTest  {
     public void setUp() throws Exception 
     {
     }
-
+    
+    @Test
+    public void testNullCNUrlBehavior() throws ServiceFailure, NotImplemented {
+    	Settings.getConfiguration().setProperty("D1Client.CN_URL","");
+    	
+    	D1Client.getMN("http://someMN.org/mn");
+    	System.out.println("got an MN by url");
+    	D1Client.getCN("http://someCN.org/cn");
+    	System.out.println("got a CN by url");
+    	try {
+    		D1Client.getCN();
+    		System.out.println("got a CN by default");
+    	} 
+    	catch (ServiceFailure e) {
+    		; // expected
+    	}
+    	try {
+    		D1Client.getMN(D1TypeBuilder.buildNodeReference("foo"));
+    		fail("Should have thrown an exception when trying to getMN by NodeRef");
+    	} catch (ServiceFailure e) {
+			;// expected
+		}  	
+    }
     
     /**
      * test that trailing slashes do not affect the response of the node

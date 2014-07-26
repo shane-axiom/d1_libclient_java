@@ -48,7 +48,7 @@ import org.dataone.service.types.v1.Session;
 public class D1Client {
 
     private static NodeLocator nodeLocator;
-    protected static MultipartRestClient restClient;
+    protected static final MultipartRestClient MULTIPART_REST_CLIENT = new DefaultHttpMultipartRestClient();
     
     
     /**
@@ -86,25 +86,32 @@ public class D1Client {
      */
     public static CNode getCN(Session session) 
     throws ServiceFailure, NotImplemented {
-        if (restClient == null) {
-        	//TODO work session into restClient
-        	restClient = new DefaultHttpMultipartRestClient();
-        }
+        
+    	CNode cn = null;
+    	
         try { 
         	if (nodeLocator == null) {
-        		nodeLocator = new SettingsContextNodeLocator(restClient);	
+        		nodeLocator = new SettingsContextNodeLocator(MULTIPART_REST_CLIENT);	
         	}
-        	return (CNode) nodeLocator.getCNode();
-        } catch (ClientSideException e) {
-			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
-		}
+        	cn = (CNode) nodeLocator.getCNode();
+        } catch (Exception e) {
+        	try {
+        		// create an empty NodeListNodeLocator
+				nodeLocator = new NodeListNodeLocator(null,MULTIPART_REST_CLIENT);
+				cn = (CNode) nodeLocator.getCNode();
+			} catch (ClientSideException e1) {
+				throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
+			}
+        }
+        return cn;
     }
 
     
     /**
      * Use this method to set the environment via the baseUrl to the environment's
      * Coordinating Node.  Doing so affects future calls using the NodeReferences -
-     * only nodes registered in the context of the current CN will be findable.
+     * only nodes registered in the context of the current CN will be findable
+     * by NodeReference.
      * 
      * @param cnUrl
      * @throws NotImplemented
@@ -113,12 +120,9 @@ public class D1Client {
     public static void setCN(String cnUrl) 
     throws NotImplemented, ServiceFailure 
     {         	
-    	if (restClient == null) {
-    		restClient = new DefaultHttpMultipartRestClient();
-    	}
     	try {
-    		CNode cn = D1NodeFactory.buildCNode(restClient, URI.create(cnUrl));
-    		nodeLocator = new NodeListNodeLocator(cn.listNodes(), restClient);
+    		CNode cn = D1NodeFactory.buildCNode(MULTIPART_REST_CLIENT, URI.create(cnUrl));
+    		nodeLocator = new NodeListNodeLocator(cn.listNodes(), MULTIPART_REST_CLIENT);
     	} catch (ClientSideException e) {
 			ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
 		}
@@ -131,27 +135,29 @@ public class D1Client {
      * @return the mn at a particular URL
      * @throws ServiceFailure 
      */
-    public static MNode getMN(String mnBaseUrl) throws ServiceFailure {
-    	MNode mn = null;
-    	if (restClient == null) {
-    		restClient = new DefaultHttpMultipartRestClient();
-    	}
-    	try {
-    		if (nodeLocator != null) {
+    public static MNode getMN(String mnBaseUrl) throws ServiceFailure 
+    {
+    	MNode mn = null;	
+    	if (nodeLocator != null) {
+    		try {		
     			mn = (MNode) nodeLocator.getNode(mnBaseUrl);	
     		} 
-    		mn = D1NodeFactory.buildMNode(restClient, URI.create(mnBaseUrl));
-		} catch (ClientSideException e) {
-			try {
-				mn = D1NodeFactory.buildMNode(restClient, URI.create(mnBaseUrl));
-				if (nodeLocator != null) {
-					nodeLocator.putNode(mn.getNodeId(), mn);
-				}
-			}
+    		catch (ClientSideException e) {
+    			;  // that's ok, will try a different way
+    		}
+    	}
+    	if (mn == null) {
+    		try {
+    			mn = D1NodeFactory.buildMNode(MULTIPART_REST_CLIENT, URI.create(mnBaseUrl));	
+    			if (nodeLocator != null) {
+    				// be opportunist, but don't be the first to call the CN (and initialize potentially wrong state.		
+    				nodeLocator.putNode(mn.getNodeId(), mn);
+    			}
+    		}
 			catch (ClientSideException cse) {
 				throw ExceptionUtils.recastClientSideExceptionToServiceFailure(cse);
 			}
-		}
+    	}
     	return mn;
     }
 
@@ -165,29 +171,33 @@ public class D1Client {
      * @throws ServiceFailure 
      */
     //TODO: do we need this method?  When do we need to micro-manage which CN to connect to?
-    public static CNode getCN(String cnBaseUrl) throws ServiceFailure {
-    	CNode cn = null;
-    	if (restClient == null) {
-    		restClient = new DefaultHttpMultipartRestClient();
-    	}
-    	try {
-    		if (nodeLocator != null) {
-    			cn = (CNode) nodeLocator.getNode(cnBaseUrl);
+    public static CNode getCN(String cnBaseUrl) throws ServiceFailure 
+    {
+    	CNode cn = null;	
+    	if (nodeLocator != null) {
+    		try {		
+    			cn = (CNode) nodeLocator.getNode(cnBaseUrl);	
+    		} 
+    		catch (ClientSideException e) {
+    			;  // that's ok, will try a different way
     		}
-    		cn = D1NodeFactory.buildCNode(restClient, URI.create(cnBaseUrl));
-		} catch (ClientSideException e) {
-			try {
-				cn = D1NodeFactory.buildCNode(restClient, URI.create(cnBaseUrl));
-				if (nodeLocator != null) {
-					nodeLocator.putNode(cn.getNodeId(), cn);
-				}
-			}
+    	}
+    	if (cn == null) {
+    		try {
+    			cn = D1NodeFactory.buildCNode(MULTIPART_REST_CLIENT, URI.create(cnBaseUrl));	
+    			if (nodeLocator != null) {
+    				// be opportunist, but don't be the first to call the CN (and initialize potentially wrong state.		
+    				nodeLocator.putNode(cn.getNodeId(), cn);
+    			}
+    		}
 			catch (ClientSideException cse) {
 				throw ExceptionUtils.recastClientSideExceptionToServiceFailure(cse);
 			}
-		}
+    	}
     	return cn;
     }
+    	
+
 
 
     /**
@@ -200,29 +210,22 @@ public class D1Client {
      * @throws ServiceFailure
      */
     public static MNode getMN(NodeReference nodeRef) throws ServiceFailure 
-    {  	
-    	if (nodeLocator == null) {
-    		try {
-				nodeLocator = new NodeListNodeLocator(D1Client.getCN().listNodes(), 
-						new DefaultHttpMultipartRestClient());
-			} catch (NotImplemented e) {
-				throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
-			} catch (ClientSideException e) {
-				ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
-			}
-    	}
-    	MNode mn;
-		try {
+    {  		
+		MNode mn = null;
+    	try {
+			// initialize the environment or lack-thereof
+			D1Client.getCN(); 
 			mn = (MNode) nodeLocator.getNode(nodeRef);
 		} catch (ClientSideException e) {
 			throw new ServiceFailure("0000", "Node is not an MNode: "
    				 + nodeRef.getValue());
+		} catch (NotImplemented e) {
+			throw new ServiceFailure("0000", "Got 'NotImplemented' from getCN(): " + e.getDescription());
 		}
     	if (mn == null) {
     		throw new ServiceFailure("0000", "Failed to find baseUrl for node "
     				 + nodeRef.getValue() + " in the NodeList");
     	}
-        mn.setNodeId(nodeRef);
         return mn;
     }
     
