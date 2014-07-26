@@ -149,10 +149,10 @@ public class D1Client {
     	if (mn == null) {
     		try {
     			mn = D1NodeFactory.buildMNode(MULTIPART_REST_CLIENT, URI.create(mnBaseUrl));	
-    			if (nodeLocator != null) {
-    				// be opportunist, but don't be the first to call the CN (and initialize potentially wrong state.		
-    				nodeLocator.putNode(mn.getNodeId(), mn);
-    			}
+//    			if (nodeLocator != null) {
+//    				// be opportunist, but don't be the first to call the CN (and initialize potentially wrong state.		
+//    				nodeLocator.putNode(mn.getNodeId(), mn);
+//    			}
     		}
 			catch (ClientSideException cse) {
 				throw ExceptionUtils.recastClientSideExceptionToServiceFailure(cse);
@@ -185,10 +185,10 @@ public class D1Client {
     	if (cn == null) {
     		try {
     			cn = D1NodeFactory.buildCNode(MULTIPART_REST_CLIENT, URI.create(cnBaseUrl));	
-    			if (nodeLocator != null) {
-    				// be opportunist, but don't be the first to call the CN (and initialize potentially wrong state.		
-    				nodeLocator.putNode(cn.getNodeId(), cn);
-    			}
+//    			if (nodeLocator != null && cn != null) {
+//    				// be opportunist, but don't be the first to call the CN (and initialize potentially wrong state.		
+//    				nodeLocator.putNode(cn.getNodeId(), cn);
+//    			}
     		}
 			catch (ClientSideException cse) {
 				throw ExceptionUtils.recastClientSideExceptionToServiceFailure(cse);
