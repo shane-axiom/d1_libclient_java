@@ -22,6 +22,7 @@ package org.dataone.client;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,6 +47,7 @@ import org.dataone.service.types.v1.SystemMetadata;
 import org.dspace.foresite.OREException;
 import org.dspace.foresite.OREParserException;
 import org.dspace.foresite.ORESerialiserException;
+import org.dspace.foresite.Predicate;
 import org.dspace.foresite.ResourceMap;
 
 /**
@@ -84,6 +86,7 @@ public class DataPackage {
     
     private Identifier packageId;
     private Map<Identifier, List<Identifier>> metadataMap;
+    private Map<Predicate, Map<Identifier, List<Identifier>>> tripleMap;
     private HashMap<Identifier, D1Object> objectStore;
     private SystemMetadata systemMetadata = null;
     
@@ -104,6 +107,7 @@ public class DataPackage {
     public DataPackage(Identifier id) {
         objectStore = new HashMap<Identifier, D1Object>();
         metadataMap = new HashMap<Identifier, List<Identifier>>();
+        tripleMap   = new HashMap<Predicate, Map<Identifier, List<Identifier>>>();
         setPackageId(id);
     }
     
@@ -144,8 +148,6 @@ public class DataPackage {
         }
     }
     
-    // TODO: consider renaming the method to include the relationship to be added to the 
-    // resourceMap
     /**
      * Declare which data objects are documented by a metadata object, using their
      * identifiers.  Additional calls using the same metadata identifier will append 
@@ -177,6 +179,62 @@ public class DataPackage {
         	metadataMap.put(metadataID, associatedData);
     }
     
+    /** Declare which data objects are documented by a metadata object, using their
+    * identifiers.  Additional calls using the same metadata identifier will append 
+    * to existing data identifier lists. Identifiers used in this call will de 
+    * facto be part of any serialized resource map derived from the DataPackage 
+    * instance.
+    * 
+    * @param subjectID
+    * @param objectIDList
+    * @param predicateNS
+    * @param predicateURI
+    * @throws URISyntaxException
+    */
+   public void insertRelationship(Identifier subjectID, List<Identifier> objectIDList, String predicateNS, String predicateURI) throws URISyntaxException
+   {   
+       //Create the predicate
+       Predicate predicate = new Predicate();
+		predicate.setNamespace(predicateNS);
+		predicate.setURI(new URI(predicateURI));
+       
+		// Start a list to hold the object Identifiers
+		List<Identifier> associatedObj = null;
+		// Start a map to map the subject Identifier to the object Identifiers
+       Map<Identifier, List<Identifier>> idMap = null;
+              
+       // Determine if we have a triple with this predicate and subject already
+       // Use it if so, if not then create a list for these objects        	
+       if (tripleMap.containsKey(predicate)) {
+       	idMap = tripleMap.get(predicate);
+       	
+       	if(idMap.containsKey(subjectID)){
+       		associatedObj = idMap.get(subjectID);
+       	}
+       	else{
+       		associatedObj = new ArrayList<Identifier>();
+       	}	
+       } else {
+       	associatedObj = new ArrayList<Identifier>();
+           idMap  = new HashMap<Identifier, List<Identifier>>();
+       }
+       
+       // For each object item, add the relationship if it doesn't exist
+       for (Identifier objectID : objectIDList) {
+           if (!associatedObj.contains(objectID)) {
+           	associatedObj.add(objectID);
+           }
+       }
+       
+       // Create the Identifier map
+       if (!idMap.containsKey(subjectID))
+       	idMap.put(subjectID, associatedObj);
+       
+       //Add to the tripleMap
+       tripleMap.put(predicate, idMap);
+       
+   }
+   
     /**
      * Used to introspect on the local temporary data store, NOT the number of 
      * DataPackage members.
@@ -263,11 +321,13 @@ public class DataPackage {
      */
     public ResourceMap getMap() throws OREException, URISyntaxException 
     {
-    	return ResourceMapFactory.getInstance().createResourceMap(packageId, metadataMap);
+    	if(tripleMap.isEmpty())
+    		return ResourceMapFactory.getInstance().createResourceMap(packageId, metadataMap);
+    	else
+    		return ResourceMapFactory.getInstance().createResourceMap(packageId, metadataMap, tripleMap);
+
     }
-    
-    
-    
+        
     /**
      * Return an ORE ResourceMap describing this package, serialized as an RDF graph.
      * @return the map as a serialized String
