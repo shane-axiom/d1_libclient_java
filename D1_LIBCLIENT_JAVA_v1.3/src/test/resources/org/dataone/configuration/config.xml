@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Apache Commons Configuration -->
+<configuration>
+	
+	<!-- override the d1 client properties if needed for tests -->
+	<properties fileName="d1client.properties"/>
+	
+	<!-- override the default properties to test the Settings class -->
+	<properties fileName="override.properties"/>
+	
+</configuration>
