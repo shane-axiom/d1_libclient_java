@@ -223,7 +223,43 @@ public class ResourceMapFactory {
 		
 	}
 	
+	/**
+	 * creates a ResourceMap from the DataPackage representation and a Map of other relationships.
+	 * @param resourceMapId
+	 * @param idMap
+	 * @return
+	 * @throws OREException
+	 * @throws URISyntaxException
+	 */
+	public ResourceMap createResourceMap(
+			Identifier resourceMapId, 
+			Map<Identifier, List<Identifier>> idMap,
+			Map<Predicate, Map<Identifier, List<Identifier>>> tripleMap) 
+		throws OREException, URISyntaxException {
+		
+		ResourceMap resourceMap = createResourceMap(resourceMapId, idMap);
+		
+		//Iterate over each triple in the triple map and add it to the resource map
+		for (Map.Entry<Predicate, Map<Identifier, List<Identifier>>> thisTripleMap : tripleMap.entrySet()) {
+		    Predicate predicate = thisTripleMap.getKey();
+		    Map<Identifier, List<Identifier>> tripleIdMap = thisTripleMap.getValue();
+		    
+		    for (Map.Entry<Identifier, List<Identifier>> thisTripleIdMap : tripleIdMap.entrySet()) {
+		    	Identifier subjectId = thisTripleIdMap.getKey();
+			    List<Identifier> objectIdList = thisTripleIdMap.getValue();
 	
+			    for(Identifier objectId : objectIdList){
+			    	Triple triple = OREFactory.createTriple(
+			    		new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(subjectId.getValue())), 
+			    		predicate, 
+			    		new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(objectId.getValue())));
+			    	resourceMap.addTriple(triple);
+			    }
+		    }
+		}
+
+		return resourceMap;
+	}
 	
 	
 	
