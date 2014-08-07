@@ -48,9 +48,17 @@ import org.dataone.service.types.v1.Session;
 public class D1Client {
 
     private static NodeLocator nodeLocator;
-    protected static final MultipartRestClient MULTIPART_REST_CLIENT = new DefaultHttpMultipartRestClient();
     
+	protected static final MultipartRestClient MULTIPART_REST_CLIENT = new DefaultHttpMultipartRestClient();
     
+	/**
+	 * For testing, we can override the nodeLocator
+	 * @param nodeLocator
+	 */
+	public static void setNodeLocator(NodeLocator nodeLocator) {
+		D1Client.nodeLocator = nodeLocator;
+	}
+	
     /**
 	 * Get the cached CNode object for calling Coordinating Node services.
 	 * By default returns the production context CN, defined via the property 
