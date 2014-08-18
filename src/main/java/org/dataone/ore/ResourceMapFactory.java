@@ -28,6 +28,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -239,6 +240,18 @@ public class ResourceMapFactory {
 		
 		ResourceMap resourceMap = createResourceMap(resourceMapId, idMap);
 		
+		//Start a list to hold all the ids of external objects referenced in this resource map
+		List<Identifier> externalIds = new ArrayList<Identifier>();
+		
+		//Create a flattened list of the ids of internal resources
+		List<Identifier> internalIds = new ArrayList<Identifier>();
+		Collection<List<Identifier>> idMapValues = idMap.values();
+		for(List<Identifier> ids : idMapValues){
+			for(Identifier id : ids){
+				internalIds.add(id);	
+			}
+		}
+		
 		//Iterate over each triple in the triple map and add it to the resource map
 		for (Map.Entry<Predicate, Map<Identifier, List<Identifier>>> thisTripleMap : tripleMap.entrySet()) {
 		    Predicate predicate = thisTripleMap.getKey();
@@ -249,6 +262,12 @@ public class ResourceMapFactory {
 			    List<Identifier> objectIdList = thisTripleIdMap.getValue();
 			    
 			    for(Identifier objectId : objectIdList){
+			    	
+			    	//Is this a reference to an external resource?
+			    	if(!internalIds.contains(objectId)){
+			    		externalIds.add(objectId);
+			    	}
+			    	
 			    	Triple triple = OREFactory.createTriple(
 			    		new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(subjectId.getValue())), 
 			    		predicate, 
@@ -257,7 +276,18 @@ public class ResourceMapFactory {
 			    }
 		    }
 		}
-
+				
+		//Add a node for any external references that just states the dcterms:indentifier 
+		for(Identifier externalId : externalIds){
+			URI externalURI = new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(externalId.getValue()));
+			
+			//Add the Identifier
+			Triple identifier = new TripleJena();
+			identifier.initialise(externalURI);
+			identifier.relate(DC_TERMS_IDENTIFIER, externalId.getValue());
+			resourceMap.addTriple(identifier);
+		}
+		
 		return resourceMap;
 	}
 
