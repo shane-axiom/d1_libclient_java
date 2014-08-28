@@ -112,7 +112,7 @@ import org.jibx.runtime.JiBXException;
  */
 public class CertificateManager {
 	
-	private static Log log = LogFactory.getLog(CertificateManager.class);
+	static Log log = LogFactory.getLog(CertificateManager.class);
 //	private static Log trustManLog = LogFactory.getLog(X509TrustManager.class);
 	
 	// this can be set by caller if the default discovery mechanism is not applicable
@@ -760,7 +760,6 @@ public class CertificateManager {
 				private List<X509Certificate> d1CaCertificates = getSupplementalCACertificates();
 	
 	            public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-	            	System.err.println("checkClientTrusted - " + authType);
 	            
 	            	// check DataONE-trusted CAs in addition to the default
 	        		boolean trusted = false;
@@ -779,7 +778,6 @@ public class CertificateManager {
 	            }
 	            
 	            public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-	            	System.err.println("checkServerTrusted - " + authType);
 
 	            	// check DataONE-trusted CAs in addition to the default
 	        		boolean trusted = false;
@@ -796,14 +794,15 @@ public class CertificateManager {
 	        			//throw new CertificateException("Certificate issuer not found in trusted CAs");
 	        			// try the default, which will either succeed, in which case we are good, or will throw exception
 	        			try {
-	        				System.err.println("CertMan Custom TrustManager: checking JVM trusted certs");
 	        				defaultTrustManager.checkServerTrusted(chain, authType);
 	        			} catch (CertificateException ce) {
-	        				System.err.println("CertMan Custom TrustManager: server cert chain subjectDNs: ");
-	        				for (X509Certificate cert: chain) {
-	        					System.err.println("CertMan Custom TrustManager:   subjDN: " + cert.getSubjectDN() + 
-	        							" / issuerDN: " + cert.getIssuerX500Principal());
-	    	            	}
+	        				if (log.isTraceEnabled()) {
+	        					log.trace("CertMan Custom TrustManager: server cert chain subjectDNs: ");
+	        					for (X509Certificate cert: chain) {
+	        						log.trace("CertMan Custom TrustManager:   subjDN: " + cert.getSubjectDN() + 
+	        								" / issuerDN: " + cert.getIssuerX500Principal());
+	        					}
+	        				}
 	        				throw ce;
 	        			}
 	        		}
