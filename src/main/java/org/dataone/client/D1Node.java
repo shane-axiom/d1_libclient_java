@@ -32,6 +32,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.input.AutoCloseInputStream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.Header;
@@ -100,6 +101,10 @@ public abstract class D1Node {
     
     /** default Socket timeout in milliseconds **/
     private Integer defaultSoTimeout = 30000;
+    
+    private BigInteger cachingObjectSizeLimit = new BigInteger("10485760"); // 10Mb
+    
+    
 	/**
      * Useful for debugging to see what the last call was
      * @return
@@ -119,6 +124,8 @@ public abstract class D1Node {
 	    setNodeBaseServiceUrl(nodeBaseServiceUrl);
 	    this.session = session;
 	    this.useLocalCache = Settings.getConfiguration().getBoolean("D1Client.useLocalCache",useLocalCache);
+	    this.cachingObjectSizeLimit = Settings.getConfiguration().getBigInteger(
+	    		"D1Client.cacheObjectSizeLimit", this.cachingObjectSizeLimit);
 	}
     
     
@@ -210,7 +217,6 @@ public abstract class D1Node {
 
 	    finally {
 	    	setLatestRequestUrl(client.getLatestRequestUrl());
-	    	client.closeIdleConnections();
 	    }
 		// if exception not thrown, and we got this far,
 		// then pull the date info from the headers
@@ -306,7 +312,6 @@ public abstract class D1Node {
  
         finally {
         	setLatestRequestUrl(client.getLatestRequestUrl());
-	    	client.closeIdleConnections();
 	    }
         return objectList;
     }
@@ -381,7 +386,6 @@ public abstract class D1Node {
 
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
 		return log;
 	}
@@ -419,18 +423,21 @@ public abstract class D1Node {
     throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, 
       NotImplemented, InsufficientResources
     {
-        InputStream is = null;        
+        InputStream returnStream = null;        
         boolean cacheMissed = false;
         
         if (useLocalCache) {
             try {
                 byte[] data = LocalCache.instance().getData(pid);
-                is = new ByteArrayInputStream(data);
-                return is;
+                returnStream = new ByteArrayInputStream(data);
+                return returnStream;
             } catch (NotCached e) {
                 cacheMissed = true;
             }
         }
+        
+        // if we reached this far, can't use the cache and need to make the remote call
+        
        	D1Url url = new D1Url(this.getNodeBaseServiceUrl(),Constants.RESOURCE_OBJECTS);
        	
        	try {
@@ -441,15 +448,24 @@ public abstract class D1Node {
        	
 
 		D1RestClient client = new D1RestClient(session);
-                client.setTimeouts(Settings.getConfiguration()
-                .getInteger("D1Client.D1Node.get.timeout", getDefaultSoTimeout()));
+		client.setTimeouts(Settings.getConfiguration()
+				.getInteger("D1Client.D1Node.get.timeout", getDefaultSoTimeout()));
         try {
-        	byte[] bytes = IOUtils.toByteArray(client.doGetRequest(url.getUrl()));
-        	is = new ByteArrayInputStream(bytes); 
-		
+        	InputStream remoteStream = client.doGetRequest(url.getUrl());
 			if (cacheMissed) {
+				// TODO: GB size remoteStreams will cause heap errors when caching.
 			    // Cache the result, and reset the stream mark
-			    LocalCache.instance().putData(pid, bytes);
+				DescribeResponse dr = this.describe(session, pid);
+				if (dr.getContent_Length().compareTo(cachingObjectSizeLimit) <= 0) { 
+					byte[] bytes = IOUtils.toByteArray(remoteStream);
+					LocalCache.instance().putData(pid, bytes);
+					returnStream = new ByteArrayInputStream(bytes);
+				} else {
+					// return as if not asked to cache
+					returnStream = new AutoCloseInputStream(remoteStream);
+				}
+			} else {
+				returnStream = new AutoCloseInputStream(remoteStream);
 			}
 		} catch (BaseException be) {
             if (be instanceof InvalidToken)      throw (InvalidToken) be;
@@ -468,9 +484,8 @@ public abstract class D1Node {
         
         finally {
         	setLatestRequestUrl(client.getLatestRequestUrl());
-        	client.closeIdleConnections();
         }
-        return is;
+        return returnStream;
     }
  
     
@@ -579,7 +594,6 @@ public abstract class D1Node {
 	
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
         return sysmeta;
 	}
@@ -632,7 +646,6 @@ public abstract class D1Node {
 
     	finally {
     		setLatestRequestUrl(client.getLatestRequestUrl());
-    		client.closeIdleConnections();
     	}
     	
  //   	DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
@@ -755,7 +768,6 @@ public abstract class D1Node {
 
         finally {
         	setLatestRequestUrl(client.getLatestRequestUrl());
-        	client.closeIdleConnections();
         }
         return checksum;
     }
@@ -804,7 +816,6 @@ public abstract class D1Node {
 
         finally {
         	setLatestRequestUrl(client.getLatestRequestUrl());
-        	client.closeIdleConnections();
         }
         return true;
     }
@@ -855,7 +866,6 @@ public abstract class D1Node {
 
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
  		return identifier;
 	}
@@ -908,7 +918,6 @@ public abstract class D1Node {
 
         finally {
         	setLatestRequestUrl(client.getLatestRequestUrl());
-        	client.closeIdleConnections();
         }
         return identifier;
     }
@@ -949,7 +958,6 @@ public abstract class D1Node {
 
         finally {
         	setLatestRequestUrl(client.getLatestRequestUrl());
-        	client.closeIdleConnections();
         }
         return identifier;
     }
@@ -1019,10 +1027,10 @@ public abstract class D1Node {
         }
     	String finalUrl = url.getUrl() + "/" + encodedQuery;
         D1RestClient client = new D1RestClient(session);
-        InputStream is = null;
+        
+        AutoCloseInputStream acis = null;
         try {
-        	byte[] bytes = IOUtils.toByteArray(client.doGetRequest(finalUrl));
-        	is = new ByteArrayInputStream(bytes); 
+        	acis = new AutoCloseInputStream(client.doGetRequest(finalUrl));
 		}
         catch (BaseException be) {
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
@@ -1041,9 +1049,8 @@ public abstract class D1Node {
 
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
-		return is;
+		return acis;
 	}
 
 
@@ -1081,7 +1088,6 @@ public abstract class D1Node {
 
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
 		return description;
 	}
@@ -1114,7 +1120,6 @@ public abstract class D1Node {
 
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
 		return engines;
 	}
