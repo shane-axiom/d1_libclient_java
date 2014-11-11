@@ -22,16 +22,6 @@
 
 package org.dataone.client;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.math.BigInteger;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.AutoCloseInputStream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.LogFactory;
@@ -42,32 +32,19 @@ import org.dataone.client.cache.LocalCache;
 import org.dataone.client.exception.NotCached;
 import org.dataone.configuration.Settings;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
-import org.dataone.service.exceptions.BaseException;
-import org.dataone.service.exceptions.InsufficientResources;
-import org.dataone.service.exceptions.InvalidRequest;
-import org.dataone.service.exceptions.InvalidToken;
-import org.dataone.service.exceptions.NotAuthorized;
-import org.dataone.service.exceptions.NotFound;
-import org.dataone.service.exceptions.NotImplemented;
-import org.dataone.service.exceptions.ServiceFailure;
-import org.dataone.service.types.v1.Checksum;
-import org.dataone.service.types.v1.DescribeResponse;
-import org.dataone.service.types.v1.Event;
-import org.dataone.service.types.v1.Identifier;
-import org.dataone.service.types.v1.Log;
-import org.dataone.service.types.v1.ObjectFormatIdentifier;
-import org.dataone.service.types.v1.ObjectList;
-import org.dataone.service.types.v1.Permission;
-import org.dataone.service.types.v1.Session;
-import org.dataone.service.types.v1.SystemMetadata;
+import org.dataone.service.exceptions.*;
+import org.dataone.service.types.v1.*;
 import org.dataone.service.types.v1_1.QueryEngineDescription;
 import org.dataone.service.types.v1_1.QueryEngineList;
-import org.dataone.service.util.BigIntegerMarshaller;
-import org.dataone.service.util.Constants;
-import org.dataone.service.util.D1Url;
-import org.dataone.service.util.DateTimeMarshaller;
-import org.dataone.service.util.TypeMarshaller;
+import org.dataone.service.util.*;
 import org.jibx.runtime.JiBXException;
+
+import java.io.*;
+import java.math.BigInteger;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * An abstract node class that contains base functionality shared between 
@@ -107,7 +84,7 @@ public abstract class D1Node {
     
 	/**
      * Useful for debugging to see what the last call was
-     * @return
+     * @return the url of the latest request
      */
     public String getLatestRequestUrl() {
     	return lastRequestUrl;
@@ -222,12 +199,14 @@ public abstract class D1Node {
 		// then pull the date info from the headers
 		Date date = null;
 		for (Header header: headers) {
-			if (log.isDebugEnabled())
-				log.debug(String.format("header: %s = %s", 
-										header.getName(), 
-										header.getValue() ));
-			if (header.getName().equals("Date")) 
-				date = DateTimeMarshaller.deserializeDateToUTC(header.getValue());
+			if (header != null) {
+				if (log.isDebugEnabled())
+					log.debug(String.format("header: %s = %s",
+							header.getName(),
+							header.getValue()));
+				if (header.getName().equals("Date"))
+					date = DateTimeMarshaller.deserializeDateToUTC(header.getValue());
+			}
 		}
 		if (date == null) 
 			throw new ServiceFailure("0000", "Could not get date information from response's 'Date' header.");
@@ -413,83 +392,110 @@ public abstract class D1Node {
      * Get the resource with the specified pid.  Used by both the CNode and 
      * MNode subclasses. A LocalCache is used to cache objects in memory and in 
      * a local disk cache if the "D1Client.useLocalCache" configuration property
-     * was set to true when the D1Node was created. Otherwise
-     * InputStream is the Java native version of D1's OctetStream
+     * was set to true when the D1Node was created. Also, caching is limited to
+	 * objects under a certain size limit, configurable through the property
+	 * "D1Client.cacheObjectSizeLimit" (default is 10Mb), to prevent potential
+	 * heap errors.  If the object is not cached, the returned InputStream is
+	 * a remote InputStream that hold the http connection until the InputStream
+	 * is consumed and closed.
      * 
      * @see <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.get">see DataONE API Reference (MemberNode API)</a>
      * @see <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.get">see DataONE API Reference (CoordinatingNode API)</a>
      */
     public InputStream get(Session session, Identifier pid)
-    throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, 
-      NotImplemented, InsufficientResources
-    {
-        InputStream returnStream = null;        
-        boolean cacheMissed = false;
-        
-        if (useLocalCache) {
-            try {
-                byte[] data = LocalCache.instance().getData(pid);
-                returnStream = new ByteArrayInputStream(data);
-                return returnStream;
-            } catch (NotCached e) {
-                cacheMissed = true;
-            }
-        }
-        
-        // if we reached this far, can't use the cache and need to make the remote call
-        
-       	D1Url url = new D1Url(this.getNodeBaseServiceUrl(),Constants.RESOURCE_OBJECTS);
-       	
-       	try {
-       		url.addNextPathElement(pid.getValue());
-       	} catch (IllegalArgumentException e) {
-       		throw new NotFound("0000", "'pid' cannot be null nor empty");
-       	}
-       	
+			throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented, InsufficientResources
+	{
+		InputStream returnStream = null;
+		boolean cacheMissed = false;
+		if (useLocalCache) {
+			try {
+				byte[] data = LocalCache.instance().getData(pid);
+				returnStream = new ByteArrayInputStream(data);
+				return returnStream;
+			} catch (NotCached e) {
+				cacheMissed = true;
+			}
+		}
+
+		// if we reached this far, can't use the cache and need to make the remote call
+		D1Url url = new D1Url(this.getNodeBaseServiceUrl(),Constants.RESOURCE_OBJECTS);
+
+		try {
+			url.addNextPathElement(pid.getValue());
+		} catch (IllegalArgumentException e) {
+			throw new NotFound("0000", "'pid' cannot be null nor empty");
+		}
 
 		D1RestClient client = new D1RestClient(session);
 		client.setTimeouts(Settings.getConfiguration()
 				.getInteger("D1Client.D1Node.get.timeout", getDefaultSoTimeout()));
-        try {
-        	InputStream remoteStream = client.doGetRequest(url.getUrl());
+
+		try {
+			InputStream remoteStream = client.doGetRequest(url.getUrl());
 			if (cacheMissed) {
-				// TODO: GB size remoteStreams will cause heap errors when caching.
-			    // Cache the result, and reset the stream mark
-				DescribeResponse dr = this.describe(session, pid);
-				if (dr.getContent_Length().compareTo(cachingObjectSizeLimit) <= 0) { 
-					byte[] bytes = IOUtils.toByteArray(remoteStream);
-					LocalCache.instance().putData(pid, bytes);
-					returnStream = new ByteArrayInputStream(bytes);
-				} else {
-					// return as if not asked to cache
-					returnStream = new AutoCloseInputStream(remoteStream);
-				}
-			} else {
+				returnStream = handleCaching(pid, remoteStream);
+			}
+			else {
 				returnStream = new AutoCloseInputStream(remoteStream);
 			}
+
 		} catch (BaseException be) {
-            if (be instanceof InvalidToken)      throw (InvalidToken) be;
-            if (be instanceof NotAuthorized)     throw (NotAuthorized) be;
-            if (be instanceof NotImplemented)    throw (NotImplemented) be;
-            if (be instanceof ServiceFailure)    throw (ServiceFailure) be;
-            if (be instanceof NotFound)                throw (NotFound) be;
-            if (be instanceof InsufficientResources)   throw (InsufficientResources) be;
-                    
-            throw recastDataONEExceptionToServiceFailure(be);
-        } 
-        catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
-        catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); } 
-        
-        finally {
-        	setLatestRequestUrl(client.getLatestRequestUrl());
-        }
-        return returnStream;
-    }
- 
-    
-    
+			if (be instanceof InvalidToken)      throw (InvalidToken) be;
+			if (be instanceof NotAuthorized)     throw (NotAuthorized) be;
+			if (be instanceof NotImplemented)    throw (NotImplemented) be;
+			if (be instanceof ServiceFailure)    throw (ServiceFailure) be;
+			if (be instanceof NotFound)                throw (NotFound) be;
+			if (be instanceof InsufficientResources)   throw (InsufficientResources) be;
+
+			throw recastDataONEExceptionToServiceFailure(be);
+		}
+		catch (ClientProtocolException e)  {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IllegalStateException e)    {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (IOException e)              {throw recastClientSideExceptionToServiceFailure(e); }
+		catch (HttpException e)            {throw recastClientSideExceptionToServiceFailure(e); }
+
+		finally {
+			setLatestRequestUrl(client.getLatestRequestUrl());
+		}
+		return returnStream;
+	}
+
+	/*
+	 * isolation of the caching logic for easier testing of caching with a size limit.  Used by get()
+	 */
+	private InputStream handleCaching(Identifier pid, InputStream remoteStream) throws IOException {
+		// start caching the remoteStream to byteArray
+		// until a size limit has been reached.  If too big, abandon caching plans.
+
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		byte[] buffer = new byte[4096];
+		long count = 0;
+		int n = 0;
+		boolean underCacheSizeLimit = true;
+		while (underCacheSizeLimit && -1 != (n = remoteStream.read(buffer))) {
+			baos.write(buffer, 0, n);
+			count += n;
+			if (cachingObjectSizeLimit.compareTo(new BigInteger(Long.toString(count))) <= 0) {
+				underCacheSizeLimit = false;
+			}
+		}
+		baos.close();
+		byte[] cachedBytes = baos.toByteArray();
+
+		if (underCacheSizeLimit) {
+			LocalCache.instance().putData(pid, cachedBytes);
+			return new ByteArrayInputStream(cachedBytes);
+		}
+		else {
+			//don't cache, but use the buffered bytes
+			return new SequenceInputStream(
+					new ByteArrayInputStream(cachedBytes),
+					new AutoCloseInputStream(remoteStream)
+			);
+		}
+	}
+
+
     /**
      * Get the system metadata from a resource with the specified guid. Used
      * by both the CNode and MNode implementations. Note that this method defaults
@@ -497,8 +503,8 @@ public abstract class D1Node {
      * SystemMetadata is mutable and so caching can lead to issues.  In specific
      * cases where a client wants to utilize the same system metadata in rapid succession,
      * it may make sense to temporarily use the local cache by calling @see #getSystemMetadata(Session, Identifier, boolean).
-     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.getSystemMetadata"> DataONE API Reference (MemberNode API)</a> 
-     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.getSystemMetadata"> DataONE API Reference (CoordinatingNode API)</a> 
+     * @see https://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.getSystemMetadata"> DataONE API Reference (MemberNode API)</a>
+     * @see https://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.getSystemMetadata"> DataONE API Reference (CoordinatingNode API)</a>
      */
     public SystemMetadata getSystemMetadata(Identifier pid)
     throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented 
@@ -724,7 +730,7 @@ public abstract class D1Node {
      * @param session
      * @param pid
      * @param checksumAlgorithm - for MN implementations only
-     * @return
+     * @return Checksum
      * @throws InvalidRequest - for MN implementations only
      * @throws InvalidToken
      * @throws NotAuthorized
@@ -888,7 +894,6 @@ public abstract class D1Node {
      * @throws NotAuthorized
      * @throws NotFound
      * @throws NotImplemented
-     * @throws InvalidRequest 
      */
     public  Identifier archive(Session session, Identifier pid)
         throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
