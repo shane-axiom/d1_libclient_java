@@ -390,14 +390,15 @@ public abstract class D1Node {
 	
 	/**
      * Get the resource with the specified pid.  Used by both the CNode and 
-     * MNode subclasses. A LocalCache is used to cache objects in memory and in 
-     * a local disk cache if the "D1Client.useLocalCache" configuration property
-     * was set to true when the D1Node was created. Also, caching is limited to
-	 * objects under a certain size limit, configurable through the property
-	 * "D1Client.cacheObjectSizeLimit" (default is 10Mb), to prevent potential
-	 * heap errors.  If the object is not cached, the returned InputStream is
-	 * a remote InputStream that hold the http connection until the InputStream
-	 * is consumed and closed.
+     * MNode subclasses.  Default behavior is to return the input stream backed
+     * by the HTTP connection to the remote node, so applications need to be
+     * careful to consume and close the input stream responsibly.<p/>
+
+     * If the configuration property "D1Client.useLocalCache" is set to true
+     * (at the time of CNode or MNode instantiation), the resource will be cached
+     * in memory and local disk. To prevent potential out-of-memory issues, an
+     * additional property "D1Client.cacheObjectSizeLimit" (default value of 10Mb)
+     * is used that bypasses caching resources over the size limit.
      * 
      * @see <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.get">see DataONE API Reference (MemberNode API)</a>
      * @see <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.get">see DataONE API Reference (CoordinatingNode API)</a>
@@ -463,7 +464,7 @@ public abstract class D1Node {
 	/*
 	 * isolation of the caching logic for easier testing of caching with a size limit.  Used by get()
 	 */
-	private InputStream handleCaching(Identifier pid, InputStream remoteStream) throws IOException {
+	protected InputStream handleCaching(Identifier pid, InputStream remoteStream) throws IOException {
 		// start caching the remoteStream to byteArray
 		// until a size limit has been reached.  If too big, abandon caching plans.
 
