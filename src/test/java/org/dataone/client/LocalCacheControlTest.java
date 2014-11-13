@@ -19,8 +19,8 @@ import org.junit.Test;
  */
 public class LocalCacheControlTest {
 
-	// tests use NullInputStream which emulate large datastreams by generating 0's
-	// from read method until the number of bytes read exceed the size set in the construtor
+	// tests use NullInputStream which emulates large data streams by generating 0's
+	// from read method until the number of bytes read exceed the size set in the constructor
 	
 	@Test
 	public void testHandleCaching_withinSizeLimit() {
