@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-package org.dataone.client;
+package org.dataone.client.types;
 
 import java.io.IOException;
 import java.io.InputStream;
