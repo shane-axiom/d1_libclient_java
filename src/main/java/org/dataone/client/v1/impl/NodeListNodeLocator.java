@@ -22,6 +22,7 @@ package org.dataone.client.v1.impl;
 import java.net.URI;
 import java.util.Set;
 
+import org.dataone.client.D1NodeFactory;
 import org.dataone.client.NodeLocator;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.rest.MultipartRestClient;
@@ -64,12 +65,12 @@ public class NodeListNodeLocator extends NodeLocator {
 				if (node.getType().equals(NodeType.MN)) {
 					super.putNode(
 							node.getIdentifier(),
-							D1NodeFactory.buildMNode(this.restClient, URI.create(node.getBaseURL()))
+							D1NodeFactory.build_v1_MNode(this.restClient, URI.create(node.getBaseURL()))
 							);
 				} else if (node.getType().equals(NodeType.CN)) {
 					super.putNode(
 							node.getIdentifier(),
-							D1NodeFactory.buildCNode(this.restClient, URI.create(node.getBaseURL()))
+							D1NodeFactory.build_v1_CNode(this.restClient, URI.create(node.getBaseURL()))
 							);
 				}
 			}	
@@ -88,12 +89,12 @@ public class NodeListNodeLocator extends NodeLocator {
 		}
 		for (Node node : cns) {
 			if (node.getDescription() != null && node.getDescription().contains("Robin")) {
-				return D1NodeFactory.buildCNode(restClient, URI.create(node.getBaseURL()));
+				return D1NodeFactory.build_v1_CNode(restClient, URI.create(node.getBaseURL()));
 			}
 		}
 		// get the first one
 		Node n = cns.iterator().next();		
-		return D1NodeFactory.buildCNode(restClient, URI.create(n.getBaseURL()));
+		return D1NodeFactory.build_v1_CNode(restClient, URI.create(n.getBaseURL()));
 
 	}
 }

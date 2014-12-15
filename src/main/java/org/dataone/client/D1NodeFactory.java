@@ -1,4 +1,4 @@
-package org.dataone.client.v1.impl;
+package org.dataone.client;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -8,8 +8,10 @@ import org.apache.commons.lang.StringUtils;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.rest.DefaultHttpMultipartRestClient;
 import org.dataone.client.rest.MultipartRestClient;
-import org.dataone.client.v1.CNode;
-import org.dataone.client.v1.MNode;
+import org.dataone.client.v2.CNode;
+import org.dataone.client.v2.MNode;
+import org.dataone.client.v1.impl.MultipartCNode;
+import org.dataone.client.v1.impl.MultipartMNode;
 import org.dataone.client.v1.types.D1TypeBuilder;
 import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.types.v1.NodeReference;
@@ -38,47 +40,47 @@ import org.dataone.service.types.v1.Subject;
  */
 public class D1NodeFactory {
 
-	private MultipartRestClient restClient;
-	
-	public D1NodeFactory(MultipartRestClient mrc) {
-		this.restClient = mrc;
-	}
-	
-	public D1NodeFactory() {
-		this.restClient = new DefaultHttpMultipartRestClient();
-	}
-	
-	/**
-	 * Access the MultipartRestClient set by the parameterless constructor
-	 * @return
-	 */
-	public MultipartRestClient getRestClient() {
-		return this.restClient;
-	}
-	
-	/**
-	 * Instantiate a CNode instance of the right type from the given URI
-	 * @param uri
-	 * @return
-	 * @throws ClientSideException
-	 */
-	public CNode buildCNode(URI uri)
-	throws ClientSideException
-	{
-		return D1NodeFactory.buildCNode(restClient, uri);
-	}
-	
-	/**
-	 * Instantiate an MNode instance of the right type from the given URI
-	 * @param uri
-	 * @return
-	 * @throws ClientSideException
-	 */
-	public MNode buildMNode(URI uri)
-	throws ClientSideException
-	{
-		return D1NodeFactory.buildMNode(restClient, uri);
-	}
+//	private MultipartRestClient restClient;
+//	
+//	public D1NodeFactory(MultipartRestClient mrc) {
+//		this.restClient = mrc;
+//	}
+//	
+//	public D1NodeFactory() {
+//		this.restClient = new DefaultHttpMultipartRestClient();
+//	}
+//	
+//	/**
+//	 * Access the MultipartRestClient set by the parameterless constructor
+//	 * @return
+//	 */
+//	public MultipartRestClient getRestClient() {
+//		return this.restClient;
+//	}
+//	
+//	/**
+//	 * Instantiate a CNode instance of the right type from the given URI
+//	 * @param uri
+//	 * @return
+//	 * @throws ClientSideException
+//	 */
+//	public CNode buildCNode(URI uri)
+//	throws ClientSideException
+//	{
+//		return D1NodeFactory.buildCNode(restClient, uri);
+//	}
+//	
+//	/**
+//	 * Instantiate an MNode instance of the right type from the given URI
+//	 * @param uri
+//	 * @return
+//	 * @throws ClientSideException
+//	 */
+//	public MNode buildMNode(URI uri)
+//	throws ClientSideException
+//	{
+//		return D1NodeFactory.buildMNode(restClient, uri);
+//	}
 	
 	/**
 	 * Instantiate a CNode instance of the right type from the given URI
@@ -88,18 +90,18 @@ public class D1NodeFactory {
 	 * @return
 	 * @throws ClientSideException
 	 */
-	public static CNode buildCNode(MultipartRestClient mrc, URI uri) 
+	public static org.dataone.client.v1.CNode build_v1_CNode(MultipartRestClient mrc, URI uri) 
 	throws ClientSideException 
 	{
 		// TOD check for nulls
 		
-		CNode builtCNode = null;
+		org.dataone.client.v1.CNode builtCNode = null;
 		
 		if (uri.getScheme() == null) {
 			throw new ClientSideException("CN uri had no scheme");
 		}
 		if(uri.getScheme().equals("java")) {
-			builtCNode = buildJavaD1Node(CNode.class, uri);
+			builtCNode = buildJavaD1Node(org.dataone.client.v1.CNode.class, uri);
 		}
 		else if (uri.getScheme().equals("http") || uri.getScheme().equals("https")) {
 			// build the standard implementation
@@ -117,16 +119,70 @@ public class D1NodeFactory {
 	 * @return
 	 * @throws ClientSideException
 	 */
-	public static MNode buildMNode(MultipartRestClient mrc, URI uri) 
+	public static org.dataone.client.v1.MNode build_v1_MNode(MultipartRestClient mrc, URI uri) 
 	throws ClientSideException 
 	{
-		MNode builtMNode = null;
+		org.dataone.client.v1.MNode builtMNode = null;
 		if(uri.getScheme().equals("java")) {
-			builtMNode = buildJavaD1Node(MNode.class, uri);
+			builtMNode = buildJavaD1Node(org.dataone.client.v1.MNode.class, uri);
 		}
 		else if (uri.getScheme().equals("http") || uri.getScheme().equals("https")) {
 			// build the standard implementation
 			builtMNode = new MultipartMNode( mrc, uri.toString());
+		} else {
+			throw new ClientSideException("No corresponding builder for URI scheme: " + uri.getScheme());
+		}
+		
+		return builtMNode;
+	} 
+	
+	/**
+	 * Instantiate a CNode instance of the right type from the given URI
+	 * and the provided MultipartRestClient
+	 * @param mrc
+	 * @param uri
+	 * @return
+	 * @throws ClientSideException
+	 */
+	public static org.dataone.client.v2.CNode build_v2_CNode(MultipartRestClient mrc, URI uri) 
+	throws ClientSideException 
+	{
+		// TOD check for nulls
+		
+		org.dataone.client.v2.CNode builtCNode = null;
+		
+		if (uri.getScheme() == null) {
+			throw new ClientSideException("CN uri had no scheme");
+		}
+		if(uri.getScheme().equals("java")) {
+			builtCNode = buildJavaD1Node(org.dataone.client.v2.CNode.class, uri);
+		}
+		else if (uri.getScheme().equals("http") || uri.getScheme().equals("https")) {
+			// build the standard implementation
+			builtCNode = new org.dataone.client.v2.impl.MultipartCNode( mrc, uri.toString());
+		}
+		
+		return builtCNode;
+	} 
+
+	/**
+	 * Instantiate an MNode instance of the right type from the given URI
+	 * and the provided MultipartRestClient
+	 * @param mrc
+	 * @param uri
+	 * @return
+	 * @throws ClientSideException
+	 */
+	public static org.dataone.client.v2.MNode build_v2_MNode(MultipartRestClient mrc, URI uri) 
+	throws ClientSideException 
+	{
+		org.dataone.client.v2.MNode builtMNode = null;
+		if(uri.getScheme().equals("java")) {
+			builtMNode = buildJavaD1Node(org.dataone.client.v2.MNode.class, uri);
+		}
+		else if (uri.getScheme().equals("http") || uri.getScheme().equals("https")) {
+			// build the standard implementation
+			builtMNode = new org.dataone.client.v2.impl.MultipartMNode( mrc, uri.toString());
 		} else {
 			throw new ClientSideException("No corresponding builder for URI scheme: " + uri.getScheme());
 		}

@@ -25,6 +25,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
 
+import org.dataone.client.D1NodeFactory;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.rest.DefaultHttpMultipartRestClient;
 import org.dataone.client.rest.MultipartRestClient;
@@ -96,10 +97,10 @@ public class SettingsContextNodeLocator extends NodeListNodeLocator {
 		try {
 			if (cnClassName == null) {
 				uri = cnUri;
-				cn = D1NodeFactory.buildCNode( mrc, URI.create(cnUri) );
+				cn = D1NodeFactory.build_v1_CNode( mrc, URI.create(cnUri) );
 			} else {
 				uri = cnClassName;
-				cn = D1NodeFactory.buildCNode( mrc, URI.create(cnClassName));
+				cn = D1NodeFactory.build_v1_CNode( mrc, URI.create(cnClassName));
 				Method setBaseUrlMethod = cn.getClass().getMethod("setNodeBaseServiceUrl", new Class[]{String.class});
 				setBaseUrlMethod.invoke(cn, cnUri);
 			}			
