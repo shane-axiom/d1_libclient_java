@@ -23,7 +23,7 @@
 DataONE Java Client Library
 ---------------------------
 
-d1-java is a client library for calling DataONE services. The library
+d1_libclient_java is a client library for calling DataONE services. The library
 exposes the DataONE services as a set of Java classes and method calls, and
 forwards these requests to particular DataONE rest services.  The response
 and exceptions are handed back to the calling application.  The library
