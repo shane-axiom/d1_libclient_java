@@ -22,7 +22,6 @@ package org.dataone.client.v1.impl;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Map;
 
 import org.dataone.client.D1NodeFactory;
@@ -31,6 +30,7 @@ import org.dataone.client.rest.DefaultHttpMultipartRestClient;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.client.v1.CNode;
 import org.dataone.configuration.Settings;
+import org.dataone.service.cn.v1.CNRead;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.types.v1.NodeList;
@@ -97,10 +97,10 @@ public class SettingsContextNodeLocator extends NodeListNodeLocator {
 		try {
 			if (cnClassName == null) {
 				uri = cnUri;
-				cn = D1NodeFactory.build_v1_CNode( mrc, URI.create(cnUri) );
+                cn = D1NodeFactory.buildNode(CNRead.class, mrc, URI.create(cnUri));
 			} else {
 				uri = cnClassName;
-				cn = D1NodeFactory.build_v1_CNode( mrc, URI.create(cnClassName));
+                cn = D1NodeFactory.buildNode(CNRead.class, mrc, URI.create(cnClassName));
 				Method setBaseUrlMethod = cn.getClass().getMethod("setNodeBaseServiceUrl", new Class[]{String.class});
 				setBaseUrlMethod.invoke(cn, cnUri);
 			}			

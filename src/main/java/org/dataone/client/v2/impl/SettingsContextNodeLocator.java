@@ -25,11 +25,13 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
 
+import org.dataone.client.D1NodeFactory;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.rest.DefaultHttpMultipartRestClient;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.client.v2.CNode;
 import org.dataone.configuration.Settings;
+import org.dataone.service.cn.v2.CNRead;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.types.v2.NodeList;
@@ -96,10 +98,10 @@ public class SettingsContextNodeLocator extends NodeListNodeLocator {
 		try {
 			if (cnClassName == null) {
 				uri = cnUri;
-				cn = D1NodeFactory.buildCNode( mrc, new URI(cnUri) );
+                cn = D1NodeFactory.buildNode(CNRead.class, mrc, new URI(cnUri));
 			} else {
 				uri = cnClassName;
-				cn = D1NodeFactory.buildCNode( mrc, new URI(cnClassName) );
+                cn = D1NodeFactory.buildNode(CNRead.class, mrc, new URI(cnClassName));
 				Method setBaseUrlMethod = cn.getClass().getMethod("setNodeBaseServiceUrl", new Class[]{String.class});
 				setBaseUrlMethod.invoke(cn, cnUri);
 			}
