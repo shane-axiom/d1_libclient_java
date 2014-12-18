@@ -51,6 +51,7 @@ public class D1NodeFactory {
         registerService(org.dataone.service.cn.v1.CNIdentity.class, new V1CnBuilder());
         registerService(org.dataone.service.cn.v1.CNRegister.class, new V1CnBuilder());
         registerService(org.dataone.service.cn.v1.CNReplication.class, new V1CnBuilder());
+        registerService(org.dataone.client.v1.CNode.class, new V1CnBuilder());
         // v2 CN
         registerService(org.dataone.service.cn.v2.CNCore.class, new V2CnBuilder());
         registerService(org.dataone.service.cn.v2.CNRead.class, new V2CnBuilder());
@@ -58,6 +59,7 @@ public class D1NodeFactory {
         registerService(org.dataone.service.cn.v2.CNIdentity.class, new V2CnBuilder());
         registerService(org.dataone.service.cn.v2.CNRegister.class, new V2CnBuilder());
         registerService(org.dataone.service.cn.v2.CNReplication.class, new V2CnBuilder());
+        registerService(org.dataone.client.v2.CNode.class, new V2CnBuilder());
         // v1 MN
         registerService(org.dataone.service.mn.tier1.v1.MNCore.class, new V1MnBuilder());
         registerService(org.dataone.service.mn.tier1.v1.MNRead.class, new V1MnBuilder());
@@ -65,6 +67,7 @@ public class D1NodeFactory {
         registerService(org.dataone.service.mn.tier3.v1.MNStorage.class, new V1MnBuilder());
         registerService(org.dataone.service.mn.tier4.v1.MNReplication.class, new V1MnBuilder());
         registerService(org.dataone.service.mn.v1.MNQuery.class, new V1MnBuilder());
+        registerService(org.dataone.client.v1.MNode.class, new V1MnBuilder());
         // v2 MN
         registerService(org.dataone.service.mn.tier1.v2.MNCore.class, new V2MnBuilder());
         registerService(org.dataone.service.mn.tier1.v2.MNRead.class, new V2MnBuilder());
@@ -72,6 +75,7 @@ public class D1NodeFactory {
         registerService(org.dataone.service.mn.tier3.v2.MNStorage.class, new V2MnBuilder());
         registerService(org.dataone.service.mn.tier4.v2.MNReplication.class, new V2MnBuilder());
         registerService(org.dataone.service.mn.v2.MNQuery.class, new V2MnBuilder());
+        registerService(org.dataone.client.v2.MNode.class, new V2MnBuilder());
     }
 
     /**
@@ -101,7 +105,7 @@ public class D1NodeFactory {
      * @throws ClientSideException 
      *      if the {@link INodeCreator} fails to create the node
      */
-    public static <N extends D1Node> N buildNode(Class<?> serviceClass, MultipartRestClient mrc, URI uri)
+    public static <N> N buildNode(Class<N> serviceClass, MultipartRestClient mrc, URI uri)
             throws ClientSideException {
 
         // safe cast, if we set up nodeCreatorMap and the creators correctly
@@ -285,7 +289,7 @@ public class D1NodeFactory {
      * 
      * @param <N> the type of node the creator will produce. Must be a subtype of {@link D1Node}.
      */
-    private static interface INodeCreator<N extends D1Node> {
+    private static interface INodeCreator<N> {
         /**
          * Creates a type of {@link D1Node} based on {@link INodeCreator}'s parameter type <code>&lt;N&gt;</code>
          * 

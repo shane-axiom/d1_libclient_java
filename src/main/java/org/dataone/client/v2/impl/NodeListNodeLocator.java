@@ -26,8 +26,7 @@ import org.dataone.client.NodeLocator;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.client.v2.CNode;
-import org.dataone.service.cn.v2.CNRead;
-import org.dataone.service.mn.tier1.v2.MNRead;
+import org.dataone.client.v2.MNode;
 import org.dataone.service.types.v1.NodeType;
 import org.dataone.service.types.v2.Node;
 import org.dataone.service.types.v2.NodeList;
@@ -65,12 +64,12 @@ public class NodeListNodeLocator extends NodeLocator {
 				if (node.getType().equals(NodeType.MN)) {
 					super.putNode(
 							node.getIdentifier(),
-                            D1NodeFactory.buildNode(MNRead.class, this.restClient, URI.create(node.getBaseURL()))
+                            D1NodeFactory.buildNode(MNode.class, this.restClient, URI.create(node.getBaseURL()))
 							);
 				} else if (node.getType().equals(NodeType.CN)) {
 					super.putNode(
 							node.getIdentifier(),
-                            D1NodeFactory.buildNode(CNRead.class, this.restClient, URI.create(node.getBaseURL()))
+                            D1NodeFactory.buildNode(CNode.class, this.restClient, URI.create(node.getBaseURL()))
 							);
 				}
 			}	
@@ -88,13 +87,13 @@ public class NodeListNodeLocator extends NodeLocator {
 				if (node.getType().equals(NodeType.CN)) {
 					n = node;
 					if (node.getDescription() != null && node.getDescription().contains("Robin")) {
-                        return D1NodeFactory.buildNode(CNRead.class, restClient, URI.create(node.getBaseURL()));
+                        return D1NodeFactory.buildNode(CNode.class, restClient, URI.create(node.getBaseURL()));
 					}
 				}
 			}
 		}
 		if (n != null) {
-            return D1NodeFactory.buildNode(CNRead.class, restClient, URI.create(n.getBaseURL()));
+            return D1NodeFactory.buildNode(CNode.class, restClient, URI.create(n.getBaseURL()));
 		}
 		throw new ClientSideException("No CNs are registered in the NodeLocator");
 	}

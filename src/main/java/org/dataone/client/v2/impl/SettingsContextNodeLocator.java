@@ -29,9 +29,8 @@ import org.dataone.client.D1NodeFactory;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.rest.DefaultHttpMultipartRestClient;
 import org.dataone.client.rest.MultipartRestClient;
-import org.dataone.client.v2.CNode;
 import org.dataone.configuration.Settings;
-import org.dataone.service.cn.v2.CNRead;
+import org.dataone.service.cn.v2.CNCore;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.types.v2.NodeList;
@@ -93,15 +92,15 @@ public class SettingsContextNodeLocator extends NodeListNodeLocator {
         // use the alternate implementation class from properties file in case it's set
 		String cnClassName = Settings.getConfiguration().getString("D1Client.cnClassName");
 		
-		CNode cn;
+        CNCore cn;
 		String uri = null;
 		try {
 			if (cnClassName == null) {
 				uri = cnUri;
-                cn = D1NodeFactory.buildNode(CNRead.class, mrc, new URI(cnUri));
+                cn = D1NodeFactory.buildNode(CNCore.class, mrc, new URI(cnUri));
 			} else {
 				uri = cnClassName;
-                cn = D1NodeFactory.buildNode(CNRead.class, mrc, new URI(cnClassName));
+                cn = D1NodeFactory.buildNode(CNCore.class, mrc, new URI(cnClassName));
 				Method setBaseUrlMethod = cn.getClass().getMethod("setNodeBaseServiceUrl", new Class[]{String.class});
 				setBaseUrlMethod.invoke(cn, cnUri);
 			}

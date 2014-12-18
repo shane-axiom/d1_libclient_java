@@ -34,10 +34,9 @@ import org.dataone.client.v2.CNode;
 import org.dataone.client.v2.MNode;
 import org.dataone.client.v2.impl.NodeListNodeLocator;
 import org.dataone.client.v2.impl.SettingsContextNodeLocator;
-import org.dataone.service.cn.v2.CNRead;
+import org.dataone.service.cn.v2.CNCore;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
-import org.dataone.service.mn.tier1.v2.MNRead;
 import org.dataone.service.types.v1.NodeReference;
 import org.dataone.service.types.v1.Session;
 
@@ -131,7 +130,7 @@ public class D1Client {
     throws NotImplemented, ServiceFailure 
     {         	
     	try {
-            CNode cn = D1NodeFactory.buildNode(CNRead.class, MULTIPART_REST_CLIENT, URI.create(cnUrl));
+            CNCore cn = D1NodeFactory.buildNode(CNCore.class, MULTIPART_REST_CLIENT, URI.create(cnUrl));
     		nodeLocator = new NodeListNodeLocator(cn.listNodes(), MULTIPART_REST_CLIENT);
     	} catch (ClientSideException e) {
 			ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
@@ -158,7 +157,7 @@ public class D1Client {
     	}
     	if (mn == null) {
     		try {
-                mn = D1NodeFactory.buildNode(MNRead.class, MULTIPART_REST_CLIENT, URI.create(mnBaseUrl));
+                mn = D1NodeFactory.buildNode(MNode.class, MULTIPART_REST_CLIENT, URI.create(mnBaseUrl));
 //    			if (nodeLocator != null) {
 //    				// be opportunist, but don't be the first to call the CN (and initialize potentially wrong state.		
 //    				nodeLocator.putNode(mn.getNodeId(), mn);
@@ -194,7 +193,7 @@ public class D1Client {
     	}
     	if (cn == null) {
     		try {
-                cn = D1NodeFactory.buildNode(CNRead.class, MULTIPART_REST_CLIENT, URI.create(cnBaseUrl));
+                cn = D1NodeFactory.buildNode(CNode.class, MULTIPART_REST_CLIENT, URI.create(cnBaseUrl));
 //    			if (nodeLocator != null && cn != null) {
 //    				// be opportunist, but don't be the first to call the CN (and initialize potentially wrong state.		
 //    				nodeLocator.putNode(cn.getNodeId(), cn);
