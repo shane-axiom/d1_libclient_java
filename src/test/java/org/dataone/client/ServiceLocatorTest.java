@@ -28,7 +28,7 @@ public class ServiceLocatorTest {
 	public void tearDown() throws Exception {
 	}
 
-	@Test
+//	@Test
 	public void shouldBeAbleToGetInstantiationsFromBaseUrl() {
 		serviceLocator.getService(
 				URI.create("https://cn-dev.test.dataone.org/cn"),
@@ -49,7 +49,7 @@ public class ServiceLocatorTest {
 	}
 
 	
-	@Test
+//	@Test
 	public void shouldBeAbleToInstantiateFromNodeReference() {
 		serviceLocator.getService(
 				D1TypeBuilder.buildNodeReference("asdf"),
@@ -70,7 +70,7 @@ public class ServiceLocatorTest {
 	}
 
 	
-	@Test
+//	@Test
 	public void shouldBeAbleToInstantiateFromInterface() {
 
 		v1CNCore = serviceLocator.getService(
@@ -85,7 +85,7 @@ public class ServiceLocatorTest {
 	}
 	
 	
-	@Test
+//	@Test
 	public void shouldReturnTheSameInstanceForSameNodeVersion() {
 		v1CNCore = serviceLocator.getService(
 				URI.create("https://cn.dataone.org/cn/"), 
@@ -102,7 +102,7 @@ public class ServiceLocatorTest {
 	//      in the nodeRegistry?  scenario would be: testing node registration
 	// the difference is that in normal situations, a node is stood up independently.
 	// but in this case instantiating the MNode, for example, is standing up the node.
-	@Test
+//	@Test
 	public void shouldThrowExceptionIfServiceNotValidatedAndReturningInterface() {
 		D1ServiceLocator serviceLocator = null;
 		v1MNode = serviceLocator.getService(
