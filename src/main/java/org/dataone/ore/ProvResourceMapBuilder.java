@@ -106,7 +106,15 @@ public class ProvResourceMapBuilder {
 	private static Predicate PROV_WAS_INFORMED_BY = null;
 	
 	private static Predicate PROV_USED = null;
+
+	private static Predicate PROV_WAS_ASSOCIATED_WITH = null;
 	
+	private static Predicate PROV_QUALIFIED_ASSOCIATION = null;
+
+	private static Predicate PROV_P_AGENT = null;
+
+	private static Predicate PROV_HAD_PLAN = null;
+
 	private static List<Predicate> predicates = null;
 
 	private static ProvResourceMapBuilder instance = null;
@@ -115,6 +123,10 @@ public class ProvResourceMapBuilder {
 	
 	private static Log log = LogFactory.getLog(ProvResourceMapBuilder.class);
 	
+	private static final String CITO_NAMESPACE_URI = "http://purl.org/spar/cito/";
+	
+	private static final String PROV_NAMESPACE_URI = "http://www.w3.org/ns/prov#";
+
 	private void init() throws URISyntaxException {
 		predicates = new ArrayList<Predicate>();
 		
@@ -128,10 +140,10 @@ public class ProvResourceMapBuilder {
 		
 		// create the CITO:isDocumentedBy predicate
 		CITO_IS_DOCUMENTED_BY = new Predicate();
-		CITO_IS_DOCUMENTED_BY.setNamespace("http://purl.org/spar/cito/");
+		CITO_IS_DOCUMENTED_BY.setNamespace(CITO_NAMESPACE_URI);
 		CITO_IS_DOCUMENTED_BY.setPrefix("cito");
 		CITO_IS_DOCUMENTED_BY.setName("isDocumentedBy");
-		CITO_IS_DOCUMENTED_BY.setURI(new URI(CITO_IS_DOCUMENTED_BY.getNamespace() 
+		CITO_IS_DOCUMENTED_BY.setURI(new URI(CITO_NAMESPACE_URI 
 				+ CITO_IS_DOCUMENTED_BY.getName()));
 		
 		// create the CITO:documents predicate
@@ -139,44 +151,82 @@ public class ProvResourceMapBuilder {
 		CITO_DOCUMENTS.setNamespace(CITO_IS_DOCUMENTED_BY.getNamespace());
 		CITO_DOCUMENTS.setPrefix(CITO_IS_DOCUMENTED_BY.getPrefix());
 		CITO_DOCUMENTS.setName("documents");
-		CITO_DOCUMENTS.setURI(new URI(CITO_DOCUMENTS.getNamespace() 
+		CITO_DOCUMENTS.setURI(new URI(CITO_NAMESPACE_URI 
 				+ CITO_DOCUMENTS.getName()));
 		
 		// create the PROV:wasDerivedFrom predicate
 		PROV_WAS_DERIVED_FROM = new Predicate();
-		PROV_WAS_DERIVED_FROM.setNamespace("http://www.w3.org/ns/prov#");
+		PROV_WAS_DERIVED_FROM.setNamespace(PROV_NAMESPACE_URI);
 		PROV_WAS_DERIVED_FROM.setPrefix("prov");
 		PROV_WAS_DERIVED_FROM.setName("wasDerivedFrom");
-		PROV_WAS_DERIVED_FROM.setURI(new URI(PROV_WAS_DERIVED_FROM.getNamespace() 
+		PROV_WAS_DERIVED_FROM.setURI(new URI(PROV_NAMESPACE_URI 
 						+ PROV_WAS_DERIVED_FROM.getName()));
 		
 		// create the PROV:wasGeneratedBy predicate
 		PROV_WAS_GENERATED_BY = new Predicate();
-		PROV_WAS_GENERATED_BY.setNamespace(PROV_WAS_DERIVED_FROM.getNamespace());
+		PROV_WAS_GENERATED_BY.setNamespace(PROV_NAMESPACE_URI);
 		PROV_WAS_GENERATED_BY.setPrefix(PROV_WAS_DERIVED_FROM.getPrefix());
 		PROV_WAS_GENERATED_BY.setName("wasGeneratedBy");
-		PROV_WAS_GENERATED_BY.setURI(new URI(PROV_WAS_GENERATED_BY.getNamespace() 
+		PROV_WAS_GENERATED_BY.setURI(new URI(PROV_NAMESPACE_URI 
 						+ PROV_WAS_GENERATED_BY.getName()));
 		
 		// create the PROV:wasInformedBy predicate
 		PROV_WAS_INFORMED_BY = new Predicate();
-		PROV_WAS_INFORMED_BY.setNamespace(PROV_WAS_DERIVED_FROM.getNamespace());
+		PROV_WAS_INFORMED_BY.setNamespace(PROV_NAMESPACE_URI);
 		PROV_WAS_INFORMED_BY.setPrefix(PROV_WAS_DERIVED_FROM.getPrefix());
 		PROV_WAS_INFORMED_BY.setName("wasInformedBy");
-		PROV_WAS_INFORMED_BY.setURI(new URI(PROV_WAS_INFORMED_BY.getNamespace() 
+		PROV_WAS_INFORMED_BY.setURI(new URI(PROV_NAMESPACE_URI 
 						+ PROV_WAS_INFORMED_BY.getName()));
 		
 		// create the PROV:used predicate
 		PROV_USED = new Predicate();
-		PROV_USED.setNamespace(PROV_WAS_DERIVED_FROM.getNamespace());
+		PROV_USED.setNamespace(PROV_NAMESPACE_URI);
 		PROV_USED.setPrefix(PROV_WAS_DERIVED_FROM.getPrefix());
 		PROV_USED.setName("used");
-		PROV_USED.setURI(new URI(PROV_USED.getNamespace() 
-						+ PROV_USED.getName()));
+		PROV_USED.setURI(new URI(PROV_NAMESPACE_URI + PROV_USED.getName()));
+		
+		// create the PROV:wasAssociatedWith predicate
+		PROV_WAS_ASSOCIATED_WITH = new Predicate();
+		PROV_WAS_ASSOCIATED_WITH.setNamespace(PROV_NAMESPACE_URI);
+		PROV_WAS_ASSOCIATED_WITH.setPrefix(PROV_USED.getPrefix());
+		PROV_WAS_ASSOCIATED_WITH.setName("wasAssociatedWith");
+		PROV_WAS_ASSOCIATED_WITH.setURI(new URI(PROV_NAMESPACE_URI + 
+				PROV_WAS_ASSOCIATED_WITH.getName()));
+		
+		// create the PROV:qualifiedAssociation predicate
+		PROV_QUALIFIED_ASSOCIATION = new Predicate();
+		PROV_QUALIFIED_ASSOCIATION.setNamespace(PROV_NAMESPACE_URI);
+		PROV_QUALIFIED_ASSOCIATION.setPrefix(PROV_WAS_ASSOCIATED_WITH.getPrefix());
+		PROV_QUALIFIED_ASSOCIATION.setName("qualifiedAssociation");
+		PROV_QUALIFIED_ASSOCIATION.setURI(new URI(PROV_NAMESPACE_URI + 
+				PROV_QUALIFIED_ASSOCIATION.getName()));
+		
+		// create the PROV:agent predicate
+		PROV_P_AGENT = new Predicate();
+		PROV_P_AGENT.setNamespace(PROV_NAMESPACE_URI);
+		PROV_P_AGENT.setPrefix(PROV_QUALIFIED_ASSOCIATION.getPrefix());
+		PROV_P_AGENT.setName("agent");
+		PROV_P_AGENT.setURI(new URI(PROV_NAMESPACE_URI + 
+				PROV_P_AGENT.getName()));
+		
+		// create the PROV:hadPlan predicate
+		PROV_HAD_PLAN = new Predicate();
+		PROV_HAD_PLAN.setNamespace(PROV_NAMESPACE_URI);
+		PROV_HAD_PLAN.setPrefix(PROV_P_AGENT.getPrefix());
+		PROV_HAD_PLAN.setName("hadPlan");
+		PROV_HAD_PLAN.setURI(new URI(PROV_NAMESPACE_URI + 
+				PROV_HAD_PLAN.getName()));
 		
 		// include predicates from each namespace we want to support
 		predicates.add(CITO_DOCUMENTS);
 		predicates.add(PROV_WAS_DERIVED_FROM);
+		predicates.add(PROV_WAS_GENERATED_BY);
+		predicates.add(PROV_WAS_INFORMED_BY);
+		predicates.add(PROV_USED);
+		predicates.add(PROV_WAS_ASSOCIATED_WITH);
+		predicates.add(PROV_QUALIFIED_ASSOCIATION);
+		predicates.add(PROV_P_AGENT);
+		predicates.add(PROV_HAD_PLAN);
 	}
 	
 	private ProvResourceMapBuilder() {
