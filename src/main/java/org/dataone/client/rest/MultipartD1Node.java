@@ -355,9 +355,6 @@ public abstract class MultipartD1Node implements D1Node {
             catch (IOException e) {
                 throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
             }
-            finally {
-                IOUtils.closeQuietly(remoteStream);
-            }
         }
 
         return is;
