@@ -64,7 +64,7 @@ public class SettingsContextNodeLocator extends NodeListNodeLocator {
 //	protected static final Integer DEFAULT_TIMEOUT_SECONDS = 30;
 	
 	/**
-	 * Creates a NodeLocator usinga DefaultHttpMultipartRestClient. 
+	 * Creates a NodeLocator using DefaultHttpMultipartRestClient. 
 	 * It uses the property D1Client.CN_URL
 	 * accessible through the Settings class.
 	 * @throws ClientSideException 

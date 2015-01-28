@@ -105,7 +105,7 @@ public class D1Client {
         	cn = (CNode) nodeLocator.getCNode();
         } catch (Exception e) {
         	try {
-        		// create an empty NodeListNodeLocator
+        		// create an empty NodeListNodeLocator to leverage the getCNode() 
 				nodeLocator = new NodeListNodeLocator(null,MULTIPART_REST_CLIENT);
 				cn = (CNode) nodeLocator.getCNode();
 			} catch (ClientSideException e1) {
