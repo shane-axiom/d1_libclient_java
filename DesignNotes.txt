@@ -1,0 +1,113 @@
+d1_libclient_java design notes
+==============================
+
+The d1_libclient_java library contains classes pertaining to two 
+main areas: 
+A) Messaging - providing implementations of DataONEs RESTful Service APIs
+B) Client-Side Tools - providing routines to simplify client-side 
+   responsibilities
+
+Messaging:
+----------
+The main responsibility of classes and abstractions involved in messaging
+is to provide the implementation classes for the java interfaces that mirror
+the RESTful DataONE API.
+1) 
+
+
+
+D1 APIs specify RESTful 
+The classes and abstractions involved in messaging follow Messaging functionality is modeled after the service implementation, in 
+that Nodes implement the set of methods for a service API, such as v1.MN_Read,
+and the class instance that implement the v1/MN_Read api is specific to the 
+Node  
+1) Nodes, which offer services
+2) REST + MIME-multipart-mixed messaging for the service methods
+3) schema-defined datatypes for information transfer
+4) An authentication and authorization layer for controlling access
+   to different objects and services
+5) retrieval by 
+
+4) Authentication and Authorization - the facilities used to determine who 
+   can successfully use a given service.  The conceptual objects include:
+ -a) Subjects, symbolic representations of different actors upon the DataONE environment
+ -b) Persons - a DataONE identity representing a human being, containing email
+     address(es), first and last name(s), a primary Subject, and equivalent Subjects.
+ -c) Groups - a named collection of Subjects representing a group of individuals. 
+ -d) Sessions - a collection of Persons & Groups, as well as state information that
+     is used for Authentication and Authorization.  A Session is the connected 
+     graph of equivalent Subjects that collectively represent an individual and 
+     all of their Persons and the Groups they are a member of.
+
+5) FormatTypes / ObjectFormats - FormatTypes are categories that determine how a 
+     retrieved object is meant to work within DataONE, including its synchronization, 
+     replication, and indexing behavior.  An ObjectFormat has 1 and only 1 FormatType
+     associated with it.
+
+
+Of these central concepts, d1_libclient_java concerns itself primarily with:
+1) Nodes - providing classes that represent a Node's services
+2) Methods - providing HTTP/S implementations matching the java service API to the REST API
+
+3) Authentication and Authorization -   managing the client's session as  as Sessions, in the form of X509Certificates
+
+4) Environments - not modeled  by DataONE, but a de-facto concept 
+   resulting from the existence of the different independent test environments 
+   (DEV, SANDBOX, STAGE).
+
+as well as client-side tools and features such as:
+5) caching - an optional facility to spare redundant requests to nodes on
+   immutable content
+6) formats - a local cache of object formats known by DataONE at the
+   time of its release, along with associated mime-type mappings. 
+7) tools for creation and parsing, especially ResourceMaps.
+   
+
+Messaging Design:
+d1_libclient_java implements the service interfaces defined in d1_common_java.  
+Where appropriate, these interfaces provide for authentication and authorization
+by including the Session as a method parameter. the methods with the Session Sessions in the method calls,
+but do not parameterize the Node, since services are implemented by Nodes,
+and so the Node becomes a property of the implementation classes.
+
+
+In v1 d1_libclient_java,  A Method call to a Node using a particular Session
+
+While the dataone architecture is defined as a REST API, it is protocol
+neutral, so HTTP/S become implementation details of the REST API.
+
+Similarly, while X509 certificates is currently the designated authentication
+implementation, others are being considered, so TLS/SSL and certificates
+are also implementations.
+
+It would be advantageous to work with core concepts when using libclient_java
+to interact with DataONE Nodes.  
+
+node + method + session = unique response
+
+CILogon sessions can connect to any server that trusts the certificate, so are
+not specific to DataONE, nor to a DataONE environment.
+
+for example:
+
+Session session = SessionFactory.createCILogonSession();
+CNode cn = NodeList
+session.search(...)
+
+
+V1 impl:
+--------
+- sessions not managed, but used
+- D1Nodes are the organizing dimension, but not tied to an actual D1Node's
+  service implementation.  
+- Service APIs are ignored.
+- api version was ignored.
+
+
+
+V2 implementation deficiencies:
+1. version handling
+2. 
+
+
+
