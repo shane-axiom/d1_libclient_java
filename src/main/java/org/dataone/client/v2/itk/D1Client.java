@@ -24,16 +24,17 @@ package org.dataone.client.v2.itk;
 
 import java.net.URI;
 
+import org.dataone.client.D1NodeFactory;
 import org.dataone.client.NodeLocator;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.rest.DefaultHttpMultipartRestClient;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.client.utils.ExceptionUtils;
-import org.dataone.client.v2.impl.SettingsContextNodeLocator;
 import org.dataone.client.v2.CNode;
 import org.dataone.client.v2.MNode;
-import org.dataone.client.v2.impl.D1NodeFactory;
 import org.dataone.client.v2.impl.NodeListNodeLocator;
+import org.dataone.client.v2.impl.SettingsContextNodeLocator;
+import org.dataone.service.cn.v2.CNCore;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.types.v1.NodeReference;
@@ -104,7 +105,7 @@ public class D1Client {
         	cn = (CNode) nodeLocator.getCNode();
         } catch (Exception e) {
         	try {
-        		// create an empty NodeListNodeLocator
+        		// create an empty NodeListNodeLocator to leverage the getCNode() 
 				nodeLocator = new NodeListNodeLocator(null,MULTIPART_REST_CLIENT);
 				cn = (CNode) nodeLocator.getCNode();
 			} catch (ClientSideException e1) {
@@ -129,7 +130,7 @@ public class D1Client {
     throws NotImplemented, ServiceFailure 
     {         	
     	try {
-    		CNode cn = D1NodeFactory.buildCNode(MULTIPART_REST_CLIENT, URI.create(cnUrl));
+            CNCore cn = D1NodeFactory.buildNode(CNCore.class, MULTIPART_REST_CLIENT, URI.create(cnUrl));
     		nodeLocator = new NodeListNodeLocator(cn.listNodes(), MULTIPART_REST_CLIENT);
     	} catch (ClientSideException e) {
 			ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
@@ -156,7 +157,7 @@ public class D1Client {
     	}
     	if (mn == null) {
     		try {
-    			mn = D1NodeFactory.buildMNode(MULTIPART_REST_CLIENT, URI.create(mnBaseUrl));	
+                mn = D1NodeFactory.buildNode(MNode.class, MULTIPART_REST_CLIENT, URI.create(mnBaseUrl));
 //    			if (nodeLocator != null) {
 //    				// be opportunist, but don't be the first to call the CN (and initialize potentially wrong state.		
 //    				nodeLocator.putNode(mn.getNodeId(), mn);
@@ -192,7 +193,7 @@ public class D1Client {
     	}
     	if (cn == null) {
     		try {
-    			cn = D1NodeFactory.buildCNode(MULTIPART_REST_CLIENT, URI.create(cnBaseUrl));	
+                cn = D1NodeFactory.buildNode(CNode.class, MULTIPART_REST_CLIENT, URI.create(cnBaseUrl));
 //    			if (nodeLocator != null && cn != null) {
 //    				// be opportunist, but don't be the first to call the CN (and initialize potentially wrong state.		
 //    				nodeLocator.putNode(cn.getNodeId(), cn);

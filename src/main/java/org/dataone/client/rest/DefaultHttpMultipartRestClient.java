@@ -31,37 +31,37 @@ import org.dataone.service.types.v1.Session;
 
 public class DefaultHttpMultipartRestClient extends HttpMultipartRestClient {
 
-	public DefaultHttpMultipartRestClient() 
-	{	
-		super(buildHttpClient(null));
-	}
-	
-	public DefaultHttpMultipartRestClient(Session session) 
-	{
-		super(buildHttpClient(session));
-	}
+    public DefaultHttpMultipartRestClient()
+    {
+        super(buildHttpClient(null));
+    }
 
-	
-	private static HttpClient buildHttpClient(Session session)  
-	{		
-		
-		Registry<ConnectionSocketFactory> sfRegistry = null;
-		try {
-			sfRegistry = HttpUtils.buildConnectionRegistry(session);
-		} 
-		catch (Exception e) {
-			// this is likely more severe
-			log.warn("Exception from CertificateManager at SSL setup - client will be anonymous: " + 
-					e.getClass() + ":: " + e.getMessage());
-			
-		}
+    public DefaultHttpMultipartRestClient(Session session)
+    {
+        super(buildHttpClient(session));
+    }
 
-		HttpClientConnectionManager connMan = new PoolingHttpClientConnectionManager(sfRegistry);
-		HttpClient hc = HttpClients.custom()
-				.setConnectionManager(connMan)
-				.build();
-			
-		return hc;
-	}
-	
+
+    private static HttpClient buildHttpClient(Session session)
+    {
+
+        Registry<ConnectionSocketFactory> sfRegistry = null;
+        try {
+            sfRegistry = HttpUtils.buildConnectionRegistry(session);
+        }
+        catch (Exception e) {
+            // this is likely more severe
+            log.warn("Exception from CertificateManager at SSL setup - client will be anonymous: " +
+                    e.getClass() + ":: " + e.getMessage());
+
+        }
+
+        HttpClientConnectionManager connMan = new PoolingHttpClientConnectionManager(sfRegistry);
+        HttpClient hc = HttpClients.custom()
+                .setConnectionManager(connMan)
+                .build();
+
+        return hc;
+    }
+
 }
