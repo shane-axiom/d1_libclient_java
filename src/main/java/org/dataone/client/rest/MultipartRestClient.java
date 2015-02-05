@@ -22,6 +22,7 @@ package org.dataone.client.rest;
 import java.io.InputStream;
 
 import org.apache.http.Header;
+import org.dataone.client.auth.X509Session;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.exceptions.BaseException;
@@ -74,5 +75,7 @@ public interface MultipartRestClient {
             throws BaseException, ClientSideException;
 
     public String getLatestRequestUrl();
+    
+    public X509Session getSession();
 
 }

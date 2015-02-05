@@ -26,6 +26,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
+import java.security.cert.CertificateExpiredException;
+import java.security.cert.CertificateNotYetValidException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,6 +38,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.Header;
 import org.dataone.client.D1Node;
+import org.dataone.client.auth.X509Session;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.exception.NotCached;
 import org.dataone.client.utils.ExceptionUtils;
@@ -86,8 +89,12 @@ public abstract class MultipartD1Node implements D1Node {
 
     protected static org.apache.commons.logging.Log log = LogFactory.getLog(MultipartD1Node.class);
 
-    /** the adapter / connector to the RESTful service endpoints */
-    protected MultipartRestClient restClient;
+    /** the D1Node instance adapter / connector to the RESTful service endpoints */
+    protected MultipartRestClient defaultRestClient;
+
+    /** the latest MRC used to make an API call */
+    protected MultipartRestClient latestRestClient;
+    protected Session latestSession;
 
     /** The URL string for the node REST API */
     private String nodeBaseServiceUrl;
@@ -95,71 +102,99 @@ public abstract class MultipartD1Node implements D1Node {
     /** The string representation of the NodeReference */
     private NodeReference nodeId;
 
-    /** this represents the session to be used for establishing the SSL connection */
-    protected Session session;
+    /** this represents the defaultSession to be used for establishing the SSL connection */
+    protected Session defaultSession;
 
     /** flag that controls whether or not a local cache is used */
     private boolean useLocalCache = false;
 
     protected NodeType nodeType;
 
+    /**
+     * API methods should use this method to get the MultipartRestClient to
+     * be used for the call.
+     * @param sessionFromMethod - this should be the session from the API method parameter
+     * @return
+     * @throws ServiceFailure 
+     */
+    protected MultipartRestClient getRestClient(Session sessionFromMethod) throws ServiceFailure {
+        if (sessionFromMethod == null)
+            this.latestRestClient = this.defaultRestClient;
+        else if (sessionFromMethod instanceof X509Session && ((X509Session)sessionFromMethod).getMultipartRestClient() != null) {
+            this.latestRestClient = ((X509Session)sessionFromMethod).getMultipartRestClient();
+        } else {
+            try {
+                String subjectString = (sessionFromMethod.getSubject() == null) ? null : sessionFromMethod.getSubject().getValue();
+                this.latestRestClient = new HttpMultipartRestClient(subjectString);
+            } catch (IOException | ClientSideException e) {
+                throw new ServiceFailure("0000", "Error creating MultipartRestClient " +
+                        "for API Session parameter" + e.getLocalizedMessage());
+            }
+        }
+        if (this.latestRestClient.getSession() instanceof X509Session)
+            try {
+                ((X509Session) this.latestRestClient.getSession()).checkValidity();
+            } catch (CertificateExpiredException
+                    | CertificateNotYetValidException e) {
+                throw new ServiceFailure("0000", "Certificate is expired (or not yet valid): " + e.getLocalizedMessage());
+            }
+        
+        return this.latestRestClient;
+    }
 
-
-    //	/**
-    //     * Useful for debugging to see what the last call was
-    //     * @return
-    //     */
-    //    public String getLatestRequestUrl() {
-    //    	return lastRequestUrl;
-    //    }
-    //
-    //    protected void setLatestRequestUrl(String url) {
-    //    	lastRequestUrl = url;
-    //    }
 
     /**
-     * Constructor to create a new instance.
+     * Users can set either a default RestClient or default Session that will 
+     * build a RestClient configured appropriately from the information in the 
+     * Session.
      */
-    public MultipartD1Node(MultipartRestClient client, String nodeBaseServiceUrl, Session session) {
+    protected MultipartD1Node(MultipartRestClient client, String nodeBaseServiceUrl, Session session) {
         setNodeBaseServiceUrl(nodeBaseServiceUrl);
-        this.restClient = client;
-        this.session = session;
+        this.defaultRestClient = client;
+        this.defaultSession = session;
+        this.latestSession = session; // setting the value here to avoid NPEs in getLatestRequestUrl() 
         this.useLocalCache = Settings.getConfiguration().getBoolean("D1Client.useLocalCache",useLocalCache);
     }
 
     /**
-     * Constructor to create a new instance.
+     * Convenience constructor to create a new instance.
      */
     public MultipartD1Node(MultipartRestClient client, String nodeBaseServiceUrl) {
-        setNodeBaseServiceUrl(nodeBaseServiceUrl);
-        this.restClient = client;
-        this.session = null;
-        this.useLocalCache = Settings.getConfiguration().getBoolean("D1Client.useLocalCache",useLocalCache);
+        this(client, nodeBaseServiceUrl, /* Session */ null);
+    }
+    
+    /**
+     * Convenience constructor to create a new instance.
+     */
+    public MultipartD1Node(Session session, String nodeBaseServiceUrl) {
+        this(/* MRC */ null, nodeBaseServiceUrl, session);
     }
 
 
 
     /**
-     * Constructor to create a new instance.
+     * Convenience constructor to create a new instance using a new DefaultHttpMultipartRestClient
+     * (can be retrieved with the (protected) getRestClient()) 
+     * This method is meant for backwards compatibility with v1 libclient D1Node class,
+     * but it's use is strongly discouraged due to lack of exposure of the rest client.
      */
-    @Deprecated
-    public MultipartD1Node(String nodeBaseServiceUrl, Session session) {
-        setNodeBaseServiceUrl(nodeBaseServiceUrl);
-        this.restClient = new DefaultHttpMultipartRestClient();
-        this.session = session;
-        this.useLocalCache = Settings.getConfiguration().getBoolean("D1Client.useLocalCache",useLocalCache);
-    }
+//    @Deprecated
+//    public MultipartD1Node(String nodeBaseServiceUrl, Session session) {
+//        this(new HttpMultipartRestClient(session), nodeBaseServiceUrl, session);
+//    }
 
 
 
     /**
      * Constructor to create a new instance.
+     * @throws ClientSideException 
+     * @throws IOException 
      */
     @Deprecated
-    public MultipartD1Node(String nodeBaseServiceUrl) {
+    public MultipartD1Node(String nodeBaseServiceUrl) throws IOException, ClientSideException {
         setNodeBaseServiceUrl(nodeBaseServiceUrl);
-        this.restClient = new DefaultHttpMultipartRestClient();
-        this.session = null;
+        this.defaultRestClient = new HttpMultipartRestClient();
+        this.defaultSession = null;
         this.useLocalCache = Settings.getConfiguration().getBoolean("D1Client.useLocalCache",useLocalCache);
     }
 
@@ -220,8 +255,11 @@ public abstract class MultipartD1Node implements D1Node {
         return this.nodeType;
     }
 
+    /**
+     * Useful for debugging to see what the last call was
+     */
     public String getLatestRequestUrl() {
-        return this.restClient.getLatestRequestUrl();
+        return this.latestRestClient.getLatestRequestUrl();
     }
 
 
@@ -236,7 +274,7 @@ public abstract class MultipartD1Node implements D1Node {
         Header[] headers = null;
 
         try {
-            headers = this.restClient.doGetRequestForHeaders(url.getUrl(), null);
+            headers = getRestClient(defaultSession).doGetRequestForHeaders(url.getUrl(), null);
         } catch (BaseException be) {
             if (be instanceof NotImplemented)         throw (NotImplemented) be;
             if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
@@ -280,7 +318,7 @@ public abstract class MultipartD1Node implements D1Node {
     public InputStream get(Identifier pid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
             NotImplemented, InsufficientResources {
-        return get(this.session, pid);
+        return get(this.defaultSession, pid);
     }
 
 
@@ -323,7 +361,7 @@ public abstract class MultipartD1Node implements D1Node {
             }
             InputStream remoteStream = null;
             try {
-                remoteStream = this.restClient.doGetRequest(url.getUrl(),
+                remoteStream = getRestClient(session).doGetRequest(url.getUrl(),
                         Settings.getConfiguration().getInteger("D1Client.D1Node.get.timeout", null));
 
 
@@ -374,7 +412,7 @@ public abstract class MultipartD1Node implements D1Node {
 
         InputStream is = null;
         try {
-            is = this.restClient.doPostRequest(url.getUrl(), mpe, null);
+            is = getRestClient(session).doPostRequest(url.getUrl(), mpe, null);
             if (is != null)
                 is.close();
         } catch (BaseException be) {
@@ -397,7 +435,7 @@ public abstract class MultipartD1Node implements D1Node {
     public DescribeResponse describe(Identifier pid)
             throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound
             {
-        return describe(this.session, pid);
+        return describe(this.defaultSession, pid);
             }
 
 
@@ -414,7 +452,7 @@ public abstract class MultipartD1Node implements D1Node {
         Header[] headers = null;
         Map<String, String> headersMap = new HashMap<String,String>();
         try {
-            headers = this.restClient.doHeadRequest(url.getUrl(),null);
+            headers = getRestClient(session).doHeadRequest(url.getUrl(),null);
             for (Header header: headers) {
                 if (log.isDebugEnabled())
                     log.debug(String.format("header: %s = %s",
@@ -501,14 +539,14 @@ public abstract class MultipartD1Node implements D1Node {
 
     public Checksum getChecksum(Identifier pid, String checksumAlgorithm)
             throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound {
-        return getChecksum(this.session, pid, checksumAlgorithm);
+        return getChecksum(this.defaultSession, pid, checksumAlgorithm);
     }
 
 
     /**
      * This method can handle both the MN and CN method, although the CN overriding method
      * will need to recast the InvalidRequest exception and use 'null' for the checksumAlgorithm param
-     * @param session
+     * @param defaultSession
      * @param pid
      * @param checksumAlgorithm - for MN implementations only
      * @return
@@ -534,7 +572,7 @@ public abstract class MultipartD1Node implements D1Node {
         Checksum checksum = null;
 
         try {
-            InputStream is = this.restClient.doGetRequest(url.getUrl(),null);
+            InputStream is = getRestClient(session).doGetRequest(url.getUrl(),null);
             checksum = deserializeServiceType(Checksum.class, is);
         } catch (BaseException be) {
             if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
@@ -557,7 +595,7 @@ public abstract class MultipartD1Node implements D1Node {
 
     public boolean isAuthorized(Identifier pid, Permission action)
             throws ServiceFailure, InvalidRequest, InvalidToken, NotFound, NotAuthorized, NotImplemented {
-        return isAuthorized(this.session, pid, action);
+        return isAuthorized(this.defaultSession, pid, action);
     }
 
 
@@ -571,7 +609,7 @@ public abstract class MultipartD1Node implements D1Node {
             url.addNonEmptyParamPair("action", action.xmlValue());
 
         try {
-            InputStream is = this.restClient.doGetRequest(url.getUrl(),null);
+            InputStream is = getRestClient(session).doGetRequest(url.getUrl(),null);
             if (is != null)
                 is.close();
         } catch (BaseException be) {
@@ -593,7 +631,7 @@ public abstract class MultipartD1Node implements D1Node {
 
     public  Identifier generateIdentifier(String scheme, String fragment)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented, InvalidRequest {
-        return generateIdentifier(this.session, scheme, fragment);
+        return generateIdentifier(this.defaultSession, scheme, fragment);
     }
 
 
@@ -614,7 +652,7 @@ public abstract class MultipartD1Node implements D1Node {
         Identifier identifier = null;
 
         try {
-            InputStream is = this.restClient.doPostRequest(url.getUrl(),smpe,null);
+            InputStream is = getRestClient(session).doPostRequest(url.getUrl(),smpe,null);
             identifier = deserializeServiceType(Identifier.class, is);
 
         } catch (BaseException be) {
@@ -636,13 +674,13 @@ public abstract class MultipartD1Node implements D1Node {
 
     public  Identifier archive(Identifier pid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented {
-        return archive(this.session, pid);
+        return archive(this.defaultSession, pid);
     }
 
 
     /**
      *  sets the archived flag to true on an MN or CN
-     * @param session
+     * @param defaultSession
      * @param pid
      * @return Identifier
      * @throws InvalidToken
@@ -660,7 +698,7 @@ public abstract class MultipartD1Node implements D1Node {
 
         Identifier identifier = null;
         try {
-            InputStream is = this.restClient.doPutRequest(url.getUrl(), null, null);
+            InputStream is = getRestClient(session).doPutRequest(url.getUrl(), null, null);
             identifier = deserializeServiceType(Identifier.class, is);
         } catch (BaseException be) {
             if (be instanceof InvalidToken)           throw (InvalidToken) be;
@@ -679,7 +717,7 @@ public abstract class MultipartD1Node implements D1Node {
 
     public  Identifier delete(Identifier pid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented {
-        return delete(this.session, pid);
+        return delete(this.defaultSession, pid);
     }
 
 
@@ -692,7 +730,7 @@ public abstract class MultipartD1Node implements D1Node {
 
         Identifier identifier = null;
         try {
-            InputStream is = this.restClient.doDeleteRequest(url.getUrl(), null);
+            InputStream is = getRestClient(session).doDeleteRequest(url.getUrl(), null);
             identifier = deserializeServiceType(Identifier.class, is);
         } catch (BaseException be) {
             if (be instanceof InvalidToken)           throw (InvalidToken) be;
@@ -744,7 +782,7 @@ public abstract class MultipartD1Node implements D1Node {
 
         AutoCloseInputStream is = null;
         try {
-            is = new AutoCloseInputStream(this.restClient.doGetRequest(finalUrl, null));
+            is = new AutoCloseInputStream(getRestClient(session).doGetRequest(finalUrl, null));
         }
         catch (BaseException be) {
             if (be instanceof NotImplemented)         throw (NotImplemented) be;
@@ -776,7 +814,7 @@ public abstract class MultipartD1Node implements D1Node {
 
         QueryEngineDescription description = null;
         try {
-            InputStream is = this.restClient.doGetRequest(url.getUrl(), null);
+            InputStream is = getRestClient(session).doGetRequest(url.getUrl(), null);
             description = deserializeServiceType(QueryEngineDescription.class, is);
         }
         catch (BaseException be) {
@@ -803,7 +841,7 @@ public abstract class MultipartD1Node implements D1Node {
         InputStream is = null;
         QueryEngineList engines = null;
         try {
-            is = this.restClient.doGetRequest(url.getUrl(), null);
+            is = getRestClient(session).doGetRequest(url.getUrl(), null);
             engines = deserializeServiceType(QueryEngineList.class, is);
         }
         catch (BaseException be) {

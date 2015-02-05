@@ -202,15 +202,15 @@ public class CertificateManager {
 
 
 	/**
-	 * Register certificates to be used by getSSLSocjetFactory(subject) for setting
+	 * Register certificates to be used by getSSLSocketFactory(subject) for setting
 	 * up connections, using the subject as the lookup key
-	 * @param subject
+	 * @param subjectString
 	 * @param certificate
 	 * @param key
 	 */
-	public void registerCertificate(String subject, X509Certificate certificate, PrivateKey key) {
-		certificates.put(subject, certificate);
-		keys.put(subject, key);
+	public void registerCertificate(String subjectString, X509Certificate certificate, PrivateKey key) {
+		certificates.put(subjectString, certificate);
+		keys.put(subjectString, key);
 	}
 
 	
@@ -366,7 +366,7 @@ public class CertificateManager {
         X509Certificate cert = null;
         try {
         	// load up the PEM
-        	KeyStore keyStore = getKeyStore(null);
+        	KeyStore keyStore = getKeyStore((String)null);
         	// get it from the store
             cert = (X509Certificate) keyStore.getCertificate("cilogon");
         } catch (FileNotFoundException fnf) {
@@ -386,7 +386,7 @@ public class CertificateManager {
     	PrivateKey key = null;
         try {
         	// load up the PEM
-        	KeyStore keyStore = getKeyStore(null);
+        	KeyStore keyStore = getKeyStore((String) null);
         	// get it from the store
             key = (PrivateKey) keyStore.getKey("cilogon", keyStorePassword.toCharArray());
         } catch (Exception e) {
@@ -645,7 +645,6 @@ public class CertificateManager {
     {
     	// our return object
     	log.info("Entering getSSLSocketFactory");
-    	SSLSocketFactory socketFactory = null;
     	KeyStore keyStore = null;
     	
     	// get the keystore that will provide the material
@@ -657,79 +656,109 @@ public class CertificateManager {
 			// these are somewhat expected for anonymous d1 client use
 			log.warn("Client certificate could not be located. Setting up SocketFactory without it." + e.getMessage());
 		}
-       
+    	return getSSLSocketFactory(keyStore);
+    }
+
+    
+    public SSLSocketFactory getSSLSocketFactory(X509Session x509Session) 
+    throws NoSuchAlgorithmException, UnrecoverableKeyException, KeyStoreException,
+    KeyManagementException, CertificateException, IOException 
+    {
+        return getSSLSocketFactory(getKeyStore(x509Session));
+    }
+
+    private SSLSocketFactory getSSLSocketFactory(KeyStore keyStore) 
+    throws NoSuchAlgorithmException, UnrecoverableKeyException, KeyStoreException,
+    KeyManagementException 
+    {       
+        SSLSocketFactory socketFactory = null;
+        
         // create SSL context
         SSLContext ctx = SSLContext.getInstance("TLS");
-        
+
         // based on config options, we get an appropriate truststore
         X509TrustManager tm = getTrustManager();
-        
+
         // specify the client key manager
         KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
         keyManagerFactory.init(keyStore, keyStorePassword.toCharArray());
         KeyManager[] keyManagers = keyManagerFactory.getKeyManagers();
-        
+
         // initialize the context
         ctx.init(keyManagers, new TrustManager[]{tm}, new SecureRandom());
         if (trustStoreIncludesD1CAs) {
-        	log.info("using allow-all hostname verifier");
-	        //socketFactory = new SSLSocketFactory(ctx, SSLSocketFactory.STRICT_HOSTNAME_VERIFIER);
-	        //socketFactory = new SSLSocketFactory(ctx, SSLSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
-	        socketFactory = new SSLSocketFactory(ctx, SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+            log.info("using allow-all hostname verifier");
+            //socketFactory = new SSLSocketFactory(ctx, SSLSocketFactory.STRICT_HOSTNAME_VERIFIER);
+            //socketFactory = new SSLSocketFactory(ctx, SSLSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
+            socketFactory = new SSLSocketFactory(ctx, SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
         } else {
-	        socketFactory = new SSLSocketFactory(ctx);
+            socketFactory = new SSLSocketFactory(ctx);
         }
-        
         return socketFactory;
     }
-    
-    
-    
-    
+
+
+
+
     public SSLConnectionSocketFactory getSSLConnectionSocketFactory(String subjectString) 
-    	    throws NoSuchAlgorithmException, UnrecoverableKeyException, KeyStoreException,
-    	    KeyManagementException, CertificateException, IOException 
-    	    {
-    	    	// our return object
-    	    	log.info("Entering getSSLConnectionSocketFactory");
-    	    	SSLConnectionSocketFactory socketFactory = null;
-    	    	KeyStore keyStore = null;
-    	    	
-    	    	// get the keystore that will provide the material
-    	    	// Catch the exception here so that the TLS connection scheme
-    	    	// will still be setup if the client certificate is not found.
-    	    	try {
-    	    		keyStore = getKeyStore(subjectString);
-    			} catch (FileNotFoundException e) {
-    				// these are somewhat expected for anonymous d1 client use
-    				log.warn("Client certificate could not be located. Setting up SocketFactory without it." + e.getMessage());
-    			}
-    	       
-    	        // create SSL context
-    	        SSLContext ctx = SSLContext.getInstance("TLS");
-    	        
-    	        // based on config options, we get an appropriate truststore
-    	        X509TrustManager tm = getTrustManager();
-    	        
-    	        // specify the client key manager
-    	        KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-    	        keyManagerFactory.init(keyStore, keyStorePassword.toCharArray());
-    	        KeyManager[] keyManagers = keyManagerFactory.getKeyManagers();
-    	        
-    	        // initialize the context
-    	        ctx.init(keyManagers, new TrustManager[]{tm}, new SecureRandom());
-    	        if (trustStoreIncludesD1CAs) {
-    	        	log.info("using allow-all hostname verifier");
-    		        //socketFactory = new SSLSocketFactory(ctx, SSLSocketFactory.STRICT_HOSTNAME_VERIFIER);
-    		        //socketFactory = new SSLSocketFactory(ctx, SSLSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
-    		        socketFactory = new SSLConnectionSocketFactory(ctx, SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
-    	        } else {
-    		        socketFactory = new SSLConnectionSocketFactory(ctx);
-    	        }
-    	        
-    	        return socketFactory;
-    	    }
-    
+    throws NoSuchAlgorithmException, UnrecoverableKeyException, KeyStoreException,
+    KeyManagementException, CertificateException, IOException 
+    {
+        // our return object
+        log.info("Entering getSSLConnectionSocketFactory");
+        KeyStore keyStore = null;
+
+        // get the keystore that will provide the material
+        // Catch the exception here so that the TLS connection scheme
+        // will still be setup if the client certificate is not found.
+        try {
+            keyStore = getKeyStore(subjectString);
+        } catch (FileNotFoundException e) {
+            // these are somewhat expected for anonymous d1 client use
+            log.warn("Client certificate could not be located. Setting up SocketFactory without it." + e.getMessage());
+        }
+        return getSSLConnectionSocketFactory(keyStore);
+    }
+
+
+    public SSLConnectionSocketFactory getSSLConnectionSocketFactory(X509Session x509Session) 
+    throws NoSuchAlgorithmException, UnrecoverableKeyException, KeyStoreException,
+    KeyManagementException, CertificateException, IOException 
+    {
+        return getSSLConnectionSocketFactory(getKeyStore(x509Session));
+    }
+
+
+    private SSLConnectionSocketFactory getSSLConnectionSocketFactory(KeyStore keyStore) 
+    throws NoSuchAlgorithmException, KeyStoreException, UnrecoverableKeyException, 
+    KeyManagementException
+    {
+
+        SSLConnectionSocketFactory socketFactory = null;        
+        // create SSL context
+        SSLContext ctx = SSLContext.getInstance("TLS");
+
+        // based on config options, we get an appropriate truststore
+        X509TrustManager tm = getTrustManager();
+
+        // specify the client key manager
+        KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        keyManagerFactory.init(keyStore, keyStorePassword.toCharArray());
+        KeyManager[] keyManagers = keyManagerFactory.getKeyManagers();
+
+        // initialize the context
+        ctx.init(keyManagers, new TrustManager[]{tm}, new SecureRandom());
+        if (trustStoreIncludesD1CAs) {
+            log.info("using allow-all hostname verifier");
+            //socketFactory = new SSLSocketFactory(ctx, SSLSocketFactory.STRICT_HOSTNAME_VERIFIER);
+            //socketFactory = new SSLSocketFactory(ctx, SSLSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
+            socketFactory = new SSLConnectionSocketFactory(ctx, SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+        } else {
+            socketFactory = new SSLConnectionSocketFactory(ctx);
+        }
+        return socketFactory;
+    }
+
     /**
      * Based on the configuration option 'certificate.truststore.includeD1CAs', 
      * returns either the JVM trustmanager or a custom trustmanager that augments 
@@ -854,9 +883,9 @@ public class CertificateManager {
 //	            	return null;
 //	            }
 //	        };
-	        
-	        
-	        
+
+
+
 	    }
 	    else {
 	    	log.info("using JVM TrustManager");
@@ -868,72 +897,104 @@ public class CertificateManager {
     }
     
     /**
-     * Loads the certificate and privateKey into the in-memory KeyStore singleton, 
-     * using the provided subjectString to search among the registered certificates.
-     * If the subjectString parameter is null, finds the certificate first using the 
-     * set certificate location, and then the default location. 
-     *  
+     * Creates a KeyStore using the certificate material determined by selectSession.
      * 
-     * NOTE: this implementation uses Bouncy Castle security provider
-     * 
-     * @param subjectString - key for the registered certificate to load into the keystore
-     *                        an unregistered subjectString will lead to a KeyStoreException
-     *                        ("Cannot store non-PrivateKeys")
-     * @return the keystore singleton instance that will provide the material
-     * @throws KeyStoreException 
      * @throws CertificateException 
      * @throws NoSuchAlgorithmException 
      * @throws IOException 
      */
-    private KeyStore getKeyStore(String subjectString) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
-    	
-    	// the important items
-    	X509Certificate certificate = null;
-        PrivateKey privateKey = null;
-        
-    	// if we have a session subject, find the registered certificate and key
-    	if (subjectString != null) {
-    		certificate = certificates.get(subjectString);
-    		privateKey = keys.get(subjectString);
-    	}
-    	else {
-			// if the location has been set, use it
-	    	String certLoc = certificateLocation;
-	    	File certFile = (certLoc == null) ? 
-	    			locateDefaultCertificate() :
-	    			new File(certLoc);
+    private KeyStore getKeyStore(String subjectString) throws KeyStoreException,
+    NoSuchAlgorithmException, CertificateException, IOException {
 
-			log.info("Using client certificate location: " + certLoc);
-	    	PEMReader pemReader = null;
-	    	try {
-	    		pemReader = new PEMReader(new FileReader(certFile));
-	    		Object pemObject = null;
-	        
-	    		KeyPair keyPair = null;
-	    		while ((pemObject = pemReader.readObject()) != null) {
-	    			if (pemObject instanceof PrivateKey) {
-	    				privateKey = (PrivateKey) pemObject;
-	    			}
-	    			else if (pemObject instanceof KeyPair) {
-	    				keyPair = (KeyPair) pemObject;
-	    				privateKey = keyPair.getPrivate();
-	    			} else if (pemObject instanceof X509Certificate) {
-	    				certificate = (X509Certificate) pemObject;
-	    			}
-	    		}
-	    	} finally {
-	    		IOUtils.closeQuietly(pemReader);
-	    	}
-    	}
-    	
-    	KeyStore keyStore  = KeyStore.getInstance(keyStoreType);
+        X509Session s = selectSession(subjectString);
+        return getKeyStore(s);
+    }
+       
+    /**
+     * Select the X509Session using the provided subjectString to search among 
+     * the registered certificates. If the subjectString parameter is null, finds 
+     * the certificate first using the set certificate location, and then the 
+     * default location for CILogon certificate downloads (the user's tmp directory).
+     * If no certificate file is found, null is returned, signifying that a public
+     * connection (certificate-less) will be used. 
+     *  
+     * NOTE: this implementation uses Bouncy Castle security provider
+     * @param subjectString
+     * @return
+     * @throws IOException - if there was trouble reading the PEM file.
+     */
+    public X509Session selectSession(String subjectString) throws IOException {
+
+        X509Session x509Session = null;
+        try {
+        // if we have a session subject, find the registered certificate and key
+        if (subjectString != null) {
+            x509Session = X509Session.create(
+                    certificates.get(subjectString),
+                    keys.get(subjectString));
+        }
+        else {
+            // if the location has been set, use it
+            File certFile = (certificateLocation == null) ? locateDefaultCertificate() :
+                new File(certificateLocation);
+            log.info("Using client certificate location: " + certificateLocation);
+            x509Session = getX509Session(certFile);
+        }
+        } catch (FileNotFoundException e) {
+            ; // that's ok
+        }
+        return x509Session;
+    }
+
+    /*
+     * converts an X509Session into a KeyStore
+     */
+    private KeyStore getKeyStore(X509Session x509Session) throws KeyStoreException,
+    NoSuchAlgorithmException, CertificateException, IOException {
+
+        // a null keystore is valid input to the schema registry
+        if (x509Session == null) return null;
+        
+        KeyStore keyStore  = KeyStore.getInstance(keyStoreType);
         keyStore.load(null, keyStorePassword.toCharArray());
-        Certificate[] chain = new Certificate[] {certificate};
-        // set the entry
-		keyStore.setKeyEntry("cilogon", privateKey, keyStorePassword.toCharArray(), chain);
+        Certificate[] chain = new Certificate[] { x509Session.getCertificate() };
+
+        keyStore.setKeyEntry("cilogon", x509Session.getPrivateKey(), 
+                keyStorePassword.toCharArray(), chain);
         
         return keyStore;
-    	
+    }
+
+    /* 
+     * reads the PEM file from the file-system and extracts the certificate and
+     * private key.  Supports KeyPair and PrivateKey PEM objects.
+     */
+    private X509Session getX509Session(File pemFile) throws 
+    FileNotFoundException, IOException {
+
+        PrivateKey privateKey = null;
+        X509Certificate certificate = null;
+        PEMReader pemReader = null;
+        try {
+            pemReader = new PEMReader(new FileReader(pemFile));
+            Object pemObject = null;
+
+            KeyPair keyPair = null;
+            while ((pemObject = pemReader.readObject()) != null) {
+                if (pemObject instanceof PrivateKey) {
+                    privateKey = (PrivateKey) pemObject;
+                }
+                else if (pemObject instanceof KeyPair) {
+                    keyPair = (KeyPair) pemObject;
+                    privateKey = keyPair.getPrivate();
+                } else if (pemObject instanceof X509Certificate) {
+                    certificate = (X509Certificate) pemObject;
+                }
+            }
+        } finally {
+            IOUtils.closeQuietly(pemReader);
+        }
+        return X509Session.create(certificate, privateKey);
     }
     
     /**

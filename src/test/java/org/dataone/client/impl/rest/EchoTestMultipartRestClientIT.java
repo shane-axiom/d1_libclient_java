@@ -33,7 +33,7 @@ import org.apache.http.Header;
 import org.apache.http.HttpException;
 import org.apache.http.client.ClientProtocolException;
 import org.dataone.client.exception.ClientSideException;
-import org.dataone.client.rest.DefaultHttpMultipartRestClient;
+import org.dataone.client.rest.HttpMultipartRestClient;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.exceptions.BaseException;
@@ -56,7 +56,7 @@ public class EchoTestMultipartRestClientIT {
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		MultipartRestClient rc = new DefaultHttpMultipartRestClient();
+		MultipartRestClient rc = new HttpMultipartRestClient();
 		String contentString = null;
 		try {
 			InputStream is = rc.doGetRequest(u.getUrl(), null);
@@ -77,7 +77,7 @@ public class EchoTestMultipartRestClientIT {
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		MultipartRestClient rc = new DefaultHttpMultipartRestClient();
+		MultipartRestClient rc = new HttpMultipartRestClient();
 		String contentString = null;
 		try {
 			InputStream is = rc.doDeleteRequest(u.getUrl(), null);
@@ -99,7 +99,7 @@ public class EchoTestMultipartRestClientIT {
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		MultipartRestClient rc = new DefaultHttpMultipartRestClient();
+		MultipartRestClient rc = new HttpMultipartRestClient();
 		Header[] headers = null;
 		try {
 			headers = rc.doHeadRequest(u.getUrl(), null);
@@ -121,7 +121,7 @@ public class EchoTestMultipartRestClientIT {
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		MultipartRestClient rc = new DefaultHttpMultipartRestClient();
+		MultipartRestClient rc = new HttpMultipartRestClient();
 		String contentString = null;
 		try {
 			InputStream is = rc.doPutRequest(u.getUrl(),null, null);
@@ -142,7 +142,7 @@ public class EchoTestMultipartRestClientIT {
 		D1Url u = new D1Url(echoNode, echoResource);
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		MultipartRestClient rc = new DefaultHttpMultipartRestClient();
+		MultipartRestClient rc = new HttpMultipartRestClient();
 		String contentString = null;
 		try {
 			InputStream is = rc.doPostRequest(u.getUrl(),null, null);
@@ -167,7 +167,7 @@ public class EchoTestMultipartRestClientIT {
 		SimpleMultipartEntity ent = new SimpleMultipartEntity();
 		ent.addParamPart("Jabberwocky", "Twas brillig and the slithy tove, did gyre and gimble in the wabe");
 		ent.addFilePart("Jabberwocky2", "All mimsy was the borogrove, and the mome wrath ungrabe.");
-		MultipartRestClient rc = new DefaultHttpMultipartRestClient();
+		MultipartRestClient rc = new HttpMultipartRestClient();
 		String contentString = null;
 		try {
 			InputStream is = rc.doPutRequest(u.getUrl(),ent, null);
@@ -191,7 +191,7 @@ public class EchoTestMultipartRestClientIT {
 		SimpleMultipartEntity ent = new SimpleMultipartEntity();
 		ent.addParamPart("Jabberwocky", "Twas brillig and the slithy tove, did gyre and gimble in the wabe");
 		ent.addFilePart("Jabberwocky2", "All mimsy was the borogrove, and the mome wrath ungrabe.");
-		MultipartRestClient rc = new DefaultHttpMultipartRestClient();
+		MultipartRestClient rc = new HttpMultipartRestClient();
 		String contentString = null;
 		try {
 			InputStream is = rc.doPostRequest(u.getUrl(),ent, null);
@@ -207,12 +207,12 @@ public class EchoTestMultipartRestClientIT {
 	
 	@Test
 	public void testExceptionFiltering() 
-	throws ClientProtocolException, IOException, IllegalStateException, HttpException 
+	throws ClientProtocolException, IOException, IllegalStateException, HttpException, ClientSideException 
 	{
 		D1Url u = new D1Url(echoNode + "xx", "fakeResource");
 		u.addNextPathElement("bizz");
 		u.addNonEmptyParamPair("x", "y");
-		MultipartRestClient rc = new DefaultHttpMultipartRestClient();
+		MultipartRestClient rc = new HttpMultipartRestClient();
 
 		try {
 			InputStream is = rc.doGetRequest(u.getUrl(), null);

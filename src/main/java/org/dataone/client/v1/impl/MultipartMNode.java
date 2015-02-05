@@ -65,7 +65,6 @@ import org.dataone.service.types.v1_1.QueryEngineDescription;
 import org.dataone.service.types.v1_1.QueryEngineList;
 import org.dataone.service.util.Constants;
 import org.dataone.service.util.D1Url;
-import org.dataone.service.util.DateTimeMarshaller;
 import org.jibx.runtime.JiBXException;
 
 /**
@@ -113,9 +112,11 @@ public class MultipartMNode extends MultipartD1Node implements MNode
      * Construct a new client-side MultipartMNode (Member Node) object, 
      * passing in the base url of the member node for calling its services.
      * @param nodeBaseServiceUrl base url for constructing service endpoints.
+     * @throws ClientSideException 
+     * @throws IOException 
      */
 	@Deprecated
-    public MultipartMNode(String nodeBaseServiceUrl) {
+    public MultipartMNode(String nodeBaseServiceUrl) throws IOException, ClientSideException {
         super(nodeBaseServiceUrl); 
         this.nodeType = NodeType.MN;
     }
@@ -126,14 +127,14 @@ public class MultipartMNode extends MultipartD1Node implements MNode
      * passing in the base url of the member node for calling its services,
      * and the Session to use for connections to that node. 
      * @param nodeBaseServiceUrl base url for constructing service endpoints.
-     * @param session - the Session object passed to the CertificateManager
+     * @param defaultSession - the Session object passed to the CertificateManager
      *                  to be used for establishing connections
      */
-	@Deprecated
-    public MultipartMNode(String nodeBaseServiceUrl, Session session) {
-        super(nodeBaseServiceUrl, session);
-        this.nodeType = NodeType.MN;
-    }
+//	@Deprecated
+//    public MultipartMNode(String nodeBaseServiceUrl, Session session) {
+//        super(nodeBaseServiceUrl, session);
+//        this.nodeType = NodeType.MN;
+//    }
 	
     /**
      * Construct a new client-side MultipartMNode (Member Node) object, 
@@ -151,7 +152,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
      * passing in the base url of the member node for calling its services,
      * and the Session to use for connections to that node. 
      * @param nodeBaseServiceUrl base url for constructing service endpoints.
-     * @param session - the Session object passed to the CertificateManager
+     * @param defaultSession - the Session object passed to the CertificateManager
      *                  to be used for establishing connections
      */
     public MultipartMNode(MultipartRestClient mrc, String nodeBaseServiceUrl, Session session) {
@@ -210,7 +211,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
         // send the request
         ObjectList objectList = null;
         try {
-        	InputStream is = this.restClient.doGetRequest(url.getUrl(), null);
+        	InputStream is = getRestClient(session).doGetRequest(url.getUrl(), null);
         	objectList =  deserializeServiceType(ObjectList.class, is);
         } catch (BaseException be) {
             if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
@@ -251,7 +252,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
         Node node = null;
 
         try {
-        	InputStream is = this.restClient.doGetRequest(url.getUrl(),null);
+        	InputStream is = getRestClient(this.defaultSession).doGetRequest(url.getUrl(),null);
         	node = deserializeServiceType(Node.class, is);
         } catch (BaseException be) {
             if (be instanceof NotImplemented)    throw (NotImplemented) be;
@@ -309,7 +310,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 		Log log = null;
 
 		try {
-			InputStream is = this.restClient.doGetRequest(url.getUrl(),
+			InputStream is = getRestClient(session).doGetRequest(url.getUrl(),
 					Settings.getConfiguration().getInteger("D1Client.D1Node.getLogRecords.timeout", null));
 			log = deserializeServiceType(Log.class, is);
 		} catch (BaseException be) {
@@ -368,7 +369,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 		SystemMetadata sysmeta = null;
 		
 		try {
-			is = this.restClient.doGetRequest(url.getUrl(),
+			is = getRestClient(session).doGetRequest(url.getUrl(),
 					Settings.getConfiguration().getInteger("D1Client.D1Node.getSystemMetadata.timeout", null));
 			sysmeta = deserializeServiceType(SystemMetadata.class,is);
 			if (cacheMissed) {
@@ -454,7 +455,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 	public boolean synchronizationFailed(SynchronizationFailed message)
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
     { 
-        return synchronizationFailed(this.session, message);
+        return synchronizationFailed(this.defaultSession, message);
     }
     
     
@@ -478,7 +479,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 
         InputStream is = null;
         try {
-        	is = this.restClient.doPostRequest(url.getUrl(),mpe, null);
+        	is = getRestClient(session).doPostRequest(url.getUrl(),mpe, null);
         	if (is != null)
 				is.close();
         } catch (BaseException be) {
@@ -549,7 +550,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
     throws IdentifierNotUnique, InsufficientResources, InvalidRequest, InvalidSystemMetadata, 
         	InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, UnsupportedType
     {
-        return create(this.session, pid, object,  sysmeta);
+        return create(this.defaultSession, pid, object,  sysmeta);
     }
      
 		
@@ -578,7 +579,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
     	Identifier identifier = null;
 
     	try {
-    		InputStream is = this.restClient.doPostRequest(url.getUrl(),mpe, 
+    		InputStream is = getRestClient(session).doPostRequest(url.getUrl(),mpe, 
     				Settings.getConfiguration().getInteger("D1Client.MNode.create.timeout", null));
     		 identifier = deserializeServiceType(Identifier.class, is);
         } catch (BaseException be) {
@@ -610,7 +611,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
             InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, UnsupportedType,
             NotFound
     {
-        return update(this.session, pid, object, newPid, sysmeta);
+        return update(this.defaultSession, pid, object, newPid, sysmeta);
     }
     
     
@@ -642,7 +643,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
     	Identifier identifier = null;
     	
     	try {
-    		InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe, 
+    		InputStream is = getRestClient(session).doPutRequest(url.getUrl(),mpe, 
     				Settings.getConfiguration()
     				.getInteger("D1Client.MNode.update.timeout",null));
     		
@@ -719,7 +720,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
         	Date dateSystemMetadataLastModified)
         throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented, InvalidRequest
     {
-        return systemMetadataChanged(this.session, pid, serialVersion, dateSystemMetadataLastModified);
+        return systemMetadataChanged(this.defaultSession, pid, serialVersion, dateSystemMetadataLastModified);
     }
    
  
@@ -732,7 +733,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
     throws NotImplemented, ServiceFailure, NotAuthorized, InvalidRequest, InvalidToken,
         InsufficientResources, UnsupportedType
     {
-        return replicate(this.session, sysmeta, sourceNode);
+        return replicate(this.defaultSession, sysmeta, sourceNode);
     }
     
     
@@ -762,7 +763,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
     	
     	InputStream is = null;
     	try {
-			is = this.restClient.doPostRequest(url.getUrl(),smpe, 
+			is = getRestClient(session).doPostRequest(url.getUrl(),smpe, 
 					Settings.getConfiguration() .getInteger("D1Client.MNode.replicate.timeout",null));
 			if (is != null)
 				is.close();
@@ -792,7 +793,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound,
     InsufficientResources
     {
-       return getReplica(this.session, pid);
+       return getReplica(this.defaultSession, pid);
     }
     
     
@@ -810,7 +811,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 
         InputStream is = null;
         try {
-        	is = new AutoCloseInputStream(this.restClient.doGetRequest(url.getUrl(), 
+        	is = new AutoCloseInputStream(getRestClient(session).doGetRequest(url.getUrl(), 
         			Settings.getConfiguration().getInteger("D1Client.MNode.getReplica.timeout", null)));
     	
         } catch (BaseException be) {

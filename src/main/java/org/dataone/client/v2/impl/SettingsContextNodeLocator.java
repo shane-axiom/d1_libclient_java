@@ -19,6 +19,7 @@
  */
 package org.dataone.client.v2.impl;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
@@ -27,7 +28,7 @@ import java.util.Map;
 
 import org.dataone.client.D1NodeFactory;
 import org.dataone.client.exception.ClientSideException;
-import org.dataone.client.rest.DefaultHttpMultipartRestClient;
+import org.dataone.client.rest.HttpMultipartRestClient;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.configuration.Settings;
 import org.dataone.service.cn.v2.CNCore;
@@ -68,10 +69,11 @@ public class SettingsContextNodeLocator extends NodeListNodeLocator {
 	 * It uses the property D1Client.CN_URL
 	 * accessible through the Settings class.
 	 * @throws ClientSideException 
+	 * @throws IOException 
 	 */
 	public SettingsContextNodeLocator() 
-	throws NotImplemented, ServiceFailure, ClientSideException {
-		this(new DefaultHttpMultipartRestClient());
+	throws NotImplemented, ServiceFailure, ClientSideException, IOException {
+		this(new HttpMultipartRestClient());
 	}
 
 	

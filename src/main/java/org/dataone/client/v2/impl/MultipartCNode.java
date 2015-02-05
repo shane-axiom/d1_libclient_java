@@ -21,19 +21,14 @@ package org.dataone.client.v2.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.DateFormat;
 import java.util.Date;
-import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.logging.LogFactory;
 import org.dataone.client.exception.ClientSideException;
-import org.dataone.client.exception.NotCached;
 import org.dataone.client.rest.MultipartD1Node;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.client.utils.ExceptionUtils;
 import org.dataone.client.v2.CNode;
-import org.dataone.client.v1.cache.LocalCache;
 import org.dataone.client.v2.formats.ObjectFormatCache;
 import org.dataone.configuration.Settings;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
@@ -56,14 +51,9 @@ import org.dataone.service.types.v1.Checksum;
 import org.dataone.service.types.v1.ChecksumAlgorithmList;
 import org.dataone.service.types.v1.Group;
 import org.dataone.service.types.v1.Identifier;
-import org.dataone.service.types.v2.Log;
-import org.dataone.service.types.v2.Node;
-import org.dataone.service.types.v2.NodeList;
 import org.dataone.service.types.v1.NodeReference;
 import org.dataone.service.types.v1.NodeType;
-import org.dataone.service.types.v2.ObjectFormat;
 import org.dataone.service.types.v1.ObjectFormatIdentifier;
-import org.dataone.service.types.v2.ObjectFormatList;
 import org.dataone.service.types.v1.ObjectList;
 import org.dataone.service.types.v1.ObjectLocationList;
 import org.dataone.service.types.v1.Person;
@@ -73,8 +63,12 @@ import org.dataone.service.types.v1.ReplicationStatus;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1.Subject;
 import org.dataone.service.types.v1.SubjectInfo;
+import org.dataone.service.types.v2.Log;
+import org.dataone.service.types.v2.Node;
+import org.dataone.service.types.v2.NodeList;
+import org.dataone.service.types.v2.ObjectFormat;
+import org.dataone.service.types.v2.ObjectFormatList;
 import org.dataone.service.types.v2.SystemMetadata;
-import org.dataone.service.types.v1.util.NodelistUtil;
 import org.dataone.service.util.Constants;
 import org.dataone.service.util.D1Url;
 import org.jibx.runtime.JiBXException;
@@ -119,9 +113,11 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	 * identifiers and base urls for further service invocations.
 	 *
 	 * @param nodeBaseServiceUrl base url for constructing service endpoints.
+	 * @throws ClientSideException 
+	 * @throws IOException 
 	 */
     @Deprecated
-	public MultipartCNode(String nodeBaseServiceUrl) {
+	public MultipartCNode(String nodeBaseServiceUrl) throws IOException, ClientSideException {
 		super(nodeBaseServiceUrl);
         this.nodeType = NodeType.CN;
 		nodelistRefreshIntervalSeconds = Settings.getConfiguration()
@@ -137,17 +133,17 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	 * identifiers and base urls for further service invocations.
 	 *
 	 * @param nodeBaseServiceUrl base url for constructing service endpoints.
-	 * @param session - the Session object passed to the CertificateManager
+	 * @param defaultSession - the Session object passed to the CertificateManager
      *                  to be used for establishing connections
 	 */
-	@Deprecated
-	public MultipartCNode(String nodeBaseServiceUrl, Session session) {
-		super(nodeBaseServiceUrl, session);
-        this.nodeType = NodeType.CN;
-		nodelistRefreshIntervalSeconds = Settings.getConfiguration()
-			.getInteger("CNode.nodemap.cache.refresh.interval.seconds", 
-						nodelistRefreshIntervalSeconds);
-	}
+//	@Deprecated
+//	public MultipartCNode(String nodeBaseServiceUrl, Session session) {
+//		super(nodeBaseServiceUrl, session);
+//        this.nodeType = NodeType.CN;
+//		nodelistRefreshIntervalSeconds = Settings.getConfiguration()
+//			.getInteger("CNode.nodemap.cache.refresh.interval.seconds", 
+//						nodelistRefreshIntervalSeconds);
+//	}
 
     /**
      * Construct a new client-side MultipartCNode (Coordinating Node) object, 
@@ -157,6 +153,9 @@ public class MultipartCNode extends MultipartD1Node implements CNode
     public MultipartCNode(MultipartRestClient mrc, String nodeBaseServiceUrl) {
         super(mrc, nodeBaseServiceUrl);
         this.nodeType = NodeType.CN;
+        nodelistRefreshIntervalSeconds = Settings.getConfiguration()
+                .getInteger("CNode.nodemap.cache.refresh.interval.seconds", 
+                            nodelistRefreshIntervalSeconds);
     }
    
     
@@ -165,12 +164,15 @@ public class MultipartCNode extends MultipartD1Node implements CNode
      * passing in the base url of the member node for calling its services,
      * and the Session to use for connections to that node. 
      * @param nodeBaseServiceUrl base url for constructing service endpoints.
-     * @param session - the Session object passed to the CertificateManager
+     * @param defaultSession - the Session object passed to the CertificateManager
      *                  to be used for establishing connections
      */
     public MultipartCNode(MultipartRestClient mrc, String nodeBaseServiceUrl, Session session) {
         super(mrc, nodeBaseServiceUrl, session);
         this.nodeType = NodeType.CN;
+        nodelistRefreshIntervalSeconds = Settings.getConfiguration()
+                .getInteger("CNode.nodemap.cache.refresh.interval.seconds", 
+                            nodelistRefreshIntervalSeconds);
     }	
 	/* (non-Javadoc)
 	 * @see org.dataone.client.CNode#getNodeBaseServiceUrl()
@@ -196,7 +198,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		ObjectFormatList formatList = null;
 		
 		try {			
-			InputStream is = this.restClient.doGetRequest(url.getUrl(), null);
+			InputStream is = getRestClient(this.defaultSession).doGetRequest(url.getUrl(), null);
 			formatList = deserializeServiceType(ObjectFormatList.class, is);
 
 		} catch (BaseException be) {
@@ -251,7 +253,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 			// send the request
 
 			try {
-				InputStream is = this.restClient.doGetRequest(url.getUrl(), null);
+				InputStream is = getRestClient(this.defaultSession).doGetRequest(url.getUrl(), null);
 				objectFormat = deserializeServiceType(ObjectFormat.class, is);
 
 			} catch (BaseException be) {
@@ -299,7 +301,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
         // send the request
         ObjectList objectList = null;
         try {
-        	InputStream is = this.restClient.doGetRequest(url.getUrl(), null);
+        	InputStream is = getRestClient(session).doGetRequest(url.getUrl(), null);
         	objectList =  deserializeServiceType(ObjectList.class, is);
         } catch (BaseException be) {
             if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
@@ -328,7 +330,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 		ChecksumAlgorithmList algorithmList = null;
 		try {
-			InputStream is = this.restClient.doGetRequest(url.getUrl(), null);
+			InputStream is = getRestClient(this.defaultSession).doGetRequest(url.getUrl(), null);
 			algorithmList = deserializeServiceType(ChecksumAlgorithmList.class, is);
 		} catch (BaseException be) {
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
@@ -364,7 +366,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		Log log = null;
 
 		try {
-			InputStream is = this.restClient.doGetRequest(url.getUrl(),
+			InputStream is = getRestClient(session).doGetRequest(url.getUrl(),
 					Settings.getConfiguration().getInteger("D1Client.D1Node.getLogRecords.timeout", null));
 			log = deserializeServiceType(Log.class, is);
 		} catch (BaseException be) {
@@ -395,7 +397,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
         Node node = null;
 
         try {
-        	InputStream is = this.restClient.doGetRequest(url.getUrl(),null);
+        	InputStream is = getRestClient(this.defaultSession).doGetRequest(url.getUrl(),null);
         	node = deserializeServiceType(Node.class, is);
         } catch (BaseException be) {
             if (be instanceof NotImplemented)    throw (NotImplemented) be;
@@ -421,7 +423,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		NodeList nodelist = null;
 
 		try {
-			InputStream is = this.restClient.doGetRequest(url.getUrl(), null);
+			InputStream is = getRestClient(this.defaultSession).doGetRequest(url.getUrl(), null);
 			nodelist = deserializeServiceType(NodeList.class, is);
 			
 		} catch (BaseException be) {
@@ -448,7 +450,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		Node node = null;
 
 		try {
-			InputStream is = this.restClient.doGetRequest(url.getUrl(), null);
+			InputStream is = getRestClient(this.defaultSession).doGetRequest(url.getUrl(), null);
 			node = deserializeServiceType(Node.class, is);
 			
 		} catch (BaseException be) {
@@ -482,7 +484,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		
 		Identifier identifier = null;
  		try {
- 			InputStream is = this.restClient.doPostRequest(url.getUrl(),smpe,
+ 			InputStream is = getRestClient(session).doPostRequest(url.getUrl(),smpe,
  					Settings.getConfiguration().getInteger("D1Client.CNode.reserveIdentifier.timeout", null));
  			identifier = deserializeServiceType(Identifier.class, is);
  			
@@ -524,7 +526,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		// send the request
 		
 		try {
-			InputStream is = this.restClient.doGetRequest(url.getUrl(), null);
+			InputStream is = getRestClient(session).doGetRequest(url.getUrl(), null);
 			if (is != null)
 				is.close();
 			
@@ -590,7 +592,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
         Identifier identifier = null;
 
         try {
-        	InputStream is = this.restClient.doPostRequest(url.getUrl(), mpe,
+        	InputStream is = getRestClient(session).doPostRequest(url.getUrl(), mpe,
         			Settings.getConfiguration().getInteger("D1Client.CNode.create.timeouts", null));
         	identifier = deserializeServiceType(Identifier.class, is);
         	
@@ -639,7 +641,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 		Identifier identifier = null;
 		try {
-			InputStream is = this.restClient.doPostRequest(url.getUrl(),mpe,
+			InputStream is = getRestClient(session).doPostRequest(url.getUrl(),mpe,
 					Settings.getConfiguration().getInteger("D1Client.CNode.registerSystemMetadata.timeouts", null));
 			identifier = deserializeServiceType(Identifier.class, is);
 		} catch (BaseException be) {
@@ -680,7 +682,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 			Identifier identifier = null;
 			try {
-				InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe,
+				InputStream is = getRestClient(session).doPutRequest(url.getUrl(),mpe,
 						Settings.getConfiguration().getInteger("D1Client.CNode.registerSystemMetadata.timeouts", null));
 				identifier = deserializeServiceType(Identifier.class, is);
 			} catch (BaseException be) {
@@ -722,7 +724,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
 
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(), mpe, null);
+			InputStream is = getRestClient(session).doPutRequest(url.getUrl(), mpe, null);
 			if (is != null)
 				is.close();
 
@@ -770,7 +772,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		SystemMetadata sysmeta = null;
 		
 		try {
-			is = this.restClient.doGetRequest(url.getUrl(),
+			is = getRestClient(session).doGetRequest(url.getUrl(),
 					Settings.getConfiguration().getInteger("D1Client.D1Node.getSystemMetadata.timeout", null));
 			sysmeta = deserializeServiceType(SystemMetadata.class,is);
 			
@@ -814,7 +816,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 		try {
 			// set flag to true to allow redirects (http.SEE_OTHER) to represent success
-			InputStream is = this.restClient.doGetRequest(url.getUrl(),null, true);
+			InputStream is = getRestClient(session).doGetRequest(url.getUrl(),null, true);
 			oll = deserializeServiceType(ObjectLocationList.class, is);
 			
 		} catch (BaseException be) {
@@ -896,7 +898,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest, 
 	NotImplemented
 	{
-		return search(this.session, queryType, queryD1url);
+		return search(this.defaultSession, queryType, queryD1url);
 	}
 	
 	
@@ -940,7 +942,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	 * <pre>  "?q=id%5C:MyStuff%5C:%5C*&start=0&rows=10&fl=id%5C%20score"</pre>
 	 *
 	 * resulting in: 
-	 * <pre>cn.search(session,"solr","?q=id%5C:MyStuff%5C:%5C*&start=0&rows=10&fl=id%5C%20score")</pre> 
+	 * <pre>cn.search(defaultSession,"solr","?q=id%5C:MyStuff%5C:%5C*&start=0&rows=10&fl=id%5C%20score")</pre> 
 	 *  
 	 *  For solr queries, a list of query terms employed can be found at the DataONE documentation on 
 	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/design/SearchMetadata.html"> Content Discovery</a> }
@@ -959,7 +961,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
         ObjectList objectList = null;
         try {
-            InputStream is = this.restClient.doGetRequest(finalUrl, null);
+            InputStream is = getRestClient(session).doGetRequest(finalUrl, null);
             objectList = deserializeServiceType(ObjectList.class, is);
             
 		} catch (BaseException be) {
@@ -1001,7 +1003,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		Identifier identifier = null;
 
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe, null);
+			InputStream is = getRestClient(session).doPutRequest(url.getUrl(),mpe, null);
 			identifier = deserializeServiceType(Identifier.class, is);
 			
 		} catch (BaseException be) {
@@ -1045,7 +1047,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		}
 
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe, null);
+			InputStream is = getRestClient(session).doPutRequest(url.getUrl(),mpe, null);
 			if (is != null)
 				is.close();
 
@@ -1092,7 +1094,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 		Subject subject = null;
 		try {
-			InputStream is = this.restClient.doPostRequest(url.getUrl(),mpe, null);
+			InputStream is = getRestClient(session).doPostRequest(url.getUrl(),mpe, null);
 			subject = deserializeServiceType(Subject.class, is);
 			
 		} catch (BaseException be) {
@@ -1139,7 +1141,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 		Subject subject = null;
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe, null);
+			InputStream is = getRestClient(session).doPutRequest(url.getUrl(),mpe, null);
 			subject = deserializeServiceType(Subject.class, is);
 			
 		} catch (BaseException be) {
@@ -1174,7 +1176,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		url.addNextPathElement(subject.getValue());
 		
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(),null, null);
+			InputStream is = getRestClient(session).doPutRequest(url.getUrl(),null, null);
 			if (is != null)
 				is.close();
 		
@@ -1209,7 +1211,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		SubjectInfo subjectInfo = null;
 
 		try {
-			InputStream is = this.restClient.doGetRequest(url.getUrl(), null);
+			InputStream is = getRestClient(session).doGetRequest(url.getUrl(), null);
 			subjectInfo = deserializeServiceType(SubjectInfo.class, is);
 			
 		} catch (BaseException be) {
@@ -1244,7 +1246,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		SubjectInfo subjectInfo = null;
 
 		try {
-			InputStream is = this.restClient.doGetRequest(url.getUrl(), null);
+			InputStream is = getRestClient(session).doGetRequest(url.getUrl(), null);
 			subjectInfo = deserializeServiceType(SubjectInfo.class, is);
 			
 		} catch (BaseException be) {
@@ -1279,7 +1281,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
     		mpe.addParamPart("secondarySubject", secondarySubject.getValue());
 
 		try {
-			InputStream is = this.restClient.doPostRequest(url.getUrl(),mpe, null);
+			InputStream is = getRestClient(session).doPostRequest(url.getUrl(),mpe, null);
 			if (is != null)
 				is.close();
 			
@@ -1314,7 +1316,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		mpe.addParamPart("subject", subject.getValue());
 
 		try {
-			InputStream is = this.restClient.doPostRequest(url.getUrl(), mpe, null);
+			InputStream is = getRestClient(session).doPostRequest(url.getUrl(), mpe, null);
 			if (is != null)
 				is.close();
 		
@@ -1349,7 +1351,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		SubjectInfo subjectInfo = null;
 
 		try {
-			InputStream is = this.restClient.doGetRequest(url.getUrl(), null);
+			InputStream is = getRestClient(session).doGetRequest(url.getUrl(), null);
 			subjectInfo = deserializeServiceType(SubjectInfo.class, is);
 			
 		} catch (BaseException be) {
@@ -1379,7 +1381,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
     	url.addNextPathElement(subject.getValue());
 
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(), null, null);
+			InputStream is = getRestClient(session).doPutRequest(url.getUrl(), null, null);
 			if (is != null)
 				is.close();
 
@@ -1410,7 +1412,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
     	url.addNextPathElement(subject.getValue());
 		
 		try {
-			InputStream is = this.restClient.doDeleteRequest(url.getUrl(), null);
+			InputStream is = getRestClient(session).doDeleteRequest(url.getUrl(), null);
 			if (is != null)
 				is.close();
 
@@ -1442,7 +1444,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
     	url.addNextPathElement(subject.getValue());
 
 		try {
-			InputStream is = this.restClient.doDeleteRequest(url.getUrl(), null);
+			InputStream is = getRestClient(session).doDeleteRequest(url.getUrl(), null);
 			if (is != null)
 				is.close();
 
@@ -1484,7 +1486,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		Subject subject = null;
 
 		try {
-			InputStream is = this.restClient.doPostRequest(url.getUrl(), mpe, null);
+			InputStream is = getRestClient(session).doPostRequest(url.getUrl(), mpe, null);
 			subject = deserializeServiceType(Subject.class, is);
 			
 		} catch (BaseException be) {
@@ -1522,7 +1524,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		}
 
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe, null);
+			InputStream is = getRestClient(session).doPutRequest(url.getUrl(),mpe, null);
 			if (is != null)
 				is.close();
 			
@@ -1567,7 +1569,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		}
 
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe, null);
+			InputStream is = getRestClient(session).doPutRequest(url.getUrl(),mpe, null);
 			if (is != null)
 				is.close();
 
@@ -1611,7 +1613,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 		NodeReference nodeRef = null;
 		try {
-			InputStream is = this.restClient.doPostRequest(url.getUrl(),mpe, null);
+			InputStream is = getRestClient(session).doPostRequest(url.getUrl(),mpe, null);
 			nodeRef = deserializeServiceType(NodeReference.class, is);
 			
 		} catch (BaseException be) {
@@ -1660,7 +1662,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
         }
 
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe,
+			InputStream is = getRestClient(session).doPutRequest(url.getUrl(),mpe,
 					Settings.getConfiguration().getInteger("D1Client.CNode.replication.timeout", null));
 			if (is != null) 
 				is.close();
@@ -1706,7 +1708,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		}
 
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe,
+			InputStream is = getRestClient(session).doPutRequest(url.getUrl(),mpe,
 					Settings.getConfiguration().getInteger("D1Client.CNode.replication.timeout", null));
 			if (is != null) 
 				is.close();
@@ -1745,7 +1747,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
         	url.addNonEmptyParamPair("targetNodeSubject", targetNodeSubject.getValue());
 
 		try {
-			InputStream is = this.restClient.doGetRequest(url.getUrl(),
+			InputStream is = getRestClient(session).doGetRequest(url.getUrl(),
 					Settings.getConfiguration().getInteger("D1Client.CNode.replication.timeout", null));
 			if (is != null) 
 				is.close();
@@ -1793,7 +1795,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		}
 
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe,
+			InputStream is = getRestClient(session).doPutRequest(url.getUrl(),mpe,
 					Settings.getConfiguration().getInteger("D1Client.CNode.replication.timeout", null));
 			if (is != null)
 				is.close();
@@ -1836,7 +1838,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
 
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe,
+			InputStream is = getRestClient(session).doPutRequest(url.getUrl(),mpe,
 					Settings.getConfiguration().getInteger("D1Client.CNode.replication.timeout", null));
 			if (is != null)
 				is.close();
