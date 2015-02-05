@@ -124,9 +124,11 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	 * identifiers and base urls for further service invocations.
 	 *
 	 * @param nodeBaseServiceUrl base url for constructing service endpoints.
+	 * @throws ClientSideException 
+	 * @throws IOException 
 	 */
     @Deprecated
-	public MultipartCNode(String nodeBaseServiceUrl) {
+	public MultipartCNode(String nodeBaseServiceUrl) throws IOException, ClientSideException {
 		super(nodeBaseServiceUrl);
         this.nodeType = NodeType.CN;
 		nodelistRefreshIntervalSeconds = Settings.getConfiguration()
@@ -142,17 +144,17 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	 * identifiers and base urls for further service invocations.
 	 *
 	 * @param nodeBaseServiceUrl base url for constructing service endpoints.
-	 * @param session - the Session object passed to the CertificateManager
+	 * @param defaultSession - the Session object passed to the CertificateManager
      *                  to be used for establishing connections
 	 */
-	@Deprecated
-	public MultipartCNode(String nodeBaseServiceUrl, Session session) {
-		super(nodeBaseServiceUrl, session);
-        this.nodeType = NodeType.CN;
-		nodelistRefreshIntervalSeconds = Settings.getConfiguration()
-			.getInteger("CNode.nodemap.cache.refresh.interval.seconds", 
-						nodelistRefreshIntervalSeconds);
-	}
+//	@Deprecated
+//	public MultipartCNode(String nodeBaseServiceUrl, Session defaultSession) {
+//		super(nodeBaseServiceUrl, defaultSession);
+//        this.nodeType = NodeType.CN;
+//		nodelistRefreshIntervalSeconds = Settings.getConfiguration()
+//			.getInteger("CNode.nodemap.cache.refresh.interval.seconds", 
+//						nodelistRefreshIntervalSeconds);
+//	}
 
     /**
      * Construct a new client-side MultipartCNode (Coordinating Node) object, 
@@ -162,6 +164,9 @@ public class MultipartCNode extends MultipartD1Node implements CNode
     public MultipartCNode(MultipartRestClient mrc, String nodeBaseServiceUrl) {
         super(mrc, nodeBaseServiceUrl);
         this.nodeType = NodeType.CN;
+        nodelistRefreshIntervalSeconds = Settings.getConfiguration()
+                .getInteger("CNode.nodemap.cache.refresh.interval.seconds", 
+                            nodelistRefreshIntervalSeconds);
     }
    
     
@@ -170,13 +175,18 @@ public class MultipartCNode extends MultipartD1Node implements CNode
      * passing in the base url of the member node for calling its services,
      * and the Session to use for connections to that node. 
      * @param nodeBaseServiceUrl base url for constructing service endpoints.
-     * @param session - the Session object passed to the CertificateManager
+     * @param defaultSession - the Session object passed to the CertificateManager
      *                  to be used for establishing connections
      */
     public MultipartCNode(MultipartRestClient mrc, String nodeBaseServiceUrl, Session session) {
         super(mrc, nodeBaseServiceUrl, session);
         this.nodeType = NodeType.CN;
+        nodelistRefreshIntervalSeconds = Settings.getConfiguration()
+                .getInteger("CNode.nodemap.cache.refresh.interval.seconds", 
+                            nodelistRefreshIntervalSeconds);
     }	
+    
+    
 	/* (non-Javadoc)
 	 * @see org.dataone.client.CNode#getNodeBaseServiceUrl()
 	 */
@@ -338,7 +348,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		ObjectFormatList formatList = null;
 		
 		try {			
-			InputStream is = this.restClient.doGetRequest(url.getUrl(), null);
+			InputStream is = getRestClient(this.defaultSession).doGetRequest(url.getUrl(), null);
 			formatList = deserializeServiceType(ObjectFormatList.class, is);
 
 		} catch (BaseException be) {
@@ -393,7 +403,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 			// send the request
 
 			try {
-				InputStream is = this.restClient.doGetRequest(url.getUrl(), null);
+				InputStream is = getRestClient(this.defaultSession).doGetRequest(url.getUrl(), null);
 				objectFormat = deserializeServiceType(ObjectFormat.class, is);
 
 			} catch (BaseException be) {
@@ -439,7 +449,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
         // send the request
         ObjectList objectList = null;
         try {
-        	InputStream is = this.restClient.doGetRequest(url.getUrl(), null);
+        	InputStream is = getRestClient(session).doGetRequest(url.getUrl(), null);
         	objectList =  deserializeServiceType(ObjectList.class, is);
         } catch (BaseException be) {
             if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
@@ -476,7 +486,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 		ChecksumAlgorithmList algorithmList = null;
 		try {
-			InputStream is = this.restClient.doGetRequest(url.getUrl(), null);
+			InputStream is = getRestClient(this.defaultSession).doGetRequest(url.getUrl(), null);
 			algorithmList = deserializeServiceType(ChecksumAlgorithmList.class, is);
 		} catch (BaseException be) {
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
@@ -512,7 +522,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		Log log = null;
 
 		try {
-			InputStream is = this.restClient.doGetRequest(url.getUrl(),
+			InputStream is = getRestClient(session).doGetRequest(url.getUrl(),
 					Settings.getConfiguration().getInteger("D1Client.D1Node.getLogRecords.timeout", null));
 			log = deserializeServiceType(Log.class, is);
 		} catch (BaseException be) {
@@ -554,7 +564,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		NodeList nodelist = null;
 
 		try {
-			InputStream is = this.restClient.doGetRequest(url.getUrl(), null);
+			InputStream is = getRestClient(this.defaultSession).doGetRequest(url.getUrl(), null);
 			nodelist = deserializeServiceType(NodeList.class, is);
 			
 		} catch (BaseException be) {
@@ -577,7 +587,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	throws InvalidToken, ServiceFailure, NotAuthorized, IdentifierNotUnique, 
 	NotImplemented, InvalidRequest
 	{
-		return reserveIdentifier(this.session, pid);
+		return reserveIdentifier(this.defaultSession, pid);
 	}
     
 	/* (non-Javadoc)
@@ -599,7 +609,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		
 		Identifier identifier = null;
  		try {
- 			InputStream is = this.restClient.doPostRequest(url.getUrl(),smpe,
+ 			InputStream is = getRestClient(session).doPostRequest(url.getUrl(),smpe,
  					Settings.getConfiguration().getInteger("D1Client.CNode.reserveIdentifier.timeout", null));
  			identifier = deserializeServiceType(Identifier.class, is);
  			
@@ -627,7 +637,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	throws InvalidToken, ServiceFailure,  NotFound, NotAuthorized, 
 	NotImplemented, IdentifierNotUnique
 	{
-		return hasReservation(this.session, subject, pid);
+		return hasReservation(this.defaultSession, subject, pid);
 	}
 	/* (non-Javadoc)
 	 * @see org.dataone.client.CNode#hasReservation(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Subject, org.dataone.service.types.v1.Identifier)
@@ -651,7 +661,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		// send the request
 		
 		try {
-			InputStream is = this.restClient.doGetRequest(url.getUrl(), null);
+			InputStream is = getRestClient(session).doGetRequest(url.getUrl(), null);
 			if (is != null)
 				is.close();
 			
@@ -685,7 +695,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	throws InvalidToken, ServiceFailure,NotAuthorized, IdentifierNotUnique, UnsupportedType,
 	InsufficientResources, InvalidSystemMetadata, NotImplemented, InvalidRequest
 	{
-		return create(this.session, pid, object, sysmeta);
+		return create(this.defaultSession, pid, object, sysmeta);
 	}
 	
 	/* (non-Javadoc)
@@ -730,7 +740,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
         Identifier identifier = null;
 
         try {
-        	InputStream is = this.restClient.doPostRequest(url.getUrl(), mpe,
+        	InputStream is = getRestClient(session).doPostRequest(url.getUrl(), mpe,
         			Settings.getConfiguration().getInteger("D1Client.CNode.create.timeouts", null));
         	identifier = deserializeServiceType(Identifier.class, is);
         	
@@ -762,7 +772,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	throws NotImplemented, NotAuthorized,ServiceFailure, InvalidRequest, 
 	InvalidSystemMetadata, InvalidToken
 	{
-		return registerSystemMetadata(this.session, pid,sysmeta);
+		return registerSystemMetadata(this.defaultSession, pid,sysmeta);
 	}
 	
 	
@@ -792,7 +802,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 		Identifier identifier = null;
 		try {
-			InputStream is = this.restClient.doPostRequest(url.getUrl(),mpe,
+			InputStream is = getRestClient(session).doPostRequest(url.getUrl(),mpe,
 					Settings.getConfiguration().getInteger("D1Client.CNode.registerSystemMetadata.timeouts", null));
 			identifier = deserializeServiceType(Identifier.class, is);
 		} catch (BaseException be) {
@@ -821,7 +831,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 			throws NotImplemented, NotFound, NotAuthorized, ServiceFailure,
 			InvalidRequest, InvalidToken, VersionMismatch 
 			{
-		return setObsoletedBy(this.session, pid, obsoletedByPid, serialVersion);
+		return setObsoletedBy(this.defaultSession, pid, obsoletedByPid, serialVersion);
 	}
 
 	
@@ -848,7 +858,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
 
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(), mpe, null);
+			InputStream is = getRestClient(session).doPutRequest(url.getUrl(), mpe, null);
 			if (is != null)
 				is.close();
 
@@ -905,7 +915,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		SystemMetadata sysmeta = null;
 		
 		try {
-			is = this.restClient.doGetRequest(url.getUrl(),
+			is = getRestClient(session).doGetRequest(url.getUrl(),
 					Settings.getConfiguration().getInteger("D1Client.D1Node.getSystemMetadata.timeout", null));
 			sysmeta = deserializeServiceType(SystemMetadata.class,is);
 			if (cacheMissed) {
@@ -947,7 +957,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	public ObjectLocationList resolve(Identifier pid)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented
 	{
-		return resolve(this.session, pid);
+		return resolve(this.defaultSession, pid);
 	}
     
     /* (non-Javadoc)
@@ -967,7 +977,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 		try {
 			// set flag to true to allow redirects (http.SEE_OTHER) to represent success
-			InputStream is = this.restClient.doGetRequest(url.getUrl(),null, true);
+			InputStream is = getRestClient(session).doGetRequest(url.getUrl(),null, true);
 			oll = deserializeServiceType(ObjectLocationList.class, is);
 			
 		} catch (BaseException be) {
@@ -1065,7 +1075,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest, 
 	NotImplemented
 	{
-		return search(this.session, queryType, queryD1url);
+		return search(this.defaultSession, queryType, queryD1url);
 	}
 	
 	
@@ -1108,7 +1118,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	 * <pre>  "?q=id%5C:MyStuff%5C:%5C*&start=0&rows=10&fl=id%5C%20score"</pre>
 	 *
 	 * resulting in: 
-	 * <pre>cn.search(session,"solr","?q=id%5C:MyStuff%5C:%5C*&start=0&rows=10&fl=id%5C%20score")</pre> 
+	 * <pre>cn.search(defaultSession,"solr","?q=id%5C:MyStuff%5C:%5C*&start=0&rows=10&fl=id%5C%20score")</pre> 
 	 *  
 	 *  For solr queries, a list of query terms employed can be found at the DataONE documentation on 
 	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/design/SearchMetadata.html"> Content Discovery</a> }
@@ -1119,7 +1129,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 			throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest, 
 			NotImplemented
 	{
-		return search(this.session, queryType, query);
+		return search(this.defaultSession, queryType, query);
 	}
 	
 	/**
@@ -1140,7 +1150,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	 * <pre>  "?q=id%5C:MyStuff%5C:%5C*&start=0&rows=10&fl=id%5C%20score"</pre>
 	 *
 	 * resulting in: 
-	 * <pre>cn.search(session,"solr","?q=id%5C:MyStuff%5C:%5C*&start=0&rows=10&fl=id%5C%20score")</pre> 
+	 * <pre>cn.search(defaultSession,"solr","?q=id%5C:MyStuff%5C:%5C*&start=0&rows=10&fl=id%5C%20score")</pre> 
 	 *  
 	 *  For solr queries, a list of query terms employed can be found at the DataONE documentation on 
 	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/design/SearchMetadata.html"> Content Discovery</a> }
@@ -1159,7 +1169,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
         ObjectList objectList = null;
         try {
-            InputStream is = this.restClient.doGetRequest(finalUrl, null);
+            InputStream is = getRestClient(session).doGetRequest(finalUrl, null);
             objectList = deserializeServiceType(ObjectList.class, is);
             
 		} catch (BaseException be) {
@@ -1188,7 +1198,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	throws InvalidToken, ServiceFailure, NotFound, NotAuthorized, NotImplemented, 
 	InvalidRequest, VersionMismatch
 	{
-		return setRightsHolder(this.session, pid, userId, serialVersion);
+		return setRightsHolder(this.defaultSession, pid, userId, serialVersion);
 	}
 	
 	
@@ -1216,7 +1226,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		Identifier identifier = null;
 
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe, null);
+			InputStream is = getRestClient(session).doPutRequest(url.getUrl(),mpe, null);
 			identifier = deserializeServiceType(Identifier.class, is);
 			
 		} catch (BaseException be) {
@@ -1244,7 +1254,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	throws InvalidToken, NotFound, NotImplemented, NotAuthorized, 
 		ServiceFailure, InvalidRequest, VersionMismatch
 	{
-		return setAccessPolicy(this.session, pid, accessPolicy, serialVersion);
+		return setAccessPolicy(this.defaultSession, pid, accessPolicy, serialVersion);
 	}
 	
 	
@@ -1273,7 +1283,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		}
 
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe, null);
+			InputStream is = getRestClient(session).doPutRequest(url.getUrl(),mpe, null);
 			if (is != null)
 				is.close();
 
@@ -1305,7 +1315,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 			throws ServiceFailure, NotAuthorized, IdentifierNotUnique, InvalidCredentials, 
 			NotImplemented, InvalidRequest, InvalidToken
 	{
-		return registerAccount(this.session, person); 
+		return registerAccount(this.defaultSession, person); 
 	}
 	
 	
@@ -1330,7 +1340,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 		Subject subject = null;
 		try {
-			InputStream is = this.restClient.doPostRequest(url.getUrl(),mpe, null);
+			InputStream is = getRestClient(session).doPostRequest(url.getUrl(),mpe, null);
 			subject = deserializeServiceType(Subject.class, is);
 			
 		} catch (BaseException be) {
@@ -1359,7 +1369,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 			throws ServiceFailure, NotAuthorized, InvalidCredentials, 
 			NotImplemented, InvalidRequest, InvalidToken, NotFound
 	{
-		return updateAccount(this.session, person);
+		return updateAccount(this.defaultSession, person);
 	}
 	
 	
@@ -1390,7 +1400,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 		Subject subject = null;
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe, null);
+			InputStream is = getRestClient(session).doPutRequest(url.getUrl(),mpe, null);
 			subject = deserializeServiceType(Subject.class, is);
 			
 		} catch (BaseException be) {
@@ -1419,7 +1429,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 			throws ServiceFailure, NotAuthorized, NotImplemented, InvalidToken, 
 			InvalidRequest
 	{
-		return verifyAccount(this.session, subject);
+		return verifyAccount(this.defaultSession, subject);
 	}
 	
 	/* (non-Javadoc)
@@ -1437,7 +1447,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		url.addNextPathElement(subject.getValue());
 		
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(),null, null);
+			InputStream is = getRestClient(session).doPutRequest(url.getUrl(),null, null);
 			if (is != null)
 				is.close();
 		
@@ -1463,7 +1473,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	public SubjectInfo getSubjectInfo(Subject subject)
 	throws ServiceFailure, NotAuthorized, NotImplemented, NotFound, InvalidToken
 	{
-		return getSubjectInfo(this.session, subject);
+		return getSubjectInfo(this.defaultSession, subject);
 	}
 	
 	/* (non-Javadoc)
@@ -1482,7 +1492,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		SubjectInfo subjectInfo = null;
 
 		try {
-			InputStream is = this.restClient.doGetRequest(url.getUrl(), null);
+			InputStream is = getRestClient(session).doGetRequest(url.getUrl(), null);
 			subjectInfo = deserializeServiceType(SubjectInfo.class, is);
 			
 		} catch (BaseException be) {
@@ -1508,7 +1518,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 			Integer count) throws InvalidRequest, ServiceFailure, InvalidToken, NotAuthorized, 
 			NotImplemented
 	{
-		return listSubjects(this.session, query, status, start, count);
+		return listSubjects(this.defaultSession, query, status, start, count);
 	}
 	
 	
@@ -1529,7 +1539,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		SubjectInfo subjectInfo = null;
 
 		try {
-			InputStream is = this.restClient.doGetRequest(url.getUrl(), null);
+			InputStream is = getRestClient(session).doGetRequest(url.getUrl(), null);
 			subjectInfo = deserializeServiceType(SubjectInfo.class, is);
 			
 		} catch (BaseException be) {
@@ -1556,7 +1566,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
 			NotImplemented, InvalidRequest, IdentifierNotUnique
 	{
-		return mapIdentity(this.session, primarySubject, secondarySubject);
+		return mapIdentity(this.defaultSession, primarySubject, secondarySubject);
 	}
 	
 	
@@ -1577,7 +1587,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
     		mpe.addParamPart("secondarySubject", secondarySubject.getValue());
 
 		try {
-			InputStream is = this.restClient.doPostRequest(url.getUrl(),mpe, null);
+			InputStream is = getRestClient(session).doPostRequest(url.getUrl(),mpe, null);
 			if (is != null)
 				is.close();
 			
@@ -1607,7 +1617,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 			throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
 			NotImplemented, InvalidRequest, IdentifierNotUnique
 	{
-		return requestMapIdentity(this.session, subject);
+		return requestMapIdentity(this.defaultSession, subject);
 	}
 	
 	
@@ -1625,7 +1635,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		mpe.addParamPart("subject", subject.getValue());
 
 		try {
-			InputStream is = this.restClient.doPostRequest(url.getUrl(), mpe, null);
+			InputStream is = getRestClient(session).doPostRequest(url.getUrl(), mpe, null);
 			if (is != null)
 				is.close();
 		
@@ -1655,7 +1665,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	public SubjectInfo getPendingMapIdentity(Subject subject) 
         throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented 
     {  	
-    	return getPendingMapIdentity(this.session, subject);
+    	return getPendingMapIdentity(this.defaultSession, subject);
     }
     
     
@@ -1672,7 +1682,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		SubjectInfo subjectInfo = null;
 
 		try {
-			InputStream is = this.restClient.doGetRequest(url.getUrl(), null);
+			InputStream is = getRestClient(session).doGetRequest(url.getUrl(), null);
 			subjectInfo = deserializeServiceType(SubjectInfo.class, is);
 			
 		} catch (BaseException be) {
@@ -1699,7 +1709,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 			throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
 			NotImplemented
 	{
-		return confirmMapIdentity(this.session, subject) ;
+		return confirmMapIdentity(this.defaultSession, subject) ;
 	}
 	
 	
@@ -1715,7 +1725,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
     	url.addNextPathElement(subject.getValue());
 
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(), null, null);
+			InputStream is = getRestClient(session).doPutRequest(url.getUrl(), null, null);
 			if (is != null)
 				is.close();
 
@@ -1743,7 +1753,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
 			NotImplemented
 	{
-		return denyMapIdentity(this.session, subject);
+		return denyMapIdentity(this.defaultSession, subject);
 	}
 	
 	
@@ -1759,7 +1769,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
     	url.addNextPathElement(subject.getValue());
 		
 		try {
-			InputStream is = this.restClient.doDeleteRequest(url.getUrl(), null);
+			InputStream is = getRestClient(session).doDeleteRequest(url.getUrl(), null);
 			if (is != null)
 				is.close();
 
@@ -1788,7 +1798,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 			throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
 			NotImplemented
 	{
-		return removeMapIdentity(this.session, subject);
+		return removeMapIdentity(this.defaultSession, subject);
 	}
 	
 	
@@ -1804,7 +1814,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
     	url.addNextPathElement(subject.getValue());
 
 		try {
-			InputStream is = this.restClient.doDeleteRequest(url.getUrl(), null);
+			InputStream is = getRestClient(session).doDeleteRequest(url.getUrl(), null);
 			if (is != null)
 				is.close();
 
@@ -1831,7 +1841,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	public Subject createGroup(Group group) 
 	throws ServiceFailure, InvalidToken, NotAuthorized, NotImplemented, IdentifierNotUnique
 	{
-		return createGroup(this.session, group);
+		return createGroup(this.defaultSession, group);
 	}
 	
 	/* (non-Javadoc)
@@ -1856,7 +1866,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		Subject subject = null;
 
 		try {
-			InputStream is = this.restClient.doPostRequest(url.getUrl(), mpe, null);
+			InputStream is = getRestClient(session).doPostRequest(url.getUrl(), mpe, null);
 			subject = deserializeServiceType(Subject.class, is);
 			
 		} catch (BaseException be) {
@@ -1883,7 +1893,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		throws ServiceFailure, InvalidToken, 
 			NotAuthorized, NotFound, NotImplemented, InvalidRequest
 	{
-		return updateGroup(this.session, group);
+		return updateGroup(this.defaultSession, group);
 	}
 	
 	
@@ -1907,7 +1917,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		}
 
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe, null);
+			InputStream is = getRestClient(session).doPutRequest(url.getUrl(),mpe, null);
 			if (is != null)
 				is.close();
 			
@@ -1937,7 +1947,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	public boolean updateNodeCapabilities(NodeReference nodeid, Node node) 
 	throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, NotFound, InvalidToken
 	{
-		return updateNodeCapabilities(this.session, nodeid, node);
+		return updateNodeCapabilities(this.defaultSession, nodeid, node);
 	}
 	
 	
@@ -1962,7 +1972,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		}
 
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe, null);
+			InputStream is = getRestClient(session).doPutRequest(url.getUrl(),mpe, null);
 			if (is != null)
 				is.close();
 
@@ -1991,7 +2001,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest, 
 	IdentifierNotUnique, InvalidToken
 	{
-		return register(this.session, node);
+		return register(this.defaultSession, node);
 	}
 	
 	/* (non-Javadoc)
@@ -2015,7 +2025,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 		NodeReference nodeRef = null;
 		try {
-			InputStream is = this.restClient.doPostRequest(url.getUrl(),mpe, null);
+			InputStream is = getRestClient(session).doPostRequest(url.getUrl(),mpe, null);
 			nodeRef = deserializeServiceType(NodeReference.class, is);
 			
 		} catch (BaseException be) {
@@ -2046,7 +2056,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 					throws ServiceFailure, NotImplemented, InvalidToken, NotAuthorized, 
 					InvalidRequest, NotFound
 	{
-		return setReplicationStatus(this.session, pid, nodeRef, status, failure);
+		return setReplicationStatus(this.defaultSession, pid, nodeRef, status, failure);
 	}
 	
 	
@@ -2077,7 +2087,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
         }
 
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe,
+			InputStream is = getRestClient(session).doPutRequest(url.getUrl(),mpe,
 					Settings.getConfiguration().getInteger("D1Client.CNode.replication.timeout", null));
 			if (is != null) 
 				is.close();
@@ -2108,7 +2118,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		throws NotImplemented, NotFound, NotAuthorized, ServiceFailure, 
 		InvalidRequest, InvalidToken, VersionMismatch
 	{
-		return setReplicationPolicy(this.session, pid, policy, serialVersion);
+		return setReplicationPolicy(this.defaultSession, pid, policy, serialVersion);
 	}
 	
 	
@@ -2136,7 +2146,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		}
 
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe,
+			InputStream is = getRestClient(session).doPutRequest(url.getUrl(),mpe,
 					Settings.getConfiguration().getInteger("D1Client.CNode.replication.timeout", null));
 			if (is != null) 
 				is.close();
@@ -2168,7 +2178,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	throws NotImplemented, NotAuthorized, InvalidToken, ServiceFailure, 
 		NotFound, InvalidRequest
 	{
-		return isNodeAuthorized(this.session, targetNodeSubject, pid);
+		return isNodeAuthorized(this.defaultSession, targetNodeSubject, pid);
 	}
 	
 	
@@ -2188,7 +2198,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
         	url.addNonEmptyParamPair("targetNodeSubject", targetNodeSubject.getValue());
 
 		try {
-			InputStream is = this.restClient.doGetRequest(url.getUrl(),
+			InputStream is = getRestClient(session).doGetRequest(url.getUrl(),
 					Settings.getConfiguration().getInteger("D1Client.CNode.replication.timeout", null));
 			if (is != null) 
 				is.close();
@@ -2219,7 +2229,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	throws NotImplemented, NotAuthorized, ServiceFailure, NotFound, 
 		InvalidRequest, InvalidToken, VersionMismatch
 	{
-		return updateReplicationMetadata(this.session, pid, replicaMetadata, serialVersion);
+		return updateReplicationMetadata(this.defaultSession, pid, replicaMetadata, serialVersion);
 	}
 
 	
@@ -2249,7 +2259,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		}
 
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe,
+			InputStream is = getRestClient(session).doPutRequest(url.getUrl(),mpe,
 					Settings.getConfiguration().getInteger("D1Client.CNode.replication.timeout", null));
 			if (is != null)
 				is.close();
@@ -2280,7 +2290,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented,
 			VersionMismatch, InvalidRequest 
 	{
-		return deleteReplicationMetadata(this.session, pid,nodeId, serialVersion);
+		return deleteReplicationMetadata(this.defaultSession, pid,nodeId, serialVersion);
 	}
 	
 	
@@ -2304,7 +2314,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
 
 		try {
-			InputStream is = this.restClient.doPutRequest(url.getUrl(),mpe,
+			InputStream is = getRestClient(session).doPutRequest(url.getUrl(),mpe,
 					Settings.getConfiguration().getInteger("D1Client.CNode.replication.timeout", null));
 			if (is != null)
 				is.close();

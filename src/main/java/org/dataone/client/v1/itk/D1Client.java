@@ -28,7 +28,7 @@ import java.net.URI;
 import org.dataone.client.D1NodeFactory;
 import org.dataone.client.NodeLocator;
 import org.dataone.client.exception.ClientSideException;
-import org.dataone.client.rest.DefaultHttpMultipartRestClient;
+import org.dataone.client.rest.HttpMultipartRestClient;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.client.types.ObsoletesChain;
 import org.dataone.client.utils.ExceptionUtils;
@@ -62,7 +62,15 @@ import org.dataone.service.types.v1.SystemMetadata;
 public class D1Client {
 
     private static NodeLocator nodeLocator;
-    protected static final MultipartRestClient MULTIPART_REST_CLIENT = new DefaultHttpMultipartRestClient();
+    protected static MultipartRestClient multipartRestClient;
+    
+    protected static MultipartRestClient getDefaultMultipartRestClient() 
+    throws IOException, ClientSideException {
+        if (multipartRestClient == null) {
+           multipartRestClient = new HttpMultipartRestClient();
+        }
+        return multipartRestClient;
+    }
     
     /**
 	 * Get the cached CNode object for calling Coordinating Node services.
@@ -102,14 +110,14 @@ public class D1Client {
 
         try { 
         	if (nodeLocator == null) {
-        		nodeLocator = new SettingsContextNodeLocator(MULTIPART_REST_CLIENT);	
+        		nodeLocator = new SettingsContextNodeLocator(getDefaultMultipartRestClient());	
         	}
         	return (CNode) nodeLocator.getCNode();
-        } catch (ClientSideException e) {
+        } catch (ClientSideException | IOException e) {
         	try {
         		// create an empty NodeListNodeLocator
-				nodeLocator = new NodeListNodeLocator(null,MULTIPART_REST_CLIENT);
-			} catch (ClientSideException e1) {
+				nodeLocator = new NodeListNodeLocator(null,getDefaultMultipartRestClient());
+			} catch (ClientSideException | IOException e1) {
 				throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
 			}
 			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
@@ -130,9 +138,9 @@ public class D1Client {
     throws NotImplemented, ServiceFailure 
     {         	
     	try {
-            CNCore cn = D1NodeFactory.buildNode(CNCore.class, MULTIPART_REST_CLIENT, URI.create(cnUrl));
-    		nodeLocator = new NodeListNodeLocator(cn.listNodes(), MULTIPART_REST_CLIENT);
-    	} catch (ClientSideException e) {
+            CNCore cn = D1NodeFactory.buildNode(CNCore.class, getDefaultMultipartRestClient(), URI.create(cnUrl));
+    		nodeLocator = new NodeListNodeLocator(cn.listNodes(), getDefaultMultipartRestClient());
+    	} catch (ClientSideException | IOException e) {
 			ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
 		}
     }
@@ -156,13 +164,13 @@ public class D1Client {
     	}
     	if (mn == null) {
     		try {
-                mn = D1NodeFactory.buildNode(MNode.class, MULTIPART_REST_CLIENT, URI.create(mnBaseUrl));
+                mn = D1NodeFactory.buildNode(MNode.class, getDefaultMultipartRestClient(), URI.create(mnBaseUrl));
 //    			if (nodeLocator != null) {
 //    				// be opportunist, but don't be the first to call the CN (and initialize potentially wrong state.		
 //    				nodeLocator.putNode(mn.getNodeId(), mn);
 //    			}
     		}
-			catch (ClientSideException cse) {
+			catch (ClientSideException  | IOException cse) {
 				throw ExceptionUtils.recastClientSideExceptionToServiceFailure(cse);
 			}
     	}
@@ -192,13 +200,13 @@ public class D1Client {
     	}
     	if (cn == null) {
     		try {
-                cn = D1NodeFactory.buildNode(CNode.class, MULTIPART_REST_CLIENT, URI.create(cnBaseUrl));
+                cn = D1NodeFactory.buildNode(CNode.class, getDefaultMultipartRestClient(), URI.create(cnBaseUrl));
 //    			if (nodeLocator != null) {
 //    				// be opportunist, but don't be the first to call the CN (and initialize potentially wrong state.		
 //    				nodeLocator.putNode(cn.getNodeId(), cn);
 //    			}
     		}
-			catch (ClientSideException cse) {
+			catch (ClientSideException | IOException cse) {
 				throw ExceptionUtils.recastClientSideExceptionToServiceFailure(cse);
 			}
     	}

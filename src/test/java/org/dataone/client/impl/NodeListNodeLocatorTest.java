@@ -8,7 +8,7 @@ import java.util.Set;
 import org.dataone.client.D1Node;
 import org.dataone.client.NodeLocator;
 import org.dataone.client.exception.ClientSideException;
-import org.dataone.client.rest.DefaultHttpMultipartRestClient;
+import org.dataone.client.rest.HttpMultipartRestClient;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.client.v1.CNode;
 import org.dataone.client.v1.MNode;
@@ -55,7 +55,7 @@ public class NodeListNodeLocatorTest {
 		nodeList.addNode(buildNode("http://mn2.baz.org/knb/d1/mn", NodeType.MN, "urn:node:MNhttp"));
 		nodeList.addNode(buildNode("java:org.dataone.client.v1.impl.InMemoryMNode#Subject=mnAdmin&Subject=cnAdmin,", 
 				 NodeType.MN, "urn:node:MNjava"));
-		mrc = new DefaultHttpMultipartRestClient();
+		mrc = new HttpMultipartRestClient();
 		
 		nodeLoc = new NodeListNodeLocator(nodeList, mrc);
 	}

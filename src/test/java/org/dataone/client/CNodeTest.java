@@ -25,6 +25,9 @@ package org.dataone.client;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
+
+import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.v1.impl.MultipartCNode;
 import org.dataone.client.v1.itk.D1Client;
 import org.dataone.configuration.Settings;
@@ -62,7 +65,7 @@ public class CNodeTest {
 	}
 	
 	//@Test
-	public void testLookupNodeBehavior_Null() throws ServiceFailure, NotImplemented 
+	public void testLookupNodeBehavior_Null() throws ServiceFailure, NotImplemented, IOException, ClientSideException 
 	{
 		MultipartCNode cn = new MultipartCNode("");
 		String returnedUrl = cn.lookupNodeBaseUrl((String) null);
@@ -70,7 +73,7 @@ public class CNodeTest {
 	}
 	
 //	@Test
-	public void testLookupNodeBehavior_Nonsense() throws ServiceFailure, NotImplemented 
+	public void testLookupNodeBehavior_Nonsense() throws ServiceFailure, NotImplemented, IOException, ClientSideException 
 	{
 		MultipartCNode cn = new MultipartCNode("");
 		String returnedUrl = cn.lookupNodeBaseUrl("foo");

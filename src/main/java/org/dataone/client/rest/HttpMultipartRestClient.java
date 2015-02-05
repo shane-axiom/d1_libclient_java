@@ -22,8 +22,14 @@
 
 package org.dataone.client.rest;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -34,14 +40,18 @@ import org.apache.http.HttpException;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.conn.HttpClientConnectionManager;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.dataone.client.auth.CertificateManager;
+import org.dataone.client.auth.X509Session;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.utils.HttpUtils;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.exceptions.BaseException;
-import org.dataone.service.types.v1.Session;
 import org.dataone.service.util.Constants;
 import org.dataone.service.util.ExceptionHandler;
+import org.jibx.runtime.JiBXException;
 
 /**
  * This class wraps the RestClient, adding uniform exception deserialization and
@@ -60,34 +70,174 @@ public class HttpMultipartRestClient implements MultipartRestClient {
 
     protected RequestConfig baseRequestConfig;
 
-    /**
-     * Default constructor to create a new instance.  SSL is setup using
-     * the default location for the client certificate.
+    protected X509Session x509Session;
+    
+    /** 
+     * HttpMRC requires a RestClient / HttpClient.
+     * It optionally needs an X509Sesson property set to provide client-side
+     * functionality (certificate checking). this can be null.
+     * @throws ClientSideException 
      */
-    public HttpMultipartRestClient(HttpClient httpClient) {
-        this(httpClient, null, null);
+//    public HttpMultipartRestClient(X509Session x, RequestConfig requestConfig) 
+//    throws ClientSideException {
+//
+//        if (x.getHttpClient() == null) {
+//            try { 
+//                if (requestConfig == null) {
+//                    x.setHttpClient(HttpUtils.createHttpClient(x));
+//                } else {
+//                    x.setHttpClient(HttpUtils.getHttpClientBuilder(x)
+//                            .setDefaultRequestConfig(requestConfig));
+//                }
+//            } catch (UnrecoverableKeyException | KeyManagementException
+//                    | NoSuchAlgorithmException | KeyStoreException
+//                    | CertificateException | InstantiationException
+//                    | IllegalAccessException | IOException | JiBXException e) {
+//                
+//                throw new ClientSideException("Error building HttpClient", e);
+//            } 
+//        }
+//        if (x.getHttpClient() instanceof HttpClient) {
+//            this.rc = new RestClient((HttpClient)x.getHttpClient());
+//        } else {
+//            throw new ClientSideException("The type HttpMultipartRestClient only accepts HttpClients.");
+//        }
+//    }
+    
+    /** 
+     * @param httpClient
+     * @param requestConfig - if the httpClient is v4.3.x or later (not an
+     * AbstractHttpClient), the requestConfiguration is set 
+     */
+//    public HttpMultipartRestClient(HttpClient httpClient, RequestConfig requestConfig) {
+//        this.rc = new RestClient(httpClient);
+//        
+//        if (httpClient instanceof DefaultHttpClient) {
+//            HttpUtils.setupSSL_v4_1((DefaultHttpClient)httpClient, null);
+//            this.baseRequestConfig = null;  // it won't be used by the older HttpClient type
+//        } else {
+//            this.baseRequestConfig = requestConfig;
+//        }
+//    }
+    
+    /**
+     * The basic constructor to implement the MultipartRestClient interface
+     * using apache HttpClient and X509Certificate.  The user needs to ensure
+     * that the X509Session (at least the Session and X509Certificate properties)
+     * are the ones used when making the HttpClient, or the X509Session is null.
+     * 
+     * A null X509Session results in client-side certificate validity being skipped.
+     * 
+     * @param httpClient
+     * @param x509Session
+     */
+    public HttpMultipartRestClient(HttpClient httpClient, X509Session x509sessiont) {
+        this.rc = new RestClient(httpClient);
+        this.x509Session = x509sessiont;
+    }
+    
+    /**
+     * This constructor is used to give users flexibility in creating the HttpClient,
+     * but takes care of configuring the ConnectionManager with the X509Session
+     * parameter. 
+     * @param httpClientBuilder
+     * @param x509session
+     * @throws ClientSideException 
+     */
+    public HttpMultipartRestClient(HttpClientBuilder httpClientBuilder, 
+            X509Session x509session) throws ClientSideException {
+        
+        HttpClientConnectionManager connMan = null;
+        try {
+            connMan = new PoolingHttpClientConnectionManager(
+                    HttpUtils.buildConnectionRegistry(x509session));
+        } catch (UnrecoverableKeyException | KeyManagementException
+                | NoSuchAlgorithmException | KeyStoreException
+                | CertificateException | IOException e) {
+            
+            throw new ClientSideException("Could not build the ConnectionRegistry", e);
+        }
+       
+        this.rc = new RestClient(httpClientBuilder.setConnectionManager(connMan).build());
+        this.x509Session = x509session;
     }
 
+    
+    
+    /**
+     * creates an HttpMultipartRestClient configured with the certificate in the
+     * default or set location in the CertificateManager.
+     * 
+     * @throws IOException
+     * @throws ClientSideException
+     */
+    public HttpMultipartRestClient() throws IOException, ClientSideException {
+        this((String)null);
+    }
 
     /**
-     * An alternate constructor for special-case situations.  See explanation
-     * in parameter descriptions.
+     * creates an HttpMultipartRestClient configured with the certificate registered
+     * to the CertificateManager.
+     * 
+     * @param subjectString
+     * @throws FileNotFoundException 
+     * @throws IOException
+     * @throws ClientSideException
+     */
+    public HttpMultipartRestClient(String subjectString) throws 
+    IOException, ClientSideException { 
+
+        this(CertificateManager.getInstance().selectSession(subjectString));
+    }
+    
+    /**
+     * creates an HttpMultipartRestClient configured with the certificate 
+     * contained in the X509Session.
+     * 
+     * @param x509Session
+     * @throws IOException
+     * @throws ClientSideException
+     */
+    public HttpMultipartRestClient(X509Session x509Session) throws  
+    IOException, ClientSideException {
+        try {
+            this.rc = new RestClient(HttpUtils.createHttpClient(x509Session));
+        } catch (UnrecoverableKeyException | KeyManagementException
+                | NoSuchAlgorithmException | KeyStoreException
+                | CertificateException | InstantiationException
+                | IllegalAccessException | JiBXException e) {
+            e.printStackTrace();
+            throw new ClientSideException("Could not create HttpClient.", e);
+        }
+        this.x509Session = x509Session;
+//        this.baseRequestConfig = defaultRequestConfig;
+    }
+
+    /**
+     * An alternate constructor for older versions of HttpClient (v4.2.x and
+     * earlier) that are based off ofAbstractHttpClient.  These HttpClients set 
+     * up request configurations differently, and are generally associated with
+     * earlier versions of ConnectionManagers that are deprecated. 
      *
      * @param httpClient
-     * @param requestConfig - set this parameter with the custom ReqeustConfig used
-     * to build the HttpClient (v4.3.x or later), so per-request configurations can
-     * use those configurations while at the same time overriding timeout ones.
-     * @param session - if using a v4.1.x httpClient (DefaultHttpClient), providing a
-     * Session object sets up the SSL using the certificate associated with that session's subject.
+     * @param session - if using a v4.2.x httpClient, allows the session to configure
+     * the connection manager held by the passed in httpClient. if an instance of
+     * X509Session, will be used to check certificate validity.
      *
      */
-    public HttpMultipartRestClient(HttpClient httpClient, RequestConfig requestConfig, Session session) {
-        this.rc = new RestClient(httpClient);
-        this.baseRequestConfig = requestConfig;
-        if (httpClient instanceof DefaultHttpClient)
-            HttpUtils.setupSSL_v4_1((DefaultHttpClient)httpClient, session);
-    }
+//    public HttpMultipartRestClient(AbstractHttpClient abstractHttpClient, Session session) {
+//        this.rc = new RestClient(abstractHttpClient);
+//        this.baseRequestConfig = null;
+//        if (session instanceof X509Session)
+//            this.x509Cert = (X509Session)session;
+//        
+//        if (abstractHttpClient != null)
+//            HttpUtils.setupSSL_v4_1(abstractHttpClient, session);
+//    }
+    
 
+ 
+    
     //	public void setRequestConfig(RequestConfig reqConfig) {
     //		this.reqConfig = reqConfig;
     //	}
@@ -150,18 +300,18 @@ public class HttpMultipartRestClient implements MultipartRestClient {
      */
     @Override
     public InputStream doGetRequest(String url, Integer timeoutMillisecs)
-            throws BaseException, ClientSideException
-            {
+            throws BaseException, ClientSideException {
+
         return doGetRequest(url, timeoutMillisecs, false);
-            }
+    }
 
     /* (non-Javadoc)
      * @see org.dataone.client.MultipartRestClient#doGetRequest(java.lang.String, boolean)
      */
     @Override
     public InputStream doGetRequest(String url, Integer timeoutMillisecs, boolean allowRedirect)
-            throws BaseException, ClientSideException
-            {
+            throws BaseException, ClientSideException {
+
         try {
             return ExceptionHandler.filterErrors(
                     rc.doGetRequest(url,determineTimeoutConfig(timeoutMillisecs)),
@@ -175,15 +325,15 @@ public class HttpMultipartRestClient implements MultipartRestClient {
         } catch (HttpException e) {
             throw new ClientSideException("", e);
         }
-            }
+    }
 
     /* (non-Javadoc)
      * @see org.dataone.client.MultipartRestClient#doGetRequestForHeaders(java.lang.String)
      */
     @Override
     public Header[] doGetRequestForHeaders(String url, Integer timeoutMillisecs)
-            throws BaseException, ClientSideException
-            {
+            throws BaseException, ClientSideException {
+
         determineTimeoutConfig(timeoutMillisecs);
         try {
             return ExceptionHandler.filterErrorsHeader(
@@ -198,15 +348,15 @@ public class HttpMultipartRestClient implements MultipartRestClient {
         } catch (HttpException e) {
             throw new ClientSideException("", e);
         }
-            }
+    }
 
     /* (non-Javadoc)
      * @see org.dataone.client.MultipartRestClient#doDeleteRequest(java.lang.String)
      */
     @Override
     public InputStream doDeleteRequest(String url, Integer timeoutMillisecs)
-            throws BaseException, ClientSideException
-            {
+            throws BaseException, ClientSideException {
+
         determineTimeoutConfig(timeoutMillisecs);
         try {
             return ExceptionHandler.filterErrors(
@@ -220,7 +370,7 @@ public class HttpMultipartRestClient implements MultipartRestClient {
         } catch (HttpException e) {
             throw new ClientSideException("", e);
         }
-            }
+    }
 
     //	public InputStream doDeleteRequest(String url, SimpleMultipartEntity mpe)
     //	throws AuthenticationTimeout, IdentifierNotUnique, InsufficientResources,
@@ -237,8 +387,8 @@ public class HttpMultipartRestClient implements MultipartRestClient {
      */
     @Override
     public Header[] doHeadRequest(String url, Integer timeoutMillisecs)
-            throws BaseException, ClientSideException
-            {
+            throws BaseException, ClientSideException {
+
         try {
             return ExceptionHandler.filterErrorsHeader(
                     rc.doHeadRequest(url,determineTimeoutConfig(timeoutMillisecs)),
@@ -252,15 +402,15 @@ public class HttpMultipartRestClient implements MultipartRestClient {
         } catch (HttpException e) {
             throw new ClientSideException("", e);
         }
-            }
+    }
 
     /* (non-Javadoc)
      * @see org.dataone.client.MultipartRestClient#doPutRequest(java.lang.String, org.dataone.mimemultipart.SimpleMultipartEntity)
      */
     @Override
     public InputStream doPutRequest(String url, SimpleMultipartEntity entity, Integer timeoutMillisecs)
-            throws BaseException, ClientSideException
-            {
+            throws BaseException, ClientSideException {
+
         determineTimeoutConfig(timeoutMillisecs);
         try {
             return ExceptionHandler.filterErrors(
@@ -274,15 +424,15 @@ public class HttpMultipartRestClient implements MultipartRestClient {
         } catch (HttpException e) {
             throw new ClientSideException("", e);
         }
-            }
+    }
 
     /* (non-Javadoc)
      * @see org.dataone.client.MultipartRestClient#doPostRequest(java.lang.String, org.dataone.mimemultipart.SimpleMultipartEntity)
      */
     @Override
     public InputStream doPostRequest(String url, SimpleMultipartEntity entity, Integer timeoutMillisecs)
-            throws BaseException, ClientSideException
-            {
+            throws BaseException, ClientSideException {
+
         determineTimeoutConfig(timeoutMillisecs);
         try {
             return ExceptionHandler.filterErrors(
@@ -296,7 +446,7 @@ public class HttpMultipartRestClient implements MultipartRestClient {
         } catch (HttpException e) {
             throw new ClientSideException("", e);
         }
-            }
+    }
 
 
     public void setHeader(String name, String value) {
@@ -330,6 +480,12 @@ public class HttpMultipartRestClient implements MultipartRestClient {
                     .build();
         }
         return config;
+    }
+
+
+    @Override
+    public X509Session getSession() {
+        return this.x509Session;
     }
 
 

@@ -40,6 +40,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
 import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.v1.impl.MultipartCNode;
 import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.BaseException;
@@ -87,7 +88,7 @@ public class CertificateManagerTest {
    // this was a temporary test to test against a real SSL handshake - if necessary
     // move it to d1_integration
 //    @Test
-    public void testWildcardCert() throws BaseException {
+    public void testWildcardCert() throws BaseException, IOException, ClientSideException {
     	String[] cns = {"https://cn-dev-unm-1.test.dataone.org/cn",
     			"https://cn-dev-ucsb-1.test.dataone.org/cn",
     			"https://mn-demo-5.test.dataone.org/knb/d1/mn",
@@ -321,7 +322,7 @@ public class CertificateManagerTest {
     @Test
     public void testSetupSSLSocketFactory() throws UnrecoverableKeyException, KeyManagementException, 
     NoSuchAlgorithmException, KeyStoreException, CertificateException, IOException {
-    	CertificateManager.getInstance().getSSLSocketFactory(null);
+    	CertificateManager.getInstance().getSSLSocketFactory((String)null);
     }
     
 }

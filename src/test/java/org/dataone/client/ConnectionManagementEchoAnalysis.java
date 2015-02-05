@@ -27,6 +27,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.commons.io.IOUtils;
+import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.v1.impl.MultipartCNode;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.NotImplemented;
@@ -61,10 +62,12 @@ public class ConnectionManagementEchoAnalysis {
 	 * test the easy case of sequentially repeated calls to a service.
 	 * (Ran for 3hrs, making 367000 calls without throwing exceptions, 
 	 * so this test probably doesn't capture the existing problem).
+	 * @throws ClientSideException 
+	 * @throws IOException 
 	 */
 	@Ignore("this is a long-long-running test!")
 	@Test
-	public void testConnectionClose_singleThread_CLOSE_WAIT() 
+	public void testConnectionClose_singleThread_CLOSE_WAIT() throws IOException, ClientSideException 
 	{
 		MultipartCNode echoNode = new MultipartCNode(echoNodeURL + "/echo");
 		
@@ -94,7 +97,7 @@ public class ConnectionManagementEchoAnalysis {
 	
 	@Ignore("this is a long-long-running test!")
 	@Test
-	public void testConnectionClose_multiThread_CLOSE_WAIT() throws InterruptedException 
+	public void testConnectionClose_multiThread_CLOSE_WAIT() throws InterruptedException, IOException, ClientSideException 
 	{
 		ExecutorService execService = Executors.newFixedThreadPool(16);
 		

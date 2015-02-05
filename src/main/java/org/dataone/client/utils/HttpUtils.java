@@ -26,18 +26,25 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 
+import org.apache.http.client.HttpClient;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.LayeredConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLSocketFactory;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.AbstractHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.log4j.Logger;
 import org.dataone.client.auth.CertificateManager;
+import org.dataone.client.auth.X509Session;
 import org.dataone.service.types.v1.Session;
+import org.jibx.runtime.JiBXException;
 
 public class HttpUtils {
 
@@ -61,19 +68,15 @@ public class HttpUtils {
 	 *  
 	 * @param session
 	 */
-	public static void setupSSL_v4_1(DefaultHttpClient httpClient, Session session) 
-	{		
+	public static void setupSSL_v4_1(AbstractHttpClient httpClient, X509Session x509Session) 
+	{
 		SchemeRegistry schemeReg = httpClient.getConnectionManager().getSchemeRegistry();
 
 		if (schemeReg.getScheme(SCHEME_NAME) == null) {
 
 			SSLSocketFactory socketFactory = null;
 			try {
-				String subjectString = null;
-				if (session != null && session.getSubject() != null) {
-					subjectString = session.getSubject().getValue();
-				}
-				socketFactory = CertificateManager.getInstance().getSSLSocketFactory(subjectString);
+			    socketFactory = CertificateManager.getInstance().getSSLSocketFactory(x509Session);
 			} catch (Exception e) {
 				// this is likely more severe
 				logger.warn("Exception from CertificateManager at SSL setup - client will be anonymous: " + 
@@ -87,39 +90,60 @@ public class HttpUtils {
 				// this is likely more severe
 				logger.error("Failed to set up SSL connection for client. Continuing. " + e.getClass() + ":: " + e.getMessage(), e);
 			}
-		}			
-	}
-	
-	
-	
-	public static Registry<ConnectionSocketFactory> buildConnectionRegistry(Session session) 
-    throws UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, 
-    KeyStoreException, CertificateException, IOException 
-    {
-		RegistryBuilder<ConnectionSocketFactory> rb = RegistryBuilder.<ConnectionSocketFactory>create();		
-		rb.register("http", PlainConnectionSocketFactory.getSocketFactory());
-
-
-		String subjectString = null;
-		if (session != null && session.getSubject() != null) {
-			subjectString = session.getSubject().getValue();
 		}
-
-		LayeredConnectionSocketFactory sslSocketFactory = 
-				CertificateManager.getInstance().getSSLConnectionSocketFactory(subjectString);
-		rb.register("https", sslSocketFactory);
-		 
-		Registry<ConnectionSocketFactory> sfRegistry = rb.build();
-		return sfRegistry;
-		
 	}
+
+    public static HttpClient createHttpClient(X509Session x509session) throws UnrecoverableKeyException, 
+    KeyManagementException, NoSuchAlgorithmException, KeyStoreException, CertificateException, 
+    InstantiationException, IllegalAccessException, IOException, JiBXException {
+
+        return getHttpClientBuilder(x509session).build();
+    }
+
+	public static HttpClientBuilder getHttpClientBuilder(X509Session x509session) throws UnrecoverableKeyException, 
+	KeyManagementException, NoSuchAlgorithmException, KeyStoreException, CertificateException, 
+	InstantiationException, IllegalAccessException, IOException, JiBXException {
+
+	    HttpClientConnectionManager connMan = new PoolingHttpClientConnectionManager(
+	            buildConnectionRegistry(x509session));
+	    return HttpClients.custom().setConnectionManager(connMan);
+	}
+	
+//    public static Registry<ConnectionSocketFactory> buildConnectionRegistry(String subjectString) 
+//    throws UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, 
+//    KeyStoreException, CertificateException, IOException, InstantiationException,
+//    IllegalAccessException, JiBXException {
+//
+//        X509Session x = CertificateManager.getInstance().selectSession(subjectString);
+//        return buildConnectionRegistry(x);
+//    }
+    
+    public static X509Session selectSession(String subjectString) throws IOException {
+        return CertificateManager.getInstance().selectSession(subjectString);
+    }
+	
+	public static Registry<ConnectionSocketFactory> buildConnectionRegistry(X509Session x509Session) 
+	        throws UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, 
+	        KeyStoreException, CertificateException, IOException {
+    
+        RegistryBuilder<ConnectionSocketFactory> rb = RegistryBuilder.<ConnectionSocketFactory>create();
+        rb.register("http", PlainConnectionSocketFactory.getSocketFactory());
+
+        LayeredConnectionSocketFactory sslSocketFactory = null;
+        sslSocketFactory = CertificateManager.getInstance().getSSLConnectionSocketFactory(x509Session);
+
+        rb.register("https", sslSocketFactory);
+
+        Registry<ConnectionSocketFactory> sfRegistry = rb.build();
+        return sfRegistry;
+    }
 	
 	/**
 	 * Sets the CONNECTION_TIMEOUT and SO_TIMEOUT values for the request.
 	 * (max delay in initial response, max delay between tcp packets, respectively).  
 	 * Uses the same value for both.
 	 * 
-	 * @param restClient - the MultipartRestClient implementation
+	 * @param defaultRestClient - the MultipartRestClient implementation
 	 * @param milliseconds
 	 * @return the previous RequestConfig associated with the HttpMultipartRestClient
 	 */
