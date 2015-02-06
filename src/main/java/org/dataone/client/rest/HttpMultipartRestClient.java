@@ -489,12 +489,12 @@ public class HttpMultipartRestClient implements MultipartRestClient {
      * @return the RequestConfig based on the given <code>timeoutMillis</code>
      *      and <code>followRedirect</code> parameters. 
      *      </p><b>NOTE:</b> 
-     *      Returns <b>null</b> if timeout parameter is null. (This is to keep the 
+     *      Returns <b>null</b> if both parameters are null. (This is to keep the 
      *      same behavior {@link #determineTimeoutConfig(null)} had before refactor.) 
      */
-    private RequestConfig determineRequestConfig(Integer timeoutMillis, boolean followRedirect)
+    private RequestConfig determineRequestConfig(Integer timeoutMillis, Boolean followRedirect)
     {
-        if(timeoutMillis == null)
+        if(timeoutMillis == null && followRedirect == null)
             return null;    // to stay compatible with code that used determineTimeoutConfig(null)
         
         RequestConfig.Builder rcBuilder = null;
@@ -507,8 +507,9 @@ public class HttpMultipartRestClient implements MultipartRestClient {
             rcBuilder.setConnectTimeout(timeoutMillis)
                 .setConnectionRequestTimeout(timeoutMillis)
                 .setSocketTimeout(timeoutMillis);
-        
-       rcBuilder.setRedirectsEnabled(followRedirect);
+       
+        if(followRedirect != null)
+            rcBuilder.setRedirectsEnabled(followRedirect);
         
         return rcBuilder.build();
     }
