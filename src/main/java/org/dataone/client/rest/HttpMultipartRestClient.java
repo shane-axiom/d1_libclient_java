@@ -37,6 +37,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.Header;
 import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
@@ -309,13 +310,15 @@ public class HttpMultipartRestClient implements MultipartRestClient {
      * @see org.dataone.client.MultipartRestClient#doGetRequest(java.lang.String, boolean)
      */
     @Override
-    public InputStream doGetRequest(String url, Integer timeoutMillisecs, boolean allowRedirect)
+    public InputStream doGetRequest(String url, Integer timeoutMillisecs, boolean followRedirect)
             throws BaseException, ClientSideException {
-
+        
         try {
-            return ExceptionHandler.filterErrors(
-                    rc.doGetRequest(url,determineTimeoutConfig(timeoutMillisecs)),
-                    allowRedirect);
+            HttpResponse response = rc.doGetRequest(url,determineRequestConfig(timeoutMillisecs, followRedirect));
+            // if we're NOT following a redirect, we'll get an HTTP_SEE_OTHER (303)
+            // and then we want filterErrors() to ALLOW that status code 
+            // without throwing an exception, and vice-versa 
+            return ExceptionHandler.filterErrors(response, !followRedirect);
         } catch (IllegalStateException e) {
             throw new ClientSideException("", e);
         } catch (ClientProtocolException e) {
@@ -464,22 +467,50 @@ public class HttpMultipartRestClient implements MultipartRestClient {
      */
     private RequestConfig determineTimeoutConfig(Integer milliseconds)
     {
-        RequestConfig config= null;
-
-        if (milliseconds != null) {
-            RequestConfig.Builder rcBuilder = null;
-            if (this.baseRequestConfig != null) {
-                rcBuilder = RequestConfig.copy(this.baseRequestConfig);
-            } else {
-                rcBuilder = RequestConfig.custom();
-            }
-            config = rcBuilder
-                    .setConnectTimeout(milliseconds)
-                    .setConnectionRequestTimeout(milliseconds)
-                    .setSocketTimeout(milliseconds)
-                    .build();
-        }
-        return config;
+        return determineRequestConfig(milliseconds, true);
+    }
+    
+    /**
+     * Returns a {@link RequestConfig} that is either based on the
+     * existing base RequestConfig passed into the constructor, or
+     * one built from scratch. All timeouts are set to the 
+     * <code>timeoutMillis</code> parameter (unless it's null, 
+     * in which case it's not set). Enabling redirects is set by the 
+     * <code>followRedirect</code> parameter (unless it's null).
+     * 
+     * @param timeoutMillis 
+     *      an Integer for the number of milliseconds to use for the
+     *      connect timeout, connection request timeout, and the 
+     *      socket timeout. None are set if this is null.
+     * @param followRedirect
+     *      a boolean that determines if redirects should be followed.
+     *      The default value for this is true.
+     *      
+     * @return the RequestConfig based on the given <code>timeoutMillis</code>
+     *      and <code>followRedirect</code> parameters. 
+     *      </p><b>NOTE:</b> 
+     *      Returns <b>null</b> if timeout parameter is null. (This is to keep the 
+     *      same behavior {@link #determineTimeoutConfig(null)} had before refactor.) 
+     */
+    private RequestConfig determineRequestConfig(Integer timeoutMillis, boolean followRedirect)
+    {
+        if(timeoutMillis == null)
+            return null;    // to stay compatible with code that used determineTimeoutConfig(null)
+        
+        RequestConfig.Builder rcBuilder = null;
+        if (this.baseRequestConfig != null)
+            rcBuilder = RequestConfig.copy(this.baseRequestConfig);
+        else
+            rcBuilder = RequestConfig.custom();
+        
+        if (timeoutMillis != null)
+            rcBuilder.setConnectTimeout(timeoutMillis)
+                .setConnectionRequestTimeout(timeoutMillis)
+                .setSocketTimeout(timeoutMillis);
+        
+       rcBuilder.setRedirectsEnabled(followRedirect);
+        
+        return rcBuilder.build();
     }
 
 
