@@ -815,11 +815,12 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		ObjectLocationList oll = null;
 
 		try {
-			// set flag to true to allow redirects (http.SEE_OTHER) to represent success
-			InputStream is = getRestClient(session).doGetRequest(url.getUrl(),null, true);
-			oll = deserializeServiceType(ObjectLocationList.class, is);
-			
-		} catch (BaseException be) {
+            Integer timeout = Settings.getConfiguration().getInteger("D1Client.default.timeout", 30000);
+            // we set followRedirect to false so we get the ObjectLocationList back
+            InputStream is = getRestClient(session).doGetRequest(url.getUrl(), timeout, false);
+            oll = deserializeServiceType(ObjectLocationList.class, is);
+            
+        } catch (BaseException be) {
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof NotAuthorized)          throw (NotAuthorized) be;

@@ -55,7 +55,7 @@ public interface MultipartRestClient {
     public InputStream doGetRequest(String url, Integer timeoutMillisecs)
             throws BaseException, ClientSideException;
 
-    public InputStream doGetRequest(String url, Integer timeoutMillisecs, boolean allowRedirect)
+    public InputStream doGetRequest(String url, Integer timeoutMillisecs, boolean followRedirect)
             throws BaseException, ClientSideException;
 
     // TODO: remove Header from the signature to remove dependency on org.apache.http
