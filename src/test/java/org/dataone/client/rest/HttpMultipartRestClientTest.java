@@ -10,6 +10,7 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.dataone.client.exception.ClientSideException;
+import org.dataone.configuration.Settings;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -36,7 +37,7 @@ public class HttpMultipartRestClientTest {
         
         // both params are null
         requestConfig = (RequestConfig) method.invoke(restClient, null, null);
-        assertNull("RequestConfig should be null if input parameters are null", requestConfig);
+        assertNotNull("RequestConfig should not be null if input parameters are null", requestConfig);
         
         // timeouts are null, redirect is valid
         requestConfig = (RequestConfig) method.invoke(restClient, null, true);
@@ -73,5 +74,18 @@ public class HttpMultipartRestClientTest {
         assertEquals("Connect timeout should be 0", requestConfig.getConnectTimeout(), -1000);
         assertEquals("Connection request timeout should be 0", requestConfig.getConnectionRequestTimeout(), -1000);
         assertEquals("Socket timeout should be 0", requestConfig.getSocketTimeout(), -1000);
+    
+        // both params are null, check default timeout setting
+        Settings.getConfiguration().setProperty("D1Client.default.timeout", 2000);
+        Integer defaultTimeout = Settings.getConfiguration().getInteger("D1Client.default.timeout", null);
+        assertEquals("Default timeout should've been set correctly", defaultTimeout.intValue(), 2000);
+        requestConfig = (RequestConfig) method.invoke(restClient, null, null);
+        assertNotNull("RequestConfig should not be null if input parameters are null", requestConfig);
+        assertEquals("Default connect timeout should be 2000", requestConfig.getConnectTimeout(), 2000);
+        assertEquals("Default connection request timeout should be 2000", requestConfig.getConnectionRequestTimeout(), 2000);
+        assertEquals("Default socket timeout should be 2000", requestConfig.getSocketTimeout(), 2000);
+    
+//      
+    
     }
 }

@@ -48,6 +48,7 @@ import org.dataone.client.auth.CertificateManager;
 import org.dataone.client.auth.X509Session;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.utils.HttpUtils;
+import org.dataone.configuration.Settings;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.util.Constants;
@@ -475,8 +476,10 @@ public class HttpMultipartRestClient implements MultipartRestClient {
      * existing base RequestConfig passed into the constructor, or
      * one built from scratch. All timeouts are set to the 
      * <code>timeoutMillis</code> parameter (unless it's null, 
-     * in which case it's not set). Enabling redirects is set by the 
-     * <code>followRedirect</code> parameter (unless it's null).
+     * in which case it tries to use the default timeout value: 
+     * "D1Client.default.timeout" using {@link Settings#getConfiguration()}). 
+     * Enabling redirects is set by the <code>followRedirect</code> 
+     * parameter (unless it's null, in which case the default is true).
      * 
      * @param timeoutMillis 
      *      an Integer for the number of milliseconds to use for the
@@ -488,26 +491,23 @@ public class HttpMultipartRestClient implements MultipartRestClient {
      *      
      * @return the RequestConfig based on the given <code>timeoutMillis</code>
      *      and <code>followRedirect</code> parameters. 
-     *      </p><b>NOTE:</b> 
-     *      Returns <b>null</b> if both parameters are null. (This is to keep the 
-     *      same behavior {@link #determineTimeoutConfig(null)} had before refactor.) 
      */
     private RequestConfig determineRequestConfig(Integer timeoutMillis, Boolean followRedirect)
     {
-        if(timeoutMillis == null && followRedirect == null)
-            return null;    // to stay compatible with code that used determineTimeoutConfig(null)
-        
         RequestConfig.Builder rcBuilder = null;
         if (this.baseRequestConfig != null)
             rcBuilder = RequestConfig.copy(this.baseRequestConfig);
         else
             rcBuilder = RequestConfig.custom();
         
+        if (timeoutMillis == null)
+            timeoutMillis = Settings.getConfiguration().getInteger("D1Client.default.timeout", null);
+        
         if (timeoutMillis != null)
             rcBuilder.setConnectTimeout(timeoutMillis)
                 .setConnectionRequestTimeout(timeoutMillis)
                 .setSocketTimeout(timeoutMillis);
-       
+
         if(followRedirect != null)
             rcBuilder.setRedirectsEnabled(followRedirect);
         
