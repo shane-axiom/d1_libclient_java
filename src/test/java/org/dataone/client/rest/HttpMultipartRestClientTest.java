@@ -41,8 +41,8 @@ public class HttpMultipartRestClientTest {
         // timeouts are null, redirect is valid
         requestConfig = (RequestConfig) method.invoke(restClient, null, true);
         assertEquals("Unspecified connect timeout should default to -1", requestConfig.getConnectTimeout(), -1);
-        assertEquals("Unspecified connection request timeout should default to -1a", requestConfig.getConnectionRequestTimeout(), -1);
-        assertEquals("Unspecified socket timeout should default to -1a", requestConfig.getSocketTimeout(), -1);
+        assertEquals("Unspecified connection request timeout should default to -1", requestConfig.getConnectionRequestTimeout(), -1);
+        assertEquals("Unspecified socket timeout should default to -1", requestConfig.getSocketTimeout(), -1);
         assertNotNull("RequestConfig shouldn't be null if followRedirect parameter is valid", requestConfig);
         assertTrue("Redirect should be enabled", requestConfig.isRedirectsEnabled());
         
