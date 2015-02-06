@@ -1,6 +1,7 @@
 package org.dataone.client;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
@@ -19,6 +20,7 @@ import org.dataone.service.types.v1.Subject;
 import org.dataone.service.types.v1.SystemMetadata;
 import org.dataone.service.types.v1.util.AccessUtil;
 import org.dataone.service.types.v1.util.ChecksumUtil;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class D1TypeBuilderTest {
@@ -88,6 +90,7 @@ public class D1TypeBuilderTest {
 //	}
 
 	@Test
+//	@Ignore
 	public void testCloneSystemMetadata() throws NoSuchAlgorithmException 
 	{
 		SystemMetadata orig = new SystemMetadata();
@@ -143,10 +146,18 @@ public class D1TypeBuilderTest {
 		assertFalse("AuthMN values diverge", clone.getAuthoritativeMemberNode().getValue() == orig.getAuthoritativeMemberNode().getValue());
 
 		assertTrue("modified date is the same", clone.getDateSysMetadataModified().equals(orig.getDateSysMetadataModified()));		
+		try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+        }
 		clone.setDateSysMetadataModified(new Date());
 		assertFalse("mod dates diverge", clone.getDateSysMetadataModified().equals(orig.getDateSysMetadataModified()));
 
-		assertTrue("upload date is the same", clone.getDateUploaded().equals(orig.getDateUploaded()));		
+		assertTrue("upload date is the same", clone.getDateUploaded().equals(orig.getDateUploaded()));
+		try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+        }
 		clone.setDateUploaded(new Date());
 		assertFalse("upload dates diverge", clone.getDateUploaded().equals(orig.getDateUploaded()));
 

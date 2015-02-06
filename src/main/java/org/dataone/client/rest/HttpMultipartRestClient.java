@@ -74,6 +74,10 @@ public class HttpMultipartRestClient implements MultipartRestClient {
 
     protected X509Session x509Session;
     
+    protected static final String DEFAULT_TIMEOUT_PARAM = "D1Client.default.timeout";
+    
+    protected static final Integer DEFAULT_TIMEOUT_VALUE = 30000;
+    
     /** 
      * HttpMRC requires a RestClient / HttpClient.
      * It optionally needs an X509Sesson property set to provide client-side
@@ -136,6 +140,7 @@ public class HttpMultipartRestClient implements MultipartRestClient {
     public HttpMultipartRestClient(HttpClient httpClient, X509Session x509sessiont) {
         this.rc = new RestClient(httpClient);
         this.x509Session = x509sessiont;
+        Settings.getConfiguration().setProperty(DEFAULT_TIMEOUT_PARAM, DEFAULT_TIMEOUT_VALUE);
     }
     
     /**
@@ -162,6 +167,7 @@ public class HttpMultipartRestClient implements MultipartRestClient {
        
         this.rc = new RestClient(httpClientBuilder.setConnectionManager(connMan).build());
         this.x509Session = x509session;
+        Settings.getConfiguration().setProperty(DEFAULT_TIMEOUT_PARAM, DEFAULT_TIMEOUT_VALUE);
     }
 
     
@@ -212,6 +218,7 @@ public class HttpMultipartRestClient implements MultipartRestClient {
             throw new ClientSideException("Could not create HttpClient.", e);
         }
         this.x509Session = x509Session;
+        Settings.getConfiguration().setProperty(DEFAULT_TIMEOUT_PARAM, DEFAULT_TIMEOUT_VALUE);
 //        this.baseRequestConfig = defaultRequestConfig;
     }
 

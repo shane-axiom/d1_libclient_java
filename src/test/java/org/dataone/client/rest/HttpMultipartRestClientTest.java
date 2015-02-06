@@ -1,14 +1,15 @@
 package org.dataone.client.rest;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import org.apache.http.client.config.RequestConfig;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.configuration.Settings;
 import org.junit.Before;
@@ -40,6 +41,7 @@ public class HttpMultipartRestClientTest {
         assertNotNull("RequestConfig should not be null if input parameters are null", requestConfig);
         
         // timeouts are null, redirect is valid
+        Settings.getConfiguration().clearProperty(HttpMultipartRestClient.DEFAULT_TIMEOUT_PARAM);
         requestConfig = (RequestConfig) method.invoke(restClient, null, true);
         assertEquals("Unspecified connect timeout should default to -1", requestConfig.getConnectTimeout(), -1);
         assertEquals("Unspecified connection request timeout should default to -1", requestConfig.getConnectionRequestTimeout(), -1);
@@ -77,7 +79,7 @@ public class HttpMultipartRestClientTest {
     
         // both params are null, check default timeout setting
         Settings.getConfiguration().setProperty("D1Client.default.timeout", 2000);
-        Integer defaultTimeout = Settings.getConfiguration().getInteger("D1Client.default.timeout", null);
+        Integer defaultTimeout = Settings.getConfiguration().getInteger(HttpMultipartRestClient.DEFAULT_TIMEOUT_PARAM, null);
         assertEquals("Default timeout should've been set correctly", defaultTimeout.intValue(), 2000);
         requestConfig = (RequestConfig) method.invoke(restClient, null, null);
         assertNotNull("RequestConfig should not be null if input parameters are null", requestConfig);
