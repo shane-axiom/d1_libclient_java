@@ -8,8 +8,14 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URL;
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.http.client.config.RequestConfig;
+import org.dataone.client.auth.CertificateManager;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.configuration.Settings;
 import org.junit.Before;
@@ -17,6 +23,8 @@ import org.junit.Test;
 
 public class HttpMultipartRestClientTest {
 
+    protected static Log log = LogFactory.getLog(HttpMultipartRestClientTest.class);
+    
     private Method method;
     private HttpMultipartRestClient restClient;
 
@@ -30,9 +38,32 @@ public class HttpMultipartRestClientTest {
         method.setAccessible(true);
     }
     
-    
+    @Test 
+    public void testConstructUsingRegisteredCertificate() throws IOException, ClientSideException {
+
+        CertificateManager cm = CertificateManager.getInstance();
+
+        URL url = Thread.currentThread().getContextClassLoader()
+                .getResource("org/dataone/client/rest/unitTestSelfSignedCert.pem");
+        cm.setCertificateLocation(url.getPath());
+        PrivateKey pk = cm.loadKey();
+
+        X509Certificate xc = cm.loadCertificate();
+        String subjectString = cm.getSubjectDN(xc);
+
+        cm.registerCertificate(subjectString, xc, pk);
+
+        System.out.println("starting certificate Subject Value " + subjectString);
+        cm.displayCertificate(xc);
+
+        HttpMultipartRestClient hmrc = new HttpMultipartRestClient(subjectString);
+        System.out.println("resulting certificate Subject Value " + cm.getSubjectDN(hmrc.getSession().getCertificate()));
+    }
+
+
     @Test
-    public void testDetermineRequestConfig() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+    public void testDetermineRequestConfig() throws IllegalAccessException, 
+    IllegalArgumentException, InvocationTargetException {
         
         RequestConfig requestConfig = null;
         

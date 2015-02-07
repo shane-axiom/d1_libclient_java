@@ -927,19 +927,19 @@ public class CertificateManager {
 
         X509Session x509Session = null;
         try {
-        // if we have a session subject, find the registered certificate and key
-        if (subjectString != null) {
-            x509Session = X509Session.create(
-                    certificates.get(subjectString),
-                    keys.get(subjectString));
-        }
-        else {
-            // if the location has been set, use it
-            File certFile = (certificateLocation == null) ? locateDefaultCertificate() :
-                new File(certificateLocation);
-            log.info("Using client certificate location: " + certificateLocation);
-            x509Session = getX509Session(certFile);
-        }
+            // if we have a session subject, find the registered certificate and key
+            if (subjectString != null) {
+                x509Session = X509Session.create(
+                        certificates.get(subjectString),
+                        keys.get(subjectString));
+            }
+            else {
+                // if the location has been set, use it
+                File certFile = (certificateLocation == null) ? locateDefaultCertificate() :
+                    new File(certificateLocation);
+                log.info("Using client certificate location: " + certificateLocation);
+                x509Session = getX509Session(certFile);
+            }
         } catch (FileNotFoundException e) {
             ; // that's ok
         }
