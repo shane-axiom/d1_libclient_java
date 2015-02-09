@@ -140,9 +140,9 @@ public class HttpMultipartRestClient implements MultipartRestClient {
     public HttpMultipartRestClient(HttpClient httpClient, X509Session x509sessiont) {
         this.rc = new RestClient(httpClient);
         this.x509Session = x509sessiont;
-        Settings.getConfiguration().setProperty(DEFAULT_TIMEOUT_PARAM, DEFAULT_TIMEOUT_VALUE);
+        setDefaultTimeout(DEFAULT_TIMEOUT_VALUE);
     }
-    
+
     /**
      * This constructor is used to give users flexibility in creating the HttpClient,
      * but takes care of configuring the ConnectionManager with the X509Session
@@ -167,7 +167,7 @@ public class HttpMultipartRestClient implements MultipartRestClient {
        
         this.rc = new RestClient(httpClientBuilder.setConnectionManager(connMan).build());
         this.x509Session = x509session;
-        Settings.getConfiguration().setProperty(DEFAULT_TIMEOUT_PARAM, DEFAULT_TIMEOUT_VALUE);
+        setDefaultTimeout(DEFAULT_TIMEOUT_VALUE);
     }
 
     
@@ -218,8 +218,7 @@ public class HttpMultipartRestClient implements MultipartRestClient {
             throw new ClientSideException("Could not create HttpClient.", e);
         }
         this.x509Session = x509Session;
-        Settings.getConfiguration().setProperty(DEFAULT_TIMEOUT_PARAM, DEFAULT_TIMEOUT_VALUE);
-//        this.baseRequestConfig = defaultRequestConfig;
+        setDefaultTimeout(DEFAULT_TIMEOUT_VALUE);
     }
 
     /**
@@ -544,4 +543,28 @@ public class HttpMultipartRestClient implements MultipartRestClient {
     //
     //        	this.setParams(params);
     //	}
+    
+    /**
+     * Sets the default timeout parameter: <b>"D1Client.default.timeout"</b>
+     * to the given Integer. This parameter is applied to the {@link RequestConfig}
+     * if no timeout value is provided when making the API calls.
+     * 
+     * @param timeout the number of milliseconds to wait before timing out. 
+     *      Determines connect timeout, connection request timeout, and 
+     *      socket timeout.
+     */
+    public void setDefaultTimeout(Integer timeout) {
+        Settings.getConfiguration().setProperty(DEFAULT_TIMEOUT_PARAM, timeout);
+    }
+    
+    /**
+     * Clears the default timeout parameter: <b>"D1Client.default.timeout"</b>.
+     * This parameter is usually applied to the {@link RequestConfig}
+     * if no timeout value is provided when making the API calls.
+     * The default timeout value determines connect timeout, 
+     * connection request timeout, and socket timeout.
+     */
+    public void clearDefaultTimeout() {
+        Settings.getConfiguration().clearProperty(DEFAULT_TIMEOUT_PARAM);
+    }
 }
