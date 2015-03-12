@@ -51,6 +51,7 @@ import org.dataone.service.types.v2.Log;
 import org.dataone.service.types.v2.LogEntry;
 import org.dataone.service.types.v2.Node;
 import org.dataone.service.types.v2.ObjectFormat;
+import org.dataone.service.types.v2.OptionList;
 import org.dataone.service.types.v2.SystemMetadata;
 import org.dataone.service.util.TypeMarshaller;
 import org.jibx.runtime.JiBXException;
@@ -654,4 +655,26 @@ public class InMemoryMNode implements MNode {
 		// TODO implement
 		throw new NotImplemented("000","listQueryEngines is not implemented.");
 	}
+
+    @Override
+    public OptionList listViews(Session arg0) throws InvalidToken, ServiceFailure, NotAuthorized,
+            InvalidRequest, NotImplemented {
+     // TODO implement
+        throw new NotImplemented("000","listViews is not implemented.");
+    }
+
+    @Override
+    public InputStream view(Session arg0, String arg1, Identifier arg2) throws InvalidToken,
+            ServiceFailure, NotAuthorized, InvalidRequest, NotImplemented, NotFound {
+     // TODO implement
+        throw new NotImplemented("000","view is not implemented.");
+    }
+
+    @Override
+    public InputStream getPackage(Session arg0, ObjectFormatIdentifier arg1, Identifier arg2)
+            throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest, NotImplemented,
+            NotFound {
+     // TODO implement
+        throw new NotImplemented("000","getPackage is not implemented.");
+    }
 }

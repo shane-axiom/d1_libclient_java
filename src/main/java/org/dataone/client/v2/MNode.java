@@ -25,7 +25,9 @@ import org.dataone.service.mn.tier1.v2.MNRead;
 import org.dataone.service.mn.tier2.v2.MNAuthorization;
 import org.dataone.service.mn.tier3.v2.MNStorage;
 import org.dataone.service.mn.tier4.v2.MNReplication;
+import org.dataone.service.mn.v2.MNPackage;
 import org.dataone.service.mn.v2.MNQuery;
+import org.dataone.service.mn.v2.MNView;
 
 
 /**
@@ -41,5 +43,5 @@ import org.dataone.service.mn.v2.MNQuery;
 public interface MNode 
 extends D1Node,
 /* and all of the MN service interfaces */
-MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery 
+MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery, MNView, MNPackage
 {}

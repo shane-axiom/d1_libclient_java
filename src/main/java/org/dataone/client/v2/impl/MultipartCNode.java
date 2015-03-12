@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.LogFactory;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.rest.MultipartD1Node;
@@ -68,6 +69,7 @@ import org.dataone.service.types.v2.Node;
 import org.dataone.service.types.v2.NodeList;
 import org.dataone.service.types.v2.ObjectFormat;
 import org.dataone.service.types.v2.ObjectFormatList;
+import org.dataone.service.types.v2.OptionList;
 import org.dataone.service.types.v2.SystemMetadata;
 import org.dataone.service.util.Constants;
 import org.dataone.service.util.D1Url;
@@ -1860,5 +1862,17 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		return true;
 	}
 
-
+	
+	@Override
+	public InputStream view(Session session, String theme, Identifier id) throws InvalidToken,
+    ServiceFailure, NotAuthorized, InvalidRequest, NotImplemented, NotFound {
+	    return super.view(session, theme, id);
+	}
+	
+	
+	@Override
+	public OptionList listViews() throws InvalidToken, ServiceFailure, NotAuthorized,
+    InvalidRequest, NotImplemented {
+	    return super.listViews(null);
+	}
 }
