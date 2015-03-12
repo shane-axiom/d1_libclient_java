@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.util.Date;
 
 import org.apache.commons.io.input.AutoCloseInputStream;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.LogFactory;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.rest.MultipartD1Node;
@@ -51,12 +52,15 @@ import org.dataone.service.types.v1.DescribeResponse;
 import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.types.v1.NodeReference;
 import org.dataone.service.types.v1.NodeType;
+import org.dataone.service.types.v1.ObjectFormat;
 import org.dataone.service.types.v1.ObjectFormatIdentifier;
 import org.dataone.service.types.v1.ObjectList;
 import org.dataone.service.types.v1.Permission;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v2.Log;
 import org.dataone.service.types.v2.Node;
+import org.dataone.service.types.v2.ObjectFormatList;
+import org.dataone.service.types.v2.OptionList;
 import org.dataone.service.types.v2.SystemMetadata;
 import org.dataone.service.util.Constants;
 import org.dataone.service.util.D1Url;
@@ -765,5 +769,54 @@ public class MultipartMNode extends MultipartD1Node implements MNode
         return is;
     }
     
+    @Override
+    public InputStream view(Session session, String theme, Identifier id) throws InvalidToken,
+    ServiceFailure, NotAuthorized, InvalidRequest, NotImplemented, NotFound {
+        return super.view(session, theme, id);
+    }
+    
+    
+    @Override
+    public OptionList listViews(Session session) throws InvalidToken, ServiceFailure, NotAuthorized,
+    InvalidRequest, NotImplemented {
+        return super.listViews(session);
+    }
 
+
+    @Override
+    public InputStream getPackage(Session session, ObjectFormatIdentifier packageType, Identifier id)
+            throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest, NotImplemented,
+            NotFound {
+        
+        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_PACKAGES);
+
+        if (packageType == null || StringUtils.isBlank(packageType.getValue()))
+            url.addNextPathElement("application/bagit");
+        else
+            url.addNextPathElement(packageType.getValue());
+
+        if (id == null || StringUtils.isBlank(id.getValue()))
+            throw new NotFound("0000", "'pid' cannot be null nor empty");
+        url.addNextPathElement(id.getValue());
+        
+        InputStream remoteStream = null;
+        try {
+            remoteStream = getRestClient(session).doGetRequest(url.getUrl(),
+                    Settings.getConfiguration().getInteger("D1Client.D1Node.get.timeout", null));
+        } catch (BaseException be) {
+            if (be instanceof InvalidToken)      throw (InvalidToken) be;
+            if (be instanceof NotAuthorized)     throw (NotAuthorized) be;
+            if (be instanceof InvalidRequest)      throw (InvalidRequest) be;
+            if (be instanceof NotImplemented)    throw (NotImplemented) be;
+            if (be instanceof NotFound)                throw (NotFound) be;
+            if (be instanceof ServiceFailure)    throw (ServiceFailure) be;
+            
+            throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
+        }
+        catch (ClientSideException e) {
+            throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
+        }
+        
+        return new AutoCloseInputStream(remoteStream);
+    }
 }

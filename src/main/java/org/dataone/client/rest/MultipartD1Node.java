@@ -63,6 +63,7 @@ import org.dataone.service.types.v1.Permission;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1_1.QueryEngineDescription;
 import org.dataone.service.types.v1_1.QueryEngineList;
+import org.dataone.service.types.v2.OptionList;
 import org.dataone.service.util.BigIntegerMarshaller;
 import org.dataone.service.util.Constants;
 import org.dataone.service.util.D1Url;
@@ -889,5 +890,69 @@ public abstract class MultipartD1Node implements D1Node {
             throw new ServiceFailure("0",
                     "Could not deserialize the " + domainClass.getCanonicalName() + ": " + e.getMessage());
         }
+    }
+    
+    protected InputStream view(Session session, String theme, Identifier id) throws InvalidToken,
+            ServiceFailure, NotAuthorized, InvalidRequest, NotImplemented, NotFound {
+
+        D1Url url = new D1Url(this.getNodeBaseServiceUrl(),Constants.RESOURCE_VIEWS);
+
+        if (StringUtils.isBlank(theme))
+            url.addNextPathElement("default");
+        else
+            url.addNextPathElement(id.getValue());
+
+        if (id == null || StringUtils.isBlank(id.getValue()))
+            throw new NotFound("0000", "'pid' cannot be null nor empty");
+        url.addNextPathElement(id.getValue());
+        
+        InputStream remoteStream = null;
+        try {
+            remoteStream = getRestClient(session).doGetRequest(url.getUrl(),
+                    Settings.getConfiguration().getInteger("D1Client.D1Node.get.timeout", null));
+        } catch (BaseException be) {
+            if (be instanceof InvalidToken)      throw (InvalidToken) be;
+            if (be instanceof NotAuthorized)     throw (NotAuthorized) be;
+            if (be instanceof InvalidRequest)      throw (InvalidRequest) be;
+            if (be instanceof NotImplemented)    throw (NotImplemented) be;
+            if (be instanceof NotFound)                throw (NotFound) be;
+            if (be instanceof ServiceFailure)    throw (ServiceFailure) be;
+            
+            throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
+        }
+        catch (ClientSideException e) {
+            throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
+        }
+        
+        return new AutoCloseInputStream(remoteStream);
+    }
+
+    protected OptionList listViews(Session session) throws InvalidToken, ServiceFailure, NotAuthorized,
+            InvalidRequest, NotImplemented {
+
+        if (session == null)
+            session = defaultSession;
+        
+        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_VIEWS);
+        
+        OptionList optionList = null;
+        try {
+            InputStream is = getRestClient(defaultSession).doGetRequest(url.getUrl(),
+                    Settings.getConfiguration().getInteger("D1Client.D1Node.get.timeout", null));
+            optionList = deserializeServiceType(OptionList.class, is);
+        } catch (BaseException be) {
+            if (be instanceof InvalidToken)      throw (InvalidToken) be;
+            if (be instanceof NotAuthorized)     throw (NotAuthorized) be;
+            if (be instanceof InvalidRequest)      throw (InvalidRequest) be;
+            if (be instanceof NotImplemented)    throw (NotImplemented) be;
+            if (be instanceof ServiceFailure)    throw (ServiceFailure) be;
+            
+            throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
+        }
+        catch (ClientSideException e) {
+            throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
+        }
+        
+        return optionList;
     }
 }

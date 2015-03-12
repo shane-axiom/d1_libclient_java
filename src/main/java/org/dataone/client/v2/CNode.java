@@ -27,6 +27,7 @@ import org.dataone.service.cn.v2.CNIdentity;
 import org.dataone.service.cn.v2.CNRead;
 import org.dataone.service.cn.v2.CNRegister;
 import org.dataone.service.cn.v2.CNReplication;
+import org.dataone.service.cn.v2.CNView;
 
 /**
  * An aggregated API that represents all of the possible services reachable at 
@@ -41,5 +42,5 @@ import org.dataone.service.cn.v2.CNReplication;
 public interface CNode 
 extends D1Node, 
 /* and all of the CN service interfaces */
-CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplication
+CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplication, CNView
 {}
