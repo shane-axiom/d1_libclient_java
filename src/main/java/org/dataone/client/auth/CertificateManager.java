@@ -45,6 +45,7 @@ import java.security.SignatureException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -56,7 +57,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import javax.net.ssl.KeyManager;
@@ -75,12 +75,16 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.bouncycastle.asn1.ASN1InputStream;
-import org.bouncycastle.asn1.DERObject;
+import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERUTF8String;
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.openssl.PEMReader;
-import org.bouncycastle.openssl.PasswordFinder;
+import org.bouncycastle.jce.provider.X509CertificateObject;
+import org.bouncycastle.openssl.PEMKeyPair;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.InvalidToken;
 import org.dataone.service.types.v1.Session;
@@ -250,7 +254,8 @@ public class CertificateManager {
 
 
                 String auxLocation = Settings.getConfiguration().getString("certificate.truststore.aux.location");
-
+                log.debug("certificate.truststore.aux.location=" + auxLocation);
+                
                 int count = 0;
                 if (auxLocation != null) {
                     File loc = new File(auxLocation);
@@ -266,6 +271,8 @@ public class CertificateManager {
                     }
                 }
                 if (count == 0) {
+                    log.debug("shippedCAcerts=" + shippedCAcerts);
+
                     InputStream shippedCerts = this.getClass().getResourceAsStream(shippedCAcerts);
                     if (shippedCerts != null) {
                         count += loadIntoTrustStore(this.d1TrustStore, new InputStreamReader(shippedCerts));
@@ -302,16 +309,20 @@ public class CertificateManager {
     throws FileNotFoundException
     {
         int count = 0;
-        PEMReader pemReader = null;
+        PEMParser pemReader = null;
         try {
-            pemReader = new PEMReader(certLoc);
+            pemReader = new PEMParser(certLoc);
 
             Object pemObject;
-            log.info("loading into client truststore: ");
+            log.info("loading into client truststore: " + certLoc);
             while ((pemObject = pemReader.readObject()) != null) {
-                if (pemObject instanceof X509Certificate) {
-                    X509Certificate certificate = (X509Certificate) pemObject;
+                log.debug("pemObject: " + pemObject);
+                if (pemObject instanceof X509CertificateHolder) {
+                	X509CertificateHolder holder = (X509CertificateHolder) pemObject;
+    				X509CertificateObject certificate = new X509CertificateObject(holder.toASN1Structure());
+
                     String alias = certificate.getSubjectX500Principal().getName();
+                    log.debug("alias: " + alias);
 
                     if (!trustStore.containsAlias(alias)) {
                         log.info(count + " alias " + alias);
@@ -324,7 +335,9 @@ public class CertificateManager {
             log.error(e.getMessage() + " after loading " + count + " certificates", e);
         } catch (IOException e) {
             log.error(e.getMessage() + " after loading " + count + " certificates", e);
-        } finally {
+        } catch (CertificateParsingException e) {
+            log.error(e.getMessage() + " after loading " + count + " certificates", e);
+		} finally {
             IOUtils.closeQuietly(pemReader);
         }
         return count;
@@ -425,7 +438,7 @@ public class CertificateManager {
         String decoded = null;
         byte[] extensionValue = X509Certificate.getExtensionValue(oid);
         if (extensionValue != null) {
-            DERObject derObject = toDERObject(extensionValue);
+            ASN1Primitive derObject = toDERObject(extensionValue);
             if (derObject instanceof DEROctetString) {
                 DEROctetString derOctetString = (DEROctetString) derObject;
                 derObject = toDERObject(derOctetString.getOctets());
@@ -445,11 +458,11 @@ public class CertificateManager {
      * @return
      * @throws IOException
      */
-    private DERObject toDERObject(byte[] data) throws IOException {
+    private ASN1Primitive toDERObject(byte[] data) throws IOException {
 
-        DERObject dero = null;
         ASN1InputStream asnInputStream = null;
-        try {
+        ASN1Primitive dero = null;
+		try {
             ByteArrayInputStream inStream = new ByteArrayInputStream(data);
             asnInputStream = new ASN1InputStream(inStream);
             dero = asnInputStream.readObject();
@@ -948,6 +961,7 @@ public class CertificateManager {
                 if (certificateLocation == null) {
                     log.info("selectSession: using the default certificate location");
                     certFile = locateDefaultCertificate();
+                    log.debug("selectSession: certificate location = " + certFile);
                 } else {
                     log.info("selectSession: Using client certificate location: " + certificateLocation);
                     certFile = new File(certificateLocation);
@@ -1012,21 +1026,26 @@ public class CertificateManager {
 
         PrivateKey privateKey = null;
         X509Certificate certificate = null;
-        PEMReader pemReader = null;
+        PEMParser pemReader = null;
         try {
-            pemReader = new PEMReader(new FileReader(pemFile));
+            pemReader = new PEMParser(new FileReader(pemFile));
             Object pemObject = null;
-
-            KeyPair keyPair = null;
+            JcaPEMKeyConverter converter = new JcaPEMKeyConverter();
             while ((pemObject = pemReader.readObject()) != null) {
-                if (pemObject instanceof PrivateKey) {
-                    privateKey = (PrivateKey) pemObject;
+                if (pemObject instanceof PrivateKeyInfo) {
+                	PrivateKeyInfo pki = (PrivateKeyInfo) pemObject;
+                    privateKey = converter.getPrivateKey(pki);
                 }
-                else if (pemObject instanceof KeyPair) {
-                    keyPair = (KeyPair) pemObject;
-                    privateKey = keyPair.getPrivate();
-                } else if (pemObject instanceof X509Certificate) {
-                    certificate = (X509Certificate) pemObject;
+                else if (pemObject instanceof PEMKeyPair) {
+                    PEMKeyPair pkp = (PEMKeyPair) pemObject;
+                    privateKey = converter.getPrivateKey(pkp.getPrivateKeyInfo());
+                } else if (pemObject instanceof X509CertificateHolder) {
+                	X509CertificateHolder holder = (X509CertificateHolder) pemObject;
+    				try {
+						certificate = new X509CertificateObject(holder.toASN1Structure());
+					} catch (CertificateParsingException e) {
+						log.warn("Could not parse x509 certificate", e);
+					}
                 }
             }
         } finally {
@@ -1041,38 +1060,30 @@ public class CertificateManager {
      * @return
      * @throws IOException
      */
-    public PrivateKey loadPrivateKeyFromFile(String fileName, final String password) throws IOException {
+    public PrivateKey loadPrivateKeyFromFile(String fileName) throws IOException {
 
         Object pemObject = null;
         PrivateKey privateKey = null;
 
         // is there a password for the key?
-        PEMReader pemReader = null;
+        PEMParser pemReader = null;
         try {
-            if (password != null && password.length() > 0) {
-                PasswordFinder passwordFinder = new PasswordFinder() {
-                    @Override
-                    public char[] getPassword() {
-                        return password.toCharArray();
-                    }
-                };
-                pemReader = new PEMReader(new FileReader(fileName), passwordFinder );
-            } else {
-                pemReader = new PEMReader(new FileReader(fileName));
-            }
-
-            KeyPair keyPair = null;
+            pemReader = new PEMParser(new FileReader(fileName));
+            
+            JcaPEMKeyConverter converter = new JcaPEMKeyConverter();
             while ((pemObject = pemReader.readObject()) != null) {
-                if (pemObject instanceof PrivateKey) {
-                    privateKey = (PrivateKey) pemObject;
+                if (pemObject instanceof PrivateKeyInfo) {
+                	PrivateKeyInfo pki = (PrivateKeyInfo) pemObject;
+                    privateKey = converter.getPrivateKey(pki);
                     break;
                 }
-                else if (pemObject instanceof KeyPair) {
-                    keyPair = (KeyPair) pemObject;
-                    privateKey = keyPair.getPrivate();
+                else if (pemObject instanceof PEMKeyPair) {
+                    PEMKeyPair pkp = (PEMKeyPair) pemObject;
+                    privateKey = converter.getPrivateKey(pkp.getPrivateKeyInfo());
                     break;
                 }
             }
+            
         } finally {
             IOUtils.closeQuietly(pemReader);
         }
@@ -1089,16 +1100,21 @@ public class CertificateManager {
     public X509Certificate loadCertificateFromFile(String fileName) throws IOException {
         X509Certificate certificate = null;
 
-        PEMReader pemReader = null;
+        PEMParser pemReader = null;
         try {
-            pemReader = new PEMReader(new FileReader(fileName));
+            pemReader = new PEMParser(new FileReader(fileName));
             Object pemObject = null;
 
             while ((pemObject = pemReader.readObject()) != null) {
-                if (pemObject instanceof X509Certificate) {
-                    certificate = (X509Certificate) pemObject;
-                    break;
-                }
+            	if (pemObject instanceof X509CertificateHolder) {
+                	X509CertificateHolder holder = (X509CertificateHolder) pemObject;
+    				try {
+						certificate = new X509CertificateObject(holder.toASN1Structure());
+						break;
+					} catch (CertificateParsingException e) {
+						log.warn("could not parse certificate", e);
+					}
+            	}
             }
         } finally {
             IOUtils.closeQuietly(pemReader);
