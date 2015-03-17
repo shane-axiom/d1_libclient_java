@@ -82,9 +82,12 @@ import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.jce.provider.X509CertificateObject;
+import org.bouncycastle.openssl.PEMDecryptorProvider;
+import org.bouncycastle.openssl.PEMEncryptedKeyPair;
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
+import org.bouncycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
 import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.InvalidToken;
 import org.dataone.service.types.v1.Session;
@@ -1057,10 +1060,11 @@ public class CertificateManager {
     /**
      * Load PrivateKey object from given file
      * @param fileName
+     * @param password 
      * @return
      * @throws IOException
      */
-    public PrivateKey loadPrivateKeyFromFile(String fileName) throws IOException {
+    public PrivateKey loadPrivateKeyFromFile(String fileName, String password) throws IOException {
 
         Object pemObject = null;
         PrivateKey privateKey = null;
@@ -1071,6 +1075,7 @@ public class CertificateManager {
             pemReader = new PEMParser(new FileReader(fileName));
             
             JcaPEMKeyConverter converter = new JcaPEMKeyConverter();
+
             while ((pemObject = pemReader.readObject()) != null) {
                 if (pemObject instanceof PrivateKeyInfo) {
                 	PrivateKeyInfo pki = (PrivateKeyInfo) pemObject;
@@ -1081,7 +1086,13 @@ public class CertificateManager {
                     PEMKeyPair pkp = (PEMKeyPair) pemObject;
                     privateKey = converter.getPrivateKey(pkp.getPrivateKeyInfo());
                     break;
-                }
+                } else if (pemObject instanceof PEMEncryptedKeyPair) {
+                    log.debug("Encrypted key - we will use provided password");
+                    PEMDecryptorProvider decProv = new JcePEMDecryptorProviderBuilder().build(password.toCharArray());
+                    KeyPair kp = converter.getKeyPair(((PEMEncryptedKeyPair) pemObject).decryptKeyPair(decProv));
+                    privateKey = kp.getPrivate();
+                    break;
+                } 
             }
             
         } finally {
