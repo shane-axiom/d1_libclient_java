@@ -977,9 +977,6 @@ public class CertificateManager {
 
         // if we have a session subject, find the registered certificate and key
         if (subjectString != null) {
-        	// make sure the default is registered as an option
-        	this.registerDefaultCertificate();
-        	
             log.info("selectSession: looking up registered certificate for: " + subjectString);
             x509Session = X509Session.create(
                     certificates.get(subjectString),
