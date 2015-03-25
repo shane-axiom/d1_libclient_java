@@ -232,7 +232,7 @@ public class CertificateManager {
             certFile = new File(certificateLocation);
         }
         X509Session session = this.getX509Session(certFile);
-                String subjectDN = this.getSubjectDN(session.getCertificate());
+        String subjectDN = this.getSubjectDN(session.getCertificate());
         this.registerCertificate(subjectDN, session.getCertificate(), session.getPrivateKey());
     }
     
@@ -977,7 +977,10 @@ public class CertificateManager {
 
         // if we have a session subject, find the registered certificate and key
         if (subjectString != null) {
-            log.info("selectSession: using registered certificate: " + subjectString);
+        	// make sure the default is registered as an option
+        	this.registerDefaultCertificate();
+        	
+            log.info("selectSession: looking up registered certificate for: " + subjectString);
             x509Session = X509Session.create(
                     certificates.get(subjectString),
                     keys.get(subjectString));
