@@ -211,7 +211,32 @@ public class CertificateManager {
         this.certificateLocation = certificate;
     }
 
-
+    /**
+     * Registers the default certificate into the registry, using first the setLocation
+     * or if null, the default CILogon location.
+     * 
+     * Supports the use of the default certificate in Session parameters of DataONE
+     * API calls.
+     * 
+     * @throws IOException
+     */
+    public void registerDefaultCertificate() throws IOException {
+        // TODO: characterize the types of exceptions returned, especially private key issues
+        File certFile = null;
+        if (certificateLocation == null) {
+            log.info("registerDefaultCertificate: using the default certificate location");
+            certFile = locateDefaultCertificate();
+            log.debug("registerDefaultCertificate: certificate location = " + certFile);
+        } else {
+            log.info("registerDefaultCertificate: Using client certificate location: " + certificateLocation);
+            certFile = new File(certificateLocation);
+        }
+        X509Session session = this.getX509Session(certFile);
+                String subjectDN = this.getSubjectDN(session.getCertificate());
+        this.registerCertificate(subjectDN, session.getCertificate(), session.getPrivateKey());
+    }
+    
+    
     /**
      * Register certificates to be used by getSSLSocketFactory(subject) for setting
      * up connections, using the subject as the lookup key
@@ -980,6 +1005,7 @@ public class CertificateManager {
     }
 
 
+
     /**
      * Creates a KeyStore using the certificate material determined by selectSession.
      * If for some reason the subjectString retrieves a certificate without an
@@ -1017,6 +1043,7 @@ public class CertificateManager {
         keyStore.setKeyEntry("cilogon", x509Session.getPrivateKey(),
                 keyStorePassword.toCharArray(), chain);
 
+        
         return keyStore;
     }
 
