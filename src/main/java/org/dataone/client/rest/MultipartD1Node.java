@@ -129,7 +129,7 @@ public abstract class MultipartD1Node implements D1Node {
                 this.latestRestClient = new HttpMultipartRestClient(subjectString);
             } catch (IOException | ClientSideException e) {
                 throw new ServiceFailure("0000", "Error creating MultipartRestClient " +
-                        "for API Session parameter" + e.getLocalizedMessage());
+                        "for API Session parameter: " + e.getLocalizedMessage());
             }
         }
         if (this.latestRestClient.getSession() instanceof X509Session)
