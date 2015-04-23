@@ -131,6 +131,7 @@ public class CertificateManager {
     // other variables
     private String keyStorePassword = null;
     private String keyStoreType = null;
+    private String tlsVersion = null;
 
     // this is packaged with the library
     private static final String shippedCAcerts = "/org/dataone/client/auth/d1-trusted-certs.crt";
@@ -178,6 +179,8 @@ public class CertificateManager {
             certificates = new HashMap<String, X509Certificate>();
             keys = new HashMap<String, PrivateKey>();
 
+            tlsVersion = Settings.getConfiguration().getString("tls.protocol.alias","TLSv1.2");
+            
             CILOGON_OID_SUBJECT_INFO = Settings.getConfiguration().getString("cilogon.oid.subjectinfo", "1.3.6.1.4.1.34998.2.1");
 
         } catch (Exception e) {
@@ -738,8 +741,9 @@ public class CertificateManager {
         SSLSocketFactory socketFactory = null;
 
         // create SSL context
-        SSLContext ctx = SSLContext.getInstance("TLS");
-
+        SSLContext ctx = SSLContext.getInstance(tlsVersion);
+        log.info("Setting SSLContext with protocol: " + tlsVersion);
+        
         // based on config options, we get an appropriate truststore
         X509TrustManager tm = getTrustManager();
 
@@ -800,8 +804,9 @@ public class CertificateManager {
 
         SSLConnectionSocketFactory socketFactory = null;
         // create SSL context
-        SSLContext ctx = SSLContext.getInstance("TLS");
-
+        SSLContext ctx = SSLContext.getInstance(tlsVersion);
+        log.info("Setting SSLContext with protocol: " + tlsVersion);
+        
         // based on config options, we get an appropriate truststore
         X509TrustManager tm = getTrustManager();
 
