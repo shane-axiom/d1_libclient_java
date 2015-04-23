@@ -126,6 +126,8 @@ public class CertificateManager {
     private static final String shippedCAcerts = "/org/dataone/client/auth/d1-trusted-certs.crt";
 //    private static final char[] caTrustStorePass = "dataONE".toCharArray();
     private KeyStore d1TrustStore;
+    
+    private String tlsVersion = null;
    
     // BouncyCastle added to be able to get the private key and certificate from the PEM
     // TODO: find a way to do this with default Java provider (not Bouncy Castle)? 
@@ -167,6 +169,8 @@ public class CertificateManager {
 	    	trustStoreIncludesD1CAs = Settings.getConfiguration().getBoolean("certificate.truststore.includeD1CAs", true);
 	    	certificates = new HashMap<String, X509Certificate>();
 	    	keys = new HashMap<String, PrivateKey>();
+	    	
+	    	tlsVersion = Settings.getConfiguration().getString("tls.protocol.alias","TLSv1.2");
 	    	
 	    	CILOGON_OID_SUBJECT_INFO = Settings.getConfiguration().getString("cilogon.oid.subjectinfo", "1.3.6.1.4.1.34998.2.1");
 
@@ -661,7 +665,7 @@ public class CertificateManager {
      *                        Otherwise, looks up the certificate from among those registered
      *                        with registerCertificate().
      * @return an SSLSockectFactory object configured with the specified certificate
-     * @throws NoSuchAlgorithmException
+     * @throws NoSuchAlgorithmException 
      * @throws UnrecoverableKeyException
      * @throws KeyStoreException - thrown if an unknown subject value provided
      * @throws KeyManagementException
@@ -688,7 +692,8 @@ public class CertificateManager {
 		}
        
         // create SSL context
-        SSLContext ctx = SSLContext.getInstance("TLS");
+        SSLContext ctx = SSLContext.getInstance(tlsVersion);
+        log.info("Setting SSLContext with protocol: " + tlsVersion);
         
         // based on config options, we get an appropriate truststore
         X509TrustManager tm = getTrustManager();

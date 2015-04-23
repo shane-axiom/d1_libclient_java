@@ -35,9 +35,15 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.Provider;
+import java.security.Security;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.Map.Entry;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocket;
 
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.dataone.client.CNode;
@@ -319,6 +325,40 @@ public class CertificateManagerTest {
     @Test
     public void testSetupSSLSocketFactory() throws UnrecoverableKeyException, KeyManagementException, 
     NoSuchAlgorithmException, KeyStoreException, CertificateException, IOException {
+     
+        System.out.println("%%%%%%%%%%%%%%% SSLContext Profile %%%%%%%%%%%%%%%%%");
+        Provider[] ps = Security.getProviders();
+        for (Provider p : ps) {
+            System.out.println(p.getName() + ": " + p.getClass().getCanonicalName());
+            for (Entry<Object,Object> n : p.entrySet()) {
+                if (n.getKey().toString().contains("SSLContext"))
+                    System.out.println(String.format("    %s : %s", n.getKey(),
+                            n.getValue()));
+
+            }
+        }
+
+        System.out.println("");
+        SSLContext ctx = SSLContext.getInstance("TLS");
+        ctx.init(null, null, null);
+
+        javax.net.ssl.SSLSocketFactory factory = (javax.net.ssl.SSLSocketFactory)ctx.getSocketFactory();
+        SSLSocket engine = (SSLSocket)factory.createSocket();
+        System.out.println(engine.getClass().getCanonicalName());
+
+        //            SSLEngine engine = ctx.createSSLEngine();
+        String[] prots = engine.getSupportedProtocols();
+        System.out.println("Supported Protocols: " + prots.length);
+        for (String prot : prots) {
+            System.out.println(" " + prot);
+        }
+        prots = engine.getEnabledProtocols();
+
+        System.out.println("Enabled Protocols: " + prots.length);
+        for(String prot: prots) {
+            System.out.println(" " + prot);
+        }
+        
     	CertificateManager.getInstance().getSSLSocketFactory(null);
     }
     
