@@ -106,6 +106,13 @@ import org.jibx.runtime.JiBXException;
  * ship with d1_libclient_java.jar.  For more information, see getSSLConnectionFactory()
  * <br>
  * 
+ * Finally, note that the TLS protocol used to establish SSL connections is configurable
+ * using the property 'tls.protocol.alias'.  Success of SSL connections relies on
+ * alignment of the chosen TLS protocol with the Security providers determined
+ * by your runtime environment.  This version assumes Java7 or higher runtime, but
+ * backwards compatibility with Java6 can be achieved by changing the TLS protocol
+ * configuration.
+ * 
  * This class is a singleton, as in any given application there 
  * need only be one collection of certificates.  
  * @author Matt Jones, Ben Leinfelder
@@ -665,7 +672,9 @@ public class CertificateManager {
      *                        Otherwise, looks up the certificate from among those registered
      *                        with registerCertificate().
      * @return an SSLSockectFactory object configured with the specified certificate
-     * @throws NoSuchAlgorithmException 
+     * @throws NoSuchAlgorithmException - thrown if the default or configured TLS protocol
+     *          is not supported by the java runtime.  To change the configured value to align
+     *          with your runtime, see 'tls.protocol.alias'  in auth.properties file.
      * @throws UnrecoverableKeyException
      * @throws KeyStoreException - thrown if an unknown subject value provided
      * @throws KeyManagementException
