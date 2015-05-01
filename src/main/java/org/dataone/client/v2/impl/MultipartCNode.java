@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.LogFactory;
 import org.dataone.client.exception.ClientSideException;
@@ -73,6 +74,7 @@ import org.dataone.service.types.v2.OptionList;
 import org.dataone.service.types.v2.SystemMetadata;
 import org.dataone.service.util.Constants;
 import org.dataone.service.util.D1Url;
+import org.dataone.service.util.TypeMarshaller;
 import org.jibx.runtime.JiBXException;
 
 /**
@@ -215,6 +217,49 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	}
 
 
+    @Override
+    public ObjectFormatIdentifier addFormat(Session session, ObjectFormatIdentifier formatid, ObjectFormat format)
+            throws ServiceFailure, NotFound, NotImplemented, InvalidRequest, NotAuthorized, InvalidToken {
+
+        if (formatid == null || StringUtils.isBlank(formatid.getValue()))
+            throw new NotFound("0000", "'formatid' cannot be null nor empty");
+        if (format == null)
+            throw new ServiceFailure("0000", "'format' cannot be null");
+
+        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_FORMATS);
+        url.addNextPathElement(formatid.getValue());
+        
+        ObjectFormatIdentifier formatID = null;
+        try {
+            SimpleMultipartEntity mpe = new SimpleMultipartEntity();
+            mpe.addFilePart("format", format);
+            
+            InputStream is = getRestClient(this.defaultSession).doPostRequest(url.getUrl(), mpe, null);
+            formatID = TypeMarshaller.unmarshalTypeFromStream(ObjectFormatIdentifier.class, is);
+            if (is != null)
+                IOUtils.closeQuietly(is);
+        } catch (BaseException be) {
+            if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
+            if (be instanceof NotFound)               throw (NotFound) be;
+            if (be instanceof NotImplemented)         throw (NotImplemented) be;
+
+            throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
+            
+        } catch (JiBXException e) {
+            throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);  
+        } catch (IOException e) {
+            throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
+        } catch (ClientSideException e) {
+            throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
+        } catch (InstantiationException e) {
+            throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
+        } catch (IllegalAccessException e) {
+            throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
+        }
+
+        return formatID;
+    }
+	
 	/**
 	 *  Return the ObjectFormat for the given ObjectFormatIdentifier, obtained 
 	 *  either from a client-cached ObjectFormatList from the ObjectFormatCache,
@@ -662,46 +707,60 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	}
 	
 	@Override
-	public boolean updateSystemMetadata(Session session, Identifier pid,
-			SystemMetadata sysmeta) 
-		throws NotImplemented, NotAuthorized,ServiceFailure, InvalidRequest, 
-		InvalidSystemMetadata, InvalidToken
-		{
-			D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_META);
-			if (pid == null) {
-				throw new InvalidRequest("0000","'pid' cannot be null");
-			}
-	    	
-	    	SimpleMultipartEntity mpe = new SimpleMultipartEntity();
-	    	try {
-	    		mpe.addParamPart("pid", pid.getValue());
-	    		mpe.addFilePart("sysmeta", sysmeta);
-	    	} catch (IOException e1) {
-				throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
-			} catch (JiBXException e1) {
-				throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
-			}
+    public boolean synchronize(Session session, Identifier pid)
+            throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest,
+            InvalidSystemMetadata, InvalidToken {
 
-			Identifier identifier = null;
-			try {
-				InputStream is = getRestClient(session).doPutRequest(url.getUrl(),mpe,
-						Settings.getConfiguration().getInteger("D1Client.CNode.registerSystemMetadata.timeouts", null));
-				identifier = deserializeServiceType(Identifier.class, is);
-			} catch (BaseException be) {
-				if (be instanceof NotImplemented)         throw (NotImplemented) be;
-				if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
-				if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
-				if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
-				if (be instanceof InvalidSystemMetadata)  throw (InvalidSystemMetadata) be;
-				if (be instanceof InvalidToken)	          throw (InvalidToken) be;
+	    if (pid == null)
+            throw new InvalidRequest("0000", "'sysmeta' cannot be null");
+	    
+	    D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_SYNCHRONIZE);
+	    url.addNextPathElement(pid.getValue());
 
-				throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
-			} 
-			catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
+        SimpleMultipartEntity mpe = new SimpleMultipartEntity();
+//        try {
+//            mpe.addFilePart("sysmeta", sysmeta);
+//        } catch (IOException e1) {
+//            throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
+//        } catch (JiBXException e1) {
+//            throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
+//        }
 
-	 		return true;
-		}
+        try {
+            InputStream is = getRestClient(session).doPostRequest(
+                    url.getUrl(),
+                    mpe,
+                    Settings.getConfiguration().getInteger(
+                            "D1Client.CNode.registerSystemMetadata.timeouts", null));
+        } catch (BaseException be) {
+            if (be instanceof NotImplemented)
+                throw (NotImplemented) be;
+            if (be instanceof NotAuthorized)
+                throw (NotAuthorized) be;
+            if (be instanceof ServiceFailure)
+                throw (ServiceFailure) be;
+            if (be instanceof InvalidRequest)
+                throw (InvalidRequest) be;
+            if (be instanceof InvalidSystemMetadata)
+                throw (InvalidSystemMetadata) be;
+            if (be instanceof InvalidToken)
+                throw (InvalidToken) be;
 
+            throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
+        } catch (ClientSideException e) {
+            throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
+        }
+
+        return true;
+    }
+	
+	@Override
+    public boolean updateSystemMetadata(Session session, Identifier pid, SystemMetadata sysmeta)
+            throws NotImplemented, NotAuthorized, ServiceFailure, InvalidRequest,
+            InvalidSystemMetadata, InvalidToken {
+
+        throw new NotImplemented("0000", "Not yet implemented.");
+    }
 	
 	/* (non-Javadoc)
 	 * @see org.dataone.client.CNode#setObsoletedBy(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.Identifier, long)
@@ -1875,4 +1934,5 @@ public class MultipartCNode extends MultipartD1Node implements CNode
     InvalidRequest, NotImplemented {
 	    return super.listViews(null);
 	}
+    
 }
