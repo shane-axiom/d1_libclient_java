@@ -177,7 +177,7 @@ public class CertificateManager {
 	    	certificates = new HashMap<String, X509Certificate>();
 	    	keys = new HashMap<String, PrivateKey>();
 	    	
-	    	tlsVersion = Settings.getConfiguration().getString("tls.protocol.alias","TLSv1.2");
+	    	tlsVersion = Settings.getConfiguration().getString("tls.protocol.alias","TLS");
 	    	
 	    	CILOGON_OID_SUBJECT_INFO = Settings.getConfiguration().getString("cilogon.oid.subjectinfo", "1.3.6.1.4.1.34998.2.1");
 
