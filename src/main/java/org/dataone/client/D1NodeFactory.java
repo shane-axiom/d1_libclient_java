@@ -59,7 +59,9 @@ public class D1NodeFactory {
         registerService(org.dataone.service.cn.v2.CNIdentity.class, new V2CnBuilder());
         registerService(org.dataone.service.cn.v2.CNRegister.class, new V2CnBuilder());
         registerService(org.dataone.service.cn.v2.CNReplication.class, new V2CnBuilder());
+        registerService(org.dataone.service.cn.v2.CNView.class, new V2CnBuilder());
         registerService(org.dataone.client.v2.CNode.class, new V2CnBuilder());
+        
         // v1 MN
         registerService(org.dataone.service.mn.tier1.v1.MNCore.class, new V1MnBuilder());
         registerService(org.dataone.service.mn.tier1.v1.MNRead.class, new V1MnBuilder());
@@ -75,6 +77,7 @@ public class D1NodeFactory {
         registerService(org.dataone.service.mn.tier3.v2.MNStorage.class, new V2MnBuilder());
         registerService(org.dataone.service.mn.tier4.v2.MNReplication.class, new V2MnBuilder());
         registerService(org.dataone.service.mn.v2.MNQuery.class, new V2MnBuilder());
+        registerService(org.dataone.service.mn.v2.MNView.class, new V2MnBuilder());
         registerService(org.dataone.client.v2.MNode.class, new V2MnBuilder());
     }
 
