@@ -900,7 +900,7 @@ public abstract class MultipartD1Node implements D1Node {
         if (StringUtils.isBlank(theme))
             url.addNextPathElement("default");
         else
-            url.addNextPathElement(id.getValue());
+            url.addNextPathElement(theme);
 
         if (id == null || StringUtils.isBlank(id.getValue()))
             throw new NotFound("0000", "'pid' cannot be null nor empty");

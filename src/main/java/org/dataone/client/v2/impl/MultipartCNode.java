@@ -1018,7 +1018,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_SEARCH);
         url.addNextPathElement(queryType);
         
-        String finalUrl = url.getUrl() + "/" + query;
+        String finalUrl = url.getUrl() + "/" + "select" + query;
 
         ObjectList objectList = null;
         try {
