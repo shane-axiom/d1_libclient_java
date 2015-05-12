@@ -715,16 +715,9 @@ public class MultipartCNode extends MultipartD1Node implements CNode
             throw new InvalidRequest("0000", "'sysmeta' cannot be null");
 	    
 	    D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_SYNCHRONIZE);
-	    url.addNextPathElement(pid.getValue());
 
         SimpleMultipartEntity mpe = new SimpleMultipartEntity();
-//        try {
-//            mpe.addFilePart("sysmeta", sysmeta);
-//        } catch (IOException e1) {
-//            throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
-//        } catch (JiBXException e1) {
-//            throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
-//        }
+        mpe.addParamPart("pid", pid.getValue());
 
         try {
             InputStream is = getRestClient(session).doPostRequest(
