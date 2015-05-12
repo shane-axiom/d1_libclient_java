@@ -712,7 +712,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
             InvalidSystemMetadata, InvalidToken {
 
 	    if (pid == null)
-            throw new InvalidRequest("0000", "'sysmeta' cannot be null");
+            throw new InvalidRequest("0000", "'pid' cannot be null");
 	    
 	    D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_SYNCHRONIZE);
 
