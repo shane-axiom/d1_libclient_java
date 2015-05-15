@@ -59,6 +59,15 @@ public class D1Client {
 	    }
 	    return multipartRestClient;
 	}
+	
+	public static void setAuthToken(String authToken) {
+		
+		if (multipartRestClient != null && multipartRestClient instanceof HttpMultipartRestClient) {
+			((HttpMultipartRestClient) multipartRestClient).setHeader("Authorization", "Bearer " + authToken);
+		}
+
+	}
+		    
 	/**
 	 * For testing, we can override the nodeLocator
 	 * @param nodeLocator
