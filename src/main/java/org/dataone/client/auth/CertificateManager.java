@@ -66,6 +66,8 @@ import javax.security.auth.x500.X500Principal;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.SystemUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.conn.ssl.SSLSocketFactory;
@@ -106,6 +108,13 @@ import org.jibx.runtime.JiBXException;
  * ship with d1_libclient_java.jar.  For more information, see getSSLConnectionFactory()
  * <br>
  * 
+ * Finally, note that the TLS protocol used to establish SSL/TLS connections is 
+ * configurable using the property 'tls.protocol.preferences'.  Success of TLS 
+ * connections relies on alignment of the chosen TLS protocol with the Security 
+ * providers determined by your runtime environment. As of May, 2015, te preference 
+ * list is 'TLSv1.2, TLS'. This allows standard Java6 runtimes to operate at 
+ * TLSv1.0, and Java7 and 8 runtimes to use the more secure TLSv1.2.
+ * 
  * This class is a singleton, as in any given application there 
  * need only be one collection of certificates.  
  * @author Matt Jones, Ben Leinfelder
@@ -126,6 +135,8 @@ public class CertificateManager {
     private static final String shippedCAcerts = "/org/dataone/client/auth/d1-trusted-certs.crt";
 //    private static final char[] caTrustStorePass = "dataONE".toCharArray();
     private KeyStore d1TrustStore;
+    
+    protected static String defaultTlsPreferences = "TLSv1.2, TLS";
    
     // BouncyCastle added to be able to get the private key and certificate from the PEM
     // TODO: find a way to do this with default Java provider (not Bouncy Castle)? 
@@ -167,13 +178,11 @@ public class CertificateManager {
 	    	trustStoreIncludesD1CAs = Settings.getConfiguration().getBoolean("certificate.truststore.includeD1CAs", true);
 	    	certificates = new HashMap<String, X509Certificate>();
 	    	keys = new HashMap<String, PrivateKey>();
-	    	
 	    	CILOGON_OID_SUBJECT_INFO = Settings.getConfiguration().getString("cilogon.oid.subjectinfo", "1.3.6.1.4.1.34998.2.1");
 
     	} catch (Exception e) {
             log.error(e.getMessage(), e);
 		}
-    
     }
     
     /**
@@ -661,7 +670,9 @@ public class CertificateManager {
      *                        Otherwise, looks up the certificate from among those registered
      *                        with registerCertificate().
      * @return an SSLSockectFactory object configured with the specified certificate
-     * @throws NoSuchAlgorithmException
+     * @throws NoSuchAlgorithmException - thrown if the default or configured TLS protocol
+     *          is not supported by the java runtime.  To change the configured value to align
+     *          with your runtime, see 'tls.protocol.alias'  in auth.properties file.
      * @throws UnrecoverableKeyException
      * @throws KeyStoreException - thrown if an unknown subject value provided
      * @throws KeyManagementException
@@ -669,8 +680,8 @@ public class CertificateManager {
      * @throws IOException
      */
     public SSLSocketFactory getSSLSocketFactory(String subjectString) 
-    throws NoSuchAlgorithmException, UnrecoverableKeyException, KeyStoreException,
-    KeyManagementException, CertificateException, IOException 
+    throws UnrecoverableKeyException, KeyStoreException,
+    KeyManagementException, CertificateException, IOException, NoSuchAlgorithmException 
     {
     	// our return object
     	log.info("Entering getSSLSocketFactory");
@@ -688,7 +699,23 @@ public class CertificateManager {
 		}
        
         // create SSL context
-        SSLContext ctx = SSLContext.getInstance("TLS");
+        SSLContext ctx = null;
+        String tlsPreferences = Settings.getConfiguration().getString("tls.protocol.preferences",defaultTlsPreferences);
+        String[] ctxPreferences = StringUtils.split(tlsPreferences,',');
+        for (String preference : ctxPreferences) {
+            try {
+                log.info("...trying SSLContext protocol: " + preference);
+                ctx = SSLContext.getInstance(StringUtils.trim(preference));
+                log.info("...setting SSLContext with protocol: " + StringUtils.trim(preference));
+                break;
+            } catch (NoSuchAlgorithmException e) {
+                ; // ok, try the next one
+            }
+        }
+        if (ctx == null) {
+            throw new NoSuchAlgorithmException("None of the preferred TLS protocols were found! (" +
+                    tlsPreferences + ")");
+        }
         
         // based on config options, we get an appropriate truststore
         X509TrustManager tm = getTrustManager();
