@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.util.Date;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.input.AutoCloseInputStream;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpException;
 import org.apache.http.client.ClientProtocolException;
@@ -294,7 +295,6 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
 
         finally {
         	setLatestRequestUrl(client.getLatestRequestUrl());
-        	client.closeIdleConnections();
         }
         return node;
     }
@@ -416,7 +416,6 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
         
         finally {
         	setLatestRequestUrl(client.getLatestRequestUrl());
-        	client.closeIdleConnections();
         }
         return true;
     }
@@ -524,7 +523,6 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
 
         finally {
         	setLatestRequestUrl(client.getLatestRequestUrl());
-        	client.closeIdleConnections();
         }
         return identifier;
     }
@@ -596,7 +594,6 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
 
         finally {
         	setLatestRequestUrl(client.getLatestRequestUrl());
-        	client.closeIdleConnections();
         }
         return identifier;
     }
@@ -691,7 +688,6 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
 		
 		finally {	
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
 		return true;
     }
@@ -758,7 +754,6 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
     	
     	finally {
     		setLatestRequestUrl(client.getLatestRequestUrl());
-    		client.closeIdleConnections();
     	}
         return true;
     }
@@ -782,18 +777,18 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
     throws InvalidToken, NotAuthorized, NotImplemented, ServiceFailure, NotFound,
     InsufficientResources
     {
-        D1Url url = new D1Url(this.getNodeBaseServiceUrl(),Constants.RESOURCE_REPLICAS);
-        if (pid != null)
+    	D1Url url = new D1Url(this.getNodeBaseServiceUrl(),Constants.RESOURCE_REPLICAS);
+    	if (pid != null)
         	url.addNextPathElement(pid.getValue());
 
         // send the request
-        D1RestClient client = new D1RestClient(session);
-                client.setTimeouts(Settings.getConfiguration()
-			.getInteger("D1Client.MNode.getReplica.timeout", getDefaultSoTimeout()));
-        ByteArrayInputStream bais = null;
+    	D1RestClient client = new D1RestClient(session);
+    	client.setTimeouts(Settings.getConfiguration()
+    			.getInteger("D1Client.MNode.getReplica.timeout", getDefaultSoTimeout()));
+        
+    	AutoCloseInputStream acis = null;
         try {
-        	byte[] bytes = IOUtils.toByteArray(client.doGetRequest(url.getUrl()));
-        	bais = new ByteArrayInputStream(bytes);     	
+        	acis = new AutoCloseInputStream(client.doGetRequest(url.getUrl()));     	
         } catch (BaseException be) {
             if (be instanceof InvalidToken)           throw (InvalidToken) be;
             if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
@@ -811,9 +806,8 @@ implements MNCore, MNRead, MNAuthorization, MNStorage, MNReplication, MNQuery
         
         finally {
         	setLatestRequestUrl(client.getLatestRequestUrl());
-        	client.closeIdleConnections();
         }
-        return bais;
+        return acis;
     }
     
     /**

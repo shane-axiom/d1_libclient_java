@@ -335,7 +335,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
 		return formatList;
 	}
@@ -398,7 +397,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 			finally {
 				setLatestRequestUrl(client.getLatestRequestUrl());
-				client.closeIdleConnections();
 			}
 
 		}
@@ -433,7 +431,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
 		return algorithmList;
 	}
@@ -518,7 +515,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
 		return nodelist;
 	}
@@ -576,7 +572,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
  		return identifier;
 	}
@@ -655,7 +650,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
 		return true;
 	}
@@ -739,7 +733,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
       
         finally {
         	setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
  		return identifier;
 	}
@@ -804,7 +797,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
  		return identifier;
 	}
@@ -870,7 +862,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
 		return true;
 	}
@@ -1030,7 +1021,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
  		return oll;
 	}
@@ -1202,7 +1192,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
 		return objectList;
 	}
@@ -1267,7 +1256,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
 		return identifier;
 	}
@@ -1354,7 +1342,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
 		return true;
 	}
@@ -1416,7 +1403,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
 		return subject;
 	}
@@ -1483,7 +1469,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
 		return subject;
 	}
@@ -1536,7 +1521,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
 		return true;
 	}
@@ -1585,7 +1569,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 	
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
 		return subjectInfo;
 	}
@@ -1638,7 +1621,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
 		return subjectInfo;
 	}
@@ -1696,7 +1678,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
 		return true;
 	}
@@ -1750,7 +1731,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
 		return true;
 	}
@@ -1799,7 +1779,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
 		return subjectInfo;
     }
@@ -1850,7 +1829,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
 		return true;
 	}
@@ -1900,7 +1878,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
 		return true;
 	}
@@ -1950,7 +1927,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
 		return true;
 	}
@@ -2006,7 +1982,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
 		return subject;
 	}
@@ -2066,7 +2041,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
 		return true;
 	}
@@ -2127,7 +2101,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
 		return true;
 	}
@@ -2185,7 +2158,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 		
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
 		return nodeRef;
 	}
@@ -2256,7 +2228,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
 		return true;
 	}
@@ -2322,7 +2293,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
 		return true;
 	}
@@ -2378,7 +2348,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
 		return true;
 	}
@@ -2447,7 +2416,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
 		return true;
 	}
@@ -2511,7 +2479,6 @@ implements CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplicatio
 
 		finally {
 			setLatestRequestUrl(client.getLatestRequestUrl());
-			client.closeIdleConnections();
 		}
 		return true;
 	}
