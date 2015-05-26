@@ -31,6 +31,7 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -46,7 +47,13 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLSocket;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.SystemUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.v1.impl.MultipartCNode;
 import org.dataone.configuration.Settings;
@@ -68,8 +75,9 @@ public class CertificateManagerTest {
 
     @Before
     public void setUp() throws Exception {
-    	// can override the location of the PEM cert
-    	CertificateManager.getInstance().setCertificateLocation(user_cert_location);
+     // can override the location of the PEM cert
+//        System.out.println("TEST SETUP: setting CertificateLocation to:" + user_cert_location);
+//        CertificateManager.getInstance().setCertificateLocation(user_cert_location);
     }
 
     @Test
@@ -362,9 +370,116 @@ public class CertificateManagerTest {
     }
     
     @Test
+    public void testTLSPreferenceSetting_TLS_Alias() {
+        
+        // this "TLS" property will work with java 6,7,8 runtimes; not java 5; maybe java 9
+        Settings.getConfiguration().setProperty("tls.protocol.preferences", "TLS");
+        try {
+            CertificateManager.getInstance().getSSLSocketFactory((String)null);
+        } catch (UnrecoverableKeyException | KeyManagementException
+                | KeyStoreException | CertificateException
+                | NoSuchAlgorithmException | IOException e) {
+            e.printStackTrace();
+            fail("Threw exception when 'TLS' alias provided");
+        }
+    }
+    
+    @Test
+    public void testTLSPreferenceSetting_ForwardCompatible() {
+        
+        // this "TLS" property will work with java 6,7,8 runtimes; not java 5; maybe java 9
+        Settings.getConfiguration().setProperty("tls.protocol.preferences", "TLSv1.3, TLSv1.2, TLS");
+        try {
+            CertificateManager.getInstance().getSSLSocketFactory((String)null);
+        } catch (UnrecoverableKeyException | KeyManagementException
+                | KeyStoreException | CertificateException
+                | NoSuchAlgorithmException | IOException e) {
+            e.printStackTrace();
+            fail("Threw exception when 'TLS' alias provided");
+        } finally {
+            Settings.getConfiguration().setProperty("tls.protocol.preferences", CertificateManager.defaultTlsPreferences);
+        }
+    }
+    
+    @Test
+    public void testTLSPreferenceSetting_NoRealProtocols() {
+        
+        // this "TLS" property will work with java 6,7,8 runtimes; not java 5; maybe java 9
+        Settings.getConfiguration().setProperty("tls.protocol.preferences", "foo, weboiudg");
+        try {
+            CertificateManager.getInstance().getSSLSocketFactory((String)null);
+            fail("Didn't throw exception when only fake protocols ('foov1.2, weboiudg') were provided");
+        } catch (UnrecoverableKeyException | KeyManagementException
+                | KeyStoreException | CertificateException
+                | NoSuchAlgorithmException | IOException e) {
+            e.printStackTrace();
+            
+        } finally {
+            Settings.getConfiguration().setProperty("tls.protocol.preferences", CertificateManager.defaultTlsPreferences);
+        }
+    }
+    
+    @Test
     public void testSetupSSLSocketFactory() throws UnrecoverableKeyException, KeyManagementException, 
     NoSuchAlgorithmException, KeyStoreException, CertificateException, IOException {
-    	CertificateManager.getInstance().getSSLSocketFactory((String)null);
+     
+        System.out.println(SystemUtils.JAVA_RUNTIME_NAME + " " + SystemUtils.JAVA_RUNTIME_VERSION);
+        System.out.println("%%%%%%%%%%%%%%%%% SSLContext Profile %%%%%%%%%%%%%%%%%%%");
+        Provider[] ps = Security.getProviders();
+        for (Provider p : ps) {
+            System.out.println(p.getName() + ": " + p.getClass().getCanonicalName());
+            for (Entry<Object,Object> n : p.entrySet()) {
+                if (n.getKey().toString().contains("SSLContext"))
+                    System.out.println(String.format("    %s : %s", n.getKey(),
+                            n.getValue()));
+
+            }
+        }
+
+        System.out.println("");
+        SSLContext ctx = SSLContext.getInstance("TLS");
+        String protocol = ctx.getProtocol();
+        System.out.println(protocol);
+        ctx.init(null, null, null);
+
+        javax.net.ssl.SSLSocketFactory factory = (javax.net.ssl.SSLSocketFactory)ctx.getSocketFactory();
+        SSLSocket engine = (SSLSocket)factory.createSocket();
+        System.out.println("Engine impl: " + engine.getClass().getCanonicalName());
+
+        //            SSLEngine engine = ctx.createSSLEngine();
+        String[] prots = engine.getSupportedProtocols();
+        System.out.println("Supported Protocols: " + prots.length);
+        for (String prot : prots) {
+            System.out.println(" " + prot);
+        }
+
+//        engine.setEnabledProtocols(prots);
+        prots = engine.getEnabledProtocols();
+
+        System.out.println("Enabled Protocols: " + prots.length);
+        for(String prot: prots) {
+            System.out.println(" " + prot);
+        }
+        
+    	SSLSocketFactory sf = CertificateManager.getInstance().getSSLSocketFactory((String)null);
+    	Scheme sch = new Scheme("https", 443, sf );
+    	DefaultHttpClient hc = new DefaultHttpClient();
+        hc.getConnectionManager().getSchemeRegistry().register(sch);
+        
+        HttpGet req = new HttpGet("https://www.howsmyssl.com/");
+        HttpResponse response = hc.execute(req);
+        System.out.println("");
+
+        InputStream is = response.getEntity().getContent();
+        File targetFile = new File("/Users/rnahf/Documents/targetFile.html");
+        FileUtils.copyInputStreamToFile(is, targetFile);
+//        String s = IOUtils.toString(is, "UTF-8");
+//        int beginIndex = 0;
+//        for (int i = 0; i< s.length()+80; i+=80) {
+//            i = i>s.length()-1 ? s.length() : i;
+//            System.out.println(s.substring(beginIndex, i));
+//            beginIndex = i;
+//        }
     }
     
 }
