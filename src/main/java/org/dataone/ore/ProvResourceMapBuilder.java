@@ -22,21 +22,12 @@
 
 package org.dataone.ore;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.dataone.configuration.Settings;
@@ -47,32 +38,13 @@ import org.dspace.foresite.AggregatedResource;
 import org.dspace.foresite.Aggregation;
 import org.dspace.foresite.OREException;
 import org.dspace.foresite.OREFactory;
-import org.dspace.foresite.OREParser;
-import org.dspace.foresite.OREParserException;
-import org.dspace.foresite.OREParserFactory;
-import org.dspace.foresite.ORESerialiser;
-import org.dspace.foresite.ORESerialiserException;
-import org.dspace.foresite.ORESerialiserFactory;
 import org.dspace.foresite.Predicate;
 import org.dspace.foresite.ResourceMap;
-import org.dspace.foresite.ResourceMapDocument;
 import org.dspace.foresite.Triple;
-import org.dspace.foresite.TripleSelector;
 import org.dspace.foresite.Vocab;
-import org.dspace.foresite.jena.JenaOREFactory;
-import org.dspace.foresite.jena.ORE;
-import org.dspace.foresite.jena.ResourceMapJena;
 import org.dspace.foresite.jena.TripleJena;
 
-import com.hp.hpl.jena.ontology.OntModelSpec;
 import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.rdf.model.RDFNode;
-import com.hp.hpl.jena.rdf.model.Resource;
-import com.hp.hpl.jena.rdf.model.Selector;
-import com.hp.hpl.jena.rdf.model.SimpleSelector;
-import com.hp.hpl.jena.rdf.model.Statement;
-import com.hp.hpl.jena.rdf.model.StmtIterator;
 /**
  *  A Resource Map builder with methods for adding provenance-related statements. 
  *  Uses ResourceMapFactory...
