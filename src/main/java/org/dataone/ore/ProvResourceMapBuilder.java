@@ -46,17 +46,10 @@ import org.dspace.foresite.jena.TripleJena;
 
 import com.hp.hpl.jena.rdf.model.Model;
 /**
- *  A Resource Map builder with methods for adding provenance-related statements. 
- *  Uses ResourceMapFactory...
+ *  A Resource Map builder with methods for adding provenance or other statements about
+ *  resource in an ORE aggregation.  
  *  
  */
-//TODO:  This is a straight-up copy of the ResourceMapFactory in turnk as of July 12, 2014
-// The new methods found suggest a builder pattern, whereas ResourceMapFactory is 
-// only a serialization and deserialization class for our package relationships.
-// Further design work needed to determine the best relationships between the two
-// classes and their proper placement.  The first question is whether or not this
-// belongs in libclient or to the application.
-
 public class ProvResourceMapBuilder {
 	
 	// TODO: will this always resolve?
@@ -471,89 +464,5 @@ public class ProvResourceMapBuilder {
 			}
 		}		
 	}
-	
-/*	/**
-	 * Experimental.  Do not use!  Creates a ResourceMap that does not contain the inverse
-	 * relationships for ore:aggregates, and cito:documents, requiring a reasoning
-	 * model to reconstitute to the DataPackage representation. 
-	 * @param resourceMapId
-	 * @param idMap
-	 * @return
-	 * @throws OREException
-	 * @throws URISyntaxException
-	 */
-/*	public ResourceMap createSparseResourceMap(
-			Identifier resourceMapId, 
-			Map<Identifier, List<Identifier>> idMap) 
-		throws OREException, URISyntaxException {
-
-	
-		// create the resource map and the aggregation
-		// NOTE: use distinct, but related URI for the aggregation
-		Aggregation aggregation = OREFactory.createAggregation(new URI(D1_URI_PREFIX 
-				+ EncodingUtilities.encodeUrlPathSegment(resourceMapId.getValue()) 
-				+ "#aggregation"));
-		ResourceMap resourceMap = aggregation.createResourceMap(new URI(D1_URI_PREFIX 
-				+ EncodingUtilities.encodeUrlPathSegment(resourceMapId.getValue())));
-		
-		Agent creator = OREFactory.createAgent();
-		creator.addName("Java libclient");
-		resourceMap.addCreator(creator);
-		// add the resource map identifier
-		Triple resourceMapIdentifier = new TripleJena();
-		resourceMapIdentifier.initialise(resourceMap);
-		resourceMapIdentifier.relate(DC_TERMS_IDENTIFIER, resourceMapId.getValue());
-		resourceMap.addTriple(resourceMapIdentifier);
-		
-		//aggregation.addCreator(creator);
-		aggregation.addTitle("DataONE Aggregation");
-		
-		// iterate through the metadata items
-
-		//		int i = 0;
-		for (Identifier metadataId: idMap.keySet()) {
-		
-			// add the science metadata
-			AggregatedResource metadataResource = aggregation.createAggregatedResource(new URI(D1_URI_PREFIX 
-					+ EncodingUtilities.encodeUrlPathSegment(metadataId.getValue())));
-			Triple metadataIdentifier = new TripleJena();
-			metadataIdentifier.initialise(metadataResource);
-			metadataIdentifier.relate(DC_TERMS_IDENTIFIER, metadataId.getValue());
-			resourceMap.addTriple(metadataIdentifier);
-			aggregation.addAggregatedResource(metadataResource);
-	
-			// iterate through data items
-			List<Identifier> dataIds = idMap.get(metadataId);
-			for (Identifier dataId: dataIds) {
-				AggregatedResource dataResource = aggregation.createAggregatedResource(new URI(D1_URI_PREFIX 
-						+ EncodingUtilities.encodeUrlPathSegment(dataId.getValue())));
-				// dcterms:identifier
-				Triple identifier = new TripleJena();
-				identifier.initialise(dataResource);
-				identifier.relate(DC_TERMS_IDENTIFIER, dataId.getValue());
-				resourceMap.addTriple(identifier);
-
-//				if ((i++ % 2) == 0) {
-//					// cito:isDocumentedBy
-//					Triple isDocumentedBy = new TripleJena();
-//					isDocumentedBy.initialise(dataResource);
-//					isDocumentedBy.relate(CITO_IS_DOCUMENTED_BY, metadataResource);
-//					resourceMap.addTriple(isDocumentedBy);
-//				} else {
-				// cito:documents (on metadata resource)
-					Triple documents = new TripleJena();
-					documents.initialise(metadataResource);
-					documents.relate(CITO_DOCUMENTS, dataResource);
-					resourceMap.addTriple(documents);
-//				}
-				
-				aggregation.addAggregatedResource(dataResource);
-			}
-		}
-		
-		return resourceMap;
-		
-	}
-	*/
 
 }
