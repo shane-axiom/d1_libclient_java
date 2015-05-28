@@ -60,6 +60,7 @@ public class D1NodeFactory {
         registerService(org.dataone.service.cn.v2.CNRegister.class, new V2CnBuilder());
         registerService(org.dataone.service.cn.v2.CNReplication.class, new V2CnBuilder());
         registerService(org.dataone.service.cn.v2.CNView.class, new V2CnBuilder());
+        registerService(org.dataone.service.cn.v2.CNDiagnostic.class, new V2CnBuilder());
         registerService(org.dataone.client.v2.CNode.class, new V2CnBuilder());
         
         // v1 MN
