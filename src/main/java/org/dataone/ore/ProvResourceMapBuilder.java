@@ -54,7 +54,7 @@ public class ProvResourceMapBuilder {
 	
 	// TODO: will this always resolve?
 	private static final String D1_URI_PREFIX = Settings.getConfiguration()
-			.getString("D1Client.CN_URL","howdy") + "/v1/resolve/";
+			.getString("D1Client.CN_URL", "https://cn-dev.test.dataone.org/cn") + "/v1/resolve/";
 
 	private static final String RESOURCE_MAP_SERIALIZATION_FORMAT = "RDF/XML";
 
@@ -256,8 +256,7 @@ public class ProvResourceMapBuilder {
 			}
 		}		
 	}
-	
-	
+		
 	/**
 	 * Adds a wasGeneratedBy triple to the specified Resource Map
 	 * @param resourceMap
@@ -301,8 +300,7 @@ public class ProvResourceMapBuilder {
 			}
 		}		
 	}
-	
-	
+		
 	/**
 	 * Adds a addWasInformedBy triple to the specified Resource Map
 	 * @param resourceMap
@@ -389,6 +387,40 @@ public class ProvResourceMapBuilder {
 				resourceMap.addTriple(triple);
 			}
 		}		
+	}
+
+	/**
+	 * Insert statements into the resource map graph using the given subject, predicate, and list
+	 * of object URIs.  When inserting a relationship, ensure that either the subject or object URIs
+	 * are connected in the graph (that one is present) to avoid an OREException.
+	 * 
+	 * @param resourceMap  The resource map to be augmented
+	 * @param subject  The URI identifying the subject of each statement
+	 * @param predicate  The Predicate identifying the relation of each statement
+	 * @param objects  A list of URIs identifying the objects of each statement
+	 * @return
+	 * @throws OREException
+	 */
+	public ResourceMap insertRelationship(ResourceMap resourceMap, URI subject, Predicate predicate, 
+	        List<URI> objects ) throws OREException {
+	    
+	    if ( subject == null ) {
+	        throw new OREException("Subject cannot be null. Please set the subject URI.");
+	        
+	    }
+	    
+    	for ( URI object : objects ) {
+    	    // Build the triple with the given predicate
+            if ( object == null ) {
+                throw new OREException("Object cannot be null. Please set the object URI.");
+                
+            }
+            
+    	    Triple triple = OREFactory.createTriple(subject, predicate, object);
+    	    resourceMap.addTriple(triple);
+    	}
+    	
+    	return resourceMap;
 	}
 
 }
