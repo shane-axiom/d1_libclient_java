@@ -419,7 +419,7 @@ public class CertificateManagerTest {
         }
     }
     
-    @Test
+//    @Test
     public void testSetupSSLSocketFactory() throws UnrecoverableKeyException, KeyManagementException, 
     NoSuchAlgorithmException, KeyStoreException, CertificateException, IOException {
      
@@ -466,13 +466,13 @@ public class CertificateManagerTest {
     	DefaultHttpClient hc = new DefaultHttpClient();
         hc.getConnectionManager().getSchemeRegistry().register(sch);
         
-        HttpGet req = new HttpGet("https://www.howsmyssl.com/");
-        HttpResponse response = hc.execute(req);
-        System.out.println("");
-
-        InputStream is = response.getEntity().getContent();
-        File targetFile = new File("/Users/rnahf/Documents/targetFile.html");
-        FileUtils.copyInputStreamToFile(is, targetFile);
+//        HttpGet req = new HttpGet("https://www.howsmyssl.com/");
+//        HttpResponse response = hc.execute(req);
+//        System.out.println("");
+//
+//        InputStream is = response.getEntity().getContent();
+//        File targetFile = new File("/Users/rnahf/Documents/targetFile.html");
+//        FileUtils.copyInputStreamToFile(is, targetFile);
 //        String s = IOUtils.toString(is, "UTF-8");
 //        int beginIndex = 0;
 //        for (int i = 0; i< s.length()+80; i+=80) {
