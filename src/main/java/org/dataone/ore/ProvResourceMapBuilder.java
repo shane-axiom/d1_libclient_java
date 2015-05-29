@@ -222,14 +222,16 @@ public class ProvResourceMapBuilder {
 	 * @throws OREException
 	 * @throws URISyntaxException
 	 */
-	public void addWasDerivedFrom(ResourceMap resourceMap, Identifier primaryDataId, Identifier derivedDataId)
+	public ResourceMap addWasDerivedFrom(ResourceMap resourceMap, Identifier primaryDataId, Identifier derivedDataId)
 	throws OREException, URISyntaxException{
 		
 		Triple triple = OREFactory.createTriple(
 								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(derivedDataId.getValue())), 
 								PROV_WAS_DERIVED_FROM, 
 								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(primaryDataId.getValue())));
-		resourceMap.addTriple(triple);				
+		resourceMap.addTriple(triple);
+        
+		return resourceMap;				
 	}
 		
 	/**
@@ -240,7 +242,7 @@ public class ProvResourceMapBuilder {
 	 * @throws OREException
 	 * @throws URISyntaxException
 	 */
-	public void addWasDerivedFrom(ResourceMap resourceMap, Map<Identifier, List<Identifier>> idMap)
+	public ResourceMap addWasDerivedFrom(ResourceMap resourceMap, Map<Identifier, List<Identifier>> idMap)
 	throws OREException, URISyntaxException{
 		
 		//Iterate over each derived data ID
@@ -254,7 +256,9 @@ public class ProvResourceMapBuilder {
 										new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(primaryDataId.getValue())));
 				resourceMap.addTriple(triple);
 			}
-		}		
+		}
+        
+		return resourceMap;		
 	}
 		
 	/**
@@ -266,14 +270,16 @@ public class ProvResourceMapBuilder {
 	 * @throws OREException
 	 * @throws URISyntaxException
 	 */
-	public void addWasGeneratedBy(ResourceMap resourceMap, Identifier subjectId, Identifier objectId)
+	public ResourceMap addWasGeneratedBy(ResourceMap resourceMap, Identifier subjectId, Identifier objectId)
 	throws OREException, URISyntaxException{
 		
 		Triple triple = OREFactory.createTriple(
 								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(subjectId.getValue())), 
 								PROV_WAS_GENERATED_BY, 
 								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(objectId.getValue())));
-		resourceMap.addTriple(triple);				
+		resourceMap.addTriple(triple);
+        
+		return resourceMap;				
 	}
 
 	/**
@@ -284,7 +290,7 @@ public class ProvResourceMapBuilder {
 	 * @throws OREException
 	 * @throws URISyntaxException
 	 */
-	public void addWasGeneratedBy(ResourceMap resourceMap, Map<Identifier, List<Identifier>> idMap)
+	public ResourceMap addWasGeneratedBy(ResourceMap resourceMap, Map<Identifier, List<Identifier>> idMap)
 	throws OREException, URISyntaxException{
 		
 		//Iterate over each subject ID
@@ -298,7 +304,9 @@ public class ProvResourceMapBuilder {
 										new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(objectId.getValue())));
 				resourceMap.addTriple(triple);
 			}
-		}		
+		}
+        
+		return resourceMap;		
 	}
 		
 	/**
@@ -310,14 +318,16 @@ public class ProvResourceMapBuilder {
 	 * @throws OREException
 	 * @throws URISyntaxException
 	 */
-	public void addWasInformedBy(ResourceMap resourceMap, Identifier subjectId, Identifier objectId)
+	public ResourceMap addWasInformedBy(ResourceMap resourceMap, Identifier subjectId, Identifier objectId)
 	throws OREException, URISyntaxException{
 		
 		Triple triple = OREFactory.createTriple(
 								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(subjectId.getValue())), 
 								PROV_WAS_INFORMED_BY, 
 								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(objectId.getValue())));
-		resourceMap.addTriple(triple);				
+		resourceMap.addTriple(triple);
+        
+		return resourceMap;				
 	}
 
 	/**
@@ -328,7 +338,7 @@ public class ProvResourceMapBuilder {
 	 * @throws OREException
 	 * @throws URISyntaxException
 	 */
-	public void addWasInformedBy(ResourceMap resourceMap, Map<Identifier, List<Identifier>> idMap)
+	public ResourceMap addWasInformedBy(ResourceMap resourceMap, Map<Identifier, List<Identifier>> idMap)
 	throws OREException, URISyntaxException{
 		
 		//Iterate over each subject ID
@@ -342,7 +352,9 @@ public class ProvResourceMapBuilder {
 										new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(objectId.getValue())));
 				resourceMap.addTriple(triple);
 			}
-		}		
+		}
+        
+		return resourceMap;		
 	}
 	
 	/**
@@ -354,14 +366,16 @@ public class ProvResourceMapBuilder {
 	 * @throws OREException
 	 * @throws URISyntaxException
 	 */
-	public void addUsed(ResourceMap resourceMap, Identifier subjectId, Identifier objectId)
+	public ResourceMap addUsed(ResourceMap resourceMap, Identifier subjectId, Identifier objectId)
 	throws OREException, URISyntaxException{
 		
 		Triple triple = OREFactory.createTriple(
 								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(subjectId.getValue())), 
 								PROV_USED, 
 								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(objectId.getValue())));
-		resourceMap.addTriple(triple);				
+		resourceMap.addTriple(triple);
+        
+		return resourceMap;				
 	}
 
 	/**
@@ -372,7 +386,7 @@ public class ProvResourceMapBuilder {
 	 * @throws OREException
 	 * @throws URISyntaxException
 	 */
-	public void addUsed(ResourceMap resourceMap, Map<Identifier, List<Identifier>> idMap)
+	public ResourceMap addUsed(ResourceMap resourceMap, Map<Identifier, List<Identifier>> idMap)
 	throws OREException, URISyntaxException{
 		
 		//Iterate over each subject ID
@@ -386,7 +400,9 @@ public class ProvResourceMapBuilder {
 										new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(objectId.getValue())));
 				resourceMap.addTriple(triple);
 			}
-		}		
+		}
+        
+		return resourceMap;		
 	}
 
 	/**
