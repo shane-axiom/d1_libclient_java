@@ -383,7 +383,8 @@ public class CertificateManagerTest {
         }
     }
     
-    @Test
+// this really isn't a test so much as an exploration...    
+//    @Test
     public void testSetupSSLSocketFactory() throws UnrecoverableKeyException, KeyManagementException, 
     NoSuchAlgorithmException, KeyStoreException, CertificateException, IOException {
      
@@ -435,15 +436,15 @@ public class CertificateManagerTest {
         System.out.println("");
 
         InputStream is = response.getEntity().getContent();
-        File targetFile = new File("/Users/rnahf/Documents/targetFile.html");
-        FileUtils.copyInputStreamToFile(is, targetFile);
-//        String s = IOUtils.toString(is, "UTF-8");
-//        int beginIndex = 0;
-//        for (int i = 0; i< s.length()+80; i+=80) {
-//            i = i>s.length()-1 ? s.length() : i;
-//            System.out.println(s.substring(beginIndex, i));
-//            beginIndex = i;
-//        }
+//        File targetFile = new File("/Users/rnahf/Documents/targetFile.html");
+//        FileUtils.copyInputStreamToFile(is, targetFile);
+        String s = IOUtils.toString(is, "UTF-8");
+        int beginIndex = 0;
+        for (int i = 0; i< s.length()+80; i+=80) {
+            i = i>s.length()-1 ? s.length() : i;
+            System.out.println(s.substring(beginIndex, i));
+            beginIndex = i;
+        }
     }
     
 }
