@@ -86,7 +86,7 @@ public class PROV {
         
         if ( ! properties.contains(property) ) {
            throw new IllegalArgumentException("The given argument: " + property +
-                   " is not a ProvONE property. Please use one of the follwing to " +
+                   " is not a PROV property. Please use one of the follwing to " +
                    "create a Predicate: " + Arrays.toString(properties.toArray())); 
         }
         
