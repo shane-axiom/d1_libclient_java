@@ -29,6 +29,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,12 +39,15 @@ import java.util.Map;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.v1.itk.DataPackage;
 import org.dataone.client.v1.types.D1TypeBuilder;
+import org.dataone.configuration.Settings;
 import org.dataone.ore.ResourceMapFactory;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.types.v1.Identifier;
+import org.dataone.vocabulary.PROV;
 import org.dspace.foresite.OREException;
 import org.dspace.foresite.OREParserException;
 import org.dspace.foresite.ORESerialiserException;
+import org.dspace.foresite.Predicate;
 import org.dspace.foresite.ResourceMap;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -93,37 +97,47 @@ public class DataPackageTest {
 	public void testInsertRelationship() throws OREException, ORESerialiserException, URISyntaxException, IOException
 	{
 		System.out.println("***************  testInsertRelationship  ******************");
-		
+
+		String D1_URI_PREFIX = 
+		    Settings.getConfiguration().getString("D1Client.CN_URL", 
+		            "https://cn-dev.test.dataone.org/cn") + "/v1/resolve/";
+
 		Identifier packageId = new Identifier();
 		packageId.setValue("package.1.1");
 		DataPackage dataPackage = new DataPackage(packageId);
 		 
 		//Create the predicate URIs and NS
-		String provNS = "http://www.w3.org/ns/prov#";
-		String wasDerivedFromURI = provNS + "wasDerivedFrom";
-		String usedURI = provNS + "used";
-		String wasGeneratedByURI = provNS + "wasGeneratedBy";
-		String generatedURI = provNS + "generated";
-		String wasInformedByURI = provNS + "wasInformedBy";
+		Predicate wasDerivedFrom = null;
+        Predicate used = null;
+        Predicate wasGeneratedBy = null;
+        Predicate wasInformedBy = null;
+        try {
+            wasDerivedFrom = PROV.predicate("wasDerivedFrom");
+            used = PROV.predicate("used");
+            wasGeneratedBy = PROV.predicate("wasGeneratedBy");
+            wasInformedBy = PROV.predicate("wasInformedBy");
+            
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+            
+        }
 		
 		//Create the derived resources
 		//A resource map
-		Identifier resourceMapId = new Identifier();
-		resourceMapId.setValue("resouceMap.1.1");
+		Identifier resourceMapId = D1TypeBuilder.buildIdentifier("resouceMap.1.1");
 		//Metadata
-		Identifier metadataId = new Identifier();
-		metadataId.setValue("meta.1.1");
+		Identifier metadataId = D1TypeBuilder.buildIdentifier("meta.1.1");
 		//One derived data 
-		Identifier dataId = new Identifier();
-		dataId.setValue("data.1.1");
+		Identifier dataId = D1TypeBuilder.buildIdentifier("data.1.1");
+		URI dataURI = new URI(D1_URI_PREFIX + "data.1.1");
 		//Two activities (e.g. scripts)
-		Identifier drawActivityId = new Identifier();
-		drawActivityId.setValue("drawActivity.1.1");
-		Identifier composeActivityId = new Identifier();
-		composeActivityId.setValue("composeActivity.1.1");
+		Identifier drawActivityId = D1TypeBuilder.buildIdentifier("drawActivity.1.1");
+        URI drawActivityURI = new URI(D1_URI_PREFIX + "drawActivity.1.1");
+		Identifier composeActivityId = D1TypeBuilder.buildIdentifier("composeActivity.1.1");
+        URI composeActivityURI = new URI(D1_URI_PREFIX + "composeActivity.1.1");
 		//A figure/image
-		Identifier imgId = new Identifier();
-		imgId.setValue("img.1.1");
+		Identifier imgId = D1TypeBuilder.buildIdentifier("img.1.1");
+        URI imgURI = new URI(D1_URI_PREFIX + "img.1.1");
 		
 		//Map the objects in the data package
 		List<Identifier> dataIds = new ArrayList<Identifier>();
@@ -134,44 +148,44 @@ public class DataPackageTest {
 		dataPackage.insertRelationship(metadataId, dataIds);
 		
 		//Create the primary resources
-		Identifier primaryDataId = new Identifier();
-		primaryDataId.setValue("primaryData.1.1");
-		Identifier primaryDataId2 = new Identifier();
-		primaryDataId2.setValue("primaryData.2.1"); 
+		Identifier primaryDataId = D1TypeBuilder.buildIdentifier("primaryData.1.1");
+        URI primaryDataURI = new URI(D1_URI_PREFIX + "primaryData.1.1");
+		Identifier primaryDataId2 = D1TypeBuilder.buildIdentifier("primaryData.2.1"); 
+        URI primaryDataURI2 = new URI(D1_URI_PREFIX + "primaryData.2.1");
 				
 		//Create a list of ids of the primary data resources
-		List<Identifier> primaryDataIds = new ArrayList<Identifier>();
-		primaryDataIds.add(primaryDataId);
-		primaryDataIds.add(primaryDataId2);
+		List<URI> primaryDataURIs = new ArrayList<URI>();
+		primaryDataURIs.add(primaryDataURI);
+		primaryDataURIs.add(primaryDataURI2);
 		
 		//Create lists of the items to use in the triples
-		List<Identifier> dataIdList = new ArrayList<Identifier>();
-		dataIdList.add(dataId);
-		List<Identifier> activityIdList = new ArrayList<Identifier>();
-		activityIdList.add(drawActivityId);
-		List<Identifier> composeActivityIdList = new ArrayList<Identifier>();
-		composeActivityIdList.add(composeActivityId);
-		List<Identifier> primaryData1IdList = new ArrayList<Identifier>();
-		primaryData1IdList.add(primaryDataId);
-		List<Identifier> primaryData2IdList = new ArrayList<Identifier>();
-		primaryData2IdList.add(primaryDataId2);
+		List<URI> dataURIList = new ArrayList<URI>();
+		dataURIList.add(dataURI);
+		List<URI> activityURIList = new ArrayList<URI>();
+		activityURIList.add(drawActivityURI);
+		List<URI> composeActivityURIList = new ArrayList<URI>();
+		composeActivityURIList.add(composeActivityURI);
+		List<URI> primaryData1URIList = new ArrayList<URI>();
+		primaryData1URIList.add(primaryDataURI);
+		List<URI> primaryData2URIList = new ArrayList<URI>();
+		primaryData2URIList.add(primaryDataURI2);
 		
 		//---- wasDerivedFrom ----
-		dataPackage.insertRelationship(dataId, primaryDataIds, provNS, wasDerivedFromURI);
-		dataPackage.insertRelationship(imgId, dataIdList, provNS, wasDerivedFromURI);
+		dataPackage.insertRelationship(dataURI, wasDerivedFrom, primaryDataURIs);
+		dataPackage.insertRelationship(imgURI, wasDerivedFrom, dataURIList);
 		
 		//---- wasGeneratedBy ----
-		dataPackage.insertRelationship(imgId, activityIdList, provNS, wasGeneratedByURI);
-		dataPackage.insertRelationship(dataId, composeActivityIdList, provNS, wasGeneratedByURI);
+		dataPackage.insertRelationship(imgURI, wasGeneratedBy, activityURIList);
+		dataPackage.insertRelationship(dataURI, wasGeneratedBy, composeActivityURIList);
 		
 		//---- wasInformedBy ----
-		dataPackage.insertRelationship(drawActivityId, composeActivityIdList, provNS, wasInformedByURI);
+		dataPackage.insertRelationship(drawActivityURI, wasInformedBy, composeActivityURIList);
 		
 		//---- used ----
-		dataPackage.insertRelationship(drawActivityId, dataIdList, provNS, usedURI);
-		dataPackage.insertRelationship(composeActivityId, primaryData1IdList, provNS, usedURI);
+		dataPackage.insertRelationship(drawActivityURI, used, dataURIList);
+		dataPackage.insertRelationship(composeActivityURI, used, primaryData1URIList);
 		//Test inserting another relationship with the same subject and predicate but a new object
-		dataPackage.insertRelationship(composeActivityId, primaryData2IdList, provNS, usedURI);
+		dataPackage.insertRelationship(composeActivityURI, used, primaryData2URIList);
 		
 		//Create the resourceMap
 		ResourceMap resourceMap = dataPackage.getMap();
