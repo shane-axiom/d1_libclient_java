@@ -34,6 +34,7 @@ import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.dataone.client.exception.ClientSideException;
+import org.dataone.ore.ProvResourceMapBuilder;
 import org.dataone.ore.ResourceMapFactory;
 import org.dataone.service.exceptions.InsufficientResources;
 import org.dataone.service.exceptions.InvalidRequest;
@@ -86,7 +87,7 @@ public class DataPackage {
     
     private Identifier packageId;
     private Map<Identifier, List<Identifier>> metadataMap;
-    private Map<Predicate, Map<Identifier, List<Identifier>>> tripleMap;
+    private Map<Predicate, Map<URI, List<URI>>> tripleMap;
     private HashMap<Identifier, D1Object> objectStore;
     private SystemMetadata systemMetadata = null;
     
@@ -107,7 +108,7 @@ public class DataPackage {
     public DataPackage(Identifier id) {
         objectStore = new HashMap<Identifier, D1Object>();
         metadataMap = new HashMap<Identifier, List<Identifier>>();
-        tripleMap   = new HashMap<Predicate, Map<Identifier, List<Identifier>>>();
+        tripleMap   = new HashMap<Predicate, Map<URI, List<URI>>>();
         setPackageId(id);
     }
     
@@ -182,58 +183,53 @@ public class DataPackage {
     
     /**
      * Declare which data objects are documented by a metadata object, using their
-     * identifiers.  Additional calls using the same metadata identifier will append 
-     * to existing data identifier lists. Identifiers used in this call will de 
+     * persistent resource URIs.  Additional calls using the same metadata URI will append 
+     * to existing data URI lists. Resources used in this call will de 
      * facto be part of any serialized resource map derived from the DataPackage 
      * instance.
      * 
-     * @param subjectID
-     * @param objectIDList
-     * @param predicateNS
-     * @param predicateURI
+     * @param subject
+     * @param predicate
+     * @param objectList
      * @throws URISyntaxException
      */
-    public void insertRelationship(Identifier subjectID, List<Identifier> objectIDList, String predicateNS, String predicateURI) throws URISyntaxException
-    {   
-        //Create the predicate
-        Predicate predicate = new Predicate();
-		predicate.setNamespace(predicateNS);
-		predicate.setURI(new URI(predicateURI));
-        
-		// Start a list to hold the object Identifiers
-		List<Identifier> associatedObj = null;
-		// Start a map to map the subject Identifier to the object Identifiers
-        Map<Identifier, List<Identifier>> idMap = null;
+    public void insertRelationship(URI subject,  Predicate predicate, List<URI> objectList) 
+            throws URISyntaxException {   
+
+        // Start a list to hold the object URIs
+		List<URI> associatedObj = null;
+		// Start a map to map the subject URI to the object URIs
+        Map<URI, List<URI>> objectsBySubjectMap = null;
                
         // Determine if we have a triple with this predicate and subject already
         // Use it if so, if not then create a list for these objects        	
         if (tripleMap.containsKey(predicate)) {
-        	idMap = tripleMap.get(predicate);
+        	objectsBySubjectMap = tripleMap.get(predicate);
         	
-        	if(idMap.containsKey(subjectID)){
-        		associatedObj = idMap.get(subjectID);
+        	if(objectsBySubjectMap.containsKey(subject)){
+        		associatedObj = objectsBySubjectMap.get(subject);
         	}
         	else{
-        		associatedObj = new ArrayList<Identifier>();
+        		associatedObj = new ArrayList<URI>();
         	}	
         } else {
-        	associatedObj = new ArrayList<Identifier>();
-            idMap  = new HashMap<Identifier, List<Identifier>>();
+        	associatedObj = new ArrayList<URI>();
+            objectsBySubjectMap  = new HashMap<URI, List<URI>>();
         }
         
         // For each object item, add the relationship if it doesn't exist
-        for (Identifier objectID : objectIDList) {
-            if (!associatedObj.contains(objectID)) {
-            	associatedObj.add(objectID);
+        for (URI object : objectList) {
+            if (!associatedObj.contains(object)) {
+            	associatedObj.add(object);
             }
         }
         
         // Create the Identifier map
-        if (!idMap.containsKey(subjectID))
-        	idMap.put(subjectID, associatedObj);
+        if (!objectsBySubjectMap.containsKey(subject))
+        	objectsBySubjectMap.put(subject, associatedObj);
         
         //Add to the tripleMap
-        tripleMap.put(predicate, idMap);
+        tripleMap.put(predicate, objectsBySubjectMap);
         
     }
     
@@ -322,13 +318,29 @@ public class DataPackage {
      * @throws URISyntaxException 
      * @throws OREException 
      */
-    public ResourceMap getMap() throws OREException, URISyntaxException 
-    {
-    	if(tripleMap.isEmpty())
-    		return ResourceMapFactory.getInstance().createResourceMap(packageId, metadataMap);
-    	else
-    		return ResourceMapFactory.getInstance().createResourceMap(packageId, metadataMap, tripleMap);
-
+    public ResourceMap getMap() throws OREException, URISyntaxException {
+    	ResourceMap resourceMap = null;
+        
+        if ( tripleMap.isEmpty() ) {
+            // create the resource map just from the metadata map
+            resourceMap = ResourceMapFactory.getInstance().createResourceMap(packageId, metadataMap);
+            
+        } else {
+            // create the resource map from the metadata map and the statements in the triple map
+            resourceMap = ResourceMapFactory.getInstance().createResourceMap(packageId, metadataMap);
+            
+            for ( Predicate predicate : tripleMap.keySet() ) {
+                Map<URI, List<URI>> objectsBySubject  = tripleMap.get(predicate);
+                
+                for (URI subject : objectsBySubject.keySet() ) {
+                    List<URI> objects = objectsBySubject.get(subject);
+                    resourceMap = ProvResourceMapBuilder.getInstance().insertRelationship(resourceMap, subject, predicate, objects);
+                    
+                }                
+            }
+        }
+        
+        return resourceMap;
     }
     
     
