@@ -3,12 +3,21 @@ package org.dataone.ore;
 import static org.junit.Assert.*;
 
 import java.io.FileWriter;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.dataone.client.v1.itk.DataPackage;
+import org.dataone.client.v1.types.D1TypeBuilder;
+import org.dataone.configuration.Settings;
 import org.dataone.service.types.v1.Identifier;
+import org.dataone.vocabulary.PROV;
+import org.dspace.foresite.OREException;
+import org.dspace.foresite.ORESerialiserException;
+import org.dspace.foresite.Predicate;
 import org.dspace.foresite.ResourceMap;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -34,6 +43,101 @@ public class ProvResourceMapBuilderTest {
 	public void tearDown() throws Exception {
 	}
 
+	@Test
+	public void testCreateResourceMapWithProvONE() {
+        
+	    
+	    System.out.println("***************  testCreateResourceMapWithProvONE  ******************");
+
+	    // The CN resolve URI base:
+	    String D1_URI_PREFIX = Settings.getConfiguration()
+	            .getString("D1Client.CN_URL","https://cn-dev.test.dataone.org/cn") + "/v1/resolve/";
+
+        // metadata 
+        Identifier metadataId = D1TypeBuilder.buildIdentifier("metadata.1.1");
+
+        // data
+        Identifier dataId = D1TypeBuilder.buildIdentifier("data.1.1");       
+        List<Identifier> dataIds = new ArrayList();
+        dataIds.add(dataId);
+
+        // resource map
+        Identifier packageId = D1TypeBuilder.buildIdentifier("resourceMap.1.1");
+        DataPackage dataPackage = new DataPackage(packageId);
+
+        // add data/metadata
+        dataPackage.insertRelationship(metadataId, dataIds);
+
+        // prov relationships
+
+        URI subjectId = null;
+        URI objectId = null;
+        List<URI> objectIds = new ArrayList<URI>();
+        Predicate predicate = null;
+
+        /* used */ 
+        try {
+            // subject (TODO: this should probably be a blank node, figure that out)
+            subjectId = new URI(D1_URI_PREFIX + "execution.1.1");                
+            // predicate
+            predicate = PROV.predicate("used");
+            // object
+            objectIds.clear();
+            objectId = new URI(D1_URI_PREFIX + "user.1.1");
+            objectIds.add(objectId);
+
+            // add used
+            // prov
+            dataPackage.insertRelationship(subjectId, predicate, objectIds);
+            
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+            
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+                        
+        }
+
+        /* wasAssociatedWith */ 
+        // subject
+        try {
+            subjectId = new URI(D1_URI_PREFIX + "execution.1.1");                
+            // predicate
+            predicate = PROV.predicate("wasAssociatedWith");
+            // object
+            objectIds.clear();
+            objectId = new URI(D1_URI_PREFIX + "data.1.1");
+            objectIds.add(objectId);
+                    
+            
+            // add wasAssociatedWith
+            // prov
+            dataPackage.insertRelationship(subjectId, predicate, objectIds);
+            
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+            
+        } catch (URISyntaxException e) {
+            fail( e.getMessage());
+            
+        }
+        
+        // Print it
+        try {
+            System.out.println(dataPackage.serializePackage());
+        } catch (OREException e) {
+            fail( e.getMessage());
+            
+        } catch (URISyntaxException e) {
+            fail( e.getMessage());
+            
+        } catch (ORESerialiserException e) {
+            fail( e.getMessage());
+            
+        }
+
+	}
+	
 	@Test
 	public void testCreateResourceMapWithPROV() {
 		System.out.println("***************  testCreateResourceMapWithPROV  ******************");
