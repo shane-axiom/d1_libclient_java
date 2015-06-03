@@ -92,6 +92,7 @@ public class PROV {
         
         Predicate predicate = new Predicate();
         predicate.setPrefix(prefix);
+        predicate.setName(property);
         predicate.setNamespace(namespace);
         predicate.setURI(new URI(namespace + property));
         
