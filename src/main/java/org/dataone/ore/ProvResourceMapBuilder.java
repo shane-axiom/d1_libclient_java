@@ -22,30 +22,39 @@
 
 package org.dataone.ore;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.dataone.configuration.Settings;
 import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.util.EncodingUtilities;
 import org.dataone.vocabulary.PROV;
-import org.dspace.foresite.Agent;
-import org.dspace.foresite.AggregatedResource;
-import org.dspace.foresite.Aggregation;
+import org.dataone.vocabulary.ProvONE_V1;
 import org.dspace.foresite.OREException;
 import org.dspace.foresite.OREFactory;
+import org.dspace.foresite.OREParser;
+import org.dspace.foresite.OREParserException;
+import org.dspace.foresite.OREParserFactory;
+import org.dspace.foresite.ORESerialiser;
+import org.dspace.foresite.ORESerialiserException;
+import org.dspace.foresite.ORESerialiserFactory;
 import org.dspace.foresite.Predicate;
 import org.dspace.foresite.ResourceMap;
+import org.dspace.foresite.ResourceMapDocument;
 import org.dspace.foresite.Triple;
 import org.dspace.foresite.Vocab;
-import org.dspace.foresite.jena.TripleJena;
 
 import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
 /**
  *  A Resource Map builder with methods for adding provenance or other statements about
  *  resource in an ORE aggregation.  
@@ -56,8 +65,6 @@ public class ProvResourceMapBuilder {
 	// TODO: will this always resolve?
 	private static final String D1_URI_PREFIX = Settings.getConfiguration()
 			.getString("D1Client.CN_URL", "https://cn-dev.test.dataone.org/cn") + "/v1/resolve/";
-
-	private static final String RESOURCE_MAP_SERIALIZATION_FORMAT = "RDF/XML";
 
 	private static Predicate DC_TERMS_IDENTIFIER = null;
 	
@@ -83,11 +90,13 @@ public class ProvResourceMapBuilder {
 
 	private static List<Predicate> predicates = null;
 	
-	private static Model oreModel = null;
+	private static Model rdfModel = null;
 	
 	private static Log log = LogFactory.getLog(ProvResourceMapBuilder.class);
 	
 	private static final String CITO_NAMESPACE_URI = "http://purl.org/spar/cito/";
+
+    private static final String DEFAULT_RDF_FORMAT = "RDF/XML";
 
 	/*
 	 * Initialize the ProvResourceMapBuilder, populating the available predicates list, etc.
@@ -153,11 +162,19 @@ public class ProvResourceMapBuilder {
 		predicates.add(PROV_QUALIFIED_ASSOCIATION);
 		predicates.add(PROV_P_AGENT);
 		predicates.add(PROV_HAD_PLAN);
+		
+		// Create and configure an RDF model to manipulate the resource map
+        rdfModel = ModelFactory.createDefaultModel();
+        rdfModel.setNsPrefix(PROV.prefix, PROV.namespace);
+        rdfModel.setNsPrefix(ProvONE_V1.prefix, ProvONE_V1.namespace);
+        rdfModel.setNsPrefix(CITO_DOCUMENTS.getPrefix(), CITO_DOCUMENTS.getNamespace());
+
 	}
 	
 	public ProvResourceMapBuilder() {
 		try {
 			init();
+			
 		} catch (URISyntaxException e) {
 			log.error("there was a problem during initialzation: " + e.getMessage());
 			if (log.isDebugEnabled()) {
@@ -390,7 +407,32 @@ public class ProvResourceMapBuilder {
     	    resourceMap.addTriple(triple);
     	}
     	
+    	setModel(resourceMap);
+    	
     	return resourceMap;
 	}
+
+    /*
+     * For the given resource map, add it to the oreModel so it can be manipulated
+     * outside of the ORE API (with the Jena API)
+     * 
+     * @param resourceMap
+     */
+    private void setModel(ResourceMap resourceMap) throws OREException {
+        ORESerialiser serialiser = ORESerialiserFactory.getInstance(DEFAULT_RDF_FORMAT);
+    	try {
+    	    ResourceMapDocument oreDocument = serialiser.serialise(resourceMap);
+    	    InputStream inputStream = IOUtils.toInputStream(oreDocument.toString());
+            rdfModel.read(inputStream, null); // TODO: Do we need to handle relative URIs?
+            
+        } catch (ORESerialiserException e) {
+            
+            if ( log.isDebugEnabled() ) {
+                e.printStackTrace();
+                
+            }
+            throw new OREException(e.getCause());
+        }
+    }
 
 }
