@@ -53,8 +53,12 @@ import org.dspace.foresite.ResourceMapDocument;
 import org.dspace.foresite.Triple;
 import org.dspace.foresite.Vocab;
 
+import com.hp.hpl.jena.rdf.model.AnonId;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.Property;
+import com.hp.hpl.jena.rdf.model.Resource;
+import com.hp.hpl.jena.rdf.model.Statement;
 /**
  *  A Resource Map builder with methods for adding provenance or other statements about
  *  resource in an ORE aggregation.  
@@ -431,6 +435,48 @@ public class ProvResourceMapBuilder {
     	return getModel();
 	}
 
+	/**
+	 * Insert statements into the resource map graph using a blank (anonymous) node ID 
+	 * as the subject, a predicate, and a list of object URIs. The blankSubjectID should
+	 * be unique to other blank nodes in the resource map. When inserting a relationship, 
+	 * ensure that either the subject or object URIs are connected in the graph 
+	 * (that one is present) to avoid an OREException.
+	 * 
+	 * @param resourceMap
+	 * @param blankSubjectID
+	 * @param predicate
+	 * @param objects
+	 * @return
+	 * @throws OREException
+	 */
+	public ResourceMap insertRelationship(ResourceMap resourceMap, String blankSubjectID, 
+	        Predicate predicate, List<URI> objects) throws OREException {
+
+	    setModel(resourceMap);
+        
+	    if ( blankSubjectID == null || blankSubjectID.isEmpty() ) {
+	         throw new OREException("blankSubjectID cannot be null or empty. Please set the blankSubjectID.");
+	         
+	    }
+	     
+	    for ( URI object : objects ) {
+	        // Build the triple with the given blank node id, predicate, and object
+	        if ( object == null ) {
+	            throw new OREException("Object cannot be null. Please set the object URI.");
+	            
+	        }
+	        
+	        
+	        AnonId anonId = new AnonId(blankSubjectID);
+	        Resource blankSubject = rdfModel.createResource(anonId);
+	        Property property = rdfModel.createProperty(predicate.getNamespace(), predicate.getName());
+	        Resource objectNode = rdfModel.createResource(object.toString());
+	        Statement statement = rdfModel.createStatement(blankSubject, property, objectNode);
+	        rdfModel.add(statement);
+	    }
+	    
+	    return getModel();
+	}
     /*
      * For the given resource map, add it to the oreModel so it can be manipulated
      * outside of the ORE API (with the Jena API)
