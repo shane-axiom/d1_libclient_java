@@ -52,6 +52,8 @@ public abstract class NodeLocator {
 	 */
 	//TODO: is the NodeReference parameter necessary, if contained in the CNode itself?
 	public void putNode(NodeReference nodeRef, D1Node node) {
+	    if (node.getNodeId() == null)
+	        node.setNodeId(nodeRef);
 		nodeMap.put(nodeRef, node);
 	}
 	

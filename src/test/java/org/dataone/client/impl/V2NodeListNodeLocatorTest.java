@@ -6,18 +6,17 @@ import static org.junit.Assert.assertTrue;
 import java.util.Set;
 
 import org.dataone.client.D1Node;
-import org.dataone.client.NodeLocator;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.rest.HttpMultipartRestClient;
 import org.dataone.client.rest.MultipartRestClient;
-import org.dataone.client.v1.CNode;
-import org.dataone.client.v1.MNode;
-import org.dataone.client.v1.impl.InMemoryMNode;
-import org.dataone.client.v1.impl.MultipartCNode;
-import org.dataone.client.v1.impl.NodeListNodeLocator;
+import org.dataone.client.v2.CNode;
+import org.dataone.client.v2.MNode;
+import org.dataone.client.v2.impl.InMemoryMNode;
+import org.dataone.client.v2.impl.MultipartCNode;
+import org.dataone.client.v2.impl.NodeListNodeLocator;
 import org.dataone.client.v1.types.D1TypeBuilder;
-import org.dataone.service.types.v1.Node;
-import org.dataone.service.types.v1.NodeList;
+import org.dataone.service.types.v2.Node;
+import org.dataone.service.types.v2.NodeList;
 import org.dataone.service.types.v1.NodeReference;
 import org.dataone.service.types.v1.NodeType;
 import org.junit.After;
@@ -25,10 +24,10 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 
-public class NodeListNodeLocatorTest {
+public class V2NodeListNodeLocatorTest {
 
 	private NodeList nodeList;
-	private NodeLocator nodeLoc;
+	private NodeListNodeLocator nodeLoc;
 	private MultipartRestClient mrc;
 
 	private static Node buildNode(String baseUri, NodeType type, String nodeID) {
@@ -53,7 +52,7 @@ public class NodeListNodeLocatorTest {
 		nodeList.addNode(buildNode("https://cn2.bar.org/cn", NodeType.CN, "urn:node:CN1bar"));
 		nodeList.addNode(buildNode("https://mn1.biz.org/mn", NodeType.MN, "urn:node:MNhttps"));
 		nodeList.addNode(buildNode("http://mn2.baz.org/knb/d1/mn", NodeType.MN, "urn:node:MNhttp"));
-		nodeList.addNode(buildNode("java:org.dataone.client.v1.impl.InMemoryMNode#Subject=mnAdmin&Subject=cnAdmin,", 
+		nodeList.addNode(buildNode("java:org.dataone.client.v2.impl.InMemoryMNode#Subject=mnAdmin&Subject=cnAdmin&NodeReference=urn:node:MNjava", 
 				 NodeType.MN, "urn:node:MNjava"));
 		mrc = new HttpMultipartRestClient();
 		
@@ -101,7 +100,8 @@ public class NodeListNodeLocatorTest {
 		NodeReference node = D1TypeBuilder.buildNodeReference("beep");
 		MNode mn = new InMemoryMNode(
 						D1TypeBuilder.buildSubject("admin1"),
-						D1TypeBuilder.buildSubject("admin2")
+						D1TypeBuilder.buildSubject("admin2"),
+						D1TypeBuilder.buildNodeReference("urn:node:CN1foo")
 						);
 		
 		nodeLoc.putNode(node,mn);
@@ -139,5 +139,21 @@ public class NodeListNodeLocatorTest {
 		nodes = nodeLoc.listD1Nodes(NodeType.MN);
 		assertEquals("Should have 3 MNs in total", 3, nodes.size());
 	}
+	
+	@Test
+	public void testNodeIdIsSet() throws ClientSideException {
+	    D1Node dn = nodeLoc.getNode(D1TypeBuilder.buildNodeReference("urn:node:CN1foo"));
+	    assertTrue("returned D1Node's NodeId should not be null when it is contained in the Node record.",
+	            dn.getNodeId() != null);
+	    
+	}
+	
+	@Test
+    public void testGetCNodeIdIsSet() throws ClientSideException {
+        CNode cn = nodeLoc.getCNode();
+        assertTrue("returned CNode's NodeId should not be null when it is contained in the Node record.",
+                cn.getNodeId() != null);
+        
+    }
 
 }
