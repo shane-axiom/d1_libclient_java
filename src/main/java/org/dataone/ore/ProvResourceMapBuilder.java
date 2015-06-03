@@ -82,15 +82,16 @@ public class ProvResourceMapBuilder {
 	private static Predicate PROV_HAD_PLAN = null;
 
 	private static List<Predicate> predicates = null;
-
-	private static ProvResourceMapBuilder instance = null;
 	
 	private static Model oreModel = null;
 	
 	private static Log log = LogFactory.getLog(ProvResourceMapBuilder.class);
 	
 	private static final String CITO_NAMESPACE_URI = "http://purl.org/spar/cito/";
-	
+
+	/*
+	 * Initialize the ProvResourceMapBuilder, populating the available predicates list, etc.
+	 */
 	private void init() throws URISyntaxException {
 		predicates = new ArrayList<Predicate>();
 		
@@ -154,25 +155,18 @@ public class ProvResourceMapBuilder {
 		predicates.add(PROV_HAD_PLAN);
 	}
 	
-	private ProvResourceMapBuilder() {
+	public ProvResourceMapBuilder() {
 		try {
 			init();
 		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error("there was a problem during initialzation: " + e.getMessage());
+			if (log.isDebugEnabled()) {
+                e.printStackTrace();
+                
+            }
 		}
 	}
-	/**
-	 * Returns the singleton instance for this class.
-	 * @return
-	 */
-	public static ProvResourceMapBuilder getInstance() {
-		if (instance == null) {
-			instance = new ProvResourceMapBuilder();
-		}
-		return instance;
-	}
-	
+
 	/**
 	 * Adds a wasDerivedFrom triple to the specified Resource Map
 	 * @param resourceMap
