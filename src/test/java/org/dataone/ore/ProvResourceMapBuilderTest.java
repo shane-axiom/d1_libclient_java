@@ -171,7 +171,7 @@ public class ProvResourceMapBuilderTest {
 			Map<Identifier, List<Identifier>> idMap = new HashMap<Identifier, List<Identifier>>();
 			idMap.put(metadataId, idsToMap);			
 			ResourceMapFactory rmf = ResourceMapFactory.getInstance();
-			ProvResourceMapBuilder provBuilder = ProvResourceMapBuilder.getInstance();
+			ProvResourceMapBuilder provBuilder = new ProvResourceMapBuilder();
 			ResourceMap resourceMap = rmf.createResourceMap(resourceMapId, idMap);
 			assertNotNull(resourceMap);
 			
