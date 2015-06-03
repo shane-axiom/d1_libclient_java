@@ -334,7 +334,8 @@ public class DataPackage {
                 
                 for (URI subject : objectsBySubject.keySet() ) {
                     List<URI> objects = objectsBySubject.get(subject);
-                    resourceMap = ProvResourceMapBuilder.getInstance().insertRelationship(resourceMap, subject, predicate, objects);
+                    ProvResourceMapBuilder provBuilder = new ProvResourceMapBuilder();
+                    resourceMap = provBuilder.insertRelationship(resourceMap, subject, predicate, objects);
                     
                 }                
             }
