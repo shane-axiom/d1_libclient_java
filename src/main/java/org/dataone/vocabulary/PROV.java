@@ -35,11 +35,11 @@ import org.dspace.foresite.Predicate;
  */
 public class PROV {
 
-    protected static final String namespace = "http://www.w3.org/ns/prov#";
+    public static final String namespace = "http://www.w3.org/ns/prov#";
     
     public static final String prefix = "prov";
 
-    protected static final List<String> properties = Arrays.asList(
+    public static final List<String> properties = Arrays.asList(
             "wasDerivedFrom",      
             "used",                
             "wasGeneratedBy",      

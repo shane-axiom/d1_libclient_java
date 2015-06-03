@@ -37,14 +37,14 @@ import org.dspace.foresite.Predicate;
 public class ProvONE_V1 {
 
     /** the ProvONE namespace URI */
-    protected static final String namespace = 
+    public static final String namespace = 
         "https://purl.org/dataone/ontologies/provenance/ProvONE/v1/owl/provone.owl#";
     
     /** A resonable ProvONE namespace prefix */
     public static final String prefix = "provone";
 
     /** The known object properties in the ProvONE model */
-    protected static final List<String> properties = Arrays.asList(
+    public static final List<String> properties = Arrays.asList(
         "hasSubProgram",   
         "controlledBy",     
         "controls",    
