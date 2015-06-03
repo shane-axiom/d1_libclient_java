@@ -409,7 +409,7 @@ public class ProvResourceMapBuilder {
     	
     	setModel(resourceMap);
     	
-    	return resourceMap;
+    	return getModel();
 	}
 
     /*
@@ -435,4 +435,36 @@ public class ProvResourceMapBuilder {
         }
     }
 
+    /**
+     * Return the RDF model as a ResourceMap.  This converts the more general RDF model into an
+     * ORE specific resource map object.
+     * 
+     * @return resourceMap  The RDF model as a resource map
+     * @throws OREException
+     */
+    public ResourceMap getModel() throws OREException {
+        ResourceMap resourceMap = null;
+        
+        OREParser oreParser = OREParserFactory.getInstance(DEFAULT_RDF_FORMAT);
+        // Do some odd gymnastics to go from an output stream to an input stream
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        rdfModel.write(outputStream);
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
+        try {
+            resourceMap = oreParser.parse(inputStream);
+            
+        } catch (OREParserException e) {
+            if ( log.isDebugEnabled() ) {
+                e.printStackTrace();
+                
+            }
+            throw new OREException(e.getCause());
+        }
+        
+        if ( log.isDebugEnabled() ) {
+            log.debug(outputStream);
+        }
+        return resourceMap;
+        
+    }
 }
