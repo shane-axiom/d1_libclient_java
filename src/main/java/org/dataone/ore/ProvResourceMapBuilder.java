@@ -165,11 +165,30 @@ public class ProvResourceMapBuilder {
 		
 		// Create and configure an RDF model to manipulate the resource map
         rdfModel = ModelFactory.createDefaultModel();
-        rdfModel.setNsPrefix(PROV.prefix, PROV.namespace);
-        rdfModel.setNsPrefix(ProvONE_V1.prefix, ProvONE_V1.namespace);
-        rdfModel.setNsPrefix(CITO_DOCUMENTS.getPrefix(), CITO_DOCUMENTS.getNamespace());
+        setNamespacePrefixes();
 
 	}
+
+    /*
+     * For readability, reset the namespace prefixes in the model for ones 
+     * we care about (PROV, ProvONE, CITO)
+     */
+    private void setNamespacePrefixes() {
+        
+        // Set the PROV prefix
+        String provPrefix = rdfModel.getNsURIPrefix(PROV.namespace);
+        rdfModel.removeNsPrefix(provPrefix);
+        rdfModel.setNsPrefix(PROV.prefix, PROV.namespace);
+        
+        // Set the ProvONE prefix
+        String provonePrefix = rdfModel.getNsURIPrefix(ProvONE_V1.namespace);
+        rdfModel.removeNsPrefix(provonePrefix);
+        rdfModel.setNsPrefix(ProvONE_V1.prefix, ProvONE_V1.namespace);
+        
+        String citoPrefix = rdfModel.getNsURIPrefix(CITO_DOCUMENTS.getNamespace());
+        rdfModel.removeNsPrefix(citoPrefix);
+        rdfModel.setNsPrefix(CITO_DOCUMENTS.getPrefix(), CITO_DOCUMENTS.getNamespace());
+    }
 	
 	public ProvResourceMapBuilder() {
 		try {
@@ -448,6 +467,7 @@ public class ProvResourceMapBuilder {
         OREParser oreParser = OREParserFactory.getInstance(DEFAULT_RDF_FORMAT);
         // Do some odd gymnastics to go from an output stream to an input stream
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        setNamespacePrefixes();
         rdfModel.write(outputStream);
         ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
         try {
@@ -461,9 +481,6 @@ public class ProvResourceMapBuilder {
             throw new OREException(e.getCause());
         }
         
-        if ( log.isDebugEnabled() ) {
-            log.debug(outputStream);
-        }
         return resourceMap;
         
     }
