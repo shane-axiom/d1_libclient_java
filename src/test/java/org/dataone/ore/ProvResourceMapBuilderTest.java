@@ -83,7 +83,7 @@ public class ProvResourceMapBuilderTest {
             predicate = PROV.predicate("used");
             // object
             objectIds.clear();
-            objectId = new URI(D1_URI_PREFIX + "user.1.1");
+            objectId = new URI(D1_URI_PREFIX + "data.1.1");
             objectIds.add(objectId);
 
             // add used
@@ -106,7 +106,7 @@ public class ProvResourceMapBuilderTest {
             predicate = PROV.predicate("wasAssociatedWith");
             // object
             objectIds.clear();
-            objectId = new URI(D1_URI_PREFIX + "data.1.1");
+            objectId = new URI(D1_URI_PREFIX + "user.1.1");
             objectIds.add(objectId);
                     
             
