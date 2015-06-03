@@ -33,6 +33,7 @@ import org.apache.commons.logging.LogFactory;
 import org.dataone.configuration.Settings;
 import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.util.EncodingUtilities;
+import org.dataone.vocabulary.PROV;
 import org.dspace.foresite.Agent;
 import org.dspace.foresite.AggregatedResource;
 import org.dspace.foresite.Aggregation;
@@ -90,8 +91,6 @@ public class ProvResourceMapBuilder {
 	
 	private static final String CITO_NAMESPACE_URI = "http://purl.org/spar/cito/";
 	
-	private static final String PROV_NAMESPACE_URI = "http://www.w3.org/ns/prov#";
-
 	private void init() throws URISyntaxException {
 		predicates = new ArrayList<Predicate>();
 		
@@ -120,67 +119,28 @@ public class ProvResourceMapBuilder {
 				+ CITO_DOCUMENTS.getName()));
 		
 		// create the PROV:wasDerivedFrom predicate
-		PROV_WAS_DERIVED_FROM = new Predicate();
-		PROV_WAS_DERIVED_FROM.setNamespace(PROV_NAMESPACE_URI);
-		PROV_WAS_DERIVED_FROM.setPrefix("prov");
-		PROV_WAS_DERIVED_FROM.setName("wasDerivedFrom");
-		PROV_WAS_DERIVED_FROM.setURI(new URI(PROV_NAMESPACE_URI 
-						+ PROV_WAS_DERIVED_FROM.getName()));
+		PROV_WAS_DERIVED_FROM = PROV.predicate("wasDerivedFrom");
 		
 		// create the PROV:wasGeneratedBy predicate
-		PROV_WAS_GENERATED_BY = new Predicate();
-		PROV_WAS_GENERATED_BY.setNamespace(PROV_NAMESPACE_URI);
-		PROV_WAS_GENERATED_BY.setPrefix(PROV_WAS_DERIVED_FROM.getPrefix());
-		PROV_WAS_GENERATED_BY.setName("wasGeneratedBy");
-		PROV_WAS_GENERATED_BY.setURI(new URI(PROV_NAMESPACE_URI 
-						+ PROV_WAS_GENERATED_BY.getName()));
+		PROV_WAS_GENERATED_BY = PROV.predicate("wasGeneratedBy");
 		
 		// create the PROV:wasInformedBy predicate
-		PROV_WAS_INFORMED_BY = new Predicate();
-		PROV_WAS_INFORMED_BY.setNamespace(PROV_NAMESPACE_URI);
-		PROV_WAS_INFORMED_BY.setPrefix(PROV_WAS_DERIVED_FROM.getPrefix());
-		PROV_WAS_INFORMED_BY.setName("wasInformedBy");
-		PROV_WAS_INFORMED_BY.setURI(new URI(PROV_NAMESPACE_URI 
-						+ PROV_WAS_INFORMED_BY.getName()));
+		PROV_WAS_INFORMED_BY = PROV.predicate("wasInformedBy");
 		
 		// create the PROV:used predicate
-		PROV_USED = new Predicate();
-		PROV_USED.setNamespace(PROV_NAMESPACE_URI);
-		PROV_USED.setPrefix(PROV_WAS_DERIVED_FROM.getPrefix());
-		PROV_USED.setName("used");
-		PROV_USED.setURI(new URI(PROV_NAMESPACE_URI + PROV_USED.getName()));
+		PROV_USED = PROV.predicate("used");
 		
 		// create the PROV:wasAssociatedWith predicate
-		PROV_WAS_ASSOCIATED_WITH = new Predicate();
-		PROV_WAS_ASSOCIATED_WITH.setNamespace(PROV_NAMESPACE_URI);
-		PROV_WAS_ASSOCIATED_WITH.setPrefix(PROV_USED.getPrefix());
-		PROV_WAS_ASSOCIATED_WITH.setName("wasAssociatedWith");
-		PROV_WAS_ASSOCIATED_WITH.setURI(new URI(PROV_NAMESPACE_URI + 
-				PROV_WAS_ASSOCIATED_WITH.getName()));
+		PROV_WAS_ASSOCIATED_WITH = PROV.predicate("wasAssociatedWith");
 		
 		// create the PROV:qualifiedAssociation predicate
-		PROV_QUALIFIED_ASSOCIATION = new Predicate();
-		PROV_QUALIFIED_ASSOCIATION.setNamespace(PROV_NAMESPACE_URI);
-		PROV_QUALIFIED_ASSOCIATION.setPrefix(PROV_WAS_ASSOCIATED_WITH.getPrefix());
-		PROV_QUALIFIED_ASSOCIATION.setName("qualifiedAssociation");
-		PROV_QUALIFIED_ASSOCIATION.setURI(new URI(PROV_NAMESPACE_URI + 
-				PROV_QUALIFIED_ASSOCIATION.getName()));
+		PROV_QUALIFIED_ASSOCIATION = PROV.predicate("qualifiedAssociation");
 		
 		// create the PROV:agent predicate
-		PROV_P_AGENT = new Predicate();
-		PROV_P_AGENT.setNamespace(PROV_NAMESPACE_URI);
-		PROV_P_AGENT.setPrefix(PROV_QUALIFIED_ASSOCIATION.getPrefix());
-		PROV_P_AGENT.setName("agent");
-		PROV_P_AGENT.setURI(new URI(PROV_NAMESPACE_URI + 
-				PROV_P_AGENT.getName()));
+		PROV_P_AGENT = PROV.predicate("agent");
 		
 		// create the PROV:hadPlan predicate
-		PROV_HAD_PLAN = new Predicate();
-		PROV_HAD_PLAN.setNamespace(PROV_NAMESPACE_URI);
-		PROV_HAD_PLAN.setPrefix(PROV_P_AGENT.getPrefix());
-		PROV_HAD_PLAN.setName("hadPlan");
-		PROV_HAD_PLAN.setURI(new URI(PROV_NAMESPACE_URI + 
-				PROV_HAD_PLAN.getName()));
+		PROV_HAD_PLAN = PROV.predicate("hadPlan");
 		
 		// include predicates from each namespace we want to support
 		predicates.add(CITO_DOCUMENTS);
