@@ -94,7 +94,7 @@ public class ProvResourceMapBuilder {
 
 	private static List<Predicate> predicates = null;
 	
-	private static Model rdfModel = null;
+	private Model rdfModel = null;
 	
 	private static Log log = LogFactory.getLog(ProvResourceMapBuilder.class);
 	
