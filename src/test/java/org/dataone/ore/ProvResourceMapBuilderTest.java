@@ -3,6 +3,7 @@ package org.dataone.ore;
 import static org.junit.Assert.*;
 
 import java.io.FileWriter;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -10,11 +11,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.io.IOUtils;
 import org.dataone.client.v1.itk.DataPackage;
 import org.dataone.client.v1.types.D1TypeBuilder;
 import org.dataone.configuration.Settings;
 import org.dataone.service.types.v1.Identifier;
 import org.dataone.vocabulary.PROV;
+import org.dataone.vocabulary.ProvONE_V1;
 import org.dspace.foresite.OREException;
 import org.dspace.foresite.ORESerialiserException;
 import org.dspace.foresite.Predicate;
@@ -24,6 +27,16 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.Property;
+import com.hp.hpl.jena.rdf.model.Resource;
+import com.hp.hpl.jena.rdf.model.Selector;
+import com.hp.hpl.jena.rdf.model.SimpleSelector;
+import com.hp.hpl.jena.rdf.model.Statement;
+import com.hp.hpl.jena.rdf.model.StmtIterator;
+import com.hp.hpl.jena.vocabulary.RDF;
 
 public class ProvResourceMapBuilderTest {
 
@@ -70,25 +83,38 @@ public class ProvResourceMapBuilderTest {
 
         // prov relationships
 
-        URI subjectId = null;
-        URI objectId = null;
-        List<URI> objectIds = new ArrayList<URI>();
+        URI subject = null;
+        URI object = null;
+        List<URI> objects = new ArrayList<URI>();
         Predicate predicate = null;
 
-        /* used */ 
+        /* prov:Activity (ProvONE:Execution) */ 
         try {
+            // Execution used
             // subject (TODO: this should probably be a blank node, figure that out)
-            subjectId = new URI(D1_URI_PREFIX + "execution.1.1");                
+            subject = new URI(D1_URI_PREFIX + "execution.1.1");                
             // predicate
             predicate = PROV.predicate("used");
             // object
-            objectIds.clear();
-            objectId = new URI(D1_URI_PREFIX + "data.1.1");
-            objectIds.add(objectId);
+            objects.clear();
+            object = new URI(D1_URI_PREFIX + "data.1.1");
+            objects.add(object);
+            dataPackage.insertRelationship(subject, predicate, objects);
+            
+            // Execution type
+            predicate = asPredicate(RDF.type, "rdf");
+            objects.clear();
+            object = new URI(ProvONE_V1.Execution);
+            objects.add(object);
+            dataPackage.insertRelationship(subject, predicate, objects);
 
-            // add used
-            // prov
-            dataPackage.insertRelationship(subjectId, predicate, objectIds);
+            // Data type
+            subject = new URI(D1_URI_PREFIX + "data.1.1");
+            predicate = asPredicate(RDF.type, "rdf");
+            objects.clear();
+            object = new URI(ProvONE_V1.Data);
+            objects.add(object);
+            dataPackage.insertRelationship(subject, predicate, objects);
             
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
@@ -98,45 +124,147 @@ public class ProvResourceMapBuilderTest {
                         
         }
 
-        /* wasAssociatedWith */ 
-        // subject
+        /* prov:wasAssociatedWith */ 
         try {
-            subjectId = new URI(D1_URI_PREFIX + "execution.1.1");                
-            // predicate
+            // Execution wasAssociatedWith
+            subject = new URI(D1_URI_PREFIX + "execution.1.1");                
             predicate = PROV.predicate("wasAssociatedWith");
-            // object
-            objectIds.clear();
-            objectId = new URI(D1_URI_PREFIX + "user.1.1");
-            objectIds.add(objectId);
-                    
-            
-            // add wasAssociatedWith
-            // prov
-            dataPackage.insertRelationship(subjectId, predicate, objectIds);
-            
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-            
-        } catch (URISyntaxException e) {
-            fail( e.getMessage());
-            
-        }
-        
-        // Print it
-        try {
-            System.out.println(dataPackage.serializePackage());
-        } catch (OREException e) {
-            fail( e.getMessage());
-            
-        } catch (URISyntaxException e) {
-            fail( e.getMessage());
-            
-        } catch (ORESerialiserException e) {
+            objects.clear();
+            object = new URI(D1_URI_PREFIX + "user.1.1");
+            objects.add(object);            
+            dataPackage.insertRelationship(subject, predicate, objects);
+
+            // User type
+            subject = new URI(D1_URI_PREFIX + "user.1.1");
+            predicate = asPredicate(RDF.type, "rdf");
+            objects.clear();
+            object = new URI(ProvONE_V1.User);
+            objects.add(object);
+            dataPackage.insertRelationship(subject, predicate, objects);
+
+        } catch (Exception e) {
+            e.printStackTrace();            
             fail( e.getMessage());
             
         }
 
+        // Validate the expected triples
+        String rdfXML = "";
+        try {
+            rdfXML = dataPackage.serializePackage();
+            System.out.println(rdfXML); // Print it
+            
+            Model rdfModel = ModelFactory.createDefaultModel();
+            InputStream inputStream = IOUtils.toInputStream(rdfXML, "UTF-8");
+            rdfModel.read(inputStream, null);
+            Resource subjectResource = null;
+            Property property = null;
+            Resource objectResource = null;
+            Selector selector = null;
+            StmtIterator statements = null;
+            
+            // Test for [execution.1.1 @prov:used data.1.1]
+            subjectResource = rdfModel.createResource(D1_URI_PREFIX + "execution.1.1");
+            property = rdfModel.createProperty(PROV.namespace, "used");
+            objectResource = rdfModel.createResource(D1_URI_PREFIX + "data.1.1");
+            selector = getSimpleSelector(subjectResource, property,
+                    objectResource);
+            statements = rdfModel.listStatements(selector);
+            
+            assertTrue(statements.hasNext());
+            
+            // Test for [execution.1.1 @rdf:type provone:Execution]
+            subjectResource = rdfModel.createResource(D1_URI_PREFIX + "execution.1.1");
+            property = rdfModel.createProperty(RDF.getURI(), RDF.type.getLocalName());
+            objectResource = rdfModel.createResource(ProvONE_V1.namespace + "Execution");
+            selector = getSimpleSelector(subjectResource, property,
+                    objectResource);
+            statements = rdfModel.listStatements(selector);
+            
+            assertTrue(statements.hasNext());
+
+            // Test for [data.1.1 @rdf:type provone:Data]
+            subjectResource = rdfModel.createResource(D1_URI_PREFIX + "data.1.1");
+            property = rdfModel.createProperty(RDF.getURI(), RDF.type.getLocalName());
+            objectResource = rdfModel.createResource(ProvONE_V1.namespace + "Data");
+            selector = getSimpleSelector(subjectResource, property,
+                    objectResource);
+            statements = rdfModel.listStatements(selector);
+            
+            assertTrue(statements.hasNext());
+
+            // Test for [data.1.1 @rdf:type provone:Data]
+            subjectResource = rdfModel.createResource(D1_URI_PREFIX + "data.1.1");
+            property = rdfModel.createProperty(RDF.getURI(), RDF.type.getLocalName());
+            objectResource = rdfModel.createResource(ProvONE_V1.namespace + "Data");
+            selector = getSimpleSelector(subjectResource, property,
+                    objectResource);
+            statements = rdfModel.listStatements(selector);
+            
+            assertTrue(statements.hasNext());
+            
+            // Test for [execution.1.1 @prov:wasAssociatedWith user.1.1]
+            subjectResource = rdfModel.createResource(D1_URI_PREFIX + "execution.1.1");
+            property = rdfModel.createProperty(PROV.namespace, "wasAssociatedWith");
+            objectResource = rdfModel.createResource(D1_URI_PREFIX + "user.1.1");
+            selector = getSimpleSelector(subjectResource, property,
+                    objectResource);
+            statements = rdfModel.listStatements(selector);
+            
+            assertTrue(statements.hasNext());
+
+            // Test for [user.1.1 @rdf:type provone:User]
+            subjectResource = rdfModel.createResource(D1_URI_PREFIX + "user.1.1");
+            property = rdfModel.createProperty(RDF.getURI(), RDF.type.getLocalName());
+            objectResource = rdfModel.createResource(ProvONE_V1.namespace + "User");
+            selector = getSimpleSelector(subjectResource, property,
+                    objectResource);
+            statements = rdfModel.listStatements(selector);
+            
+            assertTrue(statements.hasNext());
+            
+        } catch (Exception e) {
+            fail( e.getMessage());
+            
+        }
+
+        
 	}
+
+    /*
+     * Create a statement selector to query the Jena model to validate statements
+     * 
+     * @param subjectResource
+     * @param property
+     * @param objectResource
+     * @return
+     */
+    private Selector getSimpleSelector(Resource subjectResource,
+            Property property, Resource objectResource) {
+        Selector selector = new SimpleSelector(subjectResource, property, objectResource);
+        return selector;
+    }
+
+    /*
+     * Given a Jena Property and namespace prefix, create an ORE Predicate. This allows
+     * us to use the Jena vocabularies
+     * 
+     * @param predicate
+     * @throws URISyntaxException
+     */
+    private Predicate asPredicate(Property property, String prefix)
+            throws URISyntaxException {
+        Predicate predicate = new Predicate();
+        predicate.setName(property.getLocalName());
+        predicate.setNamespace(property.getNameSpace());
+        if ( prefix != null || ! prefix.isEmpty() ) {
+            predicate.setPrefix(prefix);
+            
+        }
+        predicate.setURI(new URI(property.getURI()));
+        
+        return predicate;
+    }
 	
 	@Test
 	public void testCreateResourceMapWithPROV() {
