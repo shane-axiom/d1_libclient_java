@@ -64,22 +64,22 @@ public class PROV {
             "qualifiedUsage",      
             "hadMember");
     
-    public static final Resource Usage                = resource(namespace + "Usage");
-    public static final Resource Generation           = resource(namespace + "Generation");
-    public static final Resource Association          = resource(namespace + "Association");
-    public static final Resource Collection           = resource(namespace + "Collection");
+    public static final Resource Usage                = resource("Usage");
+    public static final Resource Generation           = resource("Generation");
+    public static final Resource Association          = resource("Association");
+    public static final Resource Collection           = resource("Collection");
 
-    public static final Property wasDerivedFrom       = property(namespace + "wasDerivedFrom");
-    public static final Property used                 = property(namespace + "used");
-    public static final Property wasGeneratedBy       = property(namespace + "wasGeneratedBy");
-    public static final Property wasAssociatedWith    = property(namespace + "wasAssociatedWith");
-    public static final Property wasInformedBy        = property(namespace + "wasInformedBy");
-    public static final Property qualifiedGeneration  = property(namespace + "qualifiedGeneration");
-    public static final Property qualifiedAssociation = property(namespace + "qualifiedAssociation");
-    public static final Property agent                = property(namespace + "agent");
-    public static final Property hadPlan              = property(namespace + "hadPlan");
-    public static final Property qualifiedUsage       = property(namespace + "qualifiedUsage");
-    public static final Property hadMember            = property(namespace + "hadMember");
+    public static final Property wasDerivedFrom       = property("wasDerivedFrom");
+    public static final Property used                 = property("used");
+    public static final Property wasGeneratedBy       = property("wasGeneratedBy");
+    public static final Property wasAssociatedWith    = property("wasAssociatedWith");
+    public static final Property wasInformedBy        = property("wasInformedBy");
+    public static final Property qualifiedGeneration  = property("qualifiedGeneration");
+    public static final Property qualifiedAssociation = property("qualifiedAssociation");
+    public static final Property agent                = property("agent");
+    public static final Property hadPlan              = property("hadPlan");
+    public static final Property qualifiedUsage       = property("qualifiedUsage");
+    public static final Property hadMember            = property("hadMember");
 
     /**
      * For a given PROV property string, return a Predicate object with the URI, namespace,
