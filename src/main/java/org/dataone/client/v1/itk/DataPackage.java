@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -108,7 +109,7 @@ public class DataPackage {
     public DataPackage(Identifier id) {
         objectStore = new HashMap<Identifier, D1Object>();
         metadataMap = new HashMap<Identifier, List<Identifier>>();
-        tripleMap   = new HashMap<Predicate, Map<URI, List<URI>>>();
+        tripleMap   = new LinkedHashMap<Predicate, Map<URI, List<URI>>>();
         setPackageId(id);
     }
     
