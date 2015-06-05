@@ -52,6 +52,10 @@ import org.dspace.foresite.ORESerialiserException;
 import org.dspace.foresite.Predicate;
 import org.dspace.foresite.ResourceMap;
 
+import com.hp.hpl.jena.rdf.model.Property;
+import com.hp.hpl.jena.rdf.model.Resource;
+import com.hp.hpl.jena.rdf.model.ResourceFactory;
+
 /**
  * A DataPackage is a collection of interrelated data (science data, metadata) 
  * D1Objects plus their defined relationships (the ResourceMap object)
@@ -88,7 +92,7 @@ public class DataPackage {
     
     private Identifier packageId;
     private Map<Identifier, List<Identifier>> metadataMap;
-    private Map<Predicate, Map<URI, List<URI>>> tripleMap;
+    private Map<Property, Map<Resource, List<Resource>>> tripleMap;
     private HashMap<Identifier, D1Object> objectStore;
     private SystemMetadata systemMetadata = null;
     
@@ -109,7 +113,7 @@ public class DataPackage {
     public DataPackage(Identifier id) {
         objectStore = new HashMap<Identifier, D1Object>();
         metadataMap = new HashMap<Identifier, List<Identifier>>();
-        tripleMap   = new LinkedHashMap<Predicate, Map<URI, List<URI>>>();
+        tripleMap   = new LinkedHashMap<Property, Map<Resource, List<Resource>>>();
         setPackageId(id);
     }
     
@@ -191,50 +195,70 @@ public class DataPackage {
      * 
      * @param subject
      * @param predicate
-     * @param objectList
+     * @param objects
      * @throws URISyntaxException
      */
-    public void insertRelationship(URI subject,  Predicate predicate, List<URI> objectList) 
+    public void insertRelationship(URI subject, Predicate predicate, List<URI> objects) 
             throws URISyntaxException {   
 
-        // Start a list to hold the object URIs
-		List<URI> associatedObj = null;
-		// Start a map to map the subject URI to the object URIs
-        Map<URI, List<URI>> objectsBySubjectMap = null;
+        // convert subject, predicate, and object types
+        Resource subjectResource = ResourceFactory.createResource(subject.toString());
+        Property property = ResourceFactory.createProperty(predicate.getURI().toString());
+        List<Resource> objectResources = new ArrayList<Resource>();
+        
+        for (URI objectURI : objects) {
+            objectResources.add(ResourceFactory.createResource(objectURI.toString()));
+            
+        }
+        
+        insertRelationship(subjectResource, property, objectResources);
+                
+    }
+    
+    public void insertRelationship(URI subject, Predicate predicate, String object) {
+        
+    }
+
+    public void insertRelationship(Resource subject, Property predicate, List<Resource> objects) {
+
+        // Start a list to hold the object Resources
+        List<Resource> associatedObjects = null;
+        // Start a map to map the subject Resource to the object Resources
+        Map<Resource, List<Resource>> objectsBySubjectMap = null;
                
         // Determine if we have a triple with this predicate and subject already
-        // Use it if so, if not then create a list for these objects        	
+        // Use it if so, if not then create a list for these objects            
         if (tripleMap.containsKey(predicate)) {
-        	objectsBySubjectMap = tripleMap.get(predicate);
-        	
-        	if(objectsBySubjectMap.containsKey(subject)){
-        		associatedObj = objectsBySubjectMap.get(subject);
-        	}
-        	else{
-        		associatedObj = new ArrayList<URI>();
-        	}	
+            objectsBySubjectMap = tripleMap.get(predicate);
+            
+            if(objectsBySubjectMap.containsKey(subject)){
+                associatedObjects = objectsBySubjectMap.get(subject);
+            }
+            else{
+                associatedObjects = new ArrayList<Resource>();
+            }   
         } else {
-        	associatedObj = new ArrayList<URI>();
-            objectsBySubjectMap  = new HashMap<URI, List<URI>>();
+            associatedObjects = new ArrayList<Resource>();
+            objectsBySubjectMap  = new HashMap<Resource, List<Resource>>();
         }
         
         // For each object item, add the relationship if it doesn't exist
-        for (URI object : objectList) {
-            if (!associatedObj.contains(object)) {
-            	associatedObj.add(object);
+        for (Resource object : objects) {
+            if (!associatedObjects.contains(object)) {
+                associatedObjects.add(object);
             }
         }
         
         // Create the Identifier map
         if (!objectsBySubjectMap.containsKey(subject))
-        	objectsBySubjectMap.put(subject, associatedObj);
+            objectsBySubjectMap.put(subject, associatedObjects);
         
         //Add to the tripleMap
         tripleMap.put(predicate, objectsBySubjectMap);
-        
+
     }
     
-    
+
     /**
      * Used to introspect on the local temporary data store, NOT the number of 
      * DataPackage members.
@@ -321,22 +345,20 @@ public class DataPackage {
      */
     public ResourceMap getMap() throws OREException, URISyntaxException {
     	ResourceMap resourceMap = null;
-        
-        if ( tripleMap.isEmpty() ) {
-            // create the resource map just from the metadata map
-            resourceMap = ResourceMapFactory.getInstance().createResourceMap(packageId, metadataMap);
-            
-        } else {
-            // create the resource map from the metadata map and the statements in the triple map
-            resourceMap = ResourceMapFactory.getInstance().createResourceMap(packageId, metadataMap);
-            
-            for ( Predicate predicate : tripleMap.keySet() ) {
-                Map<URI, List<URI>> objectsBySubject  = tripleMap.get(predicate);
-                
-                for (URI subject : objectsBySubject.keySet() ) {
-                    List<URI> objects = objectsBySubject.get(subject);
+
+        // create the resource map just from the metadata map first
+        resourceMap = ResourceMapFactory.getInstance().createResourceMap(packageId, metadataMap);
+
+        if ( ! tripleMap.isEmpty() ) {
+                        
+            for ( Property property : tripleMap.keySet() ) {
+                Map<Resource, List<Resource>> objectsBySubject  = tripleMap.get(property);
+                                
+                for (Resource subject : objectsBySubject.keySet() ) {
+                    List<Resource> objects = objectsBySubject.get(subject);
                     ProvResourceMapBuilder provBuilder = new ProvResourceMapBuilder();
-                    resourceMap = provBuilder.insertRelationship(resourceMap, subject, predicate, objects);
+                    resourceMap = 
+                        provBuilder.insertRelationship(resourceMap, subject, property, objects);
                     
                 }                
             }
