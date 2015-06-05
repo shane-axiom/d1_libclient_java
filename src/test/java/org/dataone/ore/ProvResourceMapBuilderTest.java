@@ -57,7 +57,6 @@ public class ProvResourceMapBuilderTest {
 	public void tearDown() throws Exception {
 	}
 
-	@Ignore
 	@Test
 	public void testCreateResourceMapWithProvONE() {
         
