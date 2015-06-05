@@ -29,6 +29,10 @@ import java.util.List;
 
 import org.dspace.foresite.Predicate;
 
+import com.hp.hpl.jena.rdf.model.Property;
+import com.hp.hpl.jena.rdf.model.Resource;
+import com.hp.hpl.jena.rdf.model.ResourceFactory;
+
 /**
  * Provides select static terms for the PROV ontology used in ProvONE constructs
  * 
@@ -39,6 +43,14 @@ public class PROV {
     
     public static final String prefix = "prov";
 
+    /** Classes defined in PROV (ProvONE-relevant subset) */
+    public static final List<String> classes = Arrays.asList(
+            "Usage",      
+            "Generation",                
+            "Association",      
+            "Collection");
+    
+    /* Object properties defined in PROV (ProvONE-relevant subset) */
     public static final List<String> properties = Arrays.asList(
             "wasDerivedFrom",      
             "used",                
@@ -52,24 +64,22 @@ public class PROV {
             "qualifiedUsage",      
             "hadMember");
     
-    // Classes defined in PROV (ProvONE-relevant subset)
-    public static final String Usage                = namespace + "Usage";
-    public static final String Generation           = namespace + "Generation";
-    public static final String Association          = namespace + "Association";
-    public static final String Collection           = namespace + "Collection";
+    public static final Resource Usage                = resource(namespace + "Usage");
+    public static final Resource Generation           = resource(namespace + "Generation");
+    public static final Resource Association          = resource(namespace + "Association");
+    public static final Resource Collection           = resource(namespace + "Collection");
 
-    // Object properties defined in PROV (ProvONE-relevant subset)
-    public static final String wasDerivedFrom       = namespace + "wasDerivedFrom";
-    public static final String used                 = namespace + "used";
-    public static final String wasGeneratedBy       = namespace + "wasGeneratedBy";
-    public static final String wasAssociatedWith    = namespace + "wasAssociatedWith";
-    public static final String wasInformedBy        = namespace + "wasInformedBy";
-    public static final String qualifiedGeneration  = namespace + "qualifiedGeneration";
-    public static final String qualifiedAssociation = namespace + "qualifiedAssociation";
-    public static final String agent                = namespace + "agent";
-    public static final String hadPlan              = namespace + "hadPlan";
-    public static final String qualifiedUsage       = namespace + "qualifiedUsage";
-    public static final String hadMember            = namespace + "hadMember";
+    public static final Property wasDerivedFrom       = property(namespace + "wasDerivedFrom");
+    public static final Property used                 = property(namespace + "used");
+    public static final Property wasGeneratedBy       = property(namespace + "wasGeneratedBy");
+    public static final Property wasAssociatedWith    = property(namespace + "wasAssociatedWith");
+    public static final Property wasInformedBy        = property(namespace + "wasInformedBy");
+    public static final Property qualifiedGeneration  = property(namespace + "qualifiedGeneration");
+    public static final Property qualifiedAssociation = property(namespace + "qualifiedAssociation");
+    public static final Property agent                = property(namespace + "agent");
+    public static final Property hadPlan              = property(namespace + "hadPlan");
+    public static final Property qualifiedUsage       = property(namespace + "qualifiedUsage");
+    public static final Property hadMember            = property(namespace + "hadMember");
 
     /**
      * For a given PROV property string, return a Predicate object with the URI, namespace,
@@ -99,6 +109,29 @@ public class PROV {
         return predicate;
         
     }
+    
+    /**
+     * Return a Jena Resource instance for the given localName term
+     * 
+     * @param localName
+     * @return  resource  The Resource for the term
+     */
+    protected static Resource resource(String localName) {
+        return ResourceFactory.createResource(namespace + localName);
+        
+    }
+
+    /**
+     * Return a Jena Property instance for the given localName term
+     * 
+     * @param localName
+     * @return  property  The Property for the term
+     */
+    protected static Property property(String localName) {
+        return ResourceFactory.createProperty(namespace, localName);
+        
+    }
+
 
 }
 
