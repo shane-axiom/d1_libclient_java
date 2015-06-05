@@ -105,7 +105,7 @@ public class ProvResourceMapBuilderTest {
             // Execution type
             predicate = asPredicate(RDF.type, "rdf");
             objects.clear();
-            object = new URI(ProvONE_V1.Execution);
+            object = new URI(ProvONE_V1.Execution.getURI());
             objects.add(object);
             dataPackage.insertRelationship(subject, predicate, objects);
 
@@ -113,7 +113,7 @@ public class ProvResourceMapBuilderTest {
             subject = new URI(D1_URI_PREFIX + "data.1.1");
             predicate = asPredicate(RDF.type, "rdf");
             objects.clear();
-            object = new URI(ProvONE_V1.Data);
+            object = new URI(ProvONE_V1.Data.getURI());
             objects.add(object);
             dataPackage.insertRelationship(subject, predicate, objects);
             
@@ -139,7 +139,7 @@ public class ProvResourceMapBuilderTest {
             subject = new URI(D1_URI_PREFIX + "user.1.1");
             predicate = asPredicate(RDF.type, "rdf");
             objects.clear();
-            object = new URI(ProvONE_V1.User);
+            object = new URI(ProvONE_V1.User.getURI());
             objects.add(object);
             dataPackage.insertRelationship(subject, predicate, objects);
 
