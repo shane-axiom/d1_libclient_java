@@ -27,7 +27,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -37,6 +36,7 @@ import org.apache.commons.logging.LogFactory;
 import org.dataone.configuration.Settings;
 import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.util.EncodingUtilities;
+import org.dataone.vocabulary.CITO;
 import org.dataone.vocabulary.PROV;
 import org.dataone.vocabulary.ProvONE_V1;
 import org.dspace.foresite.OREException;
@@ -51,7 +51,6 @@ import org.dspace.foresite.Predicate;
 import org.dspace.foresite.ResourceMap;
 import org.dspace.foresite.ResourceMapDocument;
 import org.dspace.foresite.Triple;
-import org.dspace.foresite.Vocab;
 
 import com.hp.hpl.jena.rdf.model.AnonId;
 import com.hp.hpl.jena.rdf.model.Model;
@@ -69,142 +68,18 @@ public class ProvResourceMapBuilder {
 	// TODO: will this always resolve?
 	private static final String D1_URI_PREFIX = Settings.getConfiguration()
 			.getString("D1Client.CN_URL", "https://cn-dev.test.dataone.org/cn") + "/v1/resolve/";
-
-	private static Predicate DC_TERMS_IDENTIFIER = null;
-	
-	private static Predicate CITO_IS_DOCUMENTED_BY = null;
-	
-	private static Predicate CITO_DOCUMENTS = null;
-	
-	private static Predicate PROV_WAS_DERIVED_FROM = null;
-	
-	private static Predicate PROV_WAS_GENERATED_BY = null;
-	
-	private static Predicate PROV_WAS_INFORMED_BY = null;
-	
-	private static Predicate PROV_USED = null;
-
-	private static Predicate PROV_WAS_ASSOCIATED_WITH = null;
-	
-	private static Predicate PROV_QUALIFIED_ASSOCIATION = null;
-
-	private static Predicate PROV_P_AGENT = null;
-
-	private static Predicate PROV_HAD_PLAN = null;
-
-	private static List<Predicate> predicates = null;
 	
 	private Model rdfModel = null;
 	
 	private static Log log = LogFactory.getLog(ProvResourceMapBuilder.class);
 	
-	private static final String CITO_NAMESPACE_URI = "http://purl.org/spar/cito/";
-
     private static final String DEFAULT_RDF_FORMAT = "RDF/XML";
 
-	/*
-	 * Initialize the ProvResourceMapBuilder, populating the available predicates list, etc.
-	 */
-	private void init() throws URISyntaxException {
-		predicates = new ArrayList<Predicate>();
-		
-		// use as much as we can from the included Vocab for dcterms:Agent
-		DC_TERMS_IDENTIFIER = new Predicate();
-		DC_TERMS_IDENTIFIER.setNamespace(Vocab.dcterms_Agent.ns().toString());
-		DC_TERMS_IDENTIFIER.setPrefix(Vocab.dcterms_Agent.schema());
-		DC_TERMS_IDENTIFIER.setName("identifier");
-		DC_TERMS_IDENTIFIER.setURI(new URI(DC_TERMS_IDENTIFIER.getNamespace() 
-				+ DC_TERMS_IDENTIFIER.getName()));
-		
-		// create the CITO:isDocumentedBy predicate
-		CITO_IS_DOCUMENTED_BY = new Predicate();
-		CITO_IS_DOCUMENTED_BY.setNamespace(CITO_NAMESPACE_URI);
-		CITO_IS_DOCUMENTED_BY.setPrefix("cito");
-		CITO_IS_DOCUMENTED_BY.setName("isDocumentedBy");
-		CITO_IS_DOCUMENTED_BY.setURI(new URI(CITO_NAMESPACE_URI 
-				+ CITO_IS_DOCUMENTED_BY.getName()));
-		
-		// create the CITO:documents predicate
-		CITO_DOCUMENTS = new Predicate();
-		CITO_DOCUMENTS.setNamespace(CITO_IS_DOCUMENTED_BY.getNamespace());
-		CITO_DOCUMENTS.setPrefix(CITO_IS_DOCUMENTED_BY.getPrefix());
-		CITO_DOCUMENTS.setName("documents");
-		CITO_DOCUMENTS.setURI(new URI(CITO_NAMESPACE_URI 
-				+ CITO_DOCUMENTS.getName()));
-		
-		// create the PROV:wasDerivedFrom predicate
-		PROV_WAS_DERIVED_FROM = PROV.predicate("wasDerivedFrom");
-		
-		// create the PROV:wasGeneratedBy predicate
-		PROV_WAS_GENERATED_BY = PROV.predicate("wasGeneratedBy");
-		
-		// create the PROV:wasInformedBy predicate
-		PROV_WAS_INFORMED_BY = PROV.predicate("wasInformedBy");
-		
-		// create the PROV:used predicate
-		PROV_USED = PROV.predicate("used");
-		
-		// create the PROV:wasAssociatedWith predicate
-		PROV_WAS_ASSOCIATED_WITH = PROV.predicate("wasAssociatedWith");
-		
-		// create the PROV:qualifiedAssociation predicate
-		PROV_QUALIFIED_ASSOCIATION = PROV.predicate("qualifiedAssociation");
-		
-		// create the PROV:agent predicate
-		PROV_P_AGENT = PROV.predicate("agent");
-		
-		// create the PROV:hadPlan predicate
-		PROV_HAD_PLAN = PROV.predicate("hadPlan");
-		
-		// include predicates from each namespace we want to support
-		predicates.add(CITO_DOCUMENTS);
-		predicates.add(PROV_WAS_DERIVED_FROM);
-		predicates.add(PROV_WAS_GENERATED_BY);
-		predicates.add(PROV_WAS_INFORMED_BY);
-		predicates.add(PROV_USED);
-		predicates.add(PROV_WAS_ASSOCIATED_WITH);
-		predicates.add(PROV_QUALIFIED_ASSOCIATION);
-		predicates.add(PROV_P_AGENT);
-		predicates.add(PROV_HAD_PLAN);
-		
-		// Create and configure an RDF model to manipulate the resource map
+	public ProvResourceMapBuilder() {
+	    // Create and configure an RDF model to manipulate the resource map
         rdfModel = ModelFactory.createDefaultModel();
         setNamespacePrefixes();
 
-	}
-
-    /*
-     * For readability, reset the namespace prefixes in the model for ones 
-     * we care about (PROV, ProvONE, CITO)
-     */
-    private void setNamespacePrefixes() {
-        
-        // Set the PROV prefix
-        String provPrefix = rdfModel.getNsURIPrefix(PROV.namespace);
-        rdfModel.removeNsPrefix(provPrefix);
-        rdfModel.setNsPrefix(PROV.prefix, PROV.namespace);
-        
-        // Set the ProvONE prefix
-        String provonePrefix = rdfModel.getNsURIPrefix(ProvONE_V1.namespace);
-        rdfModel.removeNsPrefix(provonePrefix);
-        rdfModel.setNsPrefix(ProvONE_V1.prefix, ProvONE_V1.namespace);
-        
-        String citoPrefix = rdfModel.getNsURIPrefix(CITO_DOCUMENTS.getNamespace());
-        rdfModel.removeNsPrefix(citoPrefix);
-        rdfModel.setNsPrefix(CITO_DOCUMENTS.getPrefix(), CITO_DOCUMENTS.getNamespace());
-    }
-	
-	public ProvResourceMapBuilder() {
-		try {
-			init();
-			
-		} catch (URISyntaxException e) {
-			log.error("there was a problem during initialzation: " + e.getMessage());
-			if (log.isDebugEnabled()) {
-                e.printStackTrace();
-                
-            }
-		}
 	}
 
 	/**
@@ -221,7 +96,7 @@ public class ProvResourceMapBuilder {
 		
 		Triple triple = OREFactory.createTriple(
 								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(derivedDataId.getValue())), 
-								PROV_WAS_DERIVED_FROM, 
+								PROV.predicate("wasDerivedFrom"), 
 								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(primaryDataId.getValue())));
 		resourceMap.addTriple(triple);
         
@@ -246,7 +121,7 @@ public class ProvResourceMapBuilder {
 				for(Identifier primaryDataId: primaryDataIds){
 				Triple triple = OREFactory.createTriple(
 										new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(derivedDataId.getValue())), 
-										PROV_WAS_DERIVED_FROM, 
+		                                PROV.predicate("wasDerivedFrom"), 
 										new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(primaryDataId.getValue())));
 				resourceMap.addTriple(triple);
 			}
@@ -269,7 +144,7 @@ public class ProvResourceMapBuilder {
 		
 		Triple triple = OREFactory.createTriple(
 								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(subjectId.getValue())), 
-								PROV_WAS_GENERATED_BY, 
+                                PROV.predicate("wasGeneratedBy"), 
 								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(objectId.getValue())));
 		resourceMap.addTriple(triple);
         
@@ -294,7 +169,7 @@ public class ProvResourceMapBuilder {
 				for(Identifier objectId: objectIds){
 				Triple triple = OREFactory.createTriple(
 										new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(subjectId.getValue())), 
-										PROV_WAS_GENERATED_BY, 
+		                                PROV.predicate("wasGeneratedBy"), 
 										new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(objectId.getValue())));
 				resourceMap.addTriple(triple);
 			}
@@ -317,7 +192,7 @@ public class ProvResourceMapBuilder {
 		
 		Triple triple = OREFactory.createTriple(
 								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(subjectId.getValue())), 
-								PROV_WAS_INFORMED_BY, 
+                                PROV.predicate("wasInformedBy"), 
 								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(objectId.getValue())));
 		resourceMap.addTriple(triple);
         
@@ -342,7 +217,7 @@ public class ProvResourceMapBuilder {
 				for(Identifier objectId: objectIds){
 				Triple triple = OREFactory.createTriple(
 										new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(subjectId.getValue())), 
-										PROV_WAS_INFORMED_BY, 
+		                                PROV.predicate("wasInformedBy"), 
 										new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(objectId.getValue())));
 				resourceMap.addTriple(triple);
 			}
@@ -365,7 +240,7 @@ public class ProvResourceMapBuilder {
 		
 		Triple triple = OREFactory.createTriple(
 								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(subjectId.getValue())), 
-								PROV_USED, 
+                                PROV.predicate("used"), 
 								new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(objectId.getValue())));
 		resourceMap.addTriple(triple);
         
@@ -390,7 +265,7 @@ public class ProvResourceMapBuilder {
 				for(Identifier objectId: objectIds){
 				Triple triple = OREFactory.createTriple(
 										new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(subjectId.getValue())), 
-										PROV_USED, 
+		                                PROV.predicate("used"), 
 										new URI(D1_URI_PREFIX + EncodingUtilities.encodeUrlPathSegment(objectId.getValue())));
 				resourceMap.addTriple(triple);
 			}
@@ -411,27 +286,26 @@ public class ProvResourceMapBuilder {
 	 * @return
 	 * @throws OREException
 	 */
-	public ResourceMap insertRelationship(ResourceMap resourceMap, URI subject, Predicate predicate, 
-	        List<URI> objects ) throws OREException {
-	    
+	public ResourceMap insertRelationship(ResourceMap resourceMap, Resource subject, Property predicate, 
+	        List<Resource> objects ) throws OREException {
+
+	    setModel(resourceMap);
+
 	    if ( subject == null ) {
-	        throw new OREException("Subject cannot be null. Please set the subject URI.");
+	        throw new OREException("Subject cannot be null. Please set the subject Resource.");
 	        
 	    }
 	    
-    	for ( URI object : objects ) {
+    	for ( Resource object : objects ) {
     	    // Build the triple with the given predicate
             if ( object == null ) {
-                throw new OREException("Object cannot be null. Please set the object URI.");
+                throw new OREException("Object cannot be null. Please set the object Resource.");
                 
             }
-            
-    	    Triple triple = OREFactory.createTriple(subject, predicate, object);
-    	    resourceMap.addTriple(triple);
+            Statement statement = rdfModel.createStatement(subject, predicate, object);
+            rdfModel.add(statement);
     	}
-    	
-    	setModel(resourceMap);
-    	
+    	    	
     	return getModel();
 	}
 
@@ -529,5 +403,26 @@ public class ProvResourceMapBuilder {
         
         return resourceMap;
         
+    }
+    
+    /*
+     * For readability, reset the namespace prefixes in the model for ones 
+     * we care about (PROV, ProvONE, CITO)
+     */
+    private void setNamespacePrefixes() {
+        
+        // Set the PROV prefix
+        String provPrefix = rdfModel.getNsURIPrefix(PROV.namespace);
+        rdfModel.removeNsPrefix(provPrefix);
+        rdfModel.setNsPrefix(PROV.prefix, PROV.namespace);
+        
+        // Set the ProvONE prefix
+        String provonePrefix = rdfModel.getNsURIPrefix(ProvONE_V1.namespace);
+        rdfModel.removeNsPrefix(provonePrefix);
+        rdfModel.setNsPrefix(ProvONE_V1.prefix, ProvONE_V1.namespace);
+        
+        String citoPrefix = rdfModel.getNsURIPrefix(CITO.prefix);
+        rdfModel.removeNsPrefix(citoPrefix);
+        rdfModel.setNsPrefix(CITO.prefix, CITO.namespace);
     }
 }
