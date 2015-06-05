@@ -42,6 +42,7 @@ import org.apache.commons.logging.LogFactory;
 import org.dataone.configuration.Settings;
 import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.util.EncodingUtilities;
+import org.dataone.vocabulary.CITO;
 import org.dspace.foresite.Agent;
 import org.dspace.foresite.AggregatedResource;
 import org.dspace.foresite.Aggregation;
@@ -94,10 +95,6 @@ public class ResourceMapFactory {
 
 	private static Predicate DC_TERMS_IDENTIFIER = null;
 	
-	private static Predicate CITO_IS_DOCUMENTED_BY = null;
-	
-	private static Predicate CITO_DOCUMENTS = null;
-	
 	private static ResourceMapFactory instance = null;
 	
 	private static Model oreModel = null;
@@ -112,23 +109,7 @@ public class ResourceMapFactory {
 		DC_TERMS_IDENTIFIER.setName("identifier");
 		DC_TERMS_IDENTIFIER.setURI(new URI(DC_TERMS_IDENTIFIER.getNamespace() 
 				+ DC_TERMS_IDENTIFIER.getName()));
-		
-		// create the CITO:isDocumentedBy predicate
-		CITO_IS_DOCUMENTED_BY = new Predicate();
-		CITO_IS_DOCUMENTED_BY.setNamespace("http://purl.org/spar/cito/");
-		CITO_IS_DOCUMENTED_BY.setPrefix("cito");
-		CITO_IS_DOCUMENTED_BY.setName("isDocumentedBy");
-		CITO_IS_DOCUMENTED_BY.setURI(new URI(CITO_IS_DOCUMENTED_BY.getNamespace() 
-				+ CITO_IS_DOCUMENTED_BY.getName()));
-		
-		// create the CITO:documents predicate
-		CITO_DOCUMENTS = new Predicate();
-		CITO_DOCUMENTS.setNamespace(CITO_IS_DOCUMENTED_BY.getNamespace());
-		CITO_DOCUMENTS.setPrefix(CITO_IS_DOCUMENTED_BY.getPrefix());
-		CITO_DOCUMENTS.setName("documents");
-		CITO_DOCUMENTS.setURI(new URI(CITO_DOCUMENTS.getNamespace() 
-				+ CITO_DOCUMENTS.getName()));
-		
+				
 	}
 	
 	private ResourceMapFactory() {
@@ -208,12 +189,12 @@ public class ResourceMapFactory {
 				// cito:isDocumentedBy
 				Triple isDocumentedBy = new TripleJena();
 				isDocumentedBy.initialise(dataResource);
-				isDocumentedBy.relate(CITO_IS_DOCUMENTED_BY, metadataResource);
+				isDocumentedBy.relate(CITO.predicate("isDocumentedBy"), metadataResource);
 				resourceMap.addTriple(isDocumentedBy);
 				// cito:documents (on metadata resource)
 				Triple documents = new TripleJena();
 				documents.initialise(metadataResource);
-				documents.relate(CITO_DOCUMENTS, dataResource);
+				documents.relate(CITO.predicate("documents"), dataResource);
 				resourceMap.addTriple(documents);
 				
 				aggregation.addAggregatedResource(dataResource);
@@ -420,8 +401,8 @@ public class ResourceMapFactory {
 		}
 		
 		TripleSelector idSelector = new TripleSelector(null, DC_TERMS_IDENTIFIER.getURI(), null);
-		TripleSelector documentsSelector = new TripleSelector(null, CITO_DOCUMENTS.getURI(), null);
-		TripleSelector isDocBySelector = new TripleSelector(null, CITO_IS_DOCUMENTED_BY.getURI(), null);
+		TripleSelector documentsSelector = new TripleSelector(null, CITO.predicate("documents").getURI(), null);
+		TripleSelector isDocBySelector = new TripleSelector(null, CITO.predicate("isDocumentedBy").getURI(), null);
 		
 		
 		
