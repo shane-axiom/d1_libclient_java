@@ -29,6 +29,10 @@ import java.util.List;
 
 import org.dspace.foresite.Predicate;
 
+import com.hp.hpl.jena.rdf.model.Property;
+import com.hp.hpl.jena.rdf.model.Resource;
+import com.hp.hpl.jena.rdf.model.ResourceFactory;
+
 /**
  * Provides static terms for the ProvONE extensions to the PROV ontology
  * @author cjones
@@ -58,29 +62,29 @@ public class ProvONE_V1 {
         "hadOutPort");
     
     /** Classes defined in the ProvONE model */
-    public static final String Program         = namespace + "Program";
-    public static final String Port            = namespace + "Port";
-    public static final String Channel         = namespace + "Channel";
-    public static final String Controller      = namespace + "Controller";
-    public static final String Workflow        = namespace + "Workflow";
-    public static final String Execution       = namespace + "Execution";
-    public static final String User            = namespace + "User";
-    public static final String Data            = namespace + "Data";
-    public static final String Visualization   = namespace + "Visualization";
-    public static final String Document        = namespace + "Document";
+    public static final Resource Program         = resource("Program");
+    public static final Resource Port            = resource("Port");
+    public static final Resource Channel         = resource("Channel");
+    public static final Resource Controller      = resource("Controller");
+    public static final Resource Workflow        = resource("Workflow");
+    public static final Resource Execution       = resource("Execution");
+    public static final Resource User            = resource("User");
+    public static final Resource Data            = resource("Data");
+    public static final Resource Visualization   = resource("Visualization");
+    public static final Resource Document        = resource("Document");
 
     /** Object properties defined in the ProvONE model */
-    public static final String hasSubProgram   = namespace + "hasSubProgram";
-    public static final String controlledBy    = namespace + "controlledBy";
-    public static final String controls        = namespace + "controls";
-    public static final String hasInPort       = namespace + "hasInPort";
-    public static final String hasOutPort      = namespace + "hasOutPort";
-    public static final String hasDefaultParam = namespace + "hasDefaultParam";
-    public static final String connectsTo      = namespace + "connectsTo";
-    public static final String wasPartOf       = namespace + "wasPartOf";
-    public static final String hadInPort       = namespace + "hadInPort";
-    public static final String hadEntity       = namespace + "hadEntity";
-    public static final String hadOutPort      = namespace + "hadOutPort";
+    public static final Property hasSubProgram   = property("hasSubProgram");
+    public static final Property controlledBy    = property("controlledBy");
+    public static final Property controls        = property("controls");
+    public static final Property hasInPort       = property("hasInPort");
+    public static final Property hasOutPort      = property("hasOutPort");
+    public static final Property hasDefaultParam = property("hasDefaultParam");
+    public static final Property connectsTo      = property("connectsTo");
+    public static final Property wasPartOf       = property("wasPartOf");
+    public static final Property hadInPort       = property("hadInPort");
+    public static final Property hadEntity       = property("hadEntity");
+    public static final Property hadOutPort      = property("hadOutPort");
 
     /**
      * For a given ProvONE property string, return a Predicate object with the URI, namespace,
@@ -110,5 +114,28 @@ public class ProvONE_V1 {
         return predicate;
         
     }
+
+    /**
+     * Return a Jena Resource instance for the given localName term
+     * 
+     * @param localName
+     * @return  resource  The Resource for the term
+     */
+    protected static Resource resource(String localName) {
+        return ResourceFactory.createResource(namespace + localName);
+        
+    }
+
+    /**
+     * Return a Jena Property instance for the given localName term
+     * 
+     * @param localName
+     * @return  property  The Property for the term
+     */
+    protected static Property property(String localName) {
+        return ResourceFactory.createProperty(namespace, localName);
+        
+    }
+
 }
 
