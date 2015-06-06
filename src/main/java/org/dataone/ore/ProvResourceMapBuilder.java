@@ -56,6 +56,7 @@ import com.hp.hpl.jena.rdf.model.AnonId;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Property;
+import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.Statement;
 /**
@@ -287,7 +288,7 @@ public class ProvResourceMapBuilder {
 	 * @throws OREException
 	 */
 	public ResourceMap insertRelationship(ResourceMap resourceMap, Resource subject, Property predicate, 
-	        List<Resource> objects ) throws OREException {
+	        List<RDFNode> objects ) throws OREException {
 
 	    setModel(resourceMap);
 
@@ -296,7 +297,7 @@ public class ProvResourceMapBuilder {
 	        
 	    }
 	    
-    	for ( Resource object : objects ) {
+    	for ( RDFNode object : objects ) {
     	    // Build the triple with the given predicate
             if ( object == null ) {
                 throw new OREException("Object cannot be null. Please set the object Resource.");

@@ -53,6 +53,7 @@ import org.dspace.foresite.Predicate;
 import org.dspace.foresite.ResourceMap;
 
 import com.hp.hpl.jena.rdf.model.Property;
+import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.ResourceFactory;
 
@@ -92,7 +93,7 @@ public class DataPackage {
     
     private Identifier packageId;
     private Map<Identifier, List<Identifier>> metadataMap;
-    private Map<Property, Map<Resource, List<Resource>>> tripleMap;
+    private Map<Property, Map<Resource, List<RDFNode>>> tripleMap;
     private HashMap<Identifier, D1Object> objectStore;
     private SystemMetadata systemMetadata = null;
     
@@ -113,7 +114,7 @@ public class DataPackage {
     public DataPackage(Identifier id) {
         objectStore = new HashMap<Identifier, D1Object>();
         metadataMap = new HashMap<Identifier, List<Identifier>>();
-        tripleMap   = new LinkedHashMap<Property, Map<Resource, List<Resource>>>();
+        tripleMap   = new LinkedHashMap<Property, Map<Resource, List<RDFNode>>>();
         setPackageId(id);
     }
     
@@ -187,15 +188,32 @@ public class DataPackage {
     }
     
     /**
-     * Declare which data objects are documented by a metadata object, using their
-     * persistent resource URIs.  Additional calls using the same metadata URI will append 
-     * to existing data URI lists. Resources used in this call will de 
-     * facto be part of any serialized resource map derived from the DataPackage 
-     * instance.
+     * Relate a given subject URI to an object URI using the given predicate.
+     * Allows general statements to be made about members of the DataPackage where both the
+     * subject and the object have resolvable URIs.
      * 
-     * @param subject
-     * @param predicate
-     * @param objects
+     * @param subject  The subject of the statement
+     * @param predicate  The relationship of the statement
+     * @param object  the object of the statement
+     * @throws URISyntaxException
+     */
+    public void insertRelationship(URI subject, Predicate predicate, URI object) 
+            throws URISyntaxException {
+        
+        List<URI> objects = new ArrayList<URI>();
+        objects.add(object);
+        insertRelationship(subject, predicate, objects);
+        
+    }
+
+    /**
+     * Relate a given subject URI to a list of object URIs using the given predicate.
+     * Allows general statements to be made about members of the DataPackage where both the
+     * subject and the object have resolvable URIs.
+     * 
+     * @param subject  The subject of each statement
+     * @param predicate  The relationship of each statement
+     * @param object  the objects of each statement
      * @throws URISyntaxException
      */
     public void insertRelationship(URI subject, Predicate predicate, List<URI> objects) 
@@ -204,7 +222,7 @@ public class DataPackage {
         // convert subject, predicate, and object types
         Resource subjectResource = ResourceFactory.createResource(subject.toString());
         Property property = ResourceFactory.createProperty(predicate.getURI().toString());
-        List<Resource> objectResources = new ArrayList<Resource>();
+        List<RDFNode> objectResources = new ArrayList<RDFNode>();
         
         for (URI objectURI : objects) {
             objectResources.add(ResourceFactory.createResource(objectURI.toString()));
@@ -215,16 +233,16 @@ public class DataPackage {
                 
     }
     
-    public void insertRelationship(URI subject, Predicate predicate, String object) {
+    public void insertRelationship(URI subject, Predicate predicate, Object literal) {
         
     }
 
-    public void insertRelationship(Resource subject, Property predicate, List<Resource> objects) {
+    public void insertRelationship(Resource subject, Property predicate, List<RDFNode> objects) {
 
         // Start a list to hold the object Resources
-        List<Resource> associatedObjects = null;
+        List<RDFNode> associatedObjects = null;
         // Start a map to map the subject Resource to the object Resources
-        Map<Resource, List<Resource>> objectsBySubjectMap = null;
+        Map<Resource, List<RDFNode>> objectsBySubjectMap = null;
                
         // Determine if we have a triple with this predicate and subject already
         // Use it if so, if not then create a list for these objects            
@@ -235,15 +253,15 @@ public class DataPackage {
                 associatedObjects = objectsBySubjectMap.get(subject);
             }
             else{
-                associatedObjects = new ArrayList<Resource>();
+                associatedObjects = new ArrayList<RDFNode>();
             }   
         } else {
-            associatedObjects = new ArrayList<Resource>();
-            objectsBySubjectMap  = new HashMap<Resource, List<Resource>>();
+            associatedObjects = new ArrayList<RDFNode>();
+            objectsBySubjectMap  = new HashMap<Resource, List<RDFNode>>();
         }
         
         // For each object item, add the relationship if it doesn't exist
-        for (Resource object : objects) {
+        for (RDFNode object : objects) {
             if (!associatedObjects.contains(object)) {
                 associatedObjects.add(object);
             }
@@ -352,10 +370,10 @@ public class DataPackage {
         if ( ! tripleMap.isEmpty() ) {
                         
             for ( Property property : tripleMap.keySet() ) {
-                Map<Resource, List<Resource>> objectsBySubject  = tripleMap.get(property);
+                Map<Resource, List<RDFNode>> objectsBySubject  = tripleMap.get(property);
                                 
                 for (Resource subject : objectsBySubject.keySet() ) {
-                    List<Resource> objects = objectsBySubject.get(subject);
+                    List<RDFNode> objects = objectsBySubject.get(subject);
                     ProvResourceMapBuilder provBuilder = new ProvResourceMapBuilder();
                     resourceMap = 
                         provBuilder.insertRelationship(resourceMap, subject, property, objects);
