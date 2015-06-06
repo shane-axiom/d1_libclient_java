@@ -38,7 +38,7 @@ import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.util.EncodingUtilities;
 import org.dataone.vocabulary.CITO;
 import org.dataone.vocabulary.PROV;
-import org.dataone.vocabulary.ProvONE_V1;
+import org.dataone.vocabulary.ProvONE;
 import org.dspace.foresite.OREException;
 import org.dspace.foresite.OREFactory;
 import org.dspace.foresite.OREParser;
@@ -417,9 +417,9 @@ public class ProvResourceMapBuilder {
         rdfModel.setNsPrefix(PROV.prefix, PROV.namespace);
         
         // Set the ProvONE prefix
-        String provonePrefix = rdfModel.getNsURIPrefix(ProvONE_V1.namespace);
+        String provonePrefix = rdfModel.getNsURIPrefix(ProvONE.namespace);
         rdfModel.removeNsPrefix(provonePrefix);
-        rdfModel.setNsPrefix(ProvONE_V1.prefix, ProvONE_V1.namespace);
+        rdfModel.setNsPrefix(ProvONE.prefix, ProvONE.namespace);
         
         String citoPrefix = rdfModel.getNsURIPrefix(CITO.prefix);
         rdfModel.removeNsPrefix(citoPrefix);
