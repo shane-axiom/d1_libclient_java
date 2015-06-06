@@ -17,6 +17,7 @@ import org.dataone.client.v1.types.D1TypeBuilder;
 import org.dataone.configuration.Settings;
 import org.dataone.service.types.v1.Identifier;
 import org.dataone.vocabulary.PROV;
+import org.dataone.vocabulary.ProvONE;
 import org.dataone.vocabulary.ProvONE_V1;
 import org.dspace.foresite.OREException;
 import org.dspace.foresite.ORESerialiserException;
@@ -105,7 +106,7 @@ public class ProvResourceMapBuilderTest {
             // Execution type
             predicate = asPredicate(RDF.type, "rdf");
             objects.clear();
-            object = new URI(ProvONE_V1.Execution.getURI());
+            object = new URI(ProvONE.Execution.getURI());
             objects.add(object);
             dataPackage.insertRelationship(subject, predicate, objects);
 
@@ -113,7 +114,7 @@ public class ProvResourceMapBuilderTest {
             subject = new URI(D1_URI_PREFIX + "data.1.1");
             predicate = asPredicate(RDF.type, "rdf");
             objects.clear();
-            object = new URI(ProvONE_V1.Data.getURI());
+            object = new URI(ProvONE.Data.getURI());
             objects.add(object);
             dataPackage.insertRelationship(subject, predicate, objects);
             
@@ -139,7 +140,7 @@ public class ProvResourceMapBuilderTest {
             subject = new URI(D1_URI_PREFIX + "user.1.1");
             predicate = asPredicate(RDF.type, "rdf");
             objects.clear();
-            object = new URI(ProvONE_V1.User.getURI());
+            object = new URI(ProvONE.User.getURI());
             objects.add(object);
             dataPackage.insertRelationship(subject, predicate, objects);
 
@@ -177,7 +178,7 @@ public class ProvResourceMapBuilderTest {
             // Test for [execution.1.1 @rdf:type provone:Execution]
             subjectResource = rdfModel.createResource(D1_URI_PREFIX + "execution.1.1");
             property = rdfModel.createProperty(RDF.getURI(), RDF.type.getLocalName());
-            objectResource = rdfModel.createResource(ProvONE_V1.namespace + "Execution");
+            objectResource = rdfModel.createResource(ProvONE.namespace + "Execution");
             selector = getSimpleSelector(subjectResource, property,
                     objectResource);
             statements = rdfModel.listStatements(selector);
@@ -187,7 +188,7 @@ public class ProvResourceMapBuilderTest {
             // Test for [data.1.1 @rdf:type provone:Data]
             subjectResource = rdfModel.createResource(D1_URI_PREFIX + "data.1.1");
             property = rdfModel.createProperty(RDF.getURI(), RDF.type.getLocalName());
-            objectResource = rdfModel.createResource(ProvONE_V1.namespace + "Data");
+            objectResource = rdfModel.createResource(ProvONE.namespace + "Data");
             selector = getSimpleSelector(subjectResource, property,
                     objectResource);
             statements = rdfModel.listStatements(selector);
@@ -197,7 +198,7 @@ public class ProvResourceMapBuilderTest {
             // Test for [data.1.1 @rdf:type provone:Data]
             subjectResource = rdfModel.createResource(D1_URI_PREFIX + "data.1.1");
             property = rdfModel.createProperty(RDF.getURI(), RDF.type.getLocalName());
-            objectResource = rdfModel.createResource(ProvONE_V1.namespace + "Data");
+            objectResource = rdfModel.createResource(ProvONE.namespace + "Data");
             selector = getSimpleSelector(subjectResource, property,
                     objectResource);
             statements = rdfModel.listStatements(selector);
@@ -217,7 +218,7 @@ public class ProvResourceMapBuilderTest {
             // Test for [user.1.1 @rdf:type provone:User]
             subjectResource = rdfModel.createResource(D1_URI_PREFIX + "user.1.1");
             property = rdfModel.createProperty(RDF.getURI(), RDF.type.getLocalName());
-            objectResource = rdfModel.createResource(ProvONE_V1.namespace + "User");
+            objectResource = rdfModel.createResource(ProvONE.namespace + "User");
             selector = getSimpleSelector(subjectResource, property,
                     objectResource);
             statements = rdfModel.listStatements(selector);
