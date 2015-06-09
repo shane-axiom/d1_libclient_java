@@ -46,6 +46,7 @@ import org.dataone.service.exceptions.NotAuthorized;
 import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
+import org.dataone.service.exceptions.UnsupportedMetadataType;
 import org.dataone.service.exceptions.UnsupportedType;
 import org.dataone.service.exceptions.VersionMismatch;
 import org.dataone.service.types.v1.AccessPolicy;
@@ -235,9 +236,8 @@ public class MultipartCNode extends MultipartD1Node implements CNode
             mpe.addFilePart("format", format);
             
             InputStream is = getRestClient(this.defaultSession).doPostRequest(url.getUrl(), mpe, null);
-            formatID = TypeMarshaller.unmarshalTypeFromStream(ObjectFormatIdentifier.class, is);
-            if (is != null)
-                IOUtils.closeQuietly(is);
+            formatID = deserializeServiceType(ObjectFormatIdentifier.class, is);
+
         } catch (BaseException be) {
             if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
             if (be instanceof NotFound)               throw (NotFound) be;
@@ -251,12 +251,8 @@ public class MultipartCNode extends MultipartD1Node implements CNode
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
         } catch (ClientSideException e) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
-        } catch (InstantiationException e) {
-            throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
-        } catch (IllegalAccessException e) {
-            throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
         }
-
+        
         return formatID;
     }
 	
@@ -1927,5 +1923,109 @@ public class MultipartCNode extends MultipartD1Node implements CNode
     InvalidRequest, NotImplemented {
 	    return super.listViews(null);
 	}
-    
+
+//    @Override
+    public SubjectInfo echoCredentials(Session session) throws NotImplemented, ServiceFailure,
+            InvalidToken {
+
+        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_DIAG_SUBJECT);
+
+        SubjectInfo subjectInfo = null;
+        try {
+            InputStream is = getRestClient(session).doGetRequest(url.getUrl(),
+                    Settings.getConfiguration().getInteger("D1Client.CNode.replication.timeout", null));
+            subjectInfo = deserializeServiceType(SubjectInfo.class, is);
+
+        } catch (BaseException be) {
+            if (be instanceof NotImplemented)         throw (NotImplemented) be;
+            if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
+            if (be instanceof InvalidToken)           throw (InvalidToken) be;
+
+            throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
+        } 
+        catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
+        
+        return subjectInfo;
+    }
+
+
+//    @Override
+    public SystemMetadata echoSystemMetadata(Session session, SystemMetadata sysmeta)
+            throws NotImplemented, ServiceFailure, NotAuthorized, InvalidToken, InvalidRequest,
+            IdentifierNotUnique, InvalidSystemMetadata {
+
+        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_DIAG_SYSMETA);
+        
+        SystemMetadata echoedSysmeta = null;
+        try {
+            SimpleMultipartEntity mpe = new SimpleMultipartEntity();
+            mpe.addFilePart("sysmeta", sysmeta);
+            
+            InputStream is = getRestClient(this.defaultSession).doPostRequest(url.getUrl(), mpe, null);
+            echoedSysmeta = deserializeServiceType(SystemMetadata.class, is);
+            
+        } catch (BaseException be) {
+            if (be instanceof NotImplemented)         throw (NotImplemented) be;
+            if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
+            if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
+            if (be instanceof InvalidToken)           throw (InvalidToken) be;
+            if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
+            if (be instanceof InvalidSystemMetadata)  throw (InvalidSystemMetadata) be;
+            throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
+            
+        } catch (JiBXException e) {
+            throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);  
+        } catch (IOException e) {
+            throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
+        } catch (ClientSideException e) {
+            throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
+        }
+
+        return echoedSysmeta;
+    }
+
+
+//    @Override
+    public InputStream echoIndexedObject(Session session, String queryEngine,
+            SystemMetadata sysmeta, InputStream object) throws NotImplemented, ServiceFailure,
+            NotAuthorized, InvalidToken, InvalidRequest, InvalidSystemMetadata, UnsupportedType,
+            UnsupportedMetadataType, InsufficientResources {
+
+        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_DIAG_OBJECT);
+        
+        InputStream echoedObject = null;
+        try {
+            SimpleMultipartEntity mpe = new SimpleMultipartEntity();
+            mpe.addFilePart("queryEngine", queryEngine);
+            mpe.addFilePart("sysmeta", sysmeta);
+            if (object == null) {
+                mpe.addFilePart("object", "");
+            } else {
+                mpe.addFilePart("object", object);
+            }
+            
+            echoedObject = getRestClient(this.defaultSession).doPostRequest(url.getUrl(), mpe, null);
+            
+        } catch (BaseException be) {
+            if (be instanceof NotImplemented)         throw (NotImplemented) be;
+            if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
+            if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
+            if (be instanceof InvalidToken)           throw (InvalidToken) be;
+            if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
+            if (be instanceof InvalidSystemMetadata)  throw (InvalidSystemMetadata) be;
+            if (be instanceof UnsupportedType)        throw (UnsupportedType) be;
+            if (be instanceof UnsupportedMetadataType)throw (UnsupportedMetadataType) be;
+            if (be instanceof InsufficientResources)  throw (InsufficientResources) be;
+            throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
+            
+        } catch (JiBXException e) {
+            throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);  
+        } catch (IOException e) {
+            throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
+        } catch (ClientSideException e) {
+            throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
+        }
+
+        return echoedObject;
+    }
 }
