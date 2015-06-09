@@ -43,11 +43,11 @@ public class CITO_263 {
     
     public static final String prefix = "cito";
 
-    /** Classes defined in PROV (ProvONE-relevant subset) */
+    /** Classes defined in CITO */
     public static final List<String> classes = Arrays.asList(
             "CitationAct");
     
-    /* Object properties defined in PROV (ProvONE-relevant subset) */
+    /* Object properties defined in CITO */
     public static final List<String> properties = Arrays.asList(
             "agreesWith",
             "cites",
@@ -141,7 +141,7 @@ public class CITO_263 {
             "usesDataFrom",
             "usesMethodIn");
     
-    public static final Resource Usage = resource("CitationAct");
+    public static final Resource CitationAct = resource("CitationAct");
 
     public static final Property agreesWith                      = property("agreesWith");
     public static final Property cites                           = property("cites");
