@@ -790,12 +790,12 @@ public class MultipartMNode extends MultipartD1Node implements MNode
         
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_PACKAGES);
 
-        if (packageType == null || StringUtils.isBlank(packageType.getValue()))
-            url.addNextPathElement("application/bagit");
+        if (StringUtils.isBlank(packageType.getValue()))
+            url.addNextPathElement("application/zip");
         else
             url.addNextPathElement(packageType.getValue());
 
-        if (id == null || StringUtils.isBlank(id.getValue()))
+        if (StringUtils.isBlank(id.getValue()))
             throw new NotFound("0000", "'pid' cannot be null nor empty");
         url.addNextPathElement(id.getValue());
         

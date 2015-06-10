@@ -77,6 +77,7 @@ public class D1NodeFactory {
         registerService(org.dataone.service.mn.tier2.v2.MNAuthorization.class, new V2MnBuilder());
         registerService(org.dataone.service.mn.tier3.v2.MNStorage.class, new V2MnBuilder());
         registerService(org.dataone.service.mn.tier4.v2.MNReplication.class, new V2MnBuilder());
+        registerService(org.dataone.service.mn.v2.MNPackage.class, new V2MnBuilder());
         registerService(org.dataone.service.mn.v2.MNQuery.class, new V2MnBuilder());
         registerService(org.dataone.service.mn.v2.MNView.class, new V2MnBuilder());
         registerService(org.dataone.client.v2.MNode.class, new V2MnBuilder());

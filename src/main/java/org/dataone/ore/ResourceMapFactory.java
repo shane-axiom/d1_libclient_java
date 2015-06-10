@@ -88,8 +88,7 @@ import com.hp.hpl.jena.rdf.model.StmtIterator;
 public class ResourceMapFactory {
 	
 	// TODO: will this always resolve?
-	private static final String D1_URI_PREFIX = Settings.getConfiguration()
-			.getString("D1Client.CN_URL","howdy") + "/v1/resolve/";
+	private static String D1_URI_PREFIX;
 
 	private static final String RESOURCE_MAP_SERIALIZATION_FORMAT = "RDF/XML";
 
@@ -100,6 +99,14 @@ public class ResourceMapFactory {
 	private static Model oreModel = null;
 	
 	private static Log log = LogFactory.getLog(ResourceMapFactory.class);
+	
+	static{
+	    String baseUrl = Settings.getConfiguration().getString("D1Client.CN_URL");
+	    if (StringUtils.isBlank(baseUrl))
+	        D1_URI_PREFIX = "https://fake.test.dataone.org/cn" + "/v1/resolve/";
+	    else
+	        D1_URI_PREFIX = baseUrl + "/v1/resolve/";
+	}
 	
 	private void init() throws URISyntaxException {
 		// use as much as we can from the included Vocab for dcterms:Agent
