@@ -188,7 +188,7 @@ public class DataPackageTest {
 		dataPackage.insertRelationship(composeActivityURI, used, primaryData2URIList);
 		
 		//Create the resourceMap
-		ResourceMap resourceMap = dataPackage.getMap();
+		ResourceMap resourceMap = dataPackage.getResourceMap();
 		assertNotNull(resourceMap);
 
 		//Create an XML document with the serialized RDF
