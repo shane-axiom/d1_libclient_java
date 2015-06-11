@@ -81,7 +81,15 @@ public class ProvResourceMapBuilderTest {
         DataPackage dataPackage = new DataPackage(packageId);
 
         // add data/metadata
-        dataPackage.insertRelationship(metadataId, dataIds);
+        try {
+            dataPackage.insertRelationship(metadataId, dataIds);
+        } catch (OREException e1) {
+            e1.printStackTrace();
+            
+        } catch (URISyntaxException e1) {
+            e1.printStackTrace();
+            
+        }
 
         // prov relationships
 
@@ -124,6 +132,8 @@ public class ProvResourceMapBuilderTest {
         } catch (URISyntaxException e) {
             e.printStackTrace();
                         
+        } catch (OREException e) {
+            e.printStackTrace();
         }
 
         /* prov:wasAssociatedWith */ 

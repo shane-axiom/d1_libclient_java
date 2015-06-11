@@ -53,12 +53,16 @@ import org.dspace.foresite.ResourceMapDocument;
 import org.dspace.foresite.Triple;
 
 import com.hp.hpl.jena.rdf.model.AnonId;
+import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Resource;
+import com.hp.hpl.jena.rdf.model.Selector;
+import com.hp.hpl.jena.rdf.model.SimpleSelector;
 import com.hp.hpl.jena.rdf.model.Statement;
+import com.hp.hpl.jena.rdf.model.StmtIterator;
 /**
  *  A Resource Map builder with methods for adding provenance or other statements about
  *  resource in an ORE aggregation.  
@@ -290,20 +294,44 @@ public class ProvResourceMapBuilder {
 	public ResourceMap insertRelationship(ResourceMap resourceMap, Resource subject, Property predicate, 
 	        List<RDFNode> objects ) throws OREException {
 
+	    // Indicate whether a statements subject or object exists in the model
+	    boolean exists;
+	    
 	    setModel(resourceMap);
-
+	    
 	    if ( subject == null ) {
 	        throw new OREException("Subject cannot be null. Please set the subject Resource.");
 	        
 	    }
 	    
+	    Statement statement = null;
     	for ( RDFNode object : objects ) {
-    	    // Build the triple with the given predicate
-            if ( object == null ) {
+            exists = false;
+            
+    	    // Is the subject in the graph?
+            exists = rdfModel.containsResource(subject);
+
+                        
+    	    // null objects are not allowed
+    	    if ( object == null ) {
                 throw new OREException("Object cannot be null. Please set the object Resource.");
                 
             }
-            Statement statement = rdfModel.createStatement(subject, predicate, object);
+            
+            // statements may not be orphaned, so test each object
+            if ( ! exists ) {                
+                exists = rdfModel.containsResource(object);
+                
+            }
+            
+            if ( ! exists ) {
+                throw new OREException("Either the subject or object of the statement " +
+                        "must exist in the model.  Please ensure one is present.");
+                    
+            }
+            
+            // We're clear to add the statement
+            statement = rdfModel.createStatement(subject, predicate, object);
             rdfModel.add(statement);
     	}
     	    	
@@ -312,8 +340,8 @@ public class ProvResourceMapBuilder {
 
 	/**
 	 * Insert statements into the resource map graph using a blank (anonymous) node ID 
-	 * as the subject, a predicate, and a list of object URIs. The blankSubjectID should
-	 * be unique to other blank nodes in the resource map. When inserting a relationship, 
+	 * as the subject, a predicate, and a list of objects. If the blankSubjectID exists in
+	 * the resource map, it will be updated; otherwise created. When inserting a relationship, 
 	 * ensure that either the subject or object URIs are connected in the graph 
 	 * (that one is present) to avoid an OREException.
 	 * 
@@ -325,33 +353,19 @@ public class ProvResourceMapBuilder {
 	 * @throws OREException
 	 */
 	public ResourceMap insertRelationship(ResourceMap resourceMap, String blankSubjectID, 
-	        Predicate predicate, List<URI> objects) throws OREException {
+	        Property predicate, List<RDFNode> objects) throws OREException {
 
-	    setModel(resourceMap);
-        
 	    if ( blankSubjectID == null || blankSubjectID.isEmpty() ) {
 	         throw new OREException("blankSubjectID cannot be null or empty. Please set the blankSubjectID.");
 	         
 	    }
 	     
-	    for ( URI object : objects ) {
-	        // Build the triple with the given blank node id, predicate, and object
-	        if ( object == null ) {
-	            throw new OREException("Object cannot be null. Please set the object URI.");
-	            
-	        }
-	        
-	        
-	        AnonId anonId = new AnonId(blankSubjectID);
-	        Resource blankSubject = rdfModel.createResource(anonId);
-	        Property property = rdfModel.createProperty(predicate.getNamespace(), predicate.getName());
-	        Resource objectNode = rdfModel.createResource(object.toString());
-	        Statement statement = rdfModel.createStatement(blankSubject, property, objectNode);
-	        rdfModel.add(statement);
-	    }
+        AnonId anonId = new AnonId(blankSubjectID);
+        Resource blankSubject = rdfModel.createResource(anonId);
 	    
-	    return getModel();
+	    return insertRelationship(resourceMap, blankSubject, predicate, objects);
 	}
+	
     /*
      * For the given resource map, add it to the oreModel so it can be manipulated
      * outside of the ORE API (with the Jena API)
@@ -426,4 +440,5 @@ public class ProvResourceMapBuilder {
         rdfModel.removeNsPrefix(citoPrefix);
         rdfModel.setNsPrefix(CITO.prefix, CITO.namespace);
     }
+    
 }
