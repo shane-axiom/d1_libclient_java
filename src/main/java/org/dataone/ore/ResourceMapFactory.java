@@ -139,6 +139,56 @@ public class ResourceMapFactory {
 	}
 	
 	/**
+	 * Create a resource map with the given identifier and aggregation title.  This creates a base
+	 * resource map with no aggregation members, and can be added to with other methods.
+	 * 
+	 * @param resourceMapId  the identifier of the resource map
+	 * @param title  the title of the aggregated resources
+	 * @return  resourceMap  The resource map
+	 * 
+	 * @throws OREException
+	 * @throws URISyntaxException
+	 */
+	public ResourceMap createResourceMap(Identifier resourceMapId, String title) 
+	    throws OREException, URISyntaxException {
+	    ResourceMap resourceMap;
+
+	    if ( resourceMapId == null || 
+	         resourceMapId.getValue() == null ||
+	         resourceMapId.getValue().isEmpty() ) {
+	        throw new OREException("The resource map identifier can not be null or empty. " + 
+	           "Please set its value.");
+	        
+	    }
+	    
+	    if ( title == null || title.isEmpty() ) {
+	        title = "DataONE Aggregation";
+	    }
+	    
+	    Aggregation aggregation = OREFactory.createAggregation(new URI(D1_URI_PREFIX 
+	             + EncodingUtilities.encodeUrlPathSegment(resourceMapId.getValue()) 
+	             + "#aggregation"));
+
+	    resourceMap = aggregation.createResourceMap(new URI(D1_URI_PREFIX 
+                + EncodingUtilities.encodeUrlPathSegment(resourceMapId.getValue())));
+
+	    Agent creator = OREFactory.createAgent();
+	    creator.addName("DataONE Java Client Library");
+	    resourceMap.addCreator(creator);
+
+	    aggregation.addTitle(title);
+
+	    // add the resource map identifier
+        Triple resourceMapIdentifier = new TripleJena();
+        resourceMapIdentifier.initialise(resourceMap);
+        resourceMapIdentifier.relate(DC_TERMS_IDENTIFIER, resourceMapId.getValue());
+        resourceMap.addTriple(resourceMapIdentifier);
+
+	    return resourceMap;
+	    
+	}
+	
+	/**
 	 * creates a ResourceMap from the DataPackage representation.
 	 * @param resourceMapId
 	 * @param idMap
@@ -151,26 +201,16 @@ public class ResourceMapFactory {
 			Map<Identifier, List<Identifier>> idMap) 
 		throws OREException, URISyntaxException {
 		
-		// create the resource map and the aggregation
-		// NOTE: use distinct, but related URI for the aggregation
-		Aggregation aggregation = OREFactory.createAggregation(new URI(D1_URI_PREFIX 
-				+ EncodingUtilities.encodeUrlPathSegment(resourceMapId.getValue()) 
-				+ "#aggregation"));
-		ResourceMap resourceMap = aggregation.createResourceMap(new URI(D1_URI_PREFIX 
-				+ EncodingUtilities.encodeUrlPathSegment(resourceMapId.getValue())));
+	    // Create a base resource map
+		String title = null;
+		ResourceMap resourceMap = createResourceMap(resourceMapId, title);
+		Aggregation aggregation = resourceMap.getAggregation();
+		if ( aggregation.getTitles().isEmpty() ) {
+	        aggregation.addTitle("DataONE Aggregation");
+		    
+		}
 		
-		Agent creator = OREFactory.createAgent();
-		creator.addName("Java libclient");
-		resourceMap.addCreator(creator);
-		// add the resource map identifier
-		Triple resourceMapIdentifier = new TripleJena();
-		resourceMapIdentifier.initialise(resourceMap);
-		resourceMapIdentifier.relate(DC_TERMS_IDENTIFIER, resourceMapId.getValue());
-		resourceMap.addTriple(resourceMapIdentifier);
-		
-		//aggregation.addCreator(creator);
-		aggregation.addTitle("DataONE Aggregation");
-		
+		// Then populate the resource map
 		// iterate through the metadata items
 		for (Identifier metadataId: idMap.keySet()) {
 		
