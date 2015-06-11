@@ -3,7 +3,7 @@
  * jointly copyrighted by participating institutions in DataONE. For
  * more information on DataONE, see our web site at http://dataone.org.
  *
- *   Copyright ${year}
+ *   Copyright 2009-2015
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,9 @@
 
 package org.dataone.client.v1.itk;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -28,13 +30,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.dataone.client.exception.ClientSideException;
+import org.dataone.configuration.Settings;
 import org.dataone.ore.ProvResourceMapBuilder;
 import org.dataone.ore.ResourceMapFactory;
 import org.dataone.service.exceptions.InsufficientResources;
@@ -46,12 +49,21 @@ import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.types.v1.SystemMetadata;
+import org.dataone.service.util.EncodingUtilities;
+import org.dataone.vocabulary.CITO;
+import org.dataone.vocabulary.DC_TERMS;
+import org.dspace.foresite.AggregatedResource;
+import org.dspace.foresite.Aggregation;
 import org.dspace.foresite.OREException;
+import org.dspace.foresite.OREFactory;
 import org.dspace.foresite.OREParserException;
 import org.dspace.foresite.ORESerialiserException;
 import org.dspace.foresite.Predicate;
 import org.dspace.foresite.ResourceMap;
+import org.dspace.foresite.Triple;
+import org.dspace.foresite.TripleSelector;
 
+import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Resource;
@@ -92,10 +104,12 @@ import com.hp.hpl.jena.rdf.model.ResourceFactory;
 public class DataPackage {
     
     private Identifier packageId;
-    private Map<Identifier, List<Identifier>> metadataMap;
-    private Map<Property, Map<Resource, List<RDFNode>>> tripleMap;
+    private ResourceMap resourceMap = null;
     private HashMap<Identifier, D1Object> objectStore;
     private SystemMetadata systemMetadata = null;
+    private String D1_URI_PREFIX = 
+        Settings.getConfiguration().getString("D1Client.CN_URL") + "/v1/resolve/";
+
     
         
     /**
@@ -113,8 +127,17 @@ public class DataPackage {
      */
     public DataPackage(Identifier id) {
         objectStore = new HashMap<Identifier, D1Object>();
-        metadataMap = new HashMap<Identifier, List<Identifier>>();
-        tripleMap   = new LinkedHashMap<Property, Map<Resource, List<RDFNode>>>();
+        String title = null;
+        try {
+            resourceMap = ResourceMapFactory.getInstance().createResourceMap(id, title);
+            
+        } catch (OREException e) {
+            // TODO: Decide what to do here
+            
+        } catch (URISyntaxException e) {
+            // TODO: Decide what to do here
+            
+        }
         setPackageId(id);
     }
     
@@ -165,26 +188,29 @@ public class DataPackage {
      * 
      * @param metadataID
      * @param dataIDList
+     * @throws URISyntaxException
+     * @throws OREException 
      */
-    public void insertRelationship(Identifier metadataID, List<Identifier> dataIDList) {
-        List<Identifier> associatedData = null;
+    public void insertRelationship(Identifier metadataID, List<Identifier> dataIDList) 
+            throws OREException, URISyntaxException {
         
-        // Determine if the metadata object is already in the relations list
-        // Use it if so, if not then create a list for this metadata link        	
-        if (metadataMap.containsKey(metadataID)) {
-            associatedData = metadataMap.get(metadataID);
-        } else {
-            associatedData = new ArrayList<Identifier>();
-        }
+        // Add the metadata to the resource map
+        URI metadataURI = getResolveURI(metadataID);        
+        aggregate(metadataURI);
+        insertRelationship(metadataURI, DC_TERMS.predicate("identifier"), metadataID.getValue());
         
-        // For each data item, add the relationship if it doesn't exist
-        for (Identifier dataId : dataIDList) {
-            if (!associatedData.contains(dataId)) {
-                associatedData.add(dataId);
-            }
+        
+        // Add the data objects to the resource map and relate them to the metadata
+        List<URI> dataURIs = new ArrayList<URI>();
+        for (Identifier dataID : dataIDList) {
+            URI dataURI = getResolveURI(dataID);
+            dataURIs.add(dataURI);
+            aggregate(dataURI);
+            insertRelationship(dataURI, DC_TERMS.predicate("identifier"), dataID.getValue());
+            insertRelationship(dataURI, CITO.predicate("isDocumentedBy"), metadataURI);
         }
-        if (!metadataMap.containsKey(metadataID))
-        	metadataMap.put(metadataID, associatedData);
+        insertRelationship(metadataURI, CITO.predicate("documents"), dataURIs);
+        
     }
     
     /**
@@ -196,9 +222,10 @@ public class DataPackage {
      * @param predicate  The relationship of the statement
      * @param object  the object of the statement
      * @throws URISyntaxException
+     * @throws OREException 
      */
     public void insertRelationship(URI subject, Predicate predicate, URI object) 
-            throws URISyntaxException {
+            throws URISyntaxException, OREException {
         
         List<URI> objects = new ArrayList<URI>();
         objects.add(object);
@@ -215,9 +242,10 @@ public class DataPackage {
      * @param predicate  The relationship of each statement
      * @param object  the objects of each statement
      * @throws URISyntaxException
+     * @throws OREException 
      */
     public void insertRelationship(URI subject, Predicate predicate, List<URI> objects) 
-            throws URISyntaxException {   
+            throws URISyntaxException, OREException {   
 
         // convert subject, predicate, and object types
         Resource subjectResource = ResourceFactory.createResource(subject.toString());
@@ -229,53 +257,33 @@ public class DataPackage {
             
         }
         
-        insertRelationship(subjectResource, property, objectResources);
+        ProvResourceMapBuilder provBuilder = new ProvResourceMapBuilder();
+        resourceMap = provBuilder.insertRelationship(resourceMap, subjectResource, property, objectResources);
                 
     }
-    
-    public void insertRelationship(URI subject, Predicate predicate, Object literal) {
+
+    /**
+     * Relate a given subject URI to a literal using the given predicate.
+     * 
+     * @param subject
+     * @param predicate
+     * @param literal
+     * @throws OREException
+     */
+    public void insertRelationship(URI subject, Predicate predicate, Object literal) 
+            throws OREException {
+        
+        Resource subjectResource = ResourceFactory.createResource(subject.toString());
+        Property property = ResourceFactory.createProperty(predicate.getURI().toString());
+        Literal literalValue = ResourceFactory.createTypedLiteral(literal);
+        
+        List<RDFNode> objects = new ArrayList<RDFNode>();
+        objects.add(literalValue);
+        
+        ProvResourceMapBuilder provBuilder = new ProvResourceMapBuilder();
+        resourceMap = provBuilder.insertRelationship(resourceMap, subjectResource, property, objects);
         
     }
-
-    public void insertRelationship(Resource subject, Property predicate, List<RDFNode> objects) {
-
-        // Start a list to hold the object Resources
-        List<RDFNode> associatedObjects = null;
-        // Start a map to map the subject Resource to the object Resources
-        Map<Resource, List<RDFNode>> objectsBySubjectMap = null;
-               
-        // Determine if we have a triple with this predicate and subject already
-        // Use it if so, if not then create a list for these objects            
-        if (tripleMap.containsKey(predicate)) {
-            objectsBySubjectMap = tripleMap.get(predicate);
-            
-            if(objectsBySubjectMap.containsKey(subject)){
-                associatedObjects = objectsBySubjectMap.get(subject);
-            }
-            else{
-                associatedObjects = new ArrayList<RDFNode>();
-            }   
-        } else {
-            associatedObjects = new ArrayList<RDFNode>();
-            objectsBySubjectMap  = new HashMap<Resource, List<RDFNode>>();
-        }
-        
-        // For each object item, add the relationship if it doesn't exist
-        for (RDFNode object : objects) {
-            if (!associatedObjects.contains(object)) {
-                associatedObjects.add(object);
-            }
-        }
-        
-        // Create the Identifier map
-        if (!objectsBySubjectMap.containsKey(subject))
-            objectsBySubjectMap.put(subject, associatedObjects);
-        
-        //Add to the tripleMap
-        tripleMap.put(predicate, objectsBySubjectMap);
-
-    }
-    
 
     /**
      * Used to introspect on the local temporary data store, NOT the number of 
@@ -288,8 +296,7 @@ public class DataPackage {
     public int size() {
         return objectStore.size();
     }
-    
-    
+        
     /**
      * Determine if an object with the given Identifier is already present in
      * the local data store.
@@ -351,42 +358,50 @@ public class DataPackage {
             this.packageId = packageId;
         }
     }
-
   
     /**
-     * Build and return a fresh ORE ResourceMap from the metadata map.
-     * TODO: create a RM when science metadata is null
-     * TODO: handle error conditions when data list is null
-     * @return the map
-     * @throws URISyntaxException 
-     * @throws OREException 
+     * Return the internally stored resource map
+     * 
+     * @return respourceMap  The resource map
      */
-    public ResourceMap getMap() throws OREException, URISyntaxException {
-    	ResourceMap resourceMap = null;
+    public ResourceMap getResourceMap() {
 
-        // create the resource map just from the metadata map first
-        resourceMap = ResourceMapFactory.getInstance().createResourceMap(packageId, metadataMap);
-
-        if ( ! tripleMap.isEmpty() ) {
-                        
-            for ( Property property : tripleMap.keySet() ) {
-                Map<Resource, List<RDFNode>> objectsBySubject  = tripleMap.get(property);
-                                
-                for (Resource subject : objectsBySubject.keySet() ) {
-                    List<RDFNode> objects = objectsBySubject.get(subject);
-                    ProvResourceMapBuilder provBuilder = new ProvResourceMapBuilder();
-                    resourceMap = 
-                        provBuilder.insertRelationship(resourceMap, subject, property, objects);
-                    
-                }                
-            }
-        }
-        
         return resourceMap;
     }
+
+    /**
+     * Set the internally stored resource map
+     * 
+     * @param resourceMap  The resource map to set
+     */
+    public void setResourceMap(ResourceMap resourceMap) {
+        this.resourceMap = resourceMap;
+        
+    }
     
-    
-    
+    /*
+     * Construct a DataONE CNRead.resolve() URI from a given object identifier value
+     */
+    private URI getResolveURI(Identifier identifier) throws URISyntaxException {
+        
+        URI uri = new URI(D1_URI_PREFIX + 
+            EncodingUtilities.encodeUrlPathSegment(identifier.getValue()));
+        
+        return uri;
+    }
+
+    /*
+     * Aggregate a resource into the resourceMap
+     * 
+     * @param resourceURI  the URI of the resource to be aggregated
+     */
+    private void aggregate(URI resourceURI) throws OREException {
+        AggregatedResource resource = OREFactory.createAggregatedResource(resourceURI);
+        Aggregation aggregation = resourceMap.getAggregation();
+        aggregation.addAggregatedResource(resource);
+                
+
+    }
     /**
      * Return an ORE ResourceMap describing this package, serialized as an RDF graph.
      * @return the map as a serialized String
@@ -396,7 +411,7 @@ public class DataPackage {
      */
     public String serializePackage() throws OREException, URISyntaxException, ORESerialiserException 
     {
-        ResourceMap rm = getMap();
+        ResourceMap rm = getResourceMap();
         String  rdfXml = ResourceMapFactory.getInstance().serializeResourceMap(rm);
      
         return rdfXml;
@@ -469,9 +484,13 @@ public class DataPackage {
         	Identifier pid = packageMap.keySet().iterator().next();
         	dp = new DataPackage(pid);
 
+            // Store the resource map in the DataPackage
+            InputStream inputStream = new ByteArrayInputStream(resourceMap.getBytes());
+            ResourceMap resource = ResourceMapFactory.getInstance().deserializeResourceMap(inputStream);
+            dp.setResourceMap(resource);
+
         	// Get the Map of metadata/data identifiers
         	Map<Identifier, List<Identifier>> mdMap = packageMap.get(pid);
-        	dp.setMetadataMap(mdMap);
 
         	// parse the metadata/data identifiers and store the associated objects if they are accessible
         	for (Identifier scienceMetadataId : mdMap.keySet()) {
@@ -486,13 +505,6 @@ public class DataPackage {
     }
     
     /**
-     * @return the metadata map
-     */
-    public Map<Identifier, List<Identifier>> getMetadataMap() {
-        return metadataMap;
-    }
-    
-    /**
      * Convenience function for working with the metadata map. Does a reverse
      * lookup to get the metadata object that is defined to document the provided
      * data object.  Returns null if the relationship has not been defined.
@@ -500,24 +512,50 @@ public class DataPackage {
      * @return
      */
     public Identifier getDocumentedBy(Identifier dataObject) {
-    	Map<Identifier, List<Identifier>> mdMap = getMetadataMap();
-    	Set<Identifier> metadataMembers = mdMap.keySet();
     	Identifier documenter = null;
-    	for (Identifier md : metadataMembers) {
-    		if (mdMap.get(md).contains(dataObject)) {
-    			documenter = md;
-    			break;
-    		}
-    	}
-    	return documenter;
-    }
-    
+    	
+    	URI metadataURI = null;
+        URI predicateURI = null;
+        URI dataURI = null;
+        
+        try {
+            metadataURI = null;
+            predicateURI = CITO.predicate("documents").getURI();
+            dataURI = getResolveURI(dataObject);
 
-    /**
-     * @param metadataMap the metadataMap to set
-     */
-    public void setMetadataMap(Map<Identifier, List<Identifier>> metadataMap) {
-        this.metadataMap = metadataMap;
+            TripleSelector documentsSelector = new TripleSelector(metadataURI, predicateURI, dataURI);
+
+            List<Triple> documentsTriples = resourceMap.listAllTriples(documentsSelector);
+            
+            if ( ! documentsTriples.isEmpty() ) {
+               Triple triple = documentsTriples.get(0);
+               URI returnedMetadataURI = triple.getSubjectURI();
+               String metadataIdentifier = null;
+               TripleSelector idSelector = 
+                       new TripleSelector(returnedMetadataURI, 
+                               DC_TERMS.predicate("identifier").getURI(), metadataIdentifier);
+               List<Triple> idTriples = resourceMap.listAllTriples(idSelector);
+               
+               if ( ! idTriples.isEmpty() ) {
+                   Triple metadataIdTriple = idTriples.get(0);
+                   String metadataId = metadataIdTriple.getObjectLiteral();
+                   documenter = new Identifier();
+                   documenter.setValue(metadataId);
+               }
+            }
+            
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+            
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+            
+        } catch (OREException e) {
+            e.printStackTrace();
+            
+        }
+    	
+    	return documenter;
     }
     
     /**
@@ -634,14 +672,52 @@ public class DataPackage {
     	}
     	return unresolvedItems;
     }
-    
+
     /**
-     * Returns the set of Identifiers that are in the relationship map
+     * Get a map of the metadata members of the resource map and the associated data
+     * they document.
+     * 
+     * @return the metadata map
+     */
+    public Map<Identifier, List<Identifier>> getMetadataMap() {
+
+        Map<Identifier, List<Identifier>> metadataMap = null;
+        try {
+            String resourceMapStr = 
+                    ResourceMapFactory.getInstance().serializeResourceMap(resourceMap);
+            Map<Identifier, Map<Identifier, List<Identifier>>> packageMap = 
+                    ResourceMapFactory.getInstance().parseResourceMap(resourceMapStr);
+            Identifier pid = packageMap.keySet().iterator().next();
+            metadataMap = packageMap.get(pid);
+            
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            
+        } catch (ORESerialiserException e) {
+            e.printStackTrace();
+            
+        } catch (OREException e) {
+            e.printStackTrace();
+            
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+            
+        } catch (OREParserException e) {
+            e.printStackTrace();
+            
+        }
+       
+        return metadataMap;
+    }
+
+    /**
+     * Returns the set of Identifiers that are in the resource map
      * (metadataMap)
      * @return
      */
     private Set<Identifier> getPackageResources() {
-    	Set<Identifier> packageResources = new HashSet<Identifier>();
+
+        Set<Identifier> packageResources = new HashSet<Identifier>();
     	for (Identifier pid: getMetadataMap().keySet()) {
     		packageResources.add(pid);
     		packageResources.addAll(getMetadataMap().get(pid));
