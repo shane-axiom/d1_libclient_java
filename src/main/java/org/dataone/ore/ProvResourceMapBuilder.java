@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.dataone.configuration.Settings;
@@ -70,15 +71,21 @@ import com.hp.hpl.jena.rdf.model.StmtIterator;
  */
 public class ProvResourceMapBuilder {
 	
-	// TODO: will this always resolve?
-	private static final String D1_URI_PREFIX = Settings.getConfiguration()
-			.getString("D1Client.CN_URL", "https://cn-dev.test.dataone.org/cn") + "/v1/resolve/";
+	private static String D1_URI_PREFIX;
 	
 	private Model rdfModel = null;
 	
 	private static Log log = LogFactory.getLog(ProvResourceMapBuilder.class);
 	
     private static final String DEFAULT_RDF_FORMAT = "RDF/XML";
+
+    static{
+        String baseUrl = Settings.getConfiguration().getString("D1Client.CN_URL");
+        if (StringUtils.isBlank(baseUrl))
+            D1_URI_PREFIX = "https://fake.test.dataone.org/cn" + "/v1/resolve/";
+        else
+            D1_URI_PREFIX = baseUrl + "/v1/resolve/";
+    }
 
 	public ProvResourceMapBuilder() {
 	    // Create and configure an RDF model to manipulate the resource map
