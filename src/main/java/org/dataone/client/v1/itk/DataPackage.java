@@ -234,6 +234,30 @@ public class DataPackage {
     }
 
     /**
+     * Relate a given subject blank node to an object URI using the given predicate.
+     * Allows properties to be set on an anonymous node in the resource map.  When using this
+     * method, ensure that the subject is connected in the resource map graph.
+     * 
+     * @param blankSubjectId  The identifier used for the blank node in the resource map
+     * @param predicate  the predicate of the statement
+     * @param object  the URI of the object of the statement
+     * 
+     * @throws OREException
+     */
+    public void insertRelationship(String blankSubjectId, Predicate predicate, URI object) 
+            throws OREException {
+
+        Property property = ResourceFactory.createProperty(predicate.getURI().toString());
+        List<RDFNode> objectResources = new ArrayList<RDFNode>();
+        objectResources.add(ResourceFactory.createResource(object.toString()));
+        
+        ProvResourceMapBuilder provBuilder = new ProvResourceMapBuilder();
+        resourceMap = 
+            provBuilder.insertRelationship(resourceMap, blankSubjectId, property, objectResources);
+
+    }
+    
+    /**
      * Relate a given subject URI to a list of object URIs using the given predicate.
      * Allows general statements to be made about members of the DataPackage where both the
      * subject and the object have resolvable URIs.
