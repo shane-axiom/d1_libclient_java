@@ -1945,7 +1945,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
         InputStream echoedObject = null;
         try {
             SimpleMultipartEntity mpe = new SimpleMultipartEntity();
-            mpe.addFilePart("queryEngine", queryEngine);
+            mpe.addParamPart("queryEngine", queryEngine);
             mpe.addFilePart("sysmeta", sysmeta);
             if (object == null) {
                 mpe.addFilePart("object", "");
