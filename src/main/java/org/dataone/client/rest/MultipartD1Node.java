@@ -369,9 +369,13 @@ public abstract class MultipartD1Node implements D1Node {
                 if (cacheMissed) {
                     // only get here if we useLocalCache is true
                     // (we want to add it to the cache)
-                    byte[] bytes = IOUtils.toByteArray(remoteStream);
-                    LocalCache.instance().putData(pid, bytes);
-
+                    byte[] bytes = null;
+                    try {
+                        bytes = IOUtils.toByteArray(remoteStream);
+                        LocalCache.instance().putData(pid, bytes);
+                    } finally {
+                        IOUtils.closeQuietly(remoteStream);
+                    }
                     is = new AutoCloseInputStream(new ByteArrayInputStream(bytes));
                 } else {
                     is = new AutoCloseInputStream(remoteStream);
