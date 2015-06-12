@@ -23,6 +23,7 @@ package org.dataone.client.v2;
 import org.dataone.client.D1Node;
 import org.dataone.service.cn.v2.CNAuthorization;
 import org.dataone.service.cn.v2.CNCore;
+import org.dataone.service.cn.v2.CNDiagnostic;
 import org.dataone.service.cn.v2.CNIdentity;
 import org.dataone.service.cn.v2.CNRead;
 import org.dataone.service.cn.v2.CNRegister;
@@ -30,17 +31,17 @@ import org.dataone.service.cn.v2.CNReplication;
 import org.dataone.service.cn.v2.CNView;
 
 /**
- * An aggregated API that represents all of the possible services reachable at 
- * a Coordinating Node, defined in the org.dataone.service.cn package.  
- * 
+ * An aggregated API that represents all of the possible services reachable at
+ * a Coordinating Node, defined in the org.dataone.service.cn package.
+ *
  * It also extends the D1Node interface which is used to associate the baseUrl
  * and NodeId / NodeReference.
- * 
+ *
  * @author rnahf
  *
  */
-public interface CNode 
-extends D1Node, 
+public interface CNode
+extends D1Node,
 /* and all of the CN service interfaces */
-CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplication, CNView
+CNCore, CNRead, CNAuthorization, CNIdentity, CNRegister, CNReplication, CNView, CNDiagnostic
 {}
