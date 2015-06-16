@@ -28,6 +28,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -36,6 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.io.IOUtils;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.v1.itk.DataPackage;
 import org.dataone.client.v1.types.D1TypeBuilder;
@@ -43,7 +45,9 @@ import org.dataone.configuration.Settings;
 import org.dataone.ore.ResourceMapFactory;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.types.v1.Identifier;
+import org.dataone.vocabulary.DC_TERMS;
 import org.dataone.vocabulary.PROV;
+import org.dataone.vocabulary.ProvONE;
 import org.dspace.foresite.OREException;
 import org.dspace.foresite.OREParserException;
 import org.dspace.foresite.ORESerialiserException;
@@ -52,6 +56,18 @@ import org.dspace.foresite.ResourceMap;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import com.hp.hpl.jena.rdf.model.AnonId;
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.Property;
+import com.hp.hpl.jena.rdf.model.RDFNode;
+import com.hp.hpl.jena.rdf.model.Resource;
+import com.hp.hpl.jena.rdf.model.Selector;
+import com.hp.hpl.jena.rdf.model.SimpleSelector;
+import com.hp.hpl.jena.rdf.model.Statement;
+import com.hp.hpl.jena.rdf.model.StmtIterator;
+import com.hp.hpl.jena.vocabulary.RDF;
 
 public class DataPackageTest {
 
@@ -91,6 +107,95 @@ public class DataPackageTest {
 	    assertTrue("deserialized dataPackage should have the original packageId",
 		       dp2.getPackageId().equals(packageId));
 
+	}
+
+	/**
+	 * Tests the insertion of a blank node subject of an RDF statement
+	 */
+	@Test
+	public void testInsertRelationshipBlankNode() {
+        System.out.println("***************  testInsertRelationshipBlankNode  ******************");
+        
+        String D1_URI_PREFIX = Settings.getConfiguration().getString("D1Client.CN_URL", 
+            "https://cn-dev.test.dataone.org/cn") + "/v1/resolve/";
+        
+        Identifier packageId = D1TypeBuilder.buildIdentifier("package.1.1");
+        DataPackage dataPackage = new DataPackage(packageId);
+	    
+        Predicate type;
+        try {
+            
+            // First add some metadata and data to ensure the graph is connected
+            Identifier metadataId = D1TypeBuilder.buildIdentifier("meta.1.1");
+            Identifier dataId = D1TypeBuilder.buildIdentifier("data.1.1");
+            List<Identifier> data = new ArrayList<Identifier>();
+            data.add(dataId);            
+            dataPackage.insertRelationship(metadataId, data);
+            
+            // use the data in some sort of execution, identified by a blank node
+            String blankExecutionNodeId = "execution.1.1";
+            
+            dataPackage.insertRelationship(blankExecutionNodeId, PROV.predicate("used"), 
+                    new URI(D1_URI_PREFIX + dataId.getValue()));
+            
+            // and type the blank node as a provone:Execution 
+            type = asPredicate(RDF.type, "rdf");
+            dataPackage.insertRelationship(blankExecutionNodeId, type, new URI(ProvONE.Execution.getURI()));
+            
+            // Print the RDF
+            String rdfXML = dataPackage.serializePackage();
+            System.out.println(rdfXML);
+            
+            // Load the result into a model for reading
+            Model rdfModel = ModelFactory.createDefaultModel();
+            InputStream inputStream = IOUtils.toInputStream(rdfXML, "UTF-8");
+            rdfModel.read(inputStream, null);
+            Resource subjectResource = null;
+            Property property = null;
+            Resource objectResource = null;
+            Selector selector = null;
+            StmtIterator statements = null;
+            Statement statement = null;
+                        
+            // Test for [[blank node] @prov:used data.1.1]
+            objectResource = 
+                    ModelFactory.createDefaultModel().createResource(D1_URI_PREFIX + "data.1.1");
+
+            selector = getSimpleSelector(null, PROV.used, objectResource);
+            statements = rdfModel.listStatements(selector);
+            
+            assertTrue("The resource map should have a blank node that used data.1.1", 
+                    statements.hasNext());
+            statement = statements.nextStatement();
+            assertTrue("The returned node is blank", statement.getSubject().isAnon());
+            Resource subjectFromUsedStatement = statement.getSubject();
+            
+            // Test for [[blank node] @rdf:type provone:Execution]
+            selector = getSimpleSelector(null, RDF.type, ProvONE.Execution);
+            statements = rdfModel.listStatements(selector);
+            
+            assertTrue("The resource map should have a blank node of type provone:Execution", 
+                    statements.hasNext());
+            statement = statements.nextStatement();
+            assertTrue("The returned node is blank", statement.getSubject().isAnon());
+            Resource subjectFromTypeStatement = statement.getSubject();
+            assertTrue("The returned node should be the same node returned in the previous select", 
+                    subjectFromUsedStatement.equals(subjectFromTypeStatement));        
+            
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+            
+        } catch (OREException e) {
+            e.printStackTrace();
+            
+        } catch (ORESerialiserException e) {
+            e.printStackTrace();
+            
+        } catch (IOException e) {
+            e.printStackTrace();
+            
+        }
+        
 	}
 	
 	@Test
@@ -234,5 +339,41 @@ public class DataPackageTest {
 	    assertTrue("'myMetadataIDa' should be returned by getDocumentedBy('myDataID2a')", mda.equals(metadataIDa));
 
 	}
-	
+
+    /*
+     * Given a Jena Property and namespace prefix, create an ORE Predicate. This allows
+     * us to use the Jena vocabularies
+     * 
+     * @param predicate
+     * @throws URISyntaxException
+     */
+    private Predicate asPredicate(Property property, String prefix)
+            throws URISyntaxException {
+        Predicate predicate = new Predicate();
+        predicate.setName(property.getLocalName());
+        predicate.setNamespace(property.getNameSpace());
+        if ( prefix != null || ! prefix.isEmpty() ) {
+            predicate.setPrefix(prefix);
+            
+        }
+        predicate.setURI(new URI(property.getURI()));
+        
+        return predicate;
+    }
+
+    /*
+     * Create a statement selector to query the Jena model to validate statements
+     * 
+     * @param subjectResource
+     * @param property
+     * @param objectNode
+     * @return
+     */
+    private Selector getSimpleSelector(Resource subjectResource,
+            Property property, RDFNode objectNode) {
+        Selector selector = new SimpleSelector(subjectResource, property, objectNode);
+        return selector;
+    }
+
+
 }
