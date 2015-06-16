@@ -38,6 +38,7 @@ import org.dataone.configuration.Settings;
 import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.util.EncodingUtilities;
 import org.dataone.vocabulary.CITO;
+import org.dataone.vocabulary.DC_TERMS;
 import org.dataone.vocabulary.PROV;
 import org.dataone.vocabulary.ProvONE;
 import org.dspace.foresite.OREException;
@@ -315,16 +316,38 @@ public class ProvResourceMapBuilder {
     	for ( RDFNode object : objects ) {
             exists = false;
             
-    	    // Is the subject in the graph?
-            exists = rdfModel.containsResource(subject);
-
-                        
-    	    // null objects are not allowed
-    	    if ( object == null ) {
+            // null objects are not allowed
+            if ( object == null ) {
                 throw new OREException("Object cannot be null. Please set the object Resource.");
                 
             }
             
+    	    // Is the subject in the graph?
+            if ( subject.isAnon() ) {
+                
+                // For blank nodes, check the DC_TERMS identifier property
+                Statement idStatement = subject.getProperty(DC_TERMS.identifier);
+                Selector idSelector = 
+                    new SimpleSelector(null, idStatement.getPredicate(), idStatement.getObject());
+                
+                StmtIterator statements = rdfModel.listStatements(idSelector);
+                if ( statements.hasNext() ) {
+                    exists = true; // a blank node with this id exists, use its subject
+                    subject = statements.nextStatement().getSubject();
+                    
+                } else {
+                    subject = rdfModel.createResource(subject.getId()).addProperty(
+                            DC_TERMS.identifier, subject.getId().getLabelString());
+                    exists = true;
+                    
+                }
+
+            } else {
+                // For non-blank nodes, query the model directly
+                exists = rdfModel.containsResource(subject);
+                
+            }
+                        
             // statements may not be orphaned, so test each object
             if ( ! exists ) {                
                 exists = rdfModel.containsResource(object);
@@ -361,15 +384,18 @@ public class ProvResourceMapBuilder {
 	 */
 	public ResourceMap insertRelationship(ResourceMap resourceMap, String blankSubjectID, 
 	        Property predicate, List<RDFNode> objects) throws OREException {
-
+	    
 	    if ( blankSubjectID == null || blankSubjectID.isEmpty() ) {
-	         throw new OREException("blankSubjectID cannot be null or empty. Please set the blankSubjectID.");
+	         throw new OREException(
+	                 "blankSubjectID cannot be null or empty. Please set the blankSubjectID.");
 	         
 	    }
-	     
-        AnonId anonId = new AnonId(blankSubjectID);
-        Resource blankSubject = rdfModel.createResource(anonId);
-	    
+        	    
+	    // create a blank node with an identifier property
+	    AnonId anonId = new AnonId(blankSubjectID);
+	    Resource blankSubject = ModelFactory.createDefaultModel().createResource(anonId).addProperty(
+	            DC_TERMS.identifier, blankSubjectID);
+	     	    
 	    return insertRelationship(resourceMap, blankSubject, predicate, objects);
 	}
 	
@@ -380,6 +406,8 @@ public class ProvResourceMapBuilder {
      * @param resourceMap
      */
     private void setModel(ResourceMap resourceMap) throws OREException {
+        
+        rdfModel = ModelFactory.createDefaultModel();
         ORESerialiser serialiser = ORESerialiserFactory.getInstance(DEFAULT_RDF_FORMAT);
     	try {
     	    ResourceMapDocument oreDocument = serialiser.serialise(resourceMap);
