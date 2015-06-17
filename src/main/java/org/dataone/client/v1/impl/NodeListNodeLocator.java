@@ -52,14 +52,14 @@ import org.dataone.service.types.v1.util.NodelistUtil;
 public class NodeListNodeLocator extends NodeLocator {
 
 	protected NodeList nodeList;	
-	protected MultipartRestClient restClient;
+	protected MultipartRestClient client;
 
 	
 	public NodeListNodeLocator(NodeList nl, MultipartRestClient mrc) 
 	throws ClientSideException 
 	{
 		this.nodeList = nl;
-		this.restClient = mrc;
+		this.client = mrc;
 
 		// super.putNode() assigns the NodeId to the constructed D1Node, so we don't
 		// have to do it here.
@@ -68,12 +68,12 @@ public class NodeListNodeLocator extends NodeLocator {
 				if (node.getType().equals(NodeType.MN)) {
 					super.putNode(
 							node.getIdentifier(),
-                            D1NodeFactory.buildNode(MNode.class, this.restClient, URI.create(node.getBaseURL()))
+                            D1NodeFactory.buildNode(MNode.class, this.client, URI.create(node.getBaseURL()))
 							);
 				} else if (node.getType().equals(NodeType.CN)) {
 					super.putNode(
 							node.getIdentifier(),
-                            D1NodeFactory.buildNode(CNode.class, this.restClient, URI.create(node.getBaseURL()))
+                            D1NodeFactory.buildNode(CNode.class, this.client, URI.create(node.getBaseURL()))
 							);
 				}
 			}	
@@ -89,25 +89,26 @@ public class NodeListNodeLocator extends NodeLocator {
 	 */
 	public CNode getCNode() throws ClientSideException
 	{
-		Set<Node> cns = NodelistUtil.selectNodes(nodeList, NodeType.CN);
+	    Node foundCN = null;
+	    if (nodeList != null) {
+	        for (Node node : nodeList.getNodeList()) {
+	            if (node.getType().equals(NodeType.CN)) {
+	                foundCN = node;
+	                if (node.getDescription() != null)
+	                    // choose the Round-Robin CN if available
+	                    if (node.getDescription().contains("Robin") || 
+	                            node.getDescription().contains("robin")) {
+	                        break;
+	                    }
+	            }
+	        }
+	    }
+	    if (foundCN == null)
+	        throw new ClientSideException("No CNs are registered in the NodeLocator");
 
-		if (cns.isEmpty()) { 
-			throw new ClientSideException("No CNs are registered in the NodeLocator");
-		}
-		//try to find the round-robin CN
-		for (Node node : cns) {
-			if (node.getDescription() != null)
-			    if (node.getDescription().contains("Robin") || node.getDescription().contains("robin")) {
-			        CNode cn = D1NodeFactory.buildNode(CNode.class, restClient, URI.create(node.getBaseURL()));
-			        cn.setNodeId(node.getIdentifier());
-			        return cn;
-			}
-		}
-		// get the first one
-		Node n = cns.iterator().next();
-        CNode cn = D1NodeFactory.buildNode(CNode.class, restClient, URI.create(n.getBaseURL()));
-        cn.setNodeId(n.getIdentifier());
-        return cn;
+	    CNode cn = D1NodeFactory.buildNode(CNode.class, client, URI.create(foundCN.getBaseURL()));
+	    cn.setNodeId(foundCN.getIdentifier());
+	    return cn;
 	}
 }
 	
