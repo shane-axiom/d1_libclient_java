@@ -23,7 +23,9 @@
 package org.dataone.client.v2.formats;
 
 import java.util.Date;
+import java.util.HashMap;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.dataone.client.v2.CNode;
 import org.dataone.client.v2.itk.D1Client;
@@ -31,8 +33,8 @@ import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
-import org.dataone.service.types.v2.ObjectFormat;
 import org.dataone.service.types.v1.ObjectFormatIdentifier;
+import org.dataone.service.types.v2.ObjectFormat;
 import org.dataone.service.types.v2.ObjectFormatList;
 import org.dataone.service.types.v2.util.ObjectFormatServiceImpl;
 
@@ -174,44 +176,46 @@ public class ObjectFormatCache extends ObjectFormatServiceImpl {
 	/**
 	 * refreshes the cache from the CN, provided that the minimal interval
 	 * has been reached or there has never been a successful refresh from 
-	 * the CN.
+	 * the CN.  Refresh is by addition and replacements to the existing map, 
+	 * rather than instantiating a new map.
 	 * @return objectFormatList - the list of object formats
 	 * @throws ServiceFailure
 	 * @throws NotImplemented
 	 */
-	private synchronized ObjectFormatList refreshCache() 
-	throws ServiceFailure, NotImplemented 
-	{
-		Date now = new Date();
+    protected synchronized void refreshCache() 
+    throws ServiceFailure, NotImplemented 
+    {
+        Date now = new Date();
+        ObjectFormatList objectFormatList = null;
 
-		if ( usingFallbackFormatList  ||
-				lastRefreshDate == null ||
-				now.getTime() - lastRefreshDate.getTime() > throttleIntervalSec * 1000)
-		{
-			CNode cn = null;
-			String overridingCN = Settings.getConfiguration().getString("ObjectFormatCache.overriding.CN_URL");
-			if (overridingCN != null) {
-				cn = D1Client.getCN(overridingCN);
-			} else {
-				cn = D1Client.getCN();
-			}
-			logger.info("refreshing objectFormatCache from cn: " + cn.getNodeId());
-			// TODO: do we need/wish to make sure the returned list is longer, or "more complete"
-			// than the existing one before replacing?  (specifically the one on file in the jar)
-			// what would be the criteria? 
-			
-			ObjectFormatList objectFormatList = cn.listFormats();
-			lastRefreshDate = new Date();
-			// index the object format list by the format identifier
-			for (ObjectFormat objectFormat : objectFormatList.getObjectFormatList())
-			{
-				getObjectFormatMap().put(objectFormat.getFormatId(), objectFormat);
-			}
-			usingFallbackFormatList = false;
-			logger.info("successful cache refresh from cn.listFormats()");
-		}
-		return objectFormatList;
-	}
+        if ( usingFallbackFormatList  || lastRefreshDate == null ||
+                now.getTime() - lastRefreshDate.getTime() > throttleIntervalSec * 1000)
+        {
+            CNode cn = null;
+            String cnUrl = Settings.getConfiguration().getString("ObjectFormatCache.overriding.CN_URL");
+            if (StringUtils.isBlank(cnUrl))
+                cnUrl = Settings.getConfiguration().getString("D1Client.CN_URL");
+
+            if (StringUtils.isNotBlank(cnUrl)) {
+                cn = D1Client.getCN(cnUrl);
+
+                logger.info("refreshing objectFormatCache from cn: " + cn.getNodeId());
+                // TODO: do we need/wish to make sure the returned list is longer, or "more complete"
+                // than the existing one before replacing?  (specifically the one on file in the jar)
+                // what would be the criteria? 
+
+                objectFormatList = cn.listFormats();
+                lastRefreshDate = new Date();
+                // index the object format list by the format identifier
+                for (ObjectFormat objectFormat : objectFormatList.getObjectFormatList())
+                {
+                    getObjectFormatMap().put(objectFormat.getFormatId(), objectFormat);
+                }
+                usingFallbackFormatList = false;
+                logger.info("successful cache refresh from cn.listFormats()");
+            }
+        }
+    }
 
 
 
@@ -275,5 +279,10 @@ public class ObjectFormatCache extends ObjectFormatServiceImpl {
 		return objectFormat;
 	}
 
+	@Override
+	protected HashMap<ObjectFormatIdentifier, ObjectFormat> getObjectFormatMap() {
+	    
+	    return objectFormatMap;     
+	  }
 
 }
