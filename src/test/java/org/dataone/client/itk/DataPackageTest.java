@@ -25,6 +25,7 @@ package org.dataone.client.itk;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -109,6 +110,75 @@ public class DataPackageTest {
 
 	}
 
+	/**
+	 * tests the insertion of a literal object of an RDF statement
+	 */
+	@Test
+	public void testInsertRelationshipObjectLiteral() {
+        System.out.println("***************  testInsertRelationshipObjectLiteral  ******************");
+
+        String D1_URI_PREFIX = Settings.getConfiguration().getString("D1Client.CN_URL", 
+                "https://cn-dev.test.dataone.org/cn") + "/v1/resolve/";
+            
+            Identifier packageId = D1TypeBuilder.buildIdentifier("package.1.1");
+            DataPackage dataPackage = new DataPackage(packageId);
+
+            // Add some metadata and data
+            try {
+                Identifier metadataId = D1TypeBuilder.buildIdentifier("meta.1.1");
+                Identifier dataId = D1TypeBuilder.buildIdentifier("data.1.1");
+                List<Identifier> data = new ArrayList<Identifier>();
+                data.add(dataId);            
+                dataPackage.insertRelationship(metadataId, data);
+                
+                // Now describe the metadata with another literal identifier
+                URI metadataURI = new URI(D1_URI_PREFIX + "meta.1.1");
+                dataPackage.insertRelationship(metadataURI, DC_TERMS.predicate("identifier"), "another_id.1.1");
+
+                String rdfXML = dataPackage.serializePackage();
+                System.out.println(rdfXML);
+
+                // Load the result into a model for reading
+                Model rdfModel = ModelFactory.createDefaultModel();
+                InputStream inputStream = IOUtils.toInputStream(rdfXML, "UTF-8");
+                rdfModel.read(inputStream, null);
+
+                Resource subjectResource = 
+                        ModelFactory.createDefaultModel().createResource(
+                                D1_URI_PREFIX + "data.1.1").addProperty(
+                                DC_TERMS.identifier, "another_id.1.1");
+
+                Statement idStatement = subjectResource.getProperty(DC_TERMS.identifier);
+                Selector selector = getSimpleSelector(idStatement.getSubject(), idStatement.getPredicate(), null );
+                StmtIterator statements = rdfModel.listStatements(selector);
+                
+                assertTrue("The resource map should have a node with an identifier 'another_id.1.1'", 
+                        statements.hasNext());
+                Statement statement = statements.nextStatement();
+                assertTrue("The identifier object is a literal value", statement.getObject().isLiteral());
+                
+
+            } catch (OREException e) {
+                e.printStackTrace();
+                fail(e.getMessage());
+                
+            } catch (URISyntaxException e) {
+                e.printStackTrace();
+                fail(e.getMessage());
+                
+            } catch (ORESerialiserException e) {
+                e.printStackTrace();
+                fail(e.getMessage());
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                fail(e.getMessage());
+
+            }
+
+
+	}
+	
 	/**
 	 * Tests the insertion of a blank node subject of an RDF statement
 	 */
