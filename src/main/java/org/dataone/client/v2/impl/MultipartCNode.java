@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.LogFactory;
 import org.dataone.client.exception.ClientSideException;
@@ -74,7 +73,6 @@ import org.dataone.service.types.v2.OptionList;
 import org.dataone.service.types.v2.SystemMetadata;
 import org.dataone.service.util.Constants;
 import org.dataone.service.util.D1Url;
-import org.dataone.service.util.TypeMarshaller;
 import org.jibx.runtime.JiBXException;
 
 /**
@@ -1873,7 +1871,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
         return super.listViews(null);
     }
 
-//    @Override
+    @Override
     public SubjectInfo echoCredentials(Session session) throws NotImplemented, ServiceFailure,
             InvalidToken {
 
@@ -1897,8 +1895,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
         return subjectInfo;
     }
 
-
-//    @Override
+    @Override
     public SystemMetadata echoSystemMetadata(Session session, SystemMetadata sysmeta)
             throws NotImplemented, ServiceFailure, NotAuthorized, InvalidToken, InvalidRequest,
             IdentifierNotUnique, InvalidSystemMetadata {
@@ -1933,8 +1930,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
         return echoedSysmeta;
     }
 
-
-//    @Override
+    @Override
     public InputStream echoIndexedObject(Session session, String queryEngine,
             SystemMetadata sysmeta, InputStream object) throws NotImplemented, ServiceFailure,
             NotAuthorized, InvalidToken, InvalidRequest, InvalidSystemMetadata, UnsupportedType,

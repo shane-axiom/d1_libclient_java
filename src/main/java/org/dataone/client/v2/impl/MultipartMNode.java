@@ -700,7 +700,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
     @Override
     public InputStream getPackage(Session session, ObjectFormatIdentifier packageType, Identifier id)
             throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest, NotImplemented,
-            NotFound {
+            NotFound, UnsupportedType {
 
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_PACKAGES);
 

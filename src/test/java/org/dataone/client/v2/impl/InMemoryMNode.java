@@ -673,7 +673,7 @@ public class InMemoryMNode implements MNode {
     @Override
     public InputStream getPackage(Session arg0, ObjectFormatIdentifier arg1, Identifier arg2)
             throws InvalidToken, ServiceFailure, NotAuthorized, InvalidRequest, NotImplemented,
-            NotFound {
+            NotFound, UnsupportedType {
      // TODO implement
         throw new NotImplemented("000","getPackage is not implemented.");
     }
