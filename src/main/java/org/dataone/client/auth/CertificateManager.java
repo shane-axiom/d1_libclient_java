@@ -91,6 +91,7 @@ import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.bouncycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
 import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.InvalidToken;
+import org.dataone.service.types.v1.Person;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1.Subject;
 import org.dataone.service.types.v1.SubjectInfo;
@@ -648,6 +649,14 @@ public class CertificateManager {
                 String msg = "Could not get SubjectInfo from certificate for: " + subject.getValue();
                 log.error(msg, e);
                 throw new InvalidToken("", msg);
+            }
+            
+            // set the bare minimum if we have to
+            if (subjectInfo == null) {
+            	subjectInfo = new SubjectInfo();
+            	Person person = new Person();
+            	person.setSubject(subject);
+				subjectInfo.addPerson(person);
             }
 
             // set in the certificate
