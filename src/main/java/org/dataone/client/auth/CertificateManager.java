@@ -656,6 +656,8 @@ public class CertificateManager {
             	subjectInfo = new SubjectInfo();
             	Person person = new Person();
             	person.setSubject(subject);
+            	person.setFamilyName("Unknown");
+            	person.addGivenName("Unknown");
 				subjectInfo.addPerson(person);
             }
 
