@@ -20,7 +20,7 @@
  * $Id$
  */
 
-package org.dataone.client.itk;
+package org.dataone.client.v2.itk;
 
 
 import static org.junit.Assert.assertEquals;
@@ -38,7 +38,7 @@ import javax.mail.util.ByteArrayDataSource;
 
 import org.apache.commons.io.IOUtils;
 import org.dataone.client.types.AccessPolicyEditor;
-import org.dataone.client.v1.itk.D1Object;
+import org.dataone.client.v2.itk.D1Object;
 import org.dataone.client.v1.types.D1TypeBuilder;
 import org.dataone.service.exceptions.InvalidRequest;
 import org.dataone.service.exceptions.NotFound;

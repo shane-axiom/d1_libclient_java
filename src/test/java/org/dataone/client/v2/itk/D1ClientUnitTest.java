@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-package org.dataone.client.itk;
+package org.dataone.client.v2.itk;
 
 import static org.junit.Assert.*;
 
@@ -27,7 +27,7 @@ import java.util.List;
 
 import org.dataone.client.v2.CNode;
 import org.dataone.client.v2.itk.D1Client;
-import org.dataone.client.v1.itk.D1Object;
+import org.dataone.client.v2.itk.D1Object;
 import org.dataone.client.v1.types.D1TypeBuilder;
 import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.InvalidRequest;
