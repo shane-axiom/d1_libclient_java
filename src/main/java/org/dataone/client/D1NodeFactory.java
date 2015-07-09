@@ -20,22 +20,22 @@ import org.dataone.service.types.v1.Subject;
 /**
  * D1NodeFactory contains a method for building CNode and MNode instances from
  * a URI.  In production context, the URI is a URL for the base service location
- * for that node (and begins with the scheme "http" or "https").  Alternate 
- * implementations are predominantly for testing, and can be built using the 
+ * for that node (and begins with the scheme "http" or "https").  Alternate
+ * implementations are predominantly for testing, and can be built using the
  * same notation, but with the scheme "java" to indicate building via Reflection.
- * 
+ *
  * Examples:
  *   D1NodeFactory.build_V2_MNode("https://tla.institute.org/mn");
  *   D1NodeFactory.build_V2_MNode("java:org.dataone.client.impl.rest.InMemoryMemberNode#Subject=mnAdmin&Subject=cnClient);
- * 
+ *
  * The first builds a standard MNode that communicates with the networked Member Node
  * The second instantiates an InMemoryMemberNode that takes the MemberNode admin and
  * CN client Subjects as parameters in the constructor.
- * 
+ *
  * The only parameters supported at this first implementation are:
  *  String, Integer, Identifier, NodeReference and Subject
- *  
- *  
+ *
+ *
  * @author rnahf
  *
  */
@@ -62,7 +62,7 @@ public class D1NodeFactory {
         registerService(org.dataone.service.cn.v2.CNView.class, new V2CnBuilder());
         registerService(org.dataone.service.cn.v2.CNDiagnostic.class, new V2CnBuilder());
         registerService(org.dataone.client.v2.CNode.class, new V2CnBuilder());
-        
+
         // v1 MN
         registerService(org.dataone.service.mn.tier1.v1.MNCore.class, new V1MnBuilder());
         registerService(org.dataone.service.mn.tier1.v1.MNRead.class, new V1MnBuilder());
@@ -84,30 +84,30 @@ public class D1NodeFactory {
     }
 
     /**
-     * Registers a service classes (an interface like MNRead, MNStorage, etc.) to an {@link INodeCreator} 
-     * which can create the concrete {@link D1Node} subclass for the given service class.   
-     * @param serviceClass 
+     * Registers a service classes (an interface like MNRead, MNStorage, etc.) to an {@link INodeCreator}
+     * which can create the concrete {@link D1Node} subclass for the given service class.
+     * @param serviceClass
      *      the class we want to get a node implementation for
-     * @param nodeCreator 
+     * @param nodeCreator
      *      the {@link INodeCreator} responsible for producing a {@link D1Node} implementation
      */
     private static <N extends D1Node> void registerService(Class serviceClass, INodeCreator<N> nodeCreator) {
         nodeCreatorMap.put(serviceClass, nodeCreator);
     }
-    
+
     /**
      * Creates a {@link D1Node} implementation for the given <code>serviceClass</code>.
-     * 
-     * @param serviceClass 
+     *
+     * @param serviceClass
      *      the class representing the service we want to use on the node
      *      (MNRead, MNAuthorization, MNStorage, etc.)
-     * @param mrc 
+     * @param mrc
      *      the {@link MultipartRestClient} for the node REST requests
-     * @param uri 
+     * @param uri
      *      the {@link URI} for the node being created
-     * @return 
+     * @return
      *      a subclass of {@link D1Node}
-     * @throws ClientSideException 
+     * @throws ClientSideException
      *      if the {@link INodeCreator} fails to create the node
      */
     public static <N> N buildNode(Class<N> serviceClass, MultipartRestClient mrc, URI uri)
@@ -122,190 +122,202 @@ public class D1NodeFactory {
                 + serviceClass.getName());
     }
 
-	/**
-	 * Instantiate a CNode instance of the right type from the given URI
-	 * and the provided MultipartRestClient
-	 * @param mrc
-	 * @param uri
-	 * @return
-	 * @throws ClientSideException
-	 */
+    /**
+     * Instantiate a CNode instance of the right type from the given URI
+     * and the provided MultipartRestClient
+     * @param mrc
+     * @param uri
+     * @return
+     * @throws ClientSideException
+     */
     private static org.dataone.client.v1.CNode build_v1_CNode(MultipartRestClient mrc, URI uri)
-	throws ClientSideException 
-	{
-		// TOD check for nulls
-		
-		org.dataone.client.v1.CNode builtCNode = null;
-		
-		if (uri.getScheme() == null) {
-			throw new ClientSideException("CN uri had no scheme");
-		}
-		if(uri.getScheme().equals("java")) {
-			builtCNode = buildJavaD1Node(org.dataone.client.v1.CNode.class, uri);
-		}
-		else if (uri.getScheme().equals("http") || uri.getScheme().equals("https")) {
-			// build the standard implementation
-			builtCNode = new MultipartCNode( mrc, uri.toString());
-		}
-		
-		return builtCNode;
-	} 
+    throws ClientSideException
+    {
+        // TOD check for nulls
 
-	/**
-	 * Instantiate an MNode instance of the right type from the given URI
-	 * and the provided MultipartRestClient
-	 * @param mrc
-	 * @param uri
-	 * @return
-	 * @throws ClientSideException
-	 */
-    private static org.dataone.client.v1.MNode build_v1_MNode(MultipartRestClient mrc, URI uri)
-	throws ClientSideException 
-	{
-		org.dataone.client.v1.MNode builtMNode = null;
-		if(uri.getScheme().equals("java")) {
-			builtMNode = buildJavaD1Node(org.dataone.client.v1.MNode.class, uri);
-		}
-		else if (uri.getScheme().equals("http") || uri.getScheme().equals("https")) {
-			// build the standard implementation
-			builtMNode = new MultipartMNode( mrc, uri.toString());
-		} else {
-			throw new ClientSideException("No corresponding builder for URI scheme: " + uri.getScheme());
-		}
-		
-		return builtMNode;
-	} 
-	
-	/**
-	 * Instantiate a CNode instance of the right type from the given URI
-	 * and the provided MultipartRestClient
-	 * @param mrc
-	 * @param uri
-	 * @return
-	 * @throws ClientSideException
-	 */
-    private static org.dataone.client.v2.CNode build_v2_CNode(MultipartRestClient mrc, URI uri)
-	throws ClientSideException 
-	{
-		// TOD check for nulls
-		
-		org.dataone.client.v2.CNode builtCNode = null;
-		
-		if (uri.getScheme() == null) {
-			throw new ClientSideException("CN uri had no scheme");
-		}
-		if(uri.getScheme().equals("java")) {
-			builtCNode = buildJavaD1Node(org.dataone.client.v2.CNode.class, uri);
-		}
-		else if (uri.getScheme().equals("http") || uri.getScheme().equals("https")) {
-			// build the standard implementation
-			builtCNode = new org.dataone.client.v2.impl.MultipartCNode( mrc, uri.toString());
-		}
-		
-		return builtCNode;
-	} 
+        org.dataone.client.v1.CNode builtCNode = null;
 
-	/**
-	 * Instantiate an MNode instance of the right type from the given URI
-	 * and the provided MultipartRestClient
-	 * @param mrc
-	 * @param uri
-	 * @return
-	 * @throws ClientSideException
-	 */
-    private static org.dataone.client.v2.MNode build_v2_MNode(MultipartRestClient mrc, URI uri)
-	throws ClientSideException 
-	{
-		org.dataone.client.v2.MNode builtMNode = null;
-		if(uri.getScheme().equals("java")) {
-			builtMNode = buildJavaD1Node(org.dataone.client.v2.MNode.class, uri);
-		}
-		else if (uri.getScheme().equals("http") || uri.getScheme().equals("https")) {
-			// build the standard implementation
-			builtMNode = new org.dataone.client.v2.impl.MultipartMNode( mrc, uri.toString());
-		} else {
-			throw new ClientSideException("No corresponding builder for URI scheme: " + uri.getScheme());
-		}
-		
-		return builtMNode;
-	} 
-	
-	/**
-	 * This function instantiates a CNode or MNode implementation via reflection
-	 * from the information given in the URI.  The name of the class to instantiate
-	 * is given in the scheme-specific part, and parameters for the constructor
-	 * in the URI fragment.  java:fully.qualified.className#String=name&Subject=admin 
-	 */
-	//TODO: find different separator for fragment, because '=' is in most Subject strings
-	//  don't use ':' because colon in NodeReference string, maybe '#' will work or '/'?
-	// or make it the first (non alpha) character encountered.	
-	@SuppressWarnings("rawtypes")
-	private static <T> T buildJavaD1Node(Class<T> domainClass, URI uri) throws ClientSideException 
-	{
-		try {
-			String frag = uri.getFragment();
-			String[] kvPairs = StringUtils.split(frag,"&");
-			Class[] constructorParamTypes = new Class[kvPairs.length];
-			Object[] initargs = new Object[kvPairs.length];
-			for (int i=0;i<kvPairs.length; i++) {
-				String[] pair = StringUtils.split(kvPairs[i], "=");
-				if (pair[0].equals("Identifier")) {
-					constructorParamTypes[i] = Identifier.class;
-					initargs[i] = D1TypeBuilder.buildIdentifier(pair[1]);
-				} else if (pair[0].equals("Subject")) {
-					constructorParamTypes[i] = Subject.class;
-					initargs[i] = D1TypeBuilder.buildSubject(pair[1]);
-				} else if (pair[0].equals("NodeReference")) {
-					constructorParamTypes[i] = NodeReference.class;
-					initargs[i] = D1TypeBuilder.buildNodeReference(pair[1]);
-				} else if (pair[0].equals("String")) {
-					constructorParamTypes[i] = String.class;
-					initargs[i] = pair[1];
-				} else if (pair[0].equals("Integer")) {
-					constructorParamTypes[i] = Integer.class;
-					initargs[i] = new Integer(pair[1]);
-				} else {
-					throw new ClientSideException("Malformed fragment in nodeBaseUrl to form constructor arguments");
-				}
-			}
-			Constructor c = Class.forName(uri.getSchemeSpecificPart()).getConstructor(constructorParamTypes);
-			return (T) c.newInstance(initargs);
-		} catch (SecurityException e) {
-			throw new ClientSideException("Error in buildJavaMNodeFromURI",e);
-		} catch (NoSuchMethodException e) {
-			throw new ClientSideException("Error in buildJavaMNodeFromURI",e);
-		} catch (ClassNotFoundException e) {
-			throw new ClientSideException("Error in buildJavaMNodeFromURI",e);
-		} catch (IllegalArgumentException e) {
-			throw new ClientSideException("Error in buildJavaMNodeFromURI",e);
-		} catch (InstantiationException e) {
-			throw new ClientSideException("Error in buildJavaMNodeFromURI",e);
-		} catch (IllegalAccessException e) {
-			throw new ClientSideException("Error in buildJavaMNodeFromURI",e);
-		} catch (InvocationTargetException e) {
-			throw new ClientSideException("Error in buildJavaMNodeFromURI",e);
-		} 
-	}
-	
+        if (uri.getScheme() == null) {
+            throw new ClientSideException("CN uri had no scheme");
+        }
+        if(uri.getScheme().equals("java")) {
+            builtCNode = buildJavaD1Node(org.dataone.client.v1.CNode.class, uri);
+        }
+        else if (uri.getScheme().equals("http") || uri.getScheme().equals("https")) {
+            // build the standard implementation
+            builtCNode = new MultipartCNode( mrc, uri.toString());
+        } else {
+            throw new ClientSideException("No corresponding builder for URI scheme: " + uri.getScheme());
+        }
+
+        return builtCNode;
+    }
 
     /**
-     * The interface for all the node creator classes. Just requires implementors to provide one method:  
+     * Instantiate an MNode instance of the right type from the given URI
+     * and the provided MultipartRestClient
+     * @param mrc
+     * @param uri
+     * @return
+     * @throws ClientSideException
+     */
+    private static org.dataone.client.v1.MNode build_v1_MNode(MultipartRestClient mrc, URI uri)
+    throws ClientSideException
+    {
+        org.dataone.client.v1.MNode builtMNode = null;
+
+        if (uri.getScheme() == null) {
+            throw new ClientSideException("MN uri had no scheme");
+        }
+        if(uri.getScheme().equals("java")) {
+            builtMNode = buildJavaD1Node(org.dataone.client.v1.MNode.class, uri);
+        }
+        else if (uri.getScheme().equals("http") || uri.getScheme().equals("https")) {
+            // build the standard implementation
+            builtMNode = new MultipartMNode( mrc, uri.toString());
+        } else {
+            throw new ClientSideException("No corresponding builder for URI scheme: " + uri.getScheme());
+        }
+
+        return builtMNode;
+    }
+
+    /**
+     * Instantiate a CNode instance of the right type from the given URI
+     * and the provided MultipartRestClient
+     * @param mrc
+     * @param uri
+     * @return
+     * @throws ClientSideException
+     */
+    private static org.dataone.client.v2.CNode build_v2_CNode(MultipartRestClient mrc, URI uri)
+    throws ClientSideException
+    {
+        // TOD check for nulls
+
+        org.dataone.client.v2.CNode builtCNode = null;
+
+        if (uri.getScheme() == null) {
+            throw new ClientSideException("URI had no scheme");
+        }
+        if(uri.getScheme().equals("java")) {
+            builtCNode = buildJavaD1Node(org.dataone.client.v2.CNode.class, uri);
+        }
+        else if (uri.getScheme().equals("http") || uri.getScheme().equals("https")) {
+            // build the standard implementation
+            builtCNode = new org.dataone.client.v2.impl.MultipartCNode( mrc, uri.toString());
+        } else {
+            throw new ClientSideException("No corresponding builder for URI scheme: " + uri.getScheme());
+        }
+
+        return builtCNode;
+    }
+
+    /**
+     * Instantiate an MNode instance of the right type from the given URI
+     * and the provided MultipartRestClient
+     * @param mrc
+     * @param uri
+     * @return
+     * @throws ClientSideException
+     */
+    private static org.dataone.client.v2.MNode build_v2_MNode(MultipartRestClient mrc, URI uri)
+    throws ClientSideException
+    {
+        org.dataone.client.v2.MNode builtMNode = null;
+
+        if (uri.getScheme() == null) {
+            throw new ClientSideException("URI had no scheme");
+        }
+        if(uri.getScheme().equals("java")) {
+            builtMNode = buildJavaD1Node(org.dataone.client.v2.MNode.class, uri);
+        }
+        else if (uri.getScheme().equals("http") || uri.getScheme().equals("https")) {
+            // build the standard implementation
+            builtMNode = new org.dataone.client.v2.impl.MultipartMNode( mrc, uri.toString());
+        } else {
+            throw new ClientSideException("No corresponding builder for URI scheme: " + uri.getScheme());
+        }
+
+        return builtMNode;
+    }
+
+    /**
+     * This function instantiates a CNode or MNode implementation via reflection
+     * from the information given in the URI.  The name of the class to instantiate
+     * is given in the scheme-specific part, and parameters for the constructor
+     * in the URI fragment.  java:fully.qualified.className#String=name&Subject=admin
+     */
+    //TODO: find different separator for fragment, because '=' is in most Subject strings
+    //  don't use ':' because colon in NodeReference string, maybe '#' will work or '/'?
+    // or make it the first (non alpha) character encountered.
+    @SuppressWarnings("rawtypes")
+    private static <T> T buildJavaD1Node(Class<T> domainClass, URI uri) throws ClientSideException
+    {
+        try {
+            String frag = uri.getFragment();
+            String[] kvPairs = StringUtils.split(frag,"&");
+            Class[] constructorParamTypes = new Class[kvPairs.length];
+            Object[] initargs = new Object[kvPairs.length];
+            for (int i=0;i<kvPairs.length; i++) {
+                String[] pair = StringUtils.split(kvPairs[i], "=");
+                if (pair[0].equals("Identifier")) {
+                    constructorParamTypes[i] = Identifier.class;
+                    initargs[i] = D1TypeBuilder.buildIdentifier(pair[1]);
+                } else if (pair[0].equals("Subject")) {
+                    constructorParamTypes[i] = Subject.class;
+                    initargs[i] = D1TypeBuilder.buildSubject(pair[1]);
+                } else if (pair[0].equals("NodeReference")) {
+                    constructorParamTypes[i] = NodeReference.class;
+                    initargs[i] = D1TypeBuilder.buildNodeReference(pair[1]);
+                } else if (pair[0].equals("String")) {
+                    constructorParamTypes[i] = String.class;
+                    initargs[i] = pair[1];
+                } else if (pair[0].equals("Integer")) {
+                    constructorParamTypes[i] = Integer.class;
+                    initargs[i] = new Integer(pair[1]);
+                } else {
+                    throw new ClientSideException("Malformed fragment in nodeBaseUrl to form constructor arguments");
+                }
+            }
+            Constructor c = Class.forName(uri.getSchemeSpecificPart()).getConstructor(constructorParamTypes);
+            return (T) c.newInstance(initargs);
+        } catch (SecurityException e) {
+            throw new ClientSideException("Error in buildJavaMNodeFromURI",e);
+        } catch (NoSuchMethodException e) {
+            throw new ClientSideException("Error in buildJavaMNodeFromURI",e);
+        } catch (ClassNotFoundException e) {
+            throw new ClientSideException("Error in buildJavaMNodeFromURI",e);
+        } catch (IllegalArgumentException e) {
+            throw new ClientSideException("Error in buildJavaMNodeFromURI",e);
+        } catch (InstantiationException e) {
+            throw new ClientSideException("Error in buildJavaMNodeFromURI",e);
+        } catch (IllegalAccessException e) {
+            throw new ClientSideException("Error in buildJavaMNodeFromURI",e);
+        } catch (InvocationTargetException e) {
+            throw new ClientSideException("Error in buildJavaMNodeFromURI",e);
+        }
+    }
+
+
+    /**
+     * The interface for all the node creator classes. Just requires implementors to provide one method:
      * {@link INodeCreator#buildNode(MultipartRestClient, URI)}.
-     * 
+     *
      * @param <N> the type of node the creator will produce. Must be a subtype of {@link D1Node}.
      */
     private static interface INodeCreator<N> {
         /**
          * Creates a type of {@link D1Node} based on {@link INodeCreator}'s parameter type <code>&lt;N&gt;</code>
-         * 
-         * @param mrc 
+         *
+         * @param mrc
          *      the {@link MultipartRestClient} for the node REST requests
-         * @param uri 
+         * @param uri
          *      the {@link URI} for the node being created
-         * @return 
+         * @return
          *      a subclass of {@link D1Node}. Type depends on <code>&lt;N&gt;</code>.
-         *      
-         * @throws ClientSideException 
+         *
+         * @throws ClientSideException
          *      if the {@link INodeCreator} fails to create the node
          */
         public N buildNode(MultipartRestClient mrc, URI uri) throws ClientSideException;
