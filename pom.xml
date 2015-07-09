@@ -1,386 +1,394 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.dataone</groupId>
-	<artifactId>d1_libclient_java</artifactId>
-	<packaging>jar</packaging>
-	<version>2.0.0-SNAPSHOT</version>
-	<name>DataONE Java Client Library</name>
-	<url>http://dataone.org</url>
-	<properties>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.dataone</groupId>
+  <artifactId>d1_libclient_java</artifactId>
+  <packaging>jar</packaging>
+  <version>2.0.0-SNAPSHOT</version>
+  <name>DataONE Java Client Library</name>
+  <url>http://dataone.org</url>
+  <properties>
 
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-		<bouncycastle.version>1.52</bouncycastle.version>
-		<d1_common_java_version>2.0.0-SNAPSHOT</d1_common_java_version>
-		<d1_test_resources.version>1.3.0-SNAPSHOT</d1_test_resources.version>
-	</properties>
-	<repositories>
-		<repository>
-			<id>sonatype.org</id>
-			<url>https://repository.sonatype.org/content/shadows/centralm1</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>dataone.org</id>
-			<url>http://maven.dataone.org/</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>Jibx Maven Repository</id>
-			<url>http://jibx.sourceforge.net/maven/</url>
-		</repository>
-		<repository>
-			<id>maven2-repository.dev.java.net</id>
-			<name>Java.net Repository for Maven</name>
-			<url>http://download.java.net/maven/2/</url>
-			<layout>default</layout>
-		</repository>
-	</repositories>
-    
+    <bouncycastle.version>1.52</bouncycastle.version>
+    <d1_common_java_version>2.0.0-SNAPSHOT</d1_common_java_version>
+    <d1_test_resources.version>1.3.0-SNAPSHOT</d1_test_resources.version>
+  </properties>
+  <repositories>
+    <repository>
+      <id>sonatype.org</id>
+      <url>https://repository.sonatype.org/content/shadows/centralm1</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>dataone.org</id>
+      <url>http://maven.dataone.org/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>Jibx Maven Repository</id>
+      <url>http://jibx.sourceforge.net/maven/</url>
+    </repository>
+    <repository>
+      <id>maven2-repository.dev.java.net</id>
+      <name>Java.net Repository for Maven</name>
+      <url>http://download.java.net/maven/2/</url>
+      <layout>default</layout>
+    </repository>
+  </repositories>
 
-	<dependencies>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.7</version>
-			<type>jar</type>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.jmock</groupId>
-			<artifactId>jmock-junit4</artifactId>
-			<version>2.5.1</version>
-			<scope>test</scope>
-		</dependency>
-		<!-- do we even need easystream? -->
-		<dependency>
-			<groupId>net.sf.jsignature.io-tools</groupId>
-			<artifactId>easystream</artifactId>
-			<version>1.2.12</version>
-		</dependency>
-		<!-- <dependency> <groupId>net.sf.jsignature.io-tools</groupId> <artifactId>easystream</artifactId> 
-			<version>1.2.5</version> </dependency> -->
-		<dependency>
-			<groupId>javax.mail</groupId>
-			<artifactId>mail</artifactId>
-			<version>1.4.1</version>
-		</dependency>
-		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>servlet-api</artifactId>
-			<version>2.5</version>
-			<type>jar</type>
-			<scope>provided</scope>
-		</dependency>
-		<!-- <dependency> <groupId>org.slf4j</groupId> <artifactId>slf4j-api</artifactId> 
-			<version>1.5.11</version> </dependency> <dependency> <groupId>org.slf4j</groupId> 
-			<artifactId>slf4j-simple</artifactId> <version>1.5.11</version> </dependency> -->
-		<dependency>
-			<groupId>org.jibx</groupId>
-			<artifactId>jibx-run</artifactId>
-			<version>1.2.4.5</version>
-		</dependency>
 
-		<dependency>
-			<groupId>org.bouncycastle</groupId>
-			<artifactId>bcpkix-jdk15on</artifactId>
-			<version>${bouncycastle.version}</version>
-		</dependency>
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.7</version>
+      <type>jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jmock</groupId>
+      <artifactId>jmock-junit4</artifactId>
+      <version>2.5.1</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- do we even need easystream? -->
+    <dependency>
+      <groupId>net.sf.jsignature.io-tools</groupId>
+      <artifactId>easystream</artifactId>
+      <version>1.2.12</version>
+    </dependency>
+    <!-- <dependency> <groupId>net.sf.jsignature.io-tools</groupId> <artifactId>easystream</artifactId>
+      <version>1.2.5</version> </dependency> -->
+    <dependency>
+      <groupId>javax.mail</groupId>
+      <artifactId>mail</artifactId>
+      <version>1.4.1</version>
+    </dependency>
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>servlet-api</artifactId>
+      <version>2.5</version>
+      <type>jar</type>
+      <scope>provided</scope>
+    </dependency>
+    <!-- <dependency> <groupId>org.slf4j</groupId> <artifactId>slf4j-api</artifactId>
+      <version>1.5.11</version> </dependency> <dependency> <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId> <version>1.5.11</version> </dependency> -->
+    <dependency>
+      <groupId>org.jibx</groupId>
+      <artifactId>jibx-run</artifactId>
+      <version>1.2.4.5</version>
+    </dependency>
 
-		<!-- declaring this dependency to make sure we get version with StrLookup 
-			this needs to be before Foresite and JCS -->
-		<dependency>
-			<groupId>commons-lang</groupId>
-			<artifactId>commons-lang</artifactId>
-			<version>2.6</version>
-		</dependency>
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcpkix-jdk15on</artifactId>
+      <version>${bouncycastle.version}</version>
+    </dependency>
 
-		<dependency>
-			<groupId>org.dataone</groupId>
-			<artifactId>d1_common_java</artifactId>
-			<version>${d1_common_java_version}</version>
-			<type>jar</type>
-			<exclusions>
-				<exclusion>
-					<groupId>org.jibx</groupId>
-					<artifactId>maven-jibx-plugin</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-compiler-plugin</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>org.dataone</groupId>
-			<artifactId>d1_common_java</artifactId>
-			<version>${d1_common_java_version}</version>
-			<type>test-jar</type>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.dataone</groupId>
-			<artifactId>d1_test_resources</artifactId>
-			<version>${d1_test_resources.version}</version>
-			<type>jar</type>
-			<scope>test</scope>
-		</dependency>
+    <!-- declaring this dependency to make sure we get version with StrLookup
+      this needs to be before Foresite and JCS -->
+    <dependency>
+      <groupId>commons-lang</groupId>
+      <artifactId>commons-lang</artifactId>
+      <version>2.6</version>
+    </dependency>
 
-		<!-- <dependency> <groupId>org.apache.httpcomponents</groupId> <artifactId>httpcore</artifactId> 
-			<version>4.2.1</version> <type>jar</type> <scope>compile</scope> </dependency> -->
+    <dependency>
+      <groupId>org.dataone</groupId>
+      <artifactId>d1_common_java</artifactId>
+      <version>${d1_common_java_version}</version>
+      <type>jar</type>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jibx</groupId>
+          <artifactId>maven-jibx-plugin</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.dataone</groupId>
+      <artifactId>d1_common_java</artifactId>
+      <version>${d1_common_java_version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.dataone</groupId>
+      <artifactId>d1_test_resources</artifactId>
+      <version>${d1_test_resources.version}</version>
+      <type>jar</type>
+      <scope>test</scope>
+    </dependency>
 
-		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpclient</artifactId>
-			<version>4.3.3</version>
-		</dependency>
+    <!-- <dependency> <groupId>org.apache.httpcomponents</groupId> <artifactId>httpcore</artifactId>
+      <version>4.2.1</version> <type>jar</type> <scope>compile</scope> </dependency> -->
 
-		<dependency>
-			<groupId>com.googlecode.foresite-toolkit</groupId>
-			<artifactId>foresite</artifactId>
-			<version>1.0-SNAPSHOT</version>
-			<type>jar</type>
-		</dependency>
-		<dependency>
-			<groupId>jcs</groupId>
-			<artifactId>jcs</artifactId>
-			<version>1.3</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-	</dependencies>
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<source>1.7</source>
-					<target>1.7</target>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>com.mycila.maven-license-plugin</groupId>
-				<artifactId>maven-license-plugin</artifactId>
-				<configuration>
-					<header>src/license-header.txt</header>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>buildnumber-maven-plugin</artifactId>
-				<executions>
-					<execution>
-						<phase>validate</phase>
-						<goals>
-							<goal>create</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<doCheck>false</doCheck>
-					<doUpdate>false</doUpdate>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
-				<configuration>
-					<archive>
-						<manifestEntries>
-							<D1-version>${project.version}</D1-version>
-							<D1-SCM-Revision>${buildNumber}</D1-SCM-Revision>
-							<D1-SCM-Branch>${scmBranch}</D1-SCM-Branch>
-							<D1-Build-TimeStamp>${timestamp}</D1-Build-TimeStamp>
-						</manifestEntries>
-						<manifest>
-							<addClasspath>true</addClasspath>
-							<classpathPrefix>lib/</classpathPrefix>
-						</manifest>
-					</archive>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-dependency-plugin</artifactId>
-				<version>2.1</version>
-				<executions>
-				    <!--  this lib directory that gets created here 
-				          (during package phase) does not get installed 
-				          during install phase.  This is good. -->
-					<execution>
-						<id>copy-dependencies</id>
-						<phase>package</phase>
-						<goals>
-							<goal>copy-dependencies</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>${project.build.directory}/lib</outputDirectory>
-							<overWriteReleases>false</overWriteReleases>
-							<overWriteSnapshots>false</overWriteSnapshots>
-							<overWriteIfNewer>true</overWriteIfNewer>
-							<includeScope>runtime</includeScope>
-							<excludeGroupIds>org.apache.maven,org.codehaus.plexus,classworlds</excludeGroupIds>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-source-plugin</artifactId>
-				<version>2.2.1</version>
-				<executions>
-					<execution>
-						<id>attach-sources</id>
-						<goals>
-							<goal>jar</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-failsafe-plugin</artifactId>
-				<version>2.8.1</version>
-				<!-- Uncomment the excludes section to skip Echo integration tests -->
-				<!-- <configuration> <excludes> <exclude>**/Echo*.java</exclude> </excludes> 
-					</configuration> -->
-				<executions>
-					<execution>
-						<id>integration-test</id>
-						<!-- <phase>integration-test</phase> -->
-						<goals>
-							<goal>integration-test</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>verify</id>
-						<!-- <phase>verify</phase> -->
-						<goals>
-							<goal>verify</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-			  <groupId>org.apache.maven.plugins</groupId>
-			  <artifactId>maven-assembly-plugin</artifactId>
-			  <version>2.4</version>
-			  <configuration>
-			    <descriptors>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>4.3.3</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.googlecode.foresite-toolkit</groupId>
+      <artifactId>foresite</artifactId>
+      <version>1.0-SNAPSHOT</version>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>jcs</groupId>
+      <artifactId>jcs</artifactId>
+      <version>1.3</version>
+      <type>jar</type>
+      <scope>compile</scope>
+    </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.7</source>
+          <target>1.7</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>com.mycila.maven-license-plugin</groupId>
+        <artifactId>maven-license-plugin</artifactId>
+        <configuration>
+          <header>src/license-header.txt</header>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>buildnumber-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>validate</phase>
+            <goals>
+              <goal>create</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <doCheck>false</doCheck>
+          <doUpdate>false</doUpdate>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <D1-version>${project.version}</D1-version>
+              <D1-SCM-Revision>${buildNumber}</D1-SCM-Revision>
+              <D1-SCM-Branch>${scmBranch}</D1-SCM-Branch>
+              <D1-Build-TimeStamp>${timestamp}</D1-Build-TimeStamp>
+            </manifestEntries>
+            <manifest>
+              <addClasspath>true</addClasspath>
+              <classpathPrefix>lib/</classpathPrefix>
+            </manifest>
+          </archive>
+        </configuration>
+        <executions>
+            <!-- make a test resources jar -->
+            <execution>
+                <goals>
+                    <goal>test-jar</goal>
+                </goals>
+            </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>2.1</version>
+        <executions>
+            <!--  this lib directory that gets created here
+                  (during package phase) does not get installed
+                  during install phase.  This is good. -->
+          <execution>
+            <id>copy-dependencies</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/lib</outputDirectory>
+              <overWriteReleases>false</overWriteReleases>
+              <overWriteSnapshots>false</overWriteSnapshots>
+              <overWriteIfNewer>true</overWriteIfNewer>
+              <includeScope>runtime</includeScope>
+              <excludeGroupIds>org.apache.maven,org.codehaus.plexus,classworlds</excludeGroupIds>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>2.2.1</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>2.8.1</version>
+        <!-- Uncomment the excludes section to skip Echo integration tests -->
+        <!-- <configuration> <excludes> <exclude>**/Echo*.java</exclude> </excludes>
+          </configuration> -->
+        <executions>
+          <execution>
+            <id>integration-test</id>
+            <!-- <phase>integration-test</phase> -->
+            <goals>
+              <goal>integration-test</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>verify</id>
+            <!-- <phase>verify</phase> -->
+            <goals>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>2.4</version>
+        <configuration>
+          <descriptors>
                               <descriptor>src/main/assembly/withDependencies.xml</descriptor>
-			    </descriptors>
-			  </configuration>
-		<!-- 		<configuration>
-					<descriptorRefs>
-						<descriptorRef>project</descriptorRef>
-					</descriptorRefs>
-				</configuration> -->
-			</plugin>
-			<plugin>
-			  <artifactId>maven-javadoc-plugin</artifactId>
-			  <version>2.9</version>
- 			  <executions>
+          </descriptors>
+        </configuration>
+    <!-- 		<configuration>
+          <descriptorRefs>
+            <descriptorRef>project</descriptorRef>
+          </descriptorRefs>
+        </configuration> -->
+      </plugin>
+      <plugin>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.9</version>
+         <executions>
 <!-- 			    <execution> -->
 <!-- 			      <id>resource-bundles</id> -->
 <!-- 			      <phase>package</phase> -->
 <!-- 			      <goals> -->
-			      
+
 <!-- 				produce source artifact for main project sources -->
 <!-- 				<goal>resource-bundle</goal> -->
 <!-- 			      </goals> -->
 <!-- 			    </execution> -->
 <!-- 			  </executions> -->
-			  	<execution>
-            		<id>aggregate</id>
-            		<goals>
-              			<goal>aggregate</goal>
-           		 	</goals>
-            		<phase>site</phase>
-              	</execution>
+          <execution>
+                <id>aggregate</id>
+                <goals>
+                    <goal>aggregate</goal>
+                  </goals>
+                <phase>site</phase>
+                </execution>
               </executions>
-			  <configuration>
-			    <!-- switch on dependency-driven aggregation -->
-			  	<includeDependencySources>true</includeDependencySources>
-			  	
-			  	<dependencySourceIncludes>
-                	<!-- include ONLY dataone dependencies -->
-                	<dependencySourceInclude>org.dataone:*</dependencySourceInclude>
-              	</dependencySourceIncludes>	
+        <configuration>
+          <!-- switch on dependency-driven aggregation -->
+          <includeDependencySources>true</includeDependencySources>
+
+          <dependencySourceIncludes>
+                  <!-- include ONLY dataone dependencies -->
+                  <dependencySourceInclude>org.dataone:*</dependencySourceInclude>
+                </dependencySourceIncludes>
 <!--			    <additionalparam>-noqualifier org.dataone.*:java.lang.*</additionalparam>  -->
-			    <detectOfflineLinks>false</detectOfflineLinks>
- 			    <debug>true</debug>
-			  </configuration>
-			</plugin>
-		</plugins>
-		<!--  the pluginManagement section is included to keep Eclipse m2e from 
-		      trying (and failing) to run the command - and avoid the little red
-		      markers in Eclipse -->
-		<pluginManagement>
-  			<plugins>
-			    <plugin>
-			      <groupId>org.eclipse.m2e</groupId>
-			      <artifactId>lifecycle-mapping</artifactId>
-			      <version>1.0.0</version>
-			      <configuration>
-			        <lifecycleMappingMetadata>
-			          <pluginExecutions>
-			            <pluginExecution>
-			              <pluginExecutionFilter>
-			                <groupId>org.apache.maven.plugins</groupId>
-			                <artifactId>maven-dependency-plugin</artifactId>
-			                <versionRange>[2.0,)</versionRange>
-			                <goals>
-			                  <goal>copy-dependencies</goal>
-			                </goals>
-			              </pluginExecutionFilter>
-			              <action>
-			                <ignore/>
-			              </action>
-			            </pluginExecution>
-			          </pluginExecutions>
-			        </lifecycleMappingMetadata>
-			      </configuration>
-			    </plugin>
-		    </plugins>
-		</pluginManagement>
-		<resources>
-			<resource>
-				<directory>src/main/resources</directory>
-				<filtering>true</filtering>
-				<includes>
-					<include>buildInfo/buildInfo.properties</include>
-				</includes>
-			</resource>
-			<resource>
-				<directory>src/main/resources</directory>
-				<filtering>false</filtering>
-				<includes>
-					<include>**/*.*</include>
-				</includes>
-			</resource>
-		</resources>
-	</build>
-	<licenses>
-		<license>
-			<name>Apache License, Version 2.0</name>
-			<url>LICENSE.txt</url>
-		</license>
-	</licenses>
-	<scm>
-		<url>https://repository.dataone.org/software/cicore</url>
-		<connection>scm:svn:https://repository.dataone.org/software/cicore</connection>
-		<developerConnection>scm:svn:https://repository.dataone.org/software/cicore</developerConnection>
-		<tag>HEAD</tag>
-	</scm>
+          <detectOfflineLinks>false</detectOfflineLinks>
+           <debug>true</debug>
+        </configuration>
+      </plugin>
+    </plugins>
+    <!--  the pluginManagement section is included to keep Eclipse m2e from
+          trying (and failing) to run the command - and avoid the little red
+          markers in Eclipse -->
+    <pluginManagement>
+        <plugins>
+          <plugin>
+            <groupId>org.eclipse.m2e</groupId>
+            <artifactId>lifecycle-mapping</artifactId>
+            <version>1.0.0</version>
+            <configuration>
+              <lifecycleMappingMetadata>
+                <pluginExecutions>
+                  <pluginExecution>
+                    <pluginExecutionFilter>
+                      <groupId>org.apache.maven.plugins</groupId>
+                      <artifactId>maven-dependency-plugin</artifactId>
+                      <versionRange>[2.0,)</versionRange>
+                      <goals>
+                        <goal>copy-dependencies</goal>
+                      </goals>
+                    </pluginExecutionFilter>
+                    <action>
+                      <ignore/>
+                    </action>
+                  </pluginExecution>
+                </pluginExecutions>
+              </lifecycleMappingMetadata>
+            </configuration>
+          </plugin>
+        </plugins>
+    </pluginManagement>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+        <includes>
+          <include>buildInfo/buildInfo.properties</include>
+        </includes>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>false</filtering>
+        <includes>
+          <include>**/*.*</include>
+        </includes>
+      </resource>
+    </resources>
+  </build>
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>LICENSE.txt</url>
+    </license>
+  </licenses>
+  <scm>
+    <url>https://repository.dataone.org/software/cicore</url>
+    <connection>scm:svn:https://repository.dataone.org/software/cicore</connection>
+    <developerConnection>scm:svn:https://repository.dataone.org/software/cicore</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
 </project>
