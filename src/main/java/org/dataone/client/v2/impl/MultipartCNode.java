@@ -312,7 +312,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
     @Override
     public ObjectList listObjects(Session session, Date fromDate, Date toDate,
-      ObjectFormatIdentifier formatid, Identifier identifier, Boolean replicaStatus, Integer start, Integer count)
+      ObjectFormatIdentifier formatid, NodeReference nodeId, Identifier identifier, Integer start, Integer count)
               throws InvalidRequest, InvalidToken, NotAuthorized, NotImplemented, ServiceFailure
     {
 
@@ -326,15 +326,11 @@ public class MultipartCNode extends MultipartD1Node implements CNode
         url.addDateParamPair("toDate", toDate);
         if (formatid != null)
             url.addNonEmptyParamPair("formatId", formatid.getValue());
+        if (nodeId != null)
+            url.addNonEmptyParamPair("nodeId", nodeId.getValue());
         if (identifier != null)
             url.addNonEmptyParamPair("identifier", identifier.getValue());
-        if (replicaStatus != null) {
-            if (replicaStatus) {
-                url.addNonEmptyParamPair("replicaStatus", 1);
-            } else {
-                url.addNonEmptyParamPair("replicaStatus", 0);
-            }
-        }
+        
         url.addNonEmptyParamPair("start",start);
         url.addNonEmptyParamPair("count",count);
 
