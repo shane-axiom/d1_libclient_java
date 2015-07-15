@@ -104,7 +104,8 @@ public class InMemoryMNode implements MNode {
 		le.setEvent(eventString);
 		le.setIdentifier(pid);
 		le.setNodeIdentifier(getNodeId());
-		le.setSubject(session.getSubject());
+		if (session != null)
+		    le.setSubject(session.getSubject());
 		le.setEntryId(String.format("%ddd", eventLog.size()+1));
 		return le;
 	}
@@ -118,7 +119,7 @@ public class InMemoryMNode implements MNode {
 	throws NotAuthorized, NotFound
 	{
 		SystemMetadata sysmeta = metaStore.get(id);
-		if (sysmeta == null) {
+		if (sysmeta != null) {
 			sysmeta = getSeriesHead(id);
 		}
 		if (sysmeta == null) {
@@ -138,18 +139,21 @@ public class InMemoryMNode implements MNode {
 		return sysmeta;
 	}
 	
-	private SystemMetadata getSeriesHead(Identifier id) 
+	private SystemMetadata getSeriesHead(Identifier id) throws NotFound 
 	{
 		Set<Identifier> pidSet = seriesMap.get(id);
+		if (pidSet == null) {
+		    throw new NotFound("000","Identifer not found (" + id.getValue() + ")");
+		}
 		Iterator<Identifier> it = pidSet.iterator();
 		SystemMetadata latest = null;
 		Date date = null;
 		while (it.hasNext()) {
-			SystemMetadata smd = metaStore.get(it.next());
-			if (smd != null && smd.getDateUploaded().after(date)) {
-				latest = smd;
-				date = smd.getDateUploaded();
-			}
+		    SystemMetadata smd = metaStore.get(it.next());
+		    if (smd != null && smd.getDateUploaded().after(date)) {
+		        latest = smd;
+		        date = smd.getDateUploaded();
+		    }
 		}
 		return latest;
 	}
@@ -298,6 +302,8 @@ public class InMemoryMNode implements MNode {
 		for (LogEntry le : filteredLogs.subList(fromIndex, toIndex)) {
 			result.addLogEntry(le);
 		}
+		result.setStart(fromIndex);
+		result.setTotal(filteredLogs.size());
 		return result;
 	}
 
@@ -421,8 +427,10 @@ public class InMemoryMNode implements MNode {
 			SynchronizationFailed message) throws InvalidToken, NotAuthorized,
 			NotImplemented, ServiceFailure {
 		
-		eventLog.add(buildLogEntry(Event.SYNCHRONIZATION_FAILED, 
-					D1TypeBuilder.buildIdentifier(message.getPid()), session));
+		eventLog.add(buildLogEntry(
+		        Event.SYNCHRONIZATION_FAILED, 
+		        D1TypeBuilder.buildIdentifier(message.getPid()), 
+		        session));
 		
 		return true;
 	}

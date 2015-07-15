@@ -92,7 +92,8 @@ public class InMemoryMNode implements MNode {
 		le.setEvent(v);
 		le.setIdentifier(pid);
 		le.setNodeIdentifier(getNodeId());
-		le.setSubject(session.getSubject());
+		if (session != null)
+		    le.setSubject(session.getSubject());
 		le.setEntryId(String.format("%ddd", eventLog.size()+1));
 		return le;
 	}
@@ -120,14 +121,36 @@ public class InMemoryMNode implements MNode {
 	
 	/**
 	 * Validate that the systemMetadata follows the D1_Schema definitions
+	 * Doing it through serialization and deserialization (probably a bit overkill)
 	 * 
 	 * @param sysmeta
 	 * @throws InvalidSystemMetadata
 	 */
 	private void validateSystemMetadata(SystemMetadata sysmeta) 
 	throws InvalidSystemMetadata 
-	{
-		// TODO: how do we validate the sysmeta?  via clone (serialize, deserialize?)
+	{	
+		Exception caught = null;
+		try {
+			ByteArrayOutputStream os = new ByteArrayOutputStream(512);
+			TypeMarshaller.marshalTypeToOutputStream(SystemMetadata.class, os);
+			os.close();
+			// maybe we don't need to reconstitute to validate...
+			TypeMarshaller.unmarshalTypeFromStream(SystemMetadata.class, 
+					new ByteArrayInputStream(os.toByteArray()) );
+		} catch (JiBXException e) {
+			caught = e;
+		} catch (IOException e) {
+			caught = e;
+		} catch (InstantiationException e) {
+			caught = e;
+		} catch (IllegalAccessException e) {
+			caught = e;
+		}
+		if (caught != null) {
+			InvalidSystemMetadata be = new InvalidSystemMetadata("000","The SystemMetadata is invalid");
+			be.initCause(caught);
+			throw be;
+		}
 	}
 	
 	/**
@@ -183,7 +206,7 @@ public class InMemoryMNode implements MNode {
 	@Override
 	public Node getCapabilities() throws NotImplemented, ServiceFailure {
 		// TODO Auto-generated method stub
-		return null;
+		throw new NotImplemented("000","getCapabilities is not implemented.");
 	}
 
 	@Override
@@ -231,6 +254,8 @@ public class InMemoryMNode implements MNode {
 		for (LogEntry le : filteredLogs.subList(fromIndex, toIndex)) {
 			result.addLogEntry(le);
 		}
+		result.setStart(fromIndex);
+		result.setTotal(filteredLogs.size());
 		return result;
 	}
 
@@ -617,6 +642,7 @@ public class InMemoryMNode implements MNode {
 		SystemMetadata smd = checkAvailableAndAuthorized(session, pid, Permission.CHANGE_PERMISSION);
 		// TODO: what is the semantics of archived, here?  
 		archive(session, pid);
+		// remove the object 
 		objectStore.remove(pid);
 		eventLog.add(buildLogEntry(Event.DELETE, pid, session));
 		return pid;
