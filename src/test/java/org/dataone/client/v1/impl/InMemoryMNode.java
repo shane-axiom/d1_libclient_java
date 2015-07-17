@@ -112,15 +112,29 @@ public class InMemoryMNode implements MNode {
 					);
 		}
 		Set<Subject> sessionSubjects = AuthUtils.authorizedClientSubjects(session);
-		sessionSubjects.add(nodeAdministrator);
+		if (sessionSubjects.contains(nodeAdministrator) ||
+		        sessionSubjects.contains(cnClientUser)) {
+		    return sysmeta;
+		}
 		if (!AuthUtils.isAuthorized(sessionSubjects, perm, sysmeta)) {
-			throw new NotAuthorized("000",String.format("Caller does not have %s" +
+			throw new NotAuthorized("000",String.format("Caller (%s) does not have %s" +
 					" permission on %s",
+					joinSubjects(sessionSubjects),
 					perm.xmlValue(),
 					sysmeta.getIdentifier().getValue()));
 		}
 		return sysmeta;
 	}
+	
+	private String joinSubjects(Set<Subject> subs) {
+	    StringBuffer sb = new StringBuffer();
+	    for (Subject s : subs) {
+            sb.append(",");
+	        sb.append(s.getValue());
+	    }
+	    return sb.toString().substring(1);
+	}
+	
 	
 	/**
 	 * Validate that the systemMetadata follows the D1_Schema definitions
@@ -135,7 +149,7 @@ public class InMemoryMNode implements MNode {
 		Exception caught = null;
 		try {
 			ByteArrayOutputStream os = new ByteArrayOutputStream(512);
-			TypeMarshaller.marshalTypeToOutputStream(SystemMetadata.class, os);
+			TypeMarshaller.marshalTypeToOutputStream(sysmeta, os);
 			os.close();
 			// maybe we don't need to reconstitute to validate...
 			TypeMarshaller.unmarshalTypeFromStream(SystemMetadata.class, 
