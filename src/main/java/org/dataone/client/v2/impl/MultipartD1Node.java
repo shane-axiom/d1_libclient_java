@@ -3,6 +3,7 @@ package org.dataone.client.v2.impl;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.apache.commons.io.IOUtils;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.client.utils.ExceptionUtils;
@@ -130,11 +131,10 @@ public abstract class MultipartD1Node extends org.dataone.client.rest.MultipartD
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
         }
 
-        Identifier identifier = null;
+        InputStream is = null;
         try {
-            InputStream is = getRestClient(session).doPutRequest(url.getUrl(),mpe,
+            is = getRestClient(session).doPutRequest(url.getUrl(),mpe,
                     Settings.getConfiguration().getInteger("D1Client.CNode.registerSystemMetadata.timeouts", null));
-            identifier = deserializeServiceType(Identifier.class, is);
         } catch (BaseException be) {
             if (be instanceof NotImplemented)         throw (NotImplemented) be;
             if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
@@ -144,8 +144,11 @@ public abstract class MultipartD1Node extends org.dataone.client.rest.MultipartD
             if (be instanceof InvalidToken)           throw (InvalidToken) be;
 
             throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
+        } catch (ClientSideException e) {
+            throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
+        } finally {
+            IOUtils.closeQuietly(is);
         }
-        catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
 
         return true;
     }
