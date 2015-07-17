@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.dataone.client.v1.types.D1TypeBuilder;
 import org.dataone.client.v2.MNode;
 import org.dataone.client.v2.formats.ObjectFormatCache;
@@ -119,8 +120,9 @@ public class InMemoryMNode implements MNode {
 	throws NotAuthorized, NotFound
 	{
 		SystemMetadata sysmeta = metaStore.get(id);
-		if (sysmeta != null) {
-			sysmeta = getSeriesHead(id);
+		if (sysmeta == null) {
+		    // id might be a sid
+		    sysmeta = getSeriesHead(id);
 		}
 		if (sysmeta == null) {
 			throw new NotFound("000",
@@ -129,14 +131,27 @@ public class InMemoryMNode implements MNode {
 					);
 		}
 		Set<Subject> sessionSubjects = AuthUtils.authorizedClientSubjects(session);
-		sessionSubjects.add(nodeAdministrator);
+		if (sessionSubjects.contains(nodeAdministrator) ||
+		        sessionSubjects.contains(cnClientUser)) {
+		    return sysmeta;
+		}
 		if (!AuthUtils.isAuthorized(sessionSubjects, perm, sysmeta)) {
-			throw new NotAuthorized("000",String.format("Caller does not have %s" +
+			throw new NotAuthorized("000",String.format("Caller (%s) does not have %s" +
 					" permission on %s",
+					joinSubjects(sessionSubjects),
 					perm.xmlValue(),
 					sysmeta.getIdentifier().getValue()));
 		}
 		return sysmeta;
+	}
+	
+	private String joinSubjects(Set<Subject> subs) {
+	    StringBuffer sb = new StringBuffer();
+	    for (Subject s : subs) {
+            sb.append(",");
+	        sb.append(s.getValue());
+	    }
+	    return sb.toString().substring(1);
 	}
 	
 	private SystemMetadata getSeriesHead(Identifier id) throws NotFound 
@@ -188,7 +203,7 @@ public class InMemoryMNode implements MNode {
 		Exception caught = null;
 		try {
 			ByteArrayOutputStream os = new ByteArrayOutputStream(512);
-			TypeMarshaller.marshalTypeToOutputStream(SystemMetadata.class, os);
+			TypeMarshaller.marshalTypeToOutputStream(sysmeta, os);
 			os.close();
 			// maybe we don't need to reconstitute to validate...
 			TypeMarshaller.unmarshalTypeFromStream(SystemMetadata.class, 
