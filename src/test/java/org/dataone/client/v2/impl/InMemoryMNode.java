@@ -174,7 +174,7 @@ public class InMemoryMNode implements MNode {
 	}
 	
 	
-	private void addToSeries(Identifier series, Identifier pid) 
+	protected void addToSeries(Identifier series, Identifier pid) 
 	throws InvalidRequest 
 	{
 		if (pid == null) {
@@ -506,6 +506,7 @@ public class InMemoryMNode implements MNode {
 				this.objectStore.put(pid,objectBytes);
 				sysmeta.setDateUploaded(new Date());
 				sysmeta.setOriginMemberNode(getNodeId());
+				sysmeta.setSubmitter(session.getSubject());
 				validateSystemMetadata(sysmeta);
 				this.metaStore.put(pid, sysmeta);
 				addToSeries(sysmeta.getSeriesId(), pid);
@@ -675,8 +676,15 @@ public class InMemoryMNode implements MNode {
 			SystemMetadata sysmeta) throws NotImplemented, NotAuthorized,
 			NotFound, ServiceFailure, InvalidRequest, InvalidSystemMetadata,
 			InvalidToken {
-		// TODO implement
-		throw new NotImplemented("000","listQueryEngines is not implemented.");
+	    
+	    // throws exception if the pid being update (obsoleted) can't be found
+        // or the requester doesn't have the permissions to do the update
+        checkAvailableAndAuthorized(session, pid, Permission.CHANGE_PERMISSION);
+        
+        sysmeta.setDateSysMetadataModified(new Date());
+        validateSystemMetadata(sysmeta);
+        this.metaStore.put(pid, sysmeta);
+		return true;
 	}
 
     @Override
