@@ -22,6 +22,8 @@ package org.dataone.client.v2.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.Date;
 
 import org.apache.commons.io.input.AutoCloseInputStream;
@@ -704,11 +706,15 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_PACKAGES);
 
-        if (StringUtils.isBlank(packageType.getValue()))
-            url.addNextPathElement("application/zip");
-        else
-            url.addNextPathElement(packageType.getValue());
-
+        try {
+            if (StringUtils.isBlank(packageType.getValue()))
+                url.addNextPathElement(URLEncoder.encode("application/zip", "UTF-8"));
+            else
+                url.addNextPathElement(URLEncoder.encode(packageType.getValue(), "UTF-8"));
+        } catch (IllegalArgumentException | UnsupportedEncodingException e1) {
+            throw new ServiceFailure(url.getBaseUrl(), "Unable to encode packageType as url parameter!");
+        }
+        
         if (StringUtils.isBlank(id.getValue()))
             throw new NotFound("0000", "'pid' cannot be null nor empty");
         url.addNextPathElement(id.getValue());
