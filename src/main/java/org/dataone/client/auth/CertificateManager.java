@@ -427,9 +427,12 @@ public class CertificateManager {
     /**
      * Load the configured certificate into the keystore singleton
      * Follows the logic of first searching the certificate at the setCertificateLocation()
-     * location, then using the default location.
+     * location, then using the default location. If a setCertificateLocation() has been
+     * previously set and can't be found, a WARN is logged and null is returned.
+     * 
      *
-     * @return the loaded X.509 certificate
+     * @return the loaded X.509 certificate or null if a certificate isn't found
+     * 
      */
     public X509Certificate loadCertificate() {
 
@@ -437,12 +440,11 @@ public class CertificateManager {
         try {
             // load up the PEM
             KeyStore keyStore = getKeyStore((String)null);
-            // get it from the store
-            cert = (X509Certificate) keyStore.getCertificate("cilogon");
-        } catch (FileNotFoundException fnf) {
-            log.warn(fnf.getMessage());
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
+            if (keyStore != null) 
+                cert = (X509Certificate) keyStore.getCertificate("cilogon");
+        } catch (KeyStoreException | NoSuchAlgorithmException | 
+                CertificateException | IOException e) {
+            log.error(e.getMessage(),e);
         }
         return cert;
     }
@@ -1097,7 +1099,7 @@ public class CertificateManager {
     private KeyStore getKeyStore(String subjectString) throws KeyStoreException,
     NoSuchAlgorithmException, CertificateException, IOException {
 
-        X509Session s = selectSession(subjectString);
+        X509Session s = selectSession(subjectString);  // can return null...
         return getKeyStore(s);
     }
 
