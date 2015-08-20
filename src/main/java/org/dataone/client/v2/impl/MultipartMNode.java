@@ -706,19 +706,16 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_PACKAGES);
 
-        try {
-            if (StringUtils.isBlank(packageType.getValue()))
-                url.addNextPathElement(URLEncoder.encode("application/zip", "UTF-8"));
-            else
-                url.addNextPathElement(URLEncoder.encode(packageType.getValue(), "UTF-8"));
-        } catch (IllegalArgumentException | UnsupportedEncodingException e1) {
-            throw new ServiceFailure(url.getBaseUrl(), "Unable to encode packageType as url parameter!");
-        }
+        if (packageType == null || StringUtils.isBlank(packageType.getValue()))
+            url.addNextPathElement("application/zip");
+        else
+            url.addNextPathElement(packageType.getValue());
         
         if (StringUtils.isBlank(id.getValue()))
             throw new NotFound("0000", "'pid' cannot be null nor empty");
+        
         url.addNextPathElement(id.getValue());
-
+        
         InputStream remoteStream = null;
         try {
             remoteStream = getRestClient(session).doGetRequest(url.getUrl(),
