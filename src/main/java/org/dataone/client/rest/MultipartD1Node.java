@@ -111,6 +111,26 @@ public abstract class MultipartD1Node implements D1Node {
 
     protected NodeType nodeType;
 
+    
+    /**
+     * Utility method to be used in finally blocks for methods that have to 
+     * close inputStreams.  Contrast with IOUtils.closeQuietly(is).  Closes the 
+     * input stream, taking care of null situations, and throwing an appropriate 
+     * DataONE exception if there is a problem with closing.
+     * @param is
+     * @throws ServiceFailure - thrown if is.close throws an IOException
+     */
+    protected static void closeLoudly(InputStream is) throws ServiceFailure {
+        if (is != null) {
+            try {
+                is.close();
+            } catch (IOException e) {
+                throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
+            }
+        }
+    }
+    
+    
     /**
      * API methods should use this method to get the MultipartRestClient to
      * be used for the call.
@@ -404,8 +424,8 @@ public abstract class MultipartD1Node implements D1Node {
 
     public boolean systemMetadataChanged(Session session, Identifier pid, long serialVersion,
             Date dateSystemMetadataLastModified)
-                    throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented, InvalidRequest
-                    {
+                    throws InvalidToken, ServiceFailure, NotAuthorized, NotImplemented, InvalidRequest {
+        
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_META_CHANGED);
 
         SimpleMultipartEntity mpe = new SimpleMultipartEntity();
@@ -418,8 +438,7 @@ public abstract class MultipartD1Node implements D1Node {
         InputStream is = null;
         try {
             is = getRestClient(session).doPostRequest(url.getUrl(), mpe, null);
-            if (is != null)
-                is.close();
+
         } catch (BaseException be) {
             if (be instanceof InvalidToken)           throw (InvalidToken) be;
             if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
@@ -429,11 +448,14 @@ public abstract class MultipartD1Node implements D1Node {
 
             throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
         }
-        catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-        catch (IOException e)          {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
+        catch (ClientSideException e)  {
+            throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
+        }
+        finally {
+            MultipartD1Node.closeLoudly(is);
+        }
         return true;
-                    }
-
+    }
 
 
 
@@ -613,10 +635,10 @@ public abstract class MultipartD1Node implements D1Node {
         if (action != null)
             url.addNonEmptyParamPair("action", action.xmlValue());
 
+        InputStream is = null;
         try {
-            InputStream is = getRestClient(session).doGetRequest(url.getUrl(),null);
-            if (is != null)
-                is.close();
+            is = getRestClient(session).doGetRequest(url.getUrl(),null);
+
         } catch (BaseException be) {
             if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
             if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
@@ -627,9 +649,12 @@ public abstract class MultipartD1Node implements D1Node {
 
             throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
         }
-        catch (ClientSideException e)            {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-        catch (IOException e)                    {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-
+        catch (ClientSideException e) {
+            throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
+        }
+        finally {
+            MultipartD1Node.closeLoudly(is);
+        }
         return true;
     }
 

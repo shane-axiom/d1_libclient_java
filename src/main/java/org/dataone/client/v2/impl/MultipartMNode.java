@@ -53,14 +53,12 @@ import org.dataone.service.types.v1.DescribeResponse;
 import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.types.v1.NodeReference;
 import org.dataone.service.types.v1.NodeType;
-import org.dataone.service.types.v1.ObjectFormat;
 import org.dataone.service.types.v1.ObjectFormatIdentifier;
 import org.dataone.service.types.v1.ObjectList;
 import org.dataone.service.types.v1.Permission;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v2.Log;
 import org.dataone.service.types.v2.Node;
-import org.dataone.service.types.v2.ObjectFormatList;
 import org.dataone.service.types.v2.OptionList;
 import org.dataone.service.types.v2.SystemMetadata;
 import org.dataone.service.util.Constants;
@@ -390,8 +388,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
         InputStream is = null;
         try {
             is = getRestClient(session).doPostRequest(url.getUrl(),mpe, null);
-            if (is != null)
-                is.close();
+
         } catch (BaseException be) {
             if (be instanceof InvalidToken)           throw (InvalidToken) be;
             if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
@@ -400,9 +397,12 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 
             throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
         }
-        catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-        catch (IOException e)          {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-
+        catch (ClientSideException e)  {
+            throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
+        }
+        finally {
+            MultipartD1Node.closeLoudly(is);
+        }
         return true;
     }
 
@@ -631,8 +631,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
         try {
             is = getRestClient(session).doPostRequest(url.getUrl(),smpe,
                     Settings.getConfiguration() .getInteger("D1Client.MNode.replicate.timeout",null));
-            if (is != null)
-                is.close();
+
         } catch (BaseException be) {
             if (be instanceof NotImplemented)         throw (NotImplemented) be;
             if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
@@ -644,9 +643,12 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 
             throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
         }
-        catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-        catch (IOException e)          {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-
+        catch (ClientSideException e)  {
+            throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
+        }
+        finally {
+            MultipartD1Node.closeLoudly(is);
+        }
         return true;
     }
 

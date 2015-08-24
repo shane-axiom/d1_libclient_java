@@ -479,9 +479,8 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 
         InputStream is = null;
         try {
-        	is = getRestClient(session).doPostRequest(url.getUrl(),mpe, null);
-        	if (is != null)
-				is.close();
+            is = getRestClient(session).doPostRequest(url.getUrl(),mpe, null);
+
         } catch (BaseException be) {
             if (be instanceof InvalidToken)           throw (InvalidToken) be;
             if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
@@ -491,8 +490,9 @@ public class MultipartMNode extends MultipartD1Node implements MNode
             throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
         } 
         catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-        catch (IOException e)          {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-      
+        finally {
+            MultipartD1Node.closeLoudly(is);
+        }
         return true;
     }
 
@@ -765,22 +765,24 @@ public class MultipartMNode extends MultipartD1Node implements MNode
     	try {
 			is = getRestClient(session).doPostRequest(url.getUrl(),smpe, 
 					Settings.getConfiguration() .getInteger("D1Client.MNode.replicate.timeout",null));
-			if (is != null)
-				is.close();
+
         } catch (BaseException be) {
             if (be instanceof NotImplemented)         throw (NotImplemented) be;
             if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
             if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
             if (be instanceof InvalidRequest)         throw (InvalidRequest) be;
-			if (be instanceof InvalidToken)	          throw (InvalidToken) be;
+            if (be instanceof InvalidToken)	          throw (InvalidToken) be;
             if (be instanceof InsufficientResources)  throw (InsufficientResources) be;
             if (be instanceof UnsupportedType)        throw (UnsupportedType) be;
                     
             throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
         } 
-        catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-        catch (IOException e)          {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-    	
+        catch (ClientSideException e)  {
+            throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
+        }
+        finally {
+            MultipartD1Node.closeLoudly(is);
+        }
         return true;
     }
 
@@ -811,9 +813,9 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 
         InputStream is = null;
         try {
-        	is = new AutoCloseInputStream(getRestClient(session).doGetRequest(url.getUrl(), 
-        			Settings.getConfiguration().getInteger("D1Client.MNode.getReplica.timeout", null)));
-    	
+            is = new AutoCloseInputStream(getRestClient(session).doGetRequest(url.getUrl(), 
+                    Settings.getConfiguration().getInteger("D1Client.MNode.getReplica.timeout", null)));
+            
         } catch (BaseException be) {
             if (be instanceof InvalidToken)           throw (InvalidToken) be;
             if (be instanceof NotAuthorized)          throw (NotAuthorized) be;

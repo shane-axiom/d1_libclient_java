@@ -660,11 +660,10 @@ public class MultipartCNode extends MultipartD1Node implements CNode
     	
 		// send the request
 		
-		try {
-			InputStream is = getRestClient(session).doGetRequest(url.getUrl(), null);
-			if (is != null)
-				is.close();
-			
+    	InputStream is = null;
+        try {
+            is = getRestClient(session).doGetRequest(url.getUrl(), null);
+
 		} catch (BaseException be) {
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
@@ -678,8 +677,8 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		catch (ClientSideException e)  {
 			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
 		} 
-		catch (IOException e) {
-			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
+		finally {
+			MultipartD1Node.closeLoudly(is);
 		}
 
 		return true;
@@ -857,10 +856,9 @@ public class MultipartCNode extends MultipartD1Node implements CNode
     		mpe.addParamPart("obsoletedByPid", obsoletedByPid.getValue());
 		mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
 
-		try {
-			InputStream is = getRestClient(session).doPutRequest(url.getUrl(), mpe, null);
-			if (is != null)
-				is.close();
+		InputStream is = null;
+        try {
+            is = getRestClient(session).doPutRequest(url.getUrl(), mpe, null);
 
 		} catch (BaseException be) {
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
@@ -876,9 +874,9 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		catch (ClientSideException e)  {
 			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
 		} 
-		catch (IOException e) {
-			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
-		} 
+		finally {
+		    MultipartD1Node.closeLoudly(is);
+		}
 
 		return true;
 	}
@@ -1249,7 +1247,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	 * @see org.dataone.client.CNode#setAccessPolicy(org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.AccessPolicy, long)
 	 */
 	@Override
-	public  boolean setAccessPolicy(Identifier pid, 
+	public boolean setAccessPolicy(Identifier pid, 
 			AccessPolicy accessPolicy, long serialVersion) 
 	throws InvalidToken, NotFound, NotImplemented, NotAuthorized, 
 		ServiceFailure, InvalidRequest, VersionMismatch
@@ -1262,7 +1260,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	 * @see org.dataone.client.CNode#setAccessPolicy(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Identifier, org.dataone.service.types.v1.AccessPolicy, long)
 	 */
 	@Override
-	public  boolean setAccessPolicy(Session session, Identifier pid, 
+	public boolean setAccessPolicy(Session session, Identifier pid, 
 			AccessPolicy accessPolicy, long serialVersion) 
 	throws InvalidToken, NotFound, NotImplemented, NotAuthorized, 
 		ServiceFailure, InvalidRequest, VersionMismatch
@@ -1282,10 +1280,9 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		try {
-			InputStream is = getRestClient(session).doPutRequest(url.getUrl(),mpe, null);
-			if (is != null)
-				is.close();
+    	InputStream is = null;
+    	try {
+    	    is = getRestClient(session).doPutRequest(url.getUrl(),mpe, null);
 
 		} catch (BaseException be) {
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
@@ -1298,9 +1295,12 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-
+		catch (ClientSideException e)  {
+		    throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
+		}
+		finally {
+		    MultipartD1Node.closeLoudly(is);
+		}
 		return true;
 	}
 
@@ -1446,10 +1446,9 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		}
 		url.addNextPathElement(subject.getValue());
 		
-		try {
-			InputStream is = getRestClient(session).doPutRequest(url.getUrl(),null, null);
-			if (is != null)
-				is.close();
+		InputStream is = null;
+        try {
+            is = getRestClient(session).doPutRequest(url.getUrl(),null, null);
 		
 		} catch (BaseException be) {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
@@ -1460,9 +1459,13 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-		return true;
+		catch (ClientSideException e)  {
+		    throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
+		}
+		finally {
+		    MultipartD1Node.closeLoudly(is);
+		}
+        return true;
 	}
 
 
@@ -1586,11 +1589,10 @@ public class MultipartCNode extends MultipartD1Node implements CNode
     	if (secondarySubject != null)
     		mpe.addParamPart("secondarySubject", secondarySubject.getValue());
 
-		try {
-			InputStream is = getRestClient(session).doPostRequest(url.getUrl(),mpe, null);
-			if (is != null)
-				is.close();
-			
+    	InputStream is = null;
+        try {
+            is = getRestClient(session).doPostRequest(url.getUrl(),mpe, null);
+
 		} catch (BaseException be) {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
@@ -1602,9 +1604,12 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-
+		catch (ClientSideException e)  {
+		    throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
+		}
+		finally {
+		    MultipartD1Node.closeLoudly(is);
+		}
 		return true;
 	}
 
@@ -1634,11 +1639,10 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		SimpleMultipartEntity mpe = new SimpleMultipartEntity();
 		mpe.addParamPart("subject", subject.getValue());
 
-		try {
-			InputStream is = getRestClient(session).doPostRequest(url.getUrl(), mpe, null);
-			if (is != null)
-				is.close();
-		
+		InputStream is = null;
+        try {
+            is = getRestClient(session).doPostRequest(url.getUrl(), mpe, null);
+
 		} catch (BaseException be) {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
@@ -1650,10 +1654,13 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-		
-		return true;
+		catch (ClientSideException e)  {
+		    throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
+		}
+		finally {
+		    MultipartD1Node.closeLoudly(is);
+		}
+        return true;
 	}
 
 
@@ -1724,10 +1731,9 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING_PENDING);
     	url.addNextPathElement(subject.getValue());
 
-		try {
-			InputStream is = getRestClient(session).doPutRequest(url.getUrl(), null, null);
-			if (is != null)
-				is.close();
+    	InputStream is = null;
+        try {
+            is = getRestClient(session).doPutRequest(url.getUrl(), null, null);
 
 		} catch (BaseException be) {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
@@ -1738,9 +1744,14 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-		return true;
+		catch (ClientSideException e)  {
+		    throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
+		}
+		finally {
+		    MultipartD1Node.closeLoudly(is);
+		}
+        return true;
+		
 	}
 
 
@@ -1768,10 +1779,9 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING_PENDING);
     	url.addNextPathElement(subject.getValue());
 		
-		try {
-			InputStream is = getRestClient(session).doDeleteRequest(url.getUrl(), null);
-			if (is != null)
-				is.close();
+    	InputStream is = null;
+        try {
+            is = getRestClient(session).doDeleteRequest(url.getUrl(), null);
 
 		} catch (BaseException be) {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
@@ -1782,9 +1792,12 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-		
+		catch (ClientSideException e)  {
+		    throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
+		}
+		finally {
+		    MultipartD1Node.closeLoudly(is);
+		}
 		return true;
 	}
 
@@ -1794,7 +1807,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	 * @see org.dataone.client.CNode#removeMapIdentity(org.dataone.service.types.v1.Subject)
 	 */
 	@Override
-	public  boolean removeMapIdentity(Subject subject) 
+	public boolean removeMapIdentity(Subject subject) 
 			throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
 			NotImplemented
 	{
@@ -1806,17 +1819,17 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	 * @see org.dataone.client.CNode#removeMapIdentity(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Subject)
 	 */
 	@Override
-	public  boolean removeMapIdentity(Session session, Subject subject) 
+	public boolean removeMapIdentity(Session session, Subject subject) 
 			throws ServiceFailure, InvalidToken, NotAuthorized, NotFound, 
 			NotImplemented
 	{
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_ACCOUNT_MAPPING);
     	url.addNextPathElement(subject.getValue());
 
-		try {
-			InputStream is = getRestClient(session).doDeleteRequest(url.getUrl(), null);
-			if (is != null)
-				is.close();
+        InputStream is = null;
+        try {
+            is = getRestClient(session).doDeleteRequest(url.getUrl(), null);
+
 
 		} catch (BaseException be) {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
@@ -1827,9 +1840,12 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-		
+		catch (ClientSideException e)  {
+		    throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
+		}
+		finally {
+		    MultipartD1Node.closeLoudly(is);
+		}
 		return true;
 	}
 
@@ -1916,11 +1932,10 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		try {
-			InputStream is = getRestClient(session).doPutRequest(url.getUrl(),mpe, null);
-			if (is != null)
-				is.close();
-			
+    	InputStream is = null;
+        try {
+            is = getRestClient(session).doPutRequest(url.getUrl(),mpe, null);
+
 		} catch (BaseException be) {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
 			if (be instanceof InvalidToken)           throw (InvalidToken) be;
@@ -1931,9 +1946,12 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-		
+		catch (ClientSideException e)  {
+		    throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
+		}
+		finally {
+		    MultipartD1Node.closeLoudly(is);
+		}
 		return true;
 	}
 
@@ -1971,10 +1989,9 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		try {
-			InputStream is = getRestClient(session).doPutRequest(url.getUrl(),mpe, null);
-			if (is != null)
-				is.close();
+    	InputStream is = null;
+        try {
+             is = getRestClient(session).doPutRequest(url.getUrl(),mpe, null);
 
 		} catch (BaseException be) {
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
@@ -1986,9 +2003,12 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-		
+		catch (ClientSideException e)  {
+		    throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
+		}
+		finally {
+		    MultipartD1Node.closeLoudly(is);
+		}
 		return true;
 	}
 
@@ -2086,11 +2106,10 @@ public class MultipartCNode extends MultipartD1Node implements CNode
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);        
         }
 
-		try {
-			InputStream is = getRestClient(session).doPutRequest(url.getUrl(),mpe,
+        InputStream is = null;
+        try {
+            is = getRestClient(session).doPutRequest(url.getUrl(),mpe,
 					Settings.getConfiguration().getInteger("D1Client.CNode.replication.timeout", null));
-			if (is != null) 
-				is.close();
 			
 		} catch (BaseException be) {
 			if (be instanceof ServiceFailure)         throw (ServiceFailure) be;
@@ -2102,9 +2121,12 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-		
+		catch (ClientSideException e)  {
+		    throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
+		}
+		finally {
+		    MultipartD1Node.closeLoudly(is);
+		}
 		return true;
 	}
 
@@ -2145,11 +2167,10 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		try {
-			InputStream is = getRestClient(session).doPutRequest(url.getUrl(),mpe,
+    	InputStream is = null;
+        try {
+            is = getRestClient(session).doPutRequest(url.getUrl(),mpe,
 					Settings.getConfiguration().getInteger("D1Client.CNode.replication.timeout", null));
-			if (is != null) 
-				is.close();
 	
 		} catch (BaseException be) {
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
@@ -2162,9 +2183,12 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 			
 			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-		
+		catch (ClientSideException e)  {
+		    throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
+		}
+		finally  {
+		    MultipartD1Node.closeLoudly(is);
+		}
 		return true;
 	}
 
@@ -2186,7 +2210,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	 * @see org.dataone.client.CNode#isNodeAuthorized(org.dataone.service.types.v1.Session, org.dataone.service.types.v1.Subject, org.dataone.service.types.v1.Identifier)
 	 */
 	@Override
-	public  boolean isNodeAuthorized(Session session, 
+	public boolean isNodeAuthorized(Session session, 
 			Subject targetNodeSubject, Identifier pid)
 	throws NotImplemented, NotAuthorized, InvalidToken, ServiceFailure, 
 	NotFound, InvalidRequest
@@ -2197,11 +2221,10 @@ public class MultipartCNode extends MultipartD1Node implements CNode
         if (targetNodeSubject != null)
         	url.addNonEmptyParamPair("targetNodeSubject", targetNodeSubject.getValue());
 
-		try {
-			InputStream is = getRestClient(session).doGetRequest(url.getUrl(),
-					Settings.getConfiguration().getInteger("D1Client.CNode.replication.timeout", null));
-			if (is != null) 
-				is.close();
+        InputStream is = null;
+        try {
+            is = getRestClient(session).doGetRequest(url.getUrl(),
+                    Settings.getConfiguration().getInteger("D1Client.CNode.replication.timeout", null));
 
 		} catch (BaseException be) {
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
@@ -2213,9 +2236,12 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-		
+		catch (ClientSideException e)  {
+		    throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
+		}
+		finally {
+		    MultipartD1Node.closeLoudly(is);
+		}
 		return true;
 	}
 
@@ -2258,11 +2284,10 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 			throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
 		}
 
-		try {
-			InputStream is = getRestClient(session).doPutRequest(url.getUrl(),mpe,
+		InputStream is = null;
+        try {
+            is = getRestClient(session).doPutRequest(url.getUrl(),mpe,
 					Settings.getConfiguration().getInteger("D1Client.CNode.replication.timeout", null));
-			if (is != null)
-				is.close();
 
 		} catch (BaseException be) {
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
@@ -2275,9 +2300,12 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-		
+		catch (ClientSideException e)  {
+		    throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
+		}
+		finally {
+		    MultipartD1Node.closeLoudly(is);
+		}
 		return true;
 	}
 
@@ -2313,11 +2341,10 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 			mpe.addParamPart("nodeId", nodeId.getValue());
 		mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
 
-		try {
-			InputStream is = getRestClient(session).doPutRequest(url.getUrl(),mpe,
+		InputStream is = null;
+        try {
+            is = getRestClient(session).doPutRequest(url.getUrl(),mpe,
 					Settings.getConfiguration().getInteger("D1Client.CNode.replication.timeout", null));
-			if (is != null)
-				is.close();
 
 		} catch (BaseException be) {
 			if (be instanceof NotImplemented)         throw (NotImplemented) be;
@@ -2330,9 +2357,12 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 			throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 		} 
-		catch (ClientSideException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-		catch (IOException e)  {throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); }
-		
+		catch (ClientSideException e)  {
+		    throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e); 
+		}
+		finally {
+		    MultipartD1Node.closeLoudly(is);
+		}
 		return true;
 	}
 	
