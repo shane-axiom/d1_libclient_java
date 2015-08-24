@@ -3,7 +3,6 @@ package org.dataone.client.v2.impl;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.commons.io.IOUtils;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.client.utils.ExceptionUtils;
@@ -147,7 +146,7 @@ public abstract class MultipartD1Node extends org.dataone.client.rest.MultipartD
         } catch (ClientSideException e) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
         } finally {
-            IOUtils.closeQuietly(is);
+            MultipartD1Node.closeLoudly(is);
         }
 
         return true;
