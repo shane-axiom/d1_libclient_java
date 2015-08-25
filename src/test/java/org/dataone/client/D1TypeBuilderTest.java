@@ -3,6 +3,7 @@ package org.dataone.client;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
@@ -20,6 +21,8 @@ import org.dataone.service.types.v1.Subject;
 import org.dataone.service.types.v1.SystemMetadata;
 import org.dataone.service.types.v1.util.AccessUtil;
 import org.dataone.service.types.v1.util.ChecksumUtil;
+import org.dataone.service.types.v2.TypeFactory;
+import org.jibx.runtime.JiBXException;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -49,17 +52,7 @@ public class D1TypeBuilderTest {
 				id.getValue().equals(val));
 	}
 
-//	@Test
-//	public void testIsIdentifierValid() {
-//		Identifier pid = D1TypeBuilder.buildIdentifier("ho ho ho");
-//		assertFalse("identifier containing spaces should return false ['" + pid.getValue() + "']",
-//				D1TypeBuilder.isIdentifierValid(pid));
-//	
-//		pid = D1TypeBuilder.buildIdentifier("andABottleOfRum");
-//		assertTrue("identifier without spaces should return true.",
-//				D1TypeBuilder.isIdentifierValid(pid));
-//	
-//	}
+
 
 	@Test
 	public void testBuildSubject() {
@@ -69,29 +62,11 @@ public class D1TypeBuilderTest {
 				s.getValue().equals(val));
 	}
 
-//	@Test
-//	public void testBuildAccessRuleStringPermission() {
-//		fail("Not yet implemented");
-//	}
-//
-//	@Test
-//	public void testBuildAccessRuleStringPermissionArray() {
-//		fail("Not yet implemented");
-//	}
 
-//	@Test
-//	public void testBuildPerson() {
-//		fail("Not yet implemented");
-//	}
-
-//	@Test
-//	public void testBuildMinimalSystemMetadata() {
-//		fail("Not yet implemented");
-//	}
 
 	@Test
 //	@Ignore
-	public void testCloneSystemMetadata() throws NoSuchAlgorithmException 
+	public void testCloneSystemMetadata() throws NoSuchAlgorithmException, InstantiationException, IllegalAccessException, JiBXException, IOException 
 	{
 		SystemMetadata orig = new SystemMetadata();
 		orig.setAccessPolicy(AccessUtil.createSingleRuleAccessPolicy(
@@ -120,7 +95,7 @@ public class D1TypeBuilderTest {
 		orig.setSize(BigInteger.TEN);
 		orig.setSerialVersion(BigInteger.ONE);
 		
-		SystemMetadata clone = D1TypeBuilder.cloneSystemMetadata(orig);
+		SystemMetadata clone = TypeFactory.clone(orig);
 		
 		assertTrue("clone contains different property instance for AP",
 				clone.getAccessPolicy().hashCode() != orig.getAccessPolicy().hashCode());
@@ -211,12 +186,12 @@ public class D1TypeBuilderTest {
 	}
 
 	@Test
-	public void testCloneChecksum() {
+	public void testCloneChecksum() throws InstantiationException, IllegalAccessException, JiBXException, IOException {
 		Checksum orig = new Checksum();
 		orig.setAlgorithm("xxx");
 		orig.setValue("foo");
 		
-		Checksum clone = D1TypeBuilder.cloneChecksum(orig);
+		Checksum clone = TypeFactory.clone(orig);
 		assertTrue(orig.getValue().equals(clone.getValue()));
 		clone.setValue("bar");
 		assertTrue("original value still 'foo'", orig.getValue().equals("foo"));
