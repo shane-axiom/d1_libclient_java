@@ -8,6 +8,7 @@ import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 
+import org.apache.commons.lang.ObjectUtils;
 import org.dataone.client.v1.types.D1TypeBuilder;
 import org.dataone.service.types.v1.AccessRule;
 import org.dataone.service.types.v1.Checksum;
@@ -116,7 +117,7 @@ public class D1TypeBuilderTest {
 		clone.setArchived(false);
 		assertFalse("archived values diverge", clone.getArchived() == orig.getArchived());
 		
-		assertTrue("AutMN value match", clone.getAuthoritativeMemberNode().getValue() == orig.getAuthoritativeMemberNode().getValue());
+		assertTrue("AutMN value match", ObjectUtils.equals(clone.getAuthoritativeMemberNode().getValue(), orig.getAuthoritativeMemberNode().getValue()));
 		clone.setAuthoritativeMemberNode(D1TypeBuilder.buildNodeReference("cloneAuthMN"));
 		assertFalse("AuthMN values diverge", clone.getAuthoritativeMemberNode().getValue() == orig.getAuthoritativeMemberNode().getValue());
 
