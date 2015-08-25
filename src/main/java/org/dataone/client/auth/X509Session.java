@@ -8,11 +8,9 @@ import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
 import java.util.Date;
 
-import org.apache.http.client.HttpClient;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.service.types.v1.Session;
-import org.dataone.service.types.v1.Subject;
-import org.dataone.service.util.TypeMarshaller;
+import org.dataone.service.types.v2.TypeFactory;
 import org.jibx.runtime.JiBXException;
 
 /**
@@ -58,8 +56,9 @@ public class X509Session extends Session {
 
     public static X509Session create(X509Certificate certificate, PrivateKey key, 
             Session session) throws InstantiationException, IllegalAccessException, 
-            InvocationTargetException, JiBXException, IOException {
-        X509Session xs = TypeMarshaller.convertTypeFromType(session, X509Session.class);
+            InvocationTargetException, JiBXException, IOException, NoSuchMethodException {
+        
+        X509Session xs = TypeFactory.convertTypeFromType(TypeFactory.clone(session), X509Session.class);
         xs.cert = certificate;
         xs.privateKey = key;
         return xs;
