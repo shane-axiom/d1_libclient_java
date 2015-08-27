@@ -50,7 +50,7 @@ public abstract class MultipartD1Node extends org.dataone.client.rest.MultipartD
     throws NotImplemented, ServiceFailure
     {
         // assemble the url
-        D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_NODE);
+        D1Url url = new D1Url(super.getNodeBaseServiceUrl(), "");
 
         // send the request
         Node node = null;
