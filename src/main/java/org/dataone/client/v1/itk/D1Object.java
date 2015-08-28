@@ -20,8 +20,10 @@
 
 package org.dataone.client.v1.itk;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -29,15 +31,19 @@ import java.util.Date;
 import java.util.List;
 
 import javax.activation.DataSource;
+import javax.activation.FileDataSource;
 import javax.mail.util.ByteArrayDataSource;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.CountingInputStream;
 import org.apache.commons.lang.StringUtils;
+import org.dataone.client.v1.itk.D1Client;
+import org.dataone.client.v1.itk.D1Object;
 import org.dataone.client.types.AccessPolicyEditor;
 import org.dataone.client.v1.CNode;
 import org.dataone.client.v1.MNode;
 import org.dataone.client.v2.formats.ObjectFormatCache;
+import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.InsufficientResources;
 import org.dataone.service.exceptions.InvalidRequest;
@@ -343,10 +349,10 @@ public class D1Object {
         D1Object o = null;
         boolean gotData = false;
         Exception latestException = null;
-        try {	    
-	        CNode cn = D1Client.getCN();
+        try {       
+            CNode cn = D1Client.getCN();
 
-	        ObjectLocationList oll;
+            ObjectLocationList oll;
             // Get the system metadata for the object
             SystemMetadata m = cn.getSystemMetadata(id);
             if (m != null) {
@@ -370,51 +376,78 @@ public class D1Object {
                 
                 // Get the contents of the object itself
                 MNode mn = D1Client.getMN(ol.getNodeIdentifier());
-                
+                InputStream inputStream = null;
+                OutputStream outputStream = null;
+                String tempDirStr = "";
+                File tempFile = null;
+                File tempDir = null;
                 try {
-                    InputStream is = mn.get(id);
-                    o.setData(IOUtils.toByteArray(is));
+                    inputStream = mn.get(id);
+                    tempDirStr = Settings.getConfiguration().getString(
+                            "D1Client.io.tmpdir", System.getProperty("java.io.tmpdir"));
+                    if ( tempDirStr != null ) {
+                        tempDir = new File(tempDirStr);
+                    }
+                    tempFile = File.createTempFile("d1_libclient_java.", ".tmp", tempDir);
+                    DataSource dataSource = new FileDataSource(tempFile);
+                    outputStream = dataSource.getOutputStream();
+                    byte[] bytes = new byte[4096];
+                    for (int len; (len = inputStream.read(bytes)) > 0; ) {
+                        outputStream.write(bytes, 0, len);
+                    }
+                    o.setDataSource(dataSource);
+                    //o.setData(IOUtils.toByteArray(inputStream));
                     gotData = true;
                     break;
  
                 } catch (IOException e) {
-                	latestException = e;
+                    latestException = e;
+                    
                 } catch (BaseException e) {
-                	latestException = e;
+                    latestException = e;
+                    
+                } finally {
+                    IOUtils.closeQuietly(inputStream);
+                    IOUtils.closeQuietly(outputStream);
+                    if (tempFile.exists()) {
+                        tempFile.deleteOnExit();
+                    }
+                    
+                    
                 }
             } 
         }
         catch (BaseException be) {
-        	latestException = be;
+            latestException = be;
         }
         
         if (!gotData) {
-        	if (latestException != null) {
-        		if (latestException instanceof InvalidToken) {
-        			throw (InvalidToken) latestException;
-        		}
-        		else if (latestException instanceof ServiceFailure) {
-        			throw (ServiceFailure) latestException;
-        		}
-        		else if (latestException instanceof NotAuthorized) {
-        			throw (NotAuthorized) latestException;
-        		}
-        		else if (latestException instanceof NotFound) {
-        			throw (NotFound) latestException;
-        		}
-        		else if (latestException instanceof NotImplemented) {
-        			throw (NotImplemented) latestException;
-        		}
-        		else if (latestException instanceof InsufficientResources) {
-        			throw (InsufficientResources) latestException;
-        		}
-        		else if (latestException instanceof InvalidRequest) {
-        			throw (InvalidRequest) latestException;
-        		}
-        	} else {
-        		throw new ServiceFailure("0000: Client Error", "Unexpected failure.  " +
-        				"Could not get the request object, but no exception raised");		
-        	}
+            if (latestException != null) {
+                if (latestException instanceof InvalidToken) {
+                    throw (InvalidToken) latestException;
+                }
+                else if (latestException instanceof ServiceFailure) {
+                    throw (ServiceFailure) latestException;
+                }
+                else if (latestException instanceof NotAuthorized) {
+                    throw (NotAuthorized) latestException;
+                }
+                else if (latestException instanceof NotFound) {
+                    throw (NotFound) latestException;
+                }
+                else if (latestException instanceof NotImplemented) {
+                    throw (NotImplemented) latestException;
+                }
+                else if (latestException instanceof InsufficientResources) {
+                    throw (InsufficientResources) latestException;
+                }
+                else if (latestException instanceof InvalidRequest) {
+                    throw (InvalidRequest) latestException;
+                }
+            } else {
+                throw new ServiceFailure("0000: Client Error", "Unexpected failure.  " +
+                        "Could not get the request object, but no exception raised");       
+            }
         } 
         else {
             o.alreadyCreated = true;
