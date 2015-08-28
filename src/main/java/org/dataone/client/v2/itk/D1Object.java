@@ -20,8 +20,10 @@
 
 package org.dataone.client.v2.itk;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -29,6 +31,7 @@ import java.util.Date;
 import java.util.List;
 
 import javax.activation.DataSource;
+import javax.activation.FileDataSource;
 import javax.mail.util.ByteArrayDataSource;
 
 import org.apache.commons.io.IOUtils;
@@ -38,6 +41,7 @@ import org.dataone.client.types.AccessPolicyEditor;
 import org.dataone.client.v2.CNode;
 import org.dataone.client.v2.MNode;
 import org.dataone.client.v2.formats.ObjectFormatCache;
+import org.dataone.configuration.Settings;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.exceptions.InsufficientResources;
 import org.dataone.service.exceptions.InvalidRequest;
@@ -370,17 +374,44 @@ public class D1Object {
                 
                 // Get the contents of the object itself
                 MNode mn = D1Client.getMN(ol.getNodeIdentifier());
-                
+                InputStream inputStream = null;
+                OutputStream outputStream = null;
+                String tempDirStr = "";
+                File tempFile = null;
+                File tempDir = null;
                 try {
-                    InputStream is = mn.get(null, id);
-                    o.setData(IOUtils.toByteArray(is));
+                    inputStream = mn.get(null, id);
+                    tempDirStr = Settings.getConfiguration().getString(
+                            "D1Client.io.tmpdir", System.getProperty("java.io.tmpdir"));
+                    if ( tempDirStr != null ) {
+                        tempDir = new File(tempDirStr);
+                    }
+                    tempFile = File.createTempFile("d1_libclient_java.", ".tmp", tempDir);
+                    DataSource dataSource = new FileDataSource(tempFile);
+                    outputStream = dataSource.getOutputStream();
+                    byte[] bytes = new byte[4096];
+                    for (int len; (len = inputStream.read(bytes)) > 0; ) {
+                        outputStream.write(bytes, 0, len);
+                    }
+                    o.setDataSource(dataSource);
+                    //o.setData(IOUtils.toByteArray(inputStream));
                     gotData = true;
                     break;
  
                 } catch (IOException e) {
-                	latestException = e;
+                    latestException = e;
+                    
                 } catch (BaseException e) {
-                	latestException = e;
+                    latestException = e;
+                    
+                } finally {
+                    IOUtils.closeQuietly(inputStream);
+                    IOUtils.closeQuietly(outputStream);
+                    if (tempFile.exists()) {
+                        tempFile.deleteOnExit();
+                    }
+                    
+                    
                 }
             } 
         }
