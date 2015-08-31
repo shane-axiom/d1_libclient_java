@@ -234,13 +234,29 @@ public class MultipartMNode extends MultipartD1Node implements MNode
      * @see org.dataone.client.MNode#getCapabilities()
      */
     @Override
-    public Node getCapabilities()
-    throws NotImplemented, ServiceFailure
-    {
-       return super.getCapabilities();
+    public Node getCapabilities() throws NotImplemented, ServiceFailure {
+        // assemble the url
+        D1Url url = new D1Url(getNodeBaseServiceUrl(), Constants.RESOURCE_NODE);
+
+        // send the request
+        Node node = null;
+
+        try {
+            InputStream is = getRestClient(this.defaultSession).doGetRequest(url.getUrl(), null);
+            node = deserializeServiceType(Node.class, is);
+        } catch (BaseException be) {
+            if (be instanceof NotImplemented)
+                throw (NotImplemented) be;
+            if (be instanceof ServiceFailure)
+                throw (ServiceFailure) be;
+
+            throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
+        } catch (ClientSideException e) {
+            throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
+        }
+
+        return node;
     }
-
-
 
     /* (non-Javadoc)
      * @see org.dataone.client.MNode#get(org.dataone.service.types.v1.Identifier)
