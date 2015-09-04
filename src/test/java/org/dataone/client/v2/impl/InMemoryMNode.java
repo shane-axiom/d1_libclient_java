@@ -37,11 +37,14 @@ import org.dataone.service.types.v1.DescribeResponse;
 import org.dataone.service.types.v1.Event;
 import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.types.v1.NodeReference;
+import org.dataone.service.types.v1.NodeState;
 import org.dataone.service.types.v1.NodeType;
 import org.dataone.service.types.v1.ObjectFormatIdentifier;
 import org.dataone.service.types.v1.ObjectInfo;
 import org.dataone.service.types.v1.ObjectList;
 import org.dataone.service.types.v1.Permission;
+import org.dataone.service.types.v1.Service;
+import org.dataone.service.types.v1.Services;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1.Subject;
 import org.dataone.service.types.v1.util.AuthUtils;
@@ -79,6 +82,7 @@ public class InMemoryMNode implements MNode {
 	protected Subject nodeAdministrator;
 	protected Subject cnClientUser;
 	protected NodeReference coordinatingNode;
+	protected Node node;
 	/** 
 	 * Instantiate a new InMemberMemberNode.  If the cnClientSubject is null, then
 	 * getLogRecords will authorize anyone.
@@ -97,6 +101,35 @@ public class InMemoryMNode implements MNode {
 		this.metaStore = new HashMap<Identifier,SystemMetadata>();
 		this.seriesMap = new HashMap<Identifier, Set<Identifier>>();
 		this.eventLog = new ArrayList<LogEntry>();
+		
+		node = new Node();
+		node.setIdentifier(nodeId);
+		node.setReplicate(false);
+		node.addContactSubject(nodeAdministrator);
+		node.addSubject(nodeAdministrator);
+		node.setBaseURL("java:"+ this.getClass().getCanonicalName());
+		node.setState(NodeState.UP);
+		node.setSynchronize(false);
+		node.setType(NodeType.MN);
+		node.setServices(new Services());
+		String version = "V2";
+		node.getServices().addService(new Service());
+		node.getServices().getService(0).setName("MNCore");
+		node.getServices().getService(0).setAvailable(true);
+		node.getServices().getService(0).setVersion(version);
+		node.getServices().addService(new Service());
+		node.getServices().getService(0).setName("MNRead");
+		node.getServices().getService(0).setAvailable(true);
+		node.getServices().getService(0).setVersion(version);
+		node.getServices().addService(new Service());
+		node.getServices().getService(0).setName("MNAuthorization");
+		node.getServices().getService(0).setAvailable(true);
+		node.getServices().getService(0).setVersion(version);
+		node.getServices().addService(new Service());
+		node.getServices().getService(0).setName("MNStorage");
+		node.getServices().getService(0).setAvailable(true);
+		node.getServices().getService(0).setVersion(version);
+		node.getServices().addService(new Service());
 	}
 	
 	protected synchronized LogEntry buildLogEntry(String eventString, Identifier pid, Session session) {
@@ -241,6 +274,7 @@ public class InMemoryMNode implements MNode {
 	@Override
 	public void setNodeId(NodeReference nodeId) {
 		this.nodeId = nodeId;
+		this.node.setIdentifier(nodeId);
 	}
 
 	@Override
@@ -269,8 +303,7 @@ public class InMemoryMNode implements MNode {
 
 	@Override
 	public Node getCapabilities() throws NotImplemented, ServiceFailure {
-		// TODO Auto-generated method stub
-		throw new NotImplemented("000","getCapabilities is not implemented.");
+		return this.node;
 	}
 
 	@Override
@@ -505,7 +538,10 @@ public class InMemoryMNode implements MNode {
 				objectBytes = IOUtils.toByteArray(object);
 				this.objectStore.put(pid,objectBytes);
 				sysmeta.setDateUploaded(new Date());
-				sysmeta.setOriginMemberNode(getNodeId());
+				if (sysmeta.getOriginMemberNode() == null)
+				    sysmeta.setOriginMemberNode(getNodeId());
+				if (sysmeta.getAuthoritativeMemberNode() == null)
+                    sysmeta.setAuthoritativeMemberNode(sysmeta.getOriginMemberNode());
 				sysmeta.setSubmitter(session.getSubject());
 				validateSystemMetadata(sysmeta);
 				this.metaStore.put(pid, sysmeta);
