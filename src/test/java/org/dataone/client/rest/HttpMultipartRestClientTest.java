@@ -3,6 +3,7 @@ package org.dataone.client.rest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -58,6 +59,28 @@ public class HttpMultipartRestClientTest {
 
         HttpMultipartRestClient hmrc = new HttpMultipartRestClient(subjectString);
         System.out.println("resulting certificate Subject Value " + cm.getSubjectDN(hmrc.getSession().getCertificate()));
+    }
+    
+    @Test
+    public void testDefaultHttpMultipartRestClient() throws IOException, ClientSideException {
+
+        // set a certificateLocation as default
+        CertificateManager cm = CertificateManager.getInstance();
+        URL certUrl = Thread.currentThread().getContextClassLoader()
+                .getResource("org/dataone/client/rest/unitTestSelfSignedCert.pem");
+        cm.setCertificateLocation(certUrl.getPath());
+
+        // create the MultipartRestClient
+        DefaultHttpMultipartRestClient hmrc = new DefaultHttpMultipartRestClient();
+        // get it's Session information (certificate information)
+        System.out.println("resulting certificate Subject Value " + cm.getSubjectDN(hmrc.getSession().getCertificate()));
+        assertNotNull("The original session should NOT be null", hmrc.getSession());
+        
+        // change the default certificate
+        cm.setCertificateLocation(null);
+        // it should trigger an update in the DefaultHttpMRC to get a new HttpClient
+        assertNull("The new session should be null", hmrc.getSession());
+
     }
 
 
