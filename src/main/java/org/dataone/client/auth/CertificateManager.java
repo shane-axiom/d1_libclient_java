@@ -57,6 +57,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Observable;
+import java.util.Observer;
 import java.util.Set;
 
 import javax.net.ssl.KeyManager;
@@ -129,14 +131,14 @@ import org.jibx.runtime.JiBXException;
  * need only be one collection of certificates.  
  * @author Matt Jones, Ben Leinfelder
  */
-public class CertificateManager {
+public class CertificateManager extends Observable {
 
     static Log log = LogFactory.getLog(CertificateManager.class);
 //	private static Log trustManLog = LogFactory.getLog(X509TrustManager.class);
 
     // this can be set by caller if the default discovery mechanism is not applicable
     private String certificateLocation = null;
-
+    
     // other variables
     private String keyStorePassword = null;
     private String keyStoreType = null;
@@ -215,12 +217,19 @@ public class CertificateManager {
     /**
      * Use this method to set the certificate to point CertificateManager to
      * a certificate at the designated file-path.  (Call before getKeyStore()
-     * or getSSLSocketFactory()
+     * or getSSLSocketFactory().
+     * 
+     * Triggers CertificateManager to call Observer.update() method on registered
+     * observers.
+     * 
      * @param certificate
      */
     public void setCertificateLocation(String certificate) {
         this.certificateLocation = certificate;
+        setChanged();
+        notifyObservers();
     }
+
 
     /**
      * Registers the default certificate into the registry, using first the setLocation

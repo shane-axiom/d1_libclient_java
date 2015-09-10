@@ -28,7 +28,7 @@ import java.net.URI;
 import org.dataone.client.D1NodeFactory;
 import org.dataone.client.NodeLocator;
 import org.dataone.client.exception.ClientSideException;
-import org.dataone.client.rest.HttpMultipartRestClient;
+import org.dataone.client.rest.DefaultHttpMultipartRestClient;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.client.types.ObsoletesChain;
 import org.dataone.client.utils.ExceptionUtils;
@@ -64,10 +64,11 @@ public class D1Client {
     private static NodeLocator nodeLocator;
     protected static MultipartRestClient multipartRestClient;
 
+    
     protected static MultipartRestClient getMultipartRestClient()
     throws IOException, ClientSideException {
         if (multipartRestClient == null) {
-           multipartRestClient = new HttpMultipartRestClient();
+           multipartRestClient = new DefaultHttpMultipartRestClient();
         }
         return multipartRestClient;
     }
