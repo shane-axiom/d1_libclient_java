@@ -214,7 +214,7 @@ public abstract class MultipartD1Node implements D1Node {
     @Deprecated
     public MultipartD1Node(String nodeBaseServiceUrl) throws IOException, ClientSideException {
         setNodeBaseServiceUrl(nodeBaseServiceUrl);
-        this.defaultRestClient = new HttpMultipartRestClient();
+        this.defaultRestClient = new DefaultHttpMultipartRestClient();
         this.defaultSession = null;
         this.useLocalCache = Settings.getConfiguration().getBoolean("D1Client.useLocalCache",useLocalCache);
     }

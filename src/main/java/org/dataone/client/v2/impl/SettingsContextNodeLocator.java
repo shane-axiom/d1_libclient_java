@@ -28,6 +28,7 @@ import java.util.Map;
 
 import org.dataone.client.D1NodeFactory;
 import org.dataone.client.exception.ClientSideException;
+import org.dataone.client.rest.DefaultHttpMultipartRestClient;
 import org.dataone.client.rest.HttpMultipartRestClient;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.configuration.Settings;
@@ -73,7 +74,7 @@ public class SettingsContextNodeLocator extends NodeListNodeLocator {
 	 */
 	public SettingsContextNodeLocator() 
 	throws NotImplemented, ServiceFailure, ClientSideException, IOException {
-		this(new HttpMultipartRestClient());
+		this(new DefaultHttpMultipartRestClient());
 	}
 
 	
