@@ -507,10 +507,8 @@ public class D1Object {
         	sm.setSerialVersion(BigInteger.ONE);
         	
         	// set rightsHolder from the associated string
-        	if (rightsHolder != null) {
+        	if (rightsHolder != null)
         		sm.setRightsHolder(rightsHolder);
-        		sm.setSubmitter(rightsHolder);
-        	}
         	
         	Date dateCreated = new Date();
         	sm.setDateUploaded(dateCreated);
