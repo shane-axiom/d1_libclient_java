@@ -77,7 +77,7 @@ public class HttpMultipartRestClientTest {
         assertNotNull("The original session should NOT be null", hmrc.getSession());
         
         // change the default certificate
-        cm.setCertificateLocation(null);
+        cm.setCertificateLocation("/tmp/foooooo");
         // it should trigger an update in the DefaultHttpMRC to get a new HttpClient
         assertNull("The new session should be null", hmrc.getSession());
 
