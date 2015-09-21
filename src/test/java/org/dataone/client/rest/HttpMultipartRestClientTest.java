@@ -17,8 +17,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.client.config.RequestConfig;
 import org.dataone.client.auth.CertificateManager;
+import org.dataone.client.auth.X509Session;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.configuration.Settings;
+import org.dataone.service.types.v1.Session;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -64,22 +66,31 @@ public class HttpMultipartRestClientTest {
     @Test
     public void testDefaultHttpMultipartRestClient() throws IOException, ClientSideException {
 
-        // set a certificateLocation as default
         CertificateManager cm = CertificateManager.getInstance();
+        
+        // create the DefaultHttpMultipartRestClient
+        DefaultHttpMultipartRestClient hmrc = new DefaultHttpMultipartRestClient();
+        // get it's Session information (certificate information)
+        X509Session initialSession = hmrc.getSession();
+        String initialSubjectDN = null;
+        if (initialSession != null && initialSession.getCertificate() != null) {
+            System.out.println("resulting certificate Subject Value " + cm.getSubjectDN(initialSession.getCertificate()));
+            initialSubjectDN = cm.getSubjectDN(initialSession.getCertificate());
+        } else {
+            System.out.println("resulting certificate Subject Value is null");
+        }
+        // set a new default certificateLocation
         URL certUrl = Thread.currentThread().getContextClassLoader()
                 .getResource("org/dataone/client/rest/unitTestSelfSignedCert.pem");
         cm.setCertificateLocation(certUrl.getPath());
-
-        // create the MultipartRestClient
-        DefaultHttpMultipartRestClient hmrc = new DefaultHttpMultipartRestClient();
-        // get it's Session information (certificate information)
-        System.out.println("resulting certificate Subject Value " + cm.getSubjectDN(hmrc.getSession().getCertificate()));
-        assertNotNull("The original session should NOT be null", hmrc.getSession());
-        
-        // change the default certificate
-        cm.setCertificateLocation("/tmp/foooooo");
+        System.out.println("new cert location: " + certUrl.getPath());
         // it should trigger an update in the DefaultHttpMRC to get a new HttpClient
-        assertNull("The new session should be null", hmrc.getSession());
+        X509Session newSession = hmrc.getSession();
+        assertNotNull("newSession should not be null", newSession);
+        assertNotNull("newSession's certificate should not be null",newSession.getCertificate());
+        String newSubjectDN = cm.getSubjectDN(newSession.getCertificate());
+        System.out.println("new Session Cert's SubjectDN: " + newSubjectDN);
+        assertTrue("The new session's SubjectDNs should be different.", newSubjectDN != initialSubjectDN);
 
     }
 
