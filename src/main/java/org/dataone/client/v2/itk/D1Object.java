@@ -61,6 +61,8 @@ import org.dataone.service.types.v1.ObjectFormatIdentifier;
 import org.dataone.service.types.v1.ObjectLocation;
 import org.dataone.service.types.v1.ObjectLocationList;
 import org.dataone.service.types.v1.Permission;
+import org.dataone.service.types.v1.Service;
+import org.dataone.service.types.v1.Services;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1.Subject;
 import org.dataone.service.types.v2.SystemMetadata;
@@ -372,15 +374,39 @@ public class D1Object {
                         + ol.getNodeIdentifier().getValue() + " ("
                         + ol.getUrl() + ")");
                 
+                // Determine the service version for MNRead on the source MN
+                org.dataone.client.v1.MNode v1mn = null;
+                MNode v2mn = null;
+                v1mn = org.dataone.client.v1.itk.D1Client.getMN(ol.getNodeIdentifier());
+                List<Service> services = v1mn.getCapabilities().getServices().getServiceList();
+                boolean v2GetIsAvailable = false;
+                for (Service service : services ) {
+                    String serviceName = service.getName();
+                    String serviceVersion = service.getVersion();
+                    Boolean isAvailable = service.getAvailable();
+                    if ( serviceName == "MNRead" && 
+                         serviceVersion.toLowerCase() == "v2" && 
+                         isAvailable == true ) {
+                        v2GetIsAvailable = true;
+                        break;
+                    }
+                        
+                }
+                
                 // Get the contents of the object itself
-                MNode mn = D1Client.getMN(ol.getNodeIdentifier());
                 InputStream inputStream = null;
                 OutputStream outputStream = null;
                 String tempDirStr = "";
                 File tempFile = null;
                 File tempDir = null;
                 try {
-                    inputStream = mn.get(null, id);
+                    if ( v2GetIsAvailable ) {
+                        inputStream = v2mn.get(null, id);
+                        
+                    } else {
+                        inputStream = v1mn.get(id);
+                        
+                    }
                     tempDirStr = Settings.getConfiguration().getString(
                             "D1Client.io.tmpdir", System.getProperty("java.io.tmpdir"));
                     if ( tempDirStr != null ) {
@@ -407,11 +433,11 @@ public class D1Object {
                 } finally {
                     IOUtils.closeQuietly(inputStream);
                     IOUtils.closeQuietly(outputStream);
-                    if (tempFile.exists()) {
-                        tempFile.deleteOnExit();
-                    }
-                    
-                    
+                    if ( tempFile != null ) {
+                        if (tempFile.exists()) {
+                            tempFile.deleteOnExit();
+                        }                        
+                    }                   
                 }
             } 
         }
