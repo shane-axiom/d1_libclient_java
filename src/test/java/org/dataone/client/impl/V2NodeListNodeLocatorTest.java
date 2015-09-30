@@ -35,6 +35,7 @@ public class V2NodeListNodeLocatorTest {
 		n.setType(type);
 		n.setIdentifier(D1TypeBuilder.buildNodeReference(nodeID));
 		n.setBaseURL(baseUri);
+		n.setDescription("a node");
 		return n;
 	}
 	
