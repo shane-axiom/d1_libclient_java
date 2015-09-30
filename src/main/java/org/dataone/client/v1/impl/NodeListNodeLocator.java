@@ -80,8 +80,8 @@ public class NodeListNodeLocator extends NodeLocator {
 							);
 				}
 			}	
+			initCnList();
 		}
-        initCnList();
     }
     
     
@@ -108,34 +108,34 @@ public class NodeListNodeLocator extends NodeLocator {
     }
 
 
-    protected void initCnList() throws ClientSideException {
+    public void initCnList() throws ClientSideException {
         
-        // see if there's a round-robin cn to use
-        Set<Node> cnSet = NodelistUtil.selectNodes(this.nodeList, NodeType.CN);
-        Node rrCN = null;
-        for (Node cn : cnSet) {
-            if (cn.getDescription() != null) {
-                if (cn.getDescription().contains("Robin") ||
-                        cn.getDescription().contains("robin")) {
-                    rrCN = cn;
-                    break;
+        if (this.nodeList != null) { // see if there's a round-robin cn to use
+            Set<Node> cnSet = NodelistUtil.selectNodes(this.nodeList, NodeType.CN);
+            Node rrCN = null;
+            for (Node cn : cnSet) {
+                if (cn.getDescription() != null) {
+                    if (cn.getDescription().contains("Robin") ||
+                            cn.getDescription().contains("robin")) {
+                        rrCN = cn;
+                        break;
+                    }
                 }
             }
-        }
-        if (rrCN != null) {
-            // found the round robin cn
-            cnList = new LinkedList<CNode>();
-            CNode rrCNode = D1NodeFactory.buildNode(CNode.class, client, URI.create(rrCN.getBaseURL()));
-            rrCNode.setNodeId(rrCN.getIdentifier());
-            cnList.add(rrCNode);
-        } else {
-            cnList = new LinkedList<CNode>();
-            for (Node n : cnSet) {
-                CNode cNode = D1NodeFactory.buildNode(CNode.class, client, URI.create(n.getBaseURL()));
-                cNode.setNodeId(n.getIdentifier());
-                cnList.add(cNode);
+            if (rrCN != null) {
+                // found the round robin cn
+                cnList = new LinkedList<CNode>();
+                CNode rrCNode = D1NodeFactory.buildNode(CNode.class, client, URI.create(rrCN.getBaseURL()));
+                rrCNode.setNodeId(rrCN.getIdentifier());
+                cnList.add(rrCNode);
+            } else {
+                cnList = new LinkedList<CNode>();
+                for (Node n : cnSet) {
+                    CNode cNode = D1NodeFactory.buildNode(CNode.class, client, URI.create(n.getBaseURL()));
+                    cNode.setNodeId(n.getIdentifier());
+                    cnList.add(cNode);
+                }
             }
-            
         }
     }
 }
