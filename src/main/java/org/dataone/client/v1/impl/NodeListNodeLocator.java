@@ -20,6 +20,8 @@
 package org.dataone.client.v1.impl;
 
 import java.net.URI;
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.Set;
 
 import org.dataone.client.D1NodeFactory;
@@ -53,6 +55,7 @@ public class NodeListNodeLocator extends NodeLocator {
 
 	protected NodeList nodeList;	
 	protected MultipartRestClient client;
+	protected Deque<CNode> cnList;
 
 	
 	public NodeListNodeLocator(NodeList nl, MultipartRestClient mrc) 
@@ -78,38 +81,63 @@ public class NodeListNodeLocator extends NodeLocator {
 				}
 			}	
 		}
-	}
-	
-	
-	@Override
-	/**
-	 * Returns a CN if there is one in the NodeList.  Tries to determine the 
-	 * round-robin CN from the description field of the Node.  Otherwise, chooses
-	 * one of the set of CNs.
-	 */
-	public CNode getCNode() throws ClientSideException
-	{
-	    Node foundCN = null;
-	    if (nodeList != null) {
-	        for (Node node : nodeList.getNodeList()) {
-	            if (node.getType().equals(NodeType.CN)) {
-	                foundCN = node;
-	                if (node.getDescription() != null)
-	                    // choose the Round-Robin CN if available
-	                    if (node.getDescription().contains("Robin") || 
-	                            node.getDescription().contains("robin")) {
-	                        break;
-	                    }
-	            }
-	        }
-	    }
-	    if (foundCN == null)
-	        throw new ClientSideException("No CNs are registered in the NodeLocator");
+        initCnList();
+    }
+    
+    
+    @Override
+    /**
+     * Returns a CN if there is one in the NodeList.  Tries to determine the 
+     * round-robin CN from the description field of the Node.  Otherwise, chooses
+     * one of the set of CNs.
+     */
+    public CNode getCNode() throws ClientSideException {
+        
+        if (cnList == null)
+            throw new ClientSideException("Error: The CnList has not been initialized!!!");
+        
+        if (cnList.size() == 1)
+            return cnList.getLast();//D1NodeFactory.buildNode(CNode.class,  client,  URI.create(cnList.getFirst().getBaseURL()));
+            
+        if (cnList.size() == 0) 
+            throw new ClientSideException("No CNs are registered in the NodeLocator");
+        
+        CNode nextCN = cnList.removeFirst();
+        cnList.addLast(nextCN);
+        return nextCN;
+    }
 
-	    CNode cn = D1NodeFactory.buildNode(CNode.class, client, URI.create(foundCN.getBaseURL()));
-	    cn.setNodeId(foundCN.getIdentifier());
-	    return cn;
-	}
+
+    protected void initCnList() throws ClientSideException {
+        
+        // see if there's a round-robin cn to use
+        Set<Node> cnSet = NodelistUtil.selectNodes(this.nodeList, NodeType.CN);
+        Node rrCN = null;
+        for (Node cn : cnSet) {
+            if (cn.getDescription() != null) {
+                if (cn.getDescription().contains("Robin") ||
+                        cn.getDescription().contains("robin")) {
+                    rrCN = cn;
+                    break;
+                }
+            }
+        }
+        if (rrCN != null) {
+            // found the round robin cn
+            cnList = new LinkedList<CNode>();
+            CNode rrCNode = D1NodeFactory.buildNode(CNode.class, client, URI.create(rrCN.getBaseURL()));
+            rrCNode.setNodeId(rrCN.getIdentifier());
+            cnList.add(rrCNode);
+        } else {
+            cnList = new LinkedList<CNode>();
+            for (Node n : cnSet) {
+                CNode cNode = D1NodeFactory.buildNode(CNode.class, client, URI.create(n.getBaseURL()));
+                cNode.setNodeId(n.getIdentifier());
+                cnList.add(cNode);
+            }
+            
+        }
+    }
 }
 	
 

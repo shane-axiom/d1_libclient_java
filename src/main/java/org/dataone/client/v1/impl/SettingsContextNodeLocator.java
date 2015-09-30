@@ -23,15 +23,15 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Map;
 
 import org.dataone.client.D1NodeFactory;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.rest.DefaultHttpMultipartRestClient;
-import org.dataone.client.rest.HttpMultipartRestClient;
 import org.dataone.client.rest.MultipartRestClient;
+import org.dataone.client.v1.CNode;
 import org.dataone.configuration.Settings;
-import org.dataone.service.cn.v1.CNCore;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.types.v1.NodeList;
@@ -59,8 +59,8 @@ import org.dataone.service.types.v1.NodeList;
 public class SettingsContextNodeLocator extends NodeListNodeLocator {
 
 	protected Map<String, String> baseUrlMap;
-	
 	protected MultipartRestClient restClient;
+	protected CNode designatedCN;
 	
 //	protected static final Integer DEFAULT_TIMEOUT_SECONDS = 30;
 	
@@ -80,40 +80,72 @@ public class SettingsContextNodeLocator extends NodeListNodeLocator {
 	public SettingsContextNodeLocator(MultipartRestClient mrc) 
 	throws NotImplemented, ServiceFailure, ClientSideException 
 	{
-		super(determineFromSettings(mrc), mrc);
+		super(getNodeListFromSettingsCN(mrc), mrc);
+		this.designatedCN = getCnFromSettings(mrc);
 	}
 
 	
-	private static NodeList determineFromSettings(MultipartRestClient mrc) 
-	throws ClientSideException, NotImplemented, ServiceFailure 
-	{
-		
-		// get the CN URI
-        String cnUri = Settings.getConfiguration().getString("D1Client.CN_URL");
-            
-        // use the alternate implementation class from properties file in case it's set
-		String cnClassName = Settings.getConfiguration().getString("D1Client.cnClassName");
-		
-        CNCore cn;
-		String uri = null;
-		try {
-			if (cnClassName == null) {
-				uri = cnUri;
-                cn = D1NodeFactory.buildNode(CNCore.class, mrc, URI.create(cnUri));
-			} else {
-				uri = cnClassName;
-                cn = D1NodeFactory.buildNode(CNCore.class, mrc, URI.create(cnClassName));
-				Method setBaseUrlMethod = cn.getClass().getMethod("setNodeBaseServiceUrl", new Class[]{String.class});
-				setBaseUrlMethod.invoke(cn, cnUri);
-			}			
-		} catch (NoSuchMethodException e) {
-			throw new ClientSideException("Failed to find the setNodeBaseServiceUrl via reflection from the instantiated CN class: " + cnClassName,e);
-		} catch (IllegalAccessException e) {
-			throw new ClientSideException("Failed to set the nodeBaseServiceUrl via reflection from the instantiated CN class: " + cnClassName,e);
-		} catch (InvocationTargetException e) {
-			throw new ClientSideException("Failed to set the nodeBaseServiceUrl via reflection from the instantiated CN class: " + cnClassName,e);
-		}
+    @Override
+    /**
+     * Returns the CNode built using the D1Client.CN_URL property
+     */
+    public CNode getCNode() throws ClientSideException {
 
-        return cn.listNodes();
-	}
+        if (designatedCN == null) 
+            throw new ClientSideException("Error: The CnList has not been initialized!!!");
+
+        return designatedCN;
+    }
+    
+    
+    /**
+     * 
+     * @param mrc
+     * @return
+     * @throws ClientSideException
+     * @throws NotImplemented
+     * @throws ServiceFailure
+     */
+    private static NodeList getNodeListFromSettingsCN(MultipartRestClient mrc) 
+            throws ClientSideException, NotImplemented, ServiceFailure {
+        
+        return getCnFromSettings(mrc).listNodes();
+    }
+
+
+
+    private static CNode getCnFromSettings(MultipartRestClient mrc) 
+            throws ClientSideException, NotImplemented, ServiceFailure {
+
+        // get the CN URI
+        String cnUri = Settings.getConfiguration().getString("D1Client.CN_URL");
+
+        // use the alternate implementation class from properties file in case it's set
+        String cnClassName = Settings.getConfiguration().getString("D1Client.cnClassName");
+
+        CNode cn;
+        String uri = null;
+        try {
+            if (cnClassName == null) {
+                uri = cnUri;
+                cn = D1NodeFactory.buildNode(CNode.class, mrc, new URI(cnUri));
+            } else {
+                uri = cnClassName;
+                cn = D1NodeFactory.buildNode(CNode.class, mrc, new URI(cnClassName));
+                Method setBaseUrlMethod = cn.getClass().getMethod("setNodeBaseServiceUrl", new Class[]{String.class});
+                setBaseUrlMethod.invoke(cn, cnUri);
+            }
+
+        } catch (URISyntaxException e) {
+            throw new ClientSideException("Failed to build a CNode from provided CN baseUri: " + uri,e);
+        } catch (NoSuchMethodException e) {
+            throw new ClientSideException("Failed to find the setNodeBaseServiceUrl via reflection from the instantiated CN class: " + cnClassName,e);
+        } catch (IllegalAccessException e) {
+            throw new ClientSideException("Failed to set the nodeBaseServiceUrl via reflection from the instantiated CN class: " + cnClassName,e);
+        } catch (InvocationTargetException e) {
+            throw new ClientSideException("Failed to set the nodeBaseServiceUrl via reflection from the instantiated CN class: " + cnClassName,e);
+        }
+        return cn;
+    }
+
 }
