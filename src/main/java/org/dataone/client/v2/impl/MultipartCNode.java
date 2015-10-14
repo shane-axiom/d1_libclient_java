@@ -529,7 +529,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
     @Override
     public boolean hasReservation(Session session, Subject subject, Identifier pid)
     throws InvalidToken, ServiceFailure,  NotFound, NotAuthorized,
-    NotImplemented, IdentifierNotUnique
+    NotImplemented
     {
         D1Url url = new D1Url(this.getNodeBaseServiceUrl(), Constants.RESOURCE_RESERVE);
 
@@ -553,7 +553,6 @@ public class MultipartCNode extends MultipartD1Node implements CNode
             if (be instanceof NotFound)               throw (NotFound) be;
             if (be instanceof NotAuthorized)          throw (NotAuthorized) be;
             if (be instanceof NotImplemented)         throw (NotImplemented) be;
-            if (be instanceof IdentifierNotUnique)    throw (IdentifierNotUnique) be;
 
             throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
         }
