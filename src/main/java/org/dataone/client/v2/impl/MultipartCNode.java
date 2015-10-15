@@ -381,7 +381,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
 
     public Log getLogRecords(Session session, Date fromDate, Date toDate,
-            String event, String pidFilter, Integer start, Integer count)
+            String event, String idFilter, Integer start, Integer count)
     throws InvalidToken, InvalidRequest, ServiceFailure,
     NotAuthorized, NotImplemented, InsufficientResources
     {
@@ -396,7 +396,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
         url.addNonEmptyParamPair("start", start);
         url.addNonEmptyParamPair("count", count);
-        url.addNonEmptyParamPair("pidFilter", pidFilter);
+        url.addNonEmptyParamPair("idFilter", idFilter);
 
         // send the request
         Log log = null;
