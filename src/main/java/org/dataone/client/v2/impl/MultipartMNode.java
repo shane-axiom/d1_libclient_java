@@ -280,7 +280,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
     }
 
     public Log getLogRecords(Session session, Date fromDate, Date toDate,
-            String event, String pidFilter, Integer start, Integer count)
+            String event, String idFilter, Integer start, Integer count)
     throws InvalidToken, InvalidRequest, ServiceFailure,
     NotAuthorized, NotImplemented
     {
@@ -295,7 +295,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 
         url.addNonEmptyParamPair("start", start);
         url.addNonEmptyParamPair("count", count);
-        url.addNonEmptyParamPair("pidFilter", pidFilter);
+        url.addNonEmptyParamPair("idFilter", idFilter);
 
         // send the request
         Log log = null;
@@ -736,8 +736,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
         
         InputStream remoteStream = null;
         try {
-            remoteStream = getRestClient(session).doGetRequest(url.getUrl(),
-                    Settings.getConfiguration().getInteger("D1Client.D1Node.get.timeout", null));
+            remoteStream = getRestClient(session).doGetRequest(url.getUrl(),120000);
         } catch (BaseException be) {
             if (be instanceof InvalidToken)      throw (InvalidToken) be;
             if (be instanceof NotAuthorized)     throw (NotAuthorized) be;
