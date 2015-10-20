@@ -158,6 +158,8 @@
       <type>jar</type>
       <scope>compile</scope>
       <exclusions>
+      <!-- 15-Oct-2015. this dependency seemed not to be available at advertised location 
+           in maven and is not presently used by libclient .  see https://redmine.dataone.org/issues/7445 -->
          <exclusion>
              <artifactId>jdbc-stdext</artifactId>
              <groupId>javax.sql</groupId>
