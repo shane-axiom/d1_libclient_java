@@ -120,14 +120,14 @@ public class D1Object {
      * @throws InvalidRequest if the content of parameters is not correct
      */
     @Deprecated
-    public D1Object(Identifier id, byte[] data, String formatValue, String submitterValue, String nodeIdValue) 
+    public D1Object(Identifier id, byte[] data, String formatValue, String rightsHolderValue, String nodeIdValue) 
         throws NoSuchAlgorithmException, IOException, NotFound, InvalidRequest {
         alreadyCreated = false;
         this.data = new ByteArrayDataSource(data, formatValue);
         ObjectFormatIdentifier formatId = new ObjectFormatIdentifier();
         formatId.setValue(formatValue);
         Subject submitter = new Subject();
-        submitter.setValue(submitterValue);
+        submitter.setValue(rightsHolderValue);
         NodeReference nodeRef = new NodeReference();
         nodeRef.setValue(nodeIdValue);
         try {
@@ -153,7 +153,7 @@ public class D1Object {
     * @param id the identifier of the object
     * @param data the data bytes of the object
     * @param format the format of the object
-    * @param submitter the submitter for the object
+    * @param rightsHolder the rightsHolder for the object
     * @param nodeId the identifier of the node on which the object will be created
     * @throws NoSuchAlgorithmException if the checksum algorithm does not exist
     * @throws IOException if the data bytes can not be read
@@ -161,12 +161,12 @@ public class D1Object {
     * @throws InvalidRequest if the content of parameters is not correct
     */
     @Deprecated
-    public D1Object(Identifier id, byte[] data, ObjectFormatIdentifier formatId, Subject submitter, NodeReference nodeId) throws NoSuchAlgorithmException,
+    public D1Object(Identifier id, byte[] data, ObjectFormatIdentifier formatId, Subject rightsHolder, NodeReference nodeId) throws NoSuchAlgorithmException,
             IOException, NotFound, InvalidRequest {
         alreadyCreated = false;
         this.data = new ByteArrayDataSource(data, (formatId == null ? null : formatId.getValue()));
         try {
-            this.sysmeta = generateSystemMetadata(id, this.data.getInputStream(), formatId, submitter, nodeId);
+            this.sysmeta = generateSystemMetadata(id, this.data.getInputStream(), formatId, rightsHolder, nodeId);
         } catch (ServiceFailure e) {
             // TODO: revisit whether these should be exposed (thrown)
             throw new NotFound("0", "recast ServiceFailure: " + e.getDescription());
@@ -610,14 +610,14 @@ public class D1Object {
      * @param id
      * @param data
      * @param format
-     * @param submitter
+     * @param rightsHolder
      * @param nodeId
      * @throws InvalidRequest
      */
-    protected static void validateRequest(Identifier id, byte[] data, ObjectFormatIdentifier formatId, Subject submitter, 
+    protected static void validateRequest(Identifier id, byte[] data, ObjectFormatIdentifier formatId, Subject rightsHolder, 
             NodeReference nodeId) throws InvalidRequest {
 
-        List<Object> objects = Arrays.asList((Object)id, (Object)data, (Object)formatId, (Object)submitter, 
+        List<Object> objects = Arrays.asList((Object)id, (Object)data, (Object)formatId, (Object)rightsHolder, 
                 (Object)nodeId);
         D1Object.checkNotNull(objects);
         // checks that the values of these objects are not null or empty ("");
@@ -628,8 +628,8 @@ public class D1Object {
         if ( StringUtils.isEmpty( formatId.getValue() ) ) 
         	invalidParams += "'formatId' ";
         
-        if ( StringUtils.isEmpty( submitter.getValue() ) ) 
-        	invalidParams += "'submitter' ";
+        if ( StringUtils.isEmpty( rightsHolder.getValue() ) ) 
+        	invalidParams += "'rightsHolder' ";
         
         if ( StringUtils.isEmpty( nodeId.getValue() ) ) 
         	invalidParams += "'nodeId' ";
