@@ -44,6 +44,7 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.dataone.client.auth.AuthTokenSession;
 import org.dataone.client.auth.CertificateManager;
 import org.dataone.client.auth.X509Session;
 import org.dataone.client.exception.ClientSideException;
@@ -219,6 +220,10 @@ public class HttpMultipartRestClient implements MultipartRestClient {
         }
         this.x509Session = x509Session;
         setDefaultTimeout(DEFAULT_TIMEOUT_VALUE);
+    }
+    
+    public HttpMultipartRestClient(AuthTokenSession authTokenSession) {
+        this.rc = new RestClient(HttpUtils.createHttpClient(authTokenSession.getAuthToken()));
     }
 
     /**

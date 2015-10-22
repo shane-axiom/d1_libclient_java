@@ -26,6 +26,10 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 
+import org.apache.http.HttpException;
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.client.HttpClient;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
@@ -40,10 +44,10 @@ import org.apache.http.impl.client.AbstractHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.protocol.HttpContext;
 import org.apache.log4j.Logger;
 import org.dataone.client.auth.CertificateManager;
 import org.dataone.client.auth.X509Session;
-import org.dataone.service.types.v1.Session;
 import org.jibx.runtime.JiBXException;
 
 public class HttpUtils {
@@ -109,6 +113,26 @@ public class HttpUtils {
 	    return HttpClients.custom().setConnectionManager(connMan);
 	}
 	
+	
+	
+	public static HttpClient createHttpClient(String authToken) {
+	    return getHttpClientBuilder(authToken).build();
+	}
+	
+	public static HttpClientBuilder getHttpClientBuilder(final String authToken) {
+	    HttpClientConnectionManager connMan = new PoolingHttpClientConnectionManager(buildConnectionRegistry());
+	    return HttpClients.custom().setConnectionManager(connMan)
+	            .addInterceptorLast(new HttpRequestInterceptor() {
+
+	        @Override
+            public void process(final HttpRequest request, final HttpContext context) 
+                    throws HttpException, IOException 
+            {
+                request.addHeader(HttpHeaders.AUTHORIZATION, authToken);
+            }
+        });
+	}
+	
 //    public static Registry<ConnectionSocketFactory> buildConnectionRegistry(String subjectString) 
 //    throws UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, 
 //    KeyStoreException, CertificateException, IOException, InstantiationException,
@@ -137,6 +161,22 @@ public class HttpUtils {
         Registry<ConnectionSocketFactory> sfRegistry = rb.build();
         return sfRegistry;
     }
+	
+	public static Registry<ConnectionSocketFactory> buildConnectionRegistry() 
+//	        throws UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, 
+//	        KeyStoreException, CertificateException, IOException {
+	{
+	    RegistryBuilder<ConnectionSocketFactory> rb = RegistryBuilder.<ConnectionSocketFactory>create();
+	    rb.register("http", PlainConnectionSocketFactory.getSocketFactory());
+
+//	    LayeredConnectionSocketFactory sslSocketFactory = null;
+//	    sslSocketFactory = CertificateManager.getInstance().getSSLConnectionSocketFactory(x509Session);
+//
+//	    rb.register("https", sslSocketFactory);
+
+	    Registry<ConnectionSocketFactory> sfRegistry = rb.build();
+	    return sfRegistry;
+	}
 	
 	/**
 	 * Sets the CONNECTION_TIMEOUT and SO_TIMEOUT values for the request.
