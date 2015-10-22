@@ -49,18 +49,13 @@ public class AuthTokenSession extends Session {
     
     public AuthTokenSession(String authToken) {
         this.authToken = authToken;
+        HttpMultipartRestClient hmrc = new HttpMultipartRestClient(this);
+        this.setMultipartRestClient(hmrc);
+        this.setHttpClient(hmrc.getHttpClient());
     }
 
     public String getAuthToken() {
         return this.authToken;
-    }
-    
-    public static AuthTokenSession createSession(String authToken) {
-        AuthTokenSession theSession = new AuthTokenSession(authToken);
-        HttpMultipartRestClient hmrc = new HttpMultipartRestClient(theSession);
-        theSession.setMultipartRestClient(hmrc);
-        theSession.setHttpClient(hmrc.getHttpClient());
-        return theSession;
     }
     
     public void setHttpClient(Object httpClient) {
