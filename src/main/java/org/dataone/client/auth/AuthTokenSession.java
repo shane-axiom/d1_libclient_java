@@ -24,6 +24,7 @@ package org.dataone.client.auth;
 
 import org.dataone.client.rest.HttpMultipartRestClient;
 import org.dataone.client.rest.MultipartRestClient;
+import org.dataone.service.types.v1.Session;
 
 
 /**
@@ -40,7 +41,7 @@ import org.dataone.client.rest.MultipartRestClient;
  * @author rnahf
  *
  */
-public class AuthTokenSession {
+public class AuthTokenSession extends Session {
 
     private String authToken;
     private MultipartRestClient mrc;

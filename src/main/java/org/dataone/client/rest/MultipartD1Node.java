@@ -39,6 +39,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.http.Header;
 import org.dataone.client.D1Node;
 import org.dataone.client.auth.X509Session;
+import org.dataone.client.auth.AuthTokenSession;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.exception.NotCached;
 import org.dataone.client.utils.ExceptionUtils;
@@ -139,11 +140,17 @@ public abstract class MultipartD1Node implements D1Node {
      * @throws ServiceFailure 
      */
     protected MultipartRestClient getRestClient(Session sessionFromMethod) throws ServiceFailure {
-        if (sessionFromMethod == null)
+        if (sessionFromMethod == null) {
             this.latestRestClient = this.defaultRestClient;
+            
+        } 
         else if (sessionFromMethod instanceof X509Session && ((X509Session)sessionFromMethod).getMultipartRestClient() != null) {
             this.latestRestClient = ((X509Session)sessionFromMethod).getMultipartRestClient();
-        } else {
+        } 
+        else if (sessionFromMethod instanceof AuthTokenSession && ((X509Session)sessionFromMethod).getMultipartRestClient() != null) {
+           this.latestRestClient = ((AuthTokenSession)sessionFromMethod).getMultipartRestClient();
+        }
+        else {
             try {
                 String subjectString = (sessionFromMethod.getSubject() == null) ? null : sessionFromMethod.getSubject().getValue();
                 this.latestRestClient = new HttpMultipartRestClient(subjectString);
