@@ -147,7 +147,7 @@ public abstract class MultipartD1Node implements D1Node {
         else if (sessionFromMethod instanceof X509Session && ((X509Session)sessionFromMethod).getMultipartRestClient() != null) {
             this.latestRestClient = ((X509Session)sessionFromMethod).getMultipartRestClient();
         } 
-        else if (sessionFromMethod instanceof AuthTokenSession && ((X509Session)sessionFromMethod).getMultipartRestClient() != null) {
+        else if (sessionFromMethod instanceof AuthTokenSession && ((AuthTokenSession)sessionFromMethod).getMultipartRestClient() != null) {
            this.latestRestClient = ((AuthTokenSession)sessionFromMethod).getMultipartRestClient();
         }
         else {
