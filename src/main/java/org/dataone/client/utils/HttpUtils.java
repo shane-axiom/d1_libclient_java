@@ -164,8 +164,6 @@ public class HttpUtils {
     }
 	
 	public static Registry<ConnectionSocketFactory> buildConnectionRegistry() 
-	        throws UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, 
-	        KeyStoreException, CertificateException, IOException {
 	{
 	    RegistryBuilder<ConnectionSocketFactory> rb = RegistryBuilder.<ConnectionSocketFactory>create();
 	    rb.register("http", PlainConnectionSocketFactory.getSocketFactory());
