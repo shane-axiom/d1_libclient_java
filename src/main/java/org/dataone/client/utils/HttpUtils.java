@@ -129,7 +129,7 @@ public class HttpUtils {
             public void process(final HttpRequest request, final HttpContext context) 
                     throws HttpException, IOException 
             {
-                request.addHeader(HttpHeaders.AUTHORIZATION, authToken);
+                request.addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + authToken);
             }
         });
 	}
