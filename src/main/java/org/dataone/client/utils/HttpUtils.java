@@ -39,6 +39,7 @@ import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.LayeredConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.impl.client.AbstractHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -163,16 +164,16 @@ public class HttpUtils {
     }
 	
 	public static Registry<ConnectionSocketFactory> buildConnectionRegistry() 
-//	        throws UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, 
-//	        KeyStoreException, CertificateException, IOException {
+	        throws UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, 
+	        KeyStoreException, CertificateException, IOException {
 	{
 	    RegistryBuilder<ConnectionSocketFactory> rb = RegistryBuilder.<ConnectionSocketFactory>create();
 	    rb.register("http", PlainConnectionSocketFactory.getSocketFactory());
 
-//	    LayeredConnectionSocketFactory sslSocketFactory = null;
-//	    sslSocketFactory = CertificateManager.getInstance().getSSLConnectionSocketFactory(x509Session);
-//
-//	    rb.register("https", sslSocketFactory);
+	    LayeredConnectionSocketFactory sslSocketFactory = null;
+	    sslSocketFactory = SSLConnectionSocketFactory.getSocketFactory();
+
+	    rb.register("https", sslSocketFactory);
 
 	    Registry<ConnectionSocketFactory> sfRegistry = rb.build();
 	    return sfRegistry;
