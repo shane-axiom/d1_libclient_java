@@ -29,7 +29,7 @@ import org.dataone.client.D1NodeFactory;
 import org.dataone.client.NodeLocator;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.rest.DefaultHttpMultipartRestClient;
-import org.dataone.client.rest.HttpMultipartRestClient;
+//import org.dataone.client.rest.HttpMultipartRestClient;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.client.utils.ExceptionUtils;
 import org.dataone.client.v2.CNode;
@@ -61,13 +61,13 @@ public class D1Client {
 	    return multipartRestClient;
 	}
 	
-	public static void setAuthToken(String authToken) {
-		
-		if (multipartRestClient != null && multipartRestClient instanceof HttpMultipartRestClient) {
-			((HttpMultipartRestClient) multipartRestClient).setHeader("Authorization", "Bearer " + authToken);
-		}
-
-	}
+//	public static void setAuthToken(String authToken) {
+//		
+//		if (multipartRestClient != null && multipartRestClient instanceof HttpMultipartRestClient) {
+//			((HttpMultipartRestClient) multipartRestClient).setHeader("Authorization", "Bearer " + authToken);
+//		}
+//
+//	}
 		    
 	/**
 	 * For testing, we can override the nodeLocator
