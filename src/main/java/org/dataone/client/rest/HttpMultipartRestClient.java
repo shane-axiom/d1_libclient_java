@@ -138,9 +138,9 @@ public class HttpMultipartRestClient implements MultipartRestClient {
      * @param httpClient
      * @param x509Session
      */
-    public HttpMultipartRestClient(HttpClient httpClient, X509Session x509sessiont) {
+    public HttpMultipartRestClient(HttpClient httpClient, X509Session x509session) {
         this.rc = new RestClient(httpClient);
-        this.x509Session = x509sessiont;
+        this.x509Session = x509session;
         setDefaultTimeout(DEFAULT_TIMEOUT_VALUE);
     }
 
