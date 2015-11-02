@@ -51,6 +51,19 @@ import org.dataone.client.auth.CertificateManager;
 import org.dataone.client.auth.X509Session;
 import org.jibx.runtime.JiBXException;
 
+/**
+ * A utility class to simplify creation and configuration of HttpClients. In an
+ * effort to conform to HTTP/1.1, a PoolingConnectionManager is used, and the number
+ * of parallel connections per server is adjusted to conform to current browser 
+ * norms.
+ * <br/>
+ * @see http://www.browserscope.org/?category=network
+ * @see http://www.stevesouders.com/blog/2008/03/20/roundup-on-parallel-connections/#comment-3197
+ * <br/>
+
+ * @author rnahf
+ *
+ */
 public class HttpUtils {
 
 	/* The instance of the logging class */
@@ -58,6 +71,16 @@ public class HttpUtils {
 
 	/* The name of the scheme used for SSL */
 	public final static String SCHEME_NAME = "https";
+	
+	/** 
+	 * The number of parallel connections allowed per server 
+	 */
+    public final static int MAX_CONNECTIONS_PER_ROUTE = 8;
+    
+    /**
+     * The maximum number of connections allowed in total by the HttpClient
+     */
+    public final static int MAX_CONNECTIONS = 160;
 	
 	/**
 	 * Provided to assist with backwards compatibility with v4.1.x era DefaultHttpClient
@@ -98,6 +121,21 @@ public class HttpUtils {
 		}
 	}
 
+	
+	/**
+     * Creates an HttpClient configured with the X509 credentials.
+	 * @param x509session - - the configuration object containing the X509 client certificate used for the connections
+	 * @return
+	 * @throws UnrecoverableKeyException
+	 * @throws KeyManagementException
+	 * @throws NoSuchAlgorithmException
+	 * @throws KeyStoreException
+	 * @throws CertificateException
+	 * @throws InstantiationException
+	 * @throws IllegalAccessException
+	 * @throws IOException
+	 * @throws JiBXException
+	 */
     public static HttpClient createHttpClient(X509Session x509session) throws UnrecoverableKeyException, 
     KeyManagementException, NoSuchAlgorithmException, KeyStoreException, CertificateException, 
     InstantiationException, IllegalAccessException, IOException, JiBXException {
@@ -105,24 +143,52 @@ public class HttpUtils {
         return getHttpClientBuilder(x509session).build();
     }
 
+    
+    /**
+     * Returns an HttpClientBuilder with the DataONE-standard ConnectionManager configuration
+     * specified.  Users would further customize with additional builder methods.
+     * @param x509session - the configuration object containing the X509 client certificate used for the connections
+     * @return - a session-configured HttpClientBuilder
+     * @throws UnrecoverableKeyException
+     * @throws KeyManagementException
+     * @throws NoSuchAlgorithmException
+     * @throws KeyStoreException
+     * @throws CertificateException
+     * @throws InstantiationException
+     * @throws IllegalAccessException
+     * @throws IOException
+     * @throws JiBXException
+     */
 	public static HttpClientBuilder getHttpClientBuilder(X509Session x509session) throws UnrecoverableKeyException, 
 	KeyManagementException, NoSuchAlgorithmException, KeyStoreException, CertificateException, 
 	InstantiationException, IllegalAccessException, IOException, JiBXException {
 
 	    HttpClientConnectionManager connMan = new PoolingHttpClientConnectionManager(
 	            buildConnectionRegistry(x509session));
-	    return HttpClients.custom().setConnectionManager(connMan);
+	    return HttpClients.custom().setConnectionManager(connMan)
+	            .setMaxConnPerRoute(MAX_CONNECTIONS_PER_ROUTE).setMaxConnTotal(MAX_CONNECTIONS);
 	}
 	
 	
-	
+	/**
+	 * Creates an HttpClient configured with the authorization token credentials.
+	 * @param authToken - the configuration object containing the authorization token string used for the connections
+	 * @return
+	 */
 	public static HttpClient createHttpClient(String authToken) {
 	    return getHttpClientBuilder(authToken).build();
 	}
 	
+	/**
+	 * Returns an HttpClientBuilder with the DataONE-standard ConnectionManager configuration specified.
+	 * Users would further customize with additional builder methods.
+	 * @param authToken - the configuration object containing the authorization token string used for the connections
+	 * @return
+	 */
 	public static HttpClientBuilder getHttpClientBuilder(final String authToken) {
 	    HttpClientConnectionManager connMan = new PoolingHttpClientConnectionManager(buildConnectionRegistry());
 	    return HttpClients.custom().setConnectionManager(connMan)
+	            .setMaxConnPerRoute(MAX_CONNECTIONS_PER_ROUTE).setMaxConnTotal(MAX_CONNECTIONS)
 	            .addInterceptorLast(new HttpRequestInterceptor() {
 
 	        @Override
