@@ -372,7 +372,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	 *  and the cn baseURL found in D1Client.CN_URL is used for the connection, 
 	 *  not the one held by this instance of CNode.
 	 *  
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNCore.getFormat">see DataONE API Reference</a> } 
+	 *  {@link <a href=" https://purl.dataone.org/architecturev2/apis/CN_APIs.html#CNCore.getFormat">see DataONE API Reference</a> } 
 	 */
 	@Override
 	public  ObjectFormat getFormat(ObjectFormatIdentifier formatid)
@@ -888,8 +888,8 @@ public class MultipartCNode extends MultipartD1Node implements CNode
      * Because SystemMetadata is mutable, caching can lead to currency issues.  In specific
      * cases where a client wants to utilize the same system metadata in rapid succession,
      * it may make sense to temporarily use the local cache by setting useSystemMetadadataCache to true.
-     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.getSystemMetadata"> DataONE API Reference (MemberNode API)</a> 
-     * @see http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.getSystemMetadata"> DataONE API Reference (CoordinatingNode API)</a> 
+     * @see https://purl.dataone.org/architecturev2/apis/MN_APIs.html#MNRead.getSystemMetadata"> DataONE API Reference (MemberNode API)</a> 
+     * @see https://purl.dataone.org/architecturev2/apis/CN_APIs.html#CNRead.getSystemMetadata"> DataONE API Reference (CoordinatingNode API)</a> 
      */
 	protected SystemMetadata getSystemMetadata(Session session, Identifier pid, boolean useSystemMetadataCache)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented 
@@ -1060,7 +1060,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	 *  handles general URL escaping of individual url elements, but different
 	 *  search implementations, such as solr, may have extra requirements.
 	 *  
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.search">see DataONE API Reference</a> }
+	 *  {@link <a href=" https://purl.dataone.org/architecturev2/apis/CN_APIs.html#CNRead.search">see DataONE API Reference</a> }
 	 *  
 	 *  solr escaping: {@link <a href="http://www.google.com/search?q=solr+escapequerychars+api">find ClientUtils</a> }
 	 * 
@@ -1083,7 +1083,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	 *  handles general URL escaping of individual url elements, but different
 	 *  search implementations, such as solr, may have extra requirements.
 	 *  
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.search">see DataONE API Reference</a> }
+	 *  {@link <a href=" https://purl.dataone.org/architecturev2/apis/CN_APIs.html#CNRead.search">see DataONE API Reference</a> }
 	 *  
 	 *  solr escaping: {@link <a href="http://www.google.com/search?q=solr+escapequerychars+api">find ClientUtils</a> }
 	 * 
@@ -1099,7 +1099,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	}
 	
 	/**
-	 * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.search">see DataONE API Reference</a> }
+	 * {@link <a href=" https://purl.dataone.org/architecturev2/apis/CN_APIs.html#CNRead.search">see DataONE API Reference</a> }
 	 * 
 	 * This implementation handles URL-escaping for only the "queryType" parameter,
 	 * and always places a slash ('/') character after it.
@@ -1119,7 +1119,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	 * <pre>cn.search(defaultSession,"solr","?q=id%5C:MyStuff%5C:%5C*&start=0&rows=10&fl=id%5C%20score")</pre> 
 	 *  
 	 *  For solr queries, a list of query terms employed can be found at the DataONE documentation on 
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/design/SearchMetadata.html"> Content Discovery</a> }
+	 *  {@link <a href=" https://purl.dataone.org/architecturev2/design/SearchMetadata.html"> Content Discovery</a> }
 	 *  solr escaping: {@link <a href="http://www.google.com/search?q=solr+escapequerychars+api">find ClientUtils</a> }
 	 */
 	@Override
@@ -1131,7 +1131,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	}
 	
 	/**
-	 * {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.search">see DataONE API Reference</a> }
+	 * {@link <a href=" https://purl.dataone.org/architecturev2/apis/CN_APIs.html#CNRead.search">see DataONE API Reference</a> }
 	 * 
 	 * This implementation handles URL-escaping for only the "queryType" parameter,
 	 * and always places a slash ('/') character after it.
@@ -1151,7 +1151,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	 * <pre>cn.search(defaultSession,"solr","?q=id%5C:MyStuff%5C:%5C*&start=0&rows=10&fl=id%5C%20score")</pre> 
 	 *  
 	 *  For solr queries, a list of query terms employed can be found at the DataONE documentation on 
-	 *  {@link <a href=" http://mule1.dataone.org/ArchitectureDocs-current/design/SearchMetadata.html"> Content Discovery</a> }
+	 *  {@link <a href=" https://purl.dataone.org/architecturev2/design/SearchMetadata.html"> Content Discovery</a> }
 	 *  solr escaping: {@link <a href="http://www.google.com/search?q=solr+escapequerychars+api">find ClientUtils</a> }
 	 */
 	@Override

@@ -76,7 +76,7 @@ import com.hp.hpl.jena.rdf.model.StmtIterator;
 /**
  *  A utility for serializing and deserializing Resource Maps used by DataONE,
  *  following the conventions and constraints detailed in 
- *  http://mule1.dataone.org/ArchitectureDocs-current/design/DataPackage.html
+ *  https://purl.dataone.org/architecturev2/design/DataPackage.html
  *  
  *  Note: DataONE uses the serialized form of ResourceMaps to persist the relationships
  *  between metadata objects and the data objects they document, and builds a

@@ -340,8 +340,8 @@ public abstract class MultipartD1Node implements D1Node {
      * was set to true when the MultipartD1Node was created. Otherwise
      * InputStream is the Java native version of D1's OctetStream
      *
-     * @see <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.get">see DataONE API Reference (MemberNode API)</a>
-     * @see <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.get">see DataONE API Reference (CoordinatingNode API)</a>
+     * @see <a href=" https://purl.dataone.org/architecturev2/apis/MN_APIs.html#MNRead.get">see DataONE API Reference (MemberNode API)</a>
+     * @see <a href=" https://purl.dataone.org/architecturev2/apis/CN_APIs.html#CNRead.get">see DataONE API Reference (CoordinatingNode API)</a>
      */
     public InputStream get(Identifier pid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
@@ -357,8 +357,8 @@ public abstract class MultipartD1Node implements D1Node {
      * was set to true when the MultipartD1Node was created. Otherwise
      * InputStream is the Java native version of D1's OctetStream
      *
-     * @see <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#MNRead.get">see DataONE API Reference (MemberNode API)</a>
-     * @see <a href=" http://mule1.dataone.org/ArchitectureDocs-current/apis/CN_APIs.html#CNRead.get">see DataONE API Reference (CoordinatingNode API)</a>
+     * @see <a href=" https://purl.dataone.org/architecturev2/apis/MN_APIs.html#MNRead.get">see DataONE API Reference (MemberNode API)</a>
+     * @see <a href=" https://purl.dataone.org/architecturev2/apis/CN_APIs.html#CNRead.get">see DataONE API Reference (CoordinatingNode API)</a>
      */
     public InputStream get(Session session, Identifier pid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
