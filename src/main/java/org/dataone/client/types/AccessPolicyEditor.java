@@ -35,6 +35,10 @@ public class AccessPolicyEditor implements Cloneable {
 	
 	private AccessPolicy policy;
 	
+	/**
+	 * Instantiates an AccessPolicyEditor that manipulates the given AccessPolicy.
+	 * @param policy - if null, creates an new one
+	 */
 	public AccessPolicyEditor(AccessPolicy policy)
 	{
 		if (policy == null) 
