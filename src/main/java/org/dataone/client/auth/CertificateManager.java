@@ -562,29 +562,18 @@ public class CertificateManager extends Observable {
     }
 
     /**
-     * Returns D1-wide consistent Subject string representations
-     * If it is not a DN, the original string is returned rather
-     * than throwing an error.
+     * Returns D1-wide consistent Subject DN string representations
      * @see http://www.ietf.org/rfc/rfc2253.txt
-     * @param name - the subject representation
-     * @return the standard D1 representation, or the original string if not in DN format
+     * @param name - the [reasonable] DN representation
+     * @return the standard D1 representation
      */
     public String standardizeDN(String name) {
-        
-        String standardizedName = name;
-    	if (log.isDebugEnabled()) {
-            log.debug("name: " + name);    
-    	}
-    	try {
-	        X500Principal principal = new X500Principal(name);
-	        standardizedName = principal.getName(X500Principal.RFC2253);
-    	} catch (IllegalArgumentException iae) {
-            log.warn("name not a valid DN: " + name);
-    	}
-        if (log.isDebugEnabled()) {
+        if (log.isDebugEnabled())
+            log.debug("name: " + name);
+        X500Principal principal = new X500Principal(name);
+        String standardizedName = principal.getName(X500Principal.RFC2253);
+        if (log.isDebugEnabled())
             log.debug("standardizedName: " + standardizedName);
-        }
-        
         return standardizedName;
     }
 
