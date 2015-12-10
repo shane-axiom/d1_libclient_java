@@ -55,6 +55,8 @@ public class NodeListNodeLocator extends NodeLocator {
 
 	protected NodeList nodeList;	
 	protected MultipartRestClient client;
+	
+	/* the cnList is the list of CNodes that will be returned by getCN */
 	protected Deque<CNode> cnList;
 
 	
@@ -107,7 +109,12 @@ public class NodeListNodeLocator extends NodeLocator {
         return nextCN;
     }
 
-
+    /**
+     * Determines which CNodes will be part of the cnList.  If there is a Round
+     * Robin CN listed in the NodeList, it will be used, otherwise, all of the 
+     * other CNs listed will be used (and rotated through the getCN call).
+     * @throws ClientSideException
+     */
     public void initCnList() throws ClientSideException {
         
         // see if there's a round-robin cn to use

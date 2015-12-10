@@ -55,6 +55,8 @@ public class NodeListNodeLocator extends NodeLocator {
 
 	protected NodeList nodeList;	
 	protected MultipartRestClient client;
+	
+	/* the cnList is the list of CNodes that will be returned by getCN */
 	protected Deque<CNode> cnList;
 
 	
@@ -63,26 +65,27 @@ public class NodeListNodeLocator extends NodeLocator {
 	{
 		this.nodeList = nl;
 		this.client = mrc;
-
+		// TODO: add logging
+//		System.out.println("Creating NodeListNodeLocator with NodeList: " + nl);
 		// super.putNode() assigns the NodeId to the constructed D1Node, so we don't
 		// have to do it here.
-		if (this.nodeList != null) {
-			for (Node node: nl.getNodeList()) {
-				if (node.getType().equals(NodeType.MN)) {
-					super.putNode(
-							node.getIdentifier(),
-                            D1NodeFactory.buildNode(MNode.class, this.client, URI.create(node.getBaseURL()))
-							);
-				} else if (node.getType().equals(NodeType.CN)) {
-					super.putNode(
-							node.getIdentifier(),
-                            D1NodeFactory.buildNode(CNode.class, this.client, URI.create(node.getBaseURL()))
-							);
-				}
-			}	
-			initCnList();
-		}
-    }
+	    if (nl != null) {
+	        for (Node node: nl.getNodeList()) {
+	            if (node.getType().equals(NodeType.MN)) {
+	                super.putNode(
+	                        node.getIdentifier(),
+	                        D1NodeFactory.buildNode(MNode.class, mrc, URI.create(node.getBaseURL()))
+	                        );
+	            } else if (node.getType().equals(NodeType.CN)) {
+	                super.putNode(
+	                        node.getIdentifier(),
+	                        D1NodeFactory.buildNode(CNode.class, mrc, URI.create(node.getBaseURL()))
+	                        );
+	            }
+	        }	
+	        initCnList();
+	    }
+	}
     
     
     @Override
@@ -97,7 +100,7 @@ public class NodeListNodeLocator extends NodeLocator {
             throw new ClientSideException("Error: The CnList has not been initialized!!!");
         
         if (cnList.size() == 1)
-            return cnList.getLast();//D1NodeFactory.buildNode(CNode.class,  client,  URI.create(cnList.getFirst().getBaseURL()));
+            return cnList.getLast();
             
         if (cnList.size() == 0) 
             throw new ClientSideException("No CNs are registered in the NodeLocator");
@@ -107,7 +110,12 @@ public class NodeListNodeLocator extends NodeLocator {
         return nextCN;
     }
 
-
+    /**
+     * Determines which CNodes will be part of the cnList.  If there is a Round
+     * Robin CN listed in the NodeList, it will be used, otherwise, all of the 
+     * other CNs listed will be used (and rotated through the getCN call).
+     * @throws ClientSideException
+     */
     public void initCnList() throws ClientSideException {
         
         if (this.nodeList != null) { // see if there's a round-robin cn to use
