@@ -42,9 +42,9 @@ public class ProvONE_V1 {
 
     /** the ProvONE namespace URI */
     public static final String namespace = 
-        "https://purl.org/dataone/ontologies/provenance/ProvONE/v1/owl/provone.owl#";
+        "http://purl.org/provone/2015/15/ontology#";
     
-    /** A resonable ProvONE namespace prefix */
+    /** A reasonable ProvONE namespace prefix */
     public static final String prefix = "provone";
 
     /** The known object properties in the ProvONE model */
