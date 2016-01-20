@@ -41,8 +41,7 @@ import com.hp.hpl.jena.rdf.model.ResourceFactory;
 public class ProvONE_V1 {
 
     /** the ProvONE namespace URI */
-    public static final String namespace = 
-        "http://purl.org/provone/2015/15/ontology#";
+    public static final String namespace = "http://purl.dataone.org/provone/2015/01/15/ontology#";
     
     /** A reasonable ProvONE namespace prefix */
     public static final String prefix = "provone";
