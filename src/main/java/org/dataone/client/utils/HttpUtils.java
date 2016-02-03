@@ -33,6 +33,7 @@ import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.client.HttpClient;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
+import org.apache.http.config.SocketConfig;
 import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
@@ -49,6 +50,7 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.log4j.Logger;
 import org.dataone.client.auth.CertificateManager;
 import org.dataone.client.auth.X509Session;
+import org.dataone.client.rest.HttpMultipartRestClient;
 import org.jibx.runtime.JiBXException;
 
 /**
@@ -163,8 +165,17 @@ public class HttpUtils {
 	KeyManagementException, NoSuchAlgorithmException, KeyStoreException, CertificateException, 
 	InstantiationException, IllegalAccessException, IOException, JiBXException {
 
-	    HttpClientConnectionManager connMan = new PoolingHttpClientConnectionManager(
+	    PoolingHttpClientConnectionManager connMan = new PoolingHttpClientConnectionManager(
 	            buildConnectionRegistry(x509session));
+
+	    // set timeout for hangs during connection initialization (handshakes)
+	    // (these aren't handled by the RequestConfig, because happens before the request)
+	    // see https://redmine.dataone.org/issues/7634
+	    SocketConfig sc = SocketConfig.custom()
+	            .setSoTimeout(HttpMultipartRestClient.DEFAULT_TIMEOUT_VALUE)
+	            .build();
+	    connMan.setDefaultSocketConfig(sc);
+	    
 	    return HttpClients.custom().setConnectionManager(connMan)
 	            .setMaxConnPerRoute(MAX_CONNECTIONS_PER_ROUTE).setMaxConnTotal(MAX_CONNECTIONS);
 	}
