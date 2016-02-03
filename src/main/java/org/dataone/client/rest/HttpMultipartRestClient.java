@@ -75,9 +75,9 @@ public class HttpMultipartRestClient implements MultipartRestClient {
 
     protected X509Session x509Session;
     
-    protected static final String DEFAULT_TIMEOUT_PARAM = "D1Client.default.timeout";
+    public static final String DEFAULT_TIMEOUT_PARAM = "D1Client.default.timeout";
     
-    protected static final Integer DEFAULT_TIMEOUT_VALUE = 30000;
+    public static final Integer DEFAULT_TIMEOUT_VALUE = 30000;
     
     /** 
      * HttpMRC requires a RestClient / HttpClient.
