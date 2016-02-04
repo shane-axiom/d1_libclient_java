@@ -269,13 +269,23 @@ public class HttpMultipartRestClient implements MultipartRestClient {
     }
 
     /**
-     * Gets the string representation of the latest http call made by the
-     * underlying RestClient
+     * Gets the string representation of the current Thread's latest http request 
+     * via this instance.
      * @return
      */
     public String getLatestRequestUrl()
     {
         return rc.getLatestRequestUrl();
+    }
+    
+    /**
+     * Gets the string representation of the specified Thread's latest http request 
+     * via this instance.
+     * @return
+     */
+    public String getLatestRequestUrl(Thread t)
+    {
+        return rc.getLatestRequestUrl(t);
     }
 
 

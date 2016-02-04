@@ -25,6 +25,7 @@ package org.dataone.client.rest;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -64,7 +65,7 @@ public class RestClient {
     protected HttpClient httpClient;
     protected HashMap<String, String> headers = new HashMap<String, String>();
 
-    private String latestRequestUrl = null;
+    private Map<Long,String> perThreadLatestRequestUrlMap = new HashMap<Long,String>();
 
     /**
      * Default constructor to create a new instance.
@@ -76,13 +77,34 @@ public class RestClient {
         this.httpClient = client;
     }
 
+    /**
+     * returns a description of the latest rest call made by this instance.
+     * In order to handle multi-threaded uses of a single RestClient, the latest
+     * call is tracked per thread, and will return the description for the latest
+     * call on that thread.
+     * @return
+     */
     public String getLatestRequestUrl() {
-        return this.latestRequestUrl;
+        long threadId = Thread.currentThread().getId();
+        return this.perThreadLatestRequestUrlMap.get(threadId);
     }
 
     private void setLatestRequestUrl(String value) {
-        latestRequestUrl = value;
+        long threadId = Thread.currentThread().getId();
+        this.perThreadLatestRequestUrlMap.put(threadId, value);
     }
+    
+    /**
+     * To support cross thread retrieval of request info, a parameterized
+     * form of this method.
+     * @param t
+     * @return
+     */
+    public String getLatestRequestUrl(Thread t) {
+        long threadId = t.getId();
+        return this.perThreadLatestRequestUrlMap.get(threadId);
+    }
+
 
     /**
      * Gets the DefaultHttpClient instance used to make the connection
@@ -206,7 +228,7 @@ public class RestClient {
     /*
      * assembles the request for GETs, HEADs and DELETEs - assumes no message body
      */
-    private synchronized HttpResponse doRequestNoBody(String url,String httpMethod, RequestConfig requestConfig)
+    private HttpResponse doRequestNoBody(String url,String httpMethod, RequestConfig requestConfig)
             throws ClientProtocolException, IOException {
 
         String latestCall = httpMethod + " " + url;
@@ -231,7 +253,7 @@ public class RestClient {
         }
         finally {
             setLatestRequestUrl(latestCall);
-            log.info("rest call info: " + latestCall);
+            log.info("RestClient.doRequestNoBody, thread(" + Thread.currentThread().getId() + ") call Info: " + latestCall);
         }
         return response;
     }
@@ -240,7 +262,7 @@ public class RestClient {
     /*
      * assembles the request for POSTs and PUTs (uses a different base class for these entity-enclosing methods)
      */
-    private synchronized HttpResponse doRequestMMBody(String url,String httpMethod, SimpleMultipartEntity mpe, RequestConfig requestConfig)
+    private HttpResponse doRequestMMBody(String url,String httpMethod, SimpleMultipartEntity mpe, RequestConfig requestConfig)
             throws ClientProtocolException, IOException {
         String latestCall = httpMethod + " " + url;
 
@@ -273,10 +295,12 @@ public class RestClient {
         }
         finally {
             setLatestRequestUrl(latestCall);
-            log.info("rest call info: " + latestCall);
+            log.info("RestClient.doRequestMMPBody, thread(" + Thread.currentThread().getId() + ") call Info: " + latestCall);
+//            log.info("rest call info. threadId(" + Thread.currentThread().getId() + ") " + latestCall);
+            
             if (mpe != null)
                 if (! mpe.cleanupTempFiles() ) {
-                    log.warn("failed to clean up temp files for: " + httpMethod + " " + url);
+                    log.warn("Failed to clean up temp files for: " + httpMethod + " " + url);
                 }
         }
         return response;
