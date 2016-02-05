@@ -131,11 +131,16 @@ public class RestClient {
 
 
     /**
-     * adds headers with the provided key and value to the RestClient instance
-     * to be used for subsequent calls
+     * adds or replaces a header with the provided key and value to the RestClient
+     * instance to be used for all subsequent http requests (added to each HttpRequest). 
+     * Not thread-safe, so will affect all future request invocations.
+     * 
+     * @deprecated As of release 2.1, due to thread safety issues. Use an HttpRequestInterceptor 
+     * added to the HttpClient build time, as shown in https://redmine.dataone.org/issues/7638
      * @param name
      * @param value
      */
+    @Deprecated
     public void setHeader(String name, String value)
     {
         headers.put(name, value);
@@ -144,16 +149,23 @@ public class RestClient {
     /**
      * returns a Map of the headers added via setHeader(..)
      * @return
+     * @deprecated As of release 2.1, due to thread safety issues. Use an HttpRequestInterceptor 
+     * added to the HttpClient build time, as shown in https://redmine.dataone.org/issues/7638
      */
+    @Deprecated
     public HashMap<String, String> getAddedHeaders()
     {
         return headers;
     }
 
     /**
-     * clears the map of added headers
+     * clears the map of added headers.  Not thread-aware, so will affect all 
+     * request invocations.
+     * @deprecated As of release 2.1, due to thread safety issues. Use an HttpRequestInterceptor 
+     * added to the HttpClient build time, as shown in https://redmine.dataone.org/issues/7638
      * @return
      */
+    @Deprecated
     public void clearAddedHeaders()
     {
         headers.clear();
