@@ -473,11 +473,27 @@ public class HttpMultipartRestClient implements MultipartRestClient {
         }
     }
 
-
+    /**
+     * adds or replaces a header with the provided key and value to the underlying 
+     * instance to be used for subsequent http requests (added to each HttpRequest). 
+     * Not thread-aware, so will affect all request invocations.
+     * @param name
+     * @param value
+     * @deprecated As of release 2.1, due to thread safety issues. Use an HttpRequestInterceptor 
+     * added to the HttpClient build time, as shown in https://redmine.dataone.org/issues/7638
+     * build time, as shown in https://redmine.dataone.org/issues/7638
+     */
+    @Deprecated
     public void setHeader(String name, String value) {
         rc.setHeader(name, value);
     }
-
+    
+    /**
+     * @deprecated As of release 2.1, due to thread safety issues. Use an HttpRequestInterceptor 
+     * added to the HttpClient build time, as shown in https://redmine.dataone.org/issues/7638
+     * @return
+     */
+    @Deprecated
     public HashMap<String, String> getAddedHeaders() {
         return rc.getAddedHeaders();
     }
