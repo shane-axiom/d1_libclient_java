@@ -197,7 +197,16 @@ public class HttpUtils {
 	 * @return
 	 */
 	public static HttpClientBuilder getHttpClientBuilder(final String authToken) {
-	    HttpClientConnectionManager connMan = new PoolingHttpClientConnectionManager(buildConnectionRegistry());
+	    PoolingHttpClientConnectionManager connMan = new PoolingHttpClientConnectionManager(buildConnectionRegistry());
+	    
+	    // set timeout for hangs during connection initialization (handshakes)
+        // (these aren't handled by the RequestConfig, because happens before the request)
+        // see https://redmine.dataone.org/issues/7634
+        SocketConfig sc = SocketConfig.custom()
+                .setSoTimeout(HttpMultipartRestClient.DEFAULT_TIMEOUT_VALUE)
+                .build();
+        connMan.setDefaultSocketConfig(sc); 
+	    
 	    return HttpClients.custom().setConnectionManager(connMan)
 	            .setMaxConnPerRoute(MAX_CONNECTIONS_PER_ROUTE).setMaxConnTotal(MAX_CONNECTIONS)
 	            .addInterceptorLast(new HttpRequestInterceptor() {
