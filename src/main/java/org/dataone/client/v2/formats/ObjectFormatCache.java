@@ -24,9 +24,11 @@ package org.dataone.client.v2.formats;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.apache.oro.util.Cache;
 import org.dataone.client.v2.CNode;
 import org.dataone.client.v2.itk.D1Client;
 import org.dataone.configuration.Settings;
@@ -41,8 +43,9 @@ import org.dataone.service.types.v2.util.ObjectFormatServiceImpl;
 /**
  * The ObjectFormatCache is a wrapper class for the DataONE ObjectFormatList
  * type.  It loads the most current object format list from a Coordinating Node,
- * and falls back to on-disk cache version.  It provides accessor
- * methods to query and manipulate the object format list.
+ * and falls back to a default, albeit out of date, ObjectFormatList shipped with
+ * the d1_libclient_java package.  The class provides accessor methods to query 
+ * and manipulate the object format list.
  * 
  * To load an object format list other than the one configured for your environment,
  * set the property "ObjectFormatCache.overriding.CN_URL" in your application's 
@@ -52,27 +55,28 @@ import org.dataone.service.types.v2.util.ObjectFormatServiceImpl;
  * @author rnahf
  *
  */
-public class ObjectFormatCache extends ObjectFormatServiceImpl {
+public class ObjectFormatCache {
 
 	/* The instance of the logging class */
 	private static Logger logger = Logger.getLogger(ObjectFormatCache.class.getName());
 
-	/* The instance of the object format cache */
+	/* The singleton instance */
 	private static ObjectFormatCache objectFormatCache;
 	
-	/* 
-	 * a boolean to indicate whether successfully reached the CN yet, or still in a
-	 *  bootstrap situation
-	 */
+	
+	/* refreshable raw cached information */ 
+    private ObjectFormatList objectFormatList;
+    
+    /* refreshable cached information, derived from objectFormatList */ 
+	private ConcurrentHashMap<ObjectFormatIdentifier,ObjectFormat>  objectFormatMap = new ConcurrentHashMap<>();
+	
+	
+
+	/* flag for indicating whether we are still in a fallback situation */
 	public static boolean usingFallbackFormatList = true;
-
+	
 	protected static int throttleIntervalSec = 20; 
-	protected Date lastRefreshDate;
-	/* The list of object formats */
-	//  private ObjectFormatList objectFormatList;
-
-	/* The searchable map of object formats */
-	//  private HashMap<ObjectFormatIdentifier, ObjectFormat> objectFormatMap;
+	protected Date lastRefreshDate = new Date(0);
 
 	/**
 	 * Constructor: Creates an instance of the object format service using the
@@ -80,52 +84,38 @@ public class ObjectFormatCache extends ObjectFormatServiceImpl {
 	 * list.
 	 * 
 	 * @param cnURL - the HTTP URL to the Coordinating Node to query
-	 * @throws ServiceFailure 
-	 * @throws NotImplemented 
+	 * @throws RuntimeException - if it fails to connect to a CN and fails to
+	 * find the ObjectFormatList shipped with d1_libclient_java
 	 */
-	private ObjectFormatCache() throws ServiceFailure {
-
-		 super();  // populates the default cache shipped with super's jar.
-
-		 // set the last cache refresh date to a long time ago
-//		 lastRefreshDate = new Date(0);
-		 
+	private ObjectFormatCache() {
+	
 		 throttleIntervalSec = Settings.getConfiguration()
 		 	.getInt("ObjectFormatCache.minimum.refresh.interval.seconds",throttleIntervalSec);
 		 
-		 // update the cache with any new information from this class.
+		 // populate the instance properties (the map and OFList)
 		 try {
 			 refreshCache();
 		 } 
-		 /*  need to swallow exceptions from call to CN so that
-		  * there's an ObjectFormatCache instance that can access
-		  * the fallback cached objectFormatList
-		  */
 		 catch (ServiceFailure e) {
-			// TODO: any secondary decisions to make regarding cache refresh frequency?
-			 logger.warn("Failed to get current ObjectFormatList from the CN, using fallback" +
-			 		"list provided with libclient. Cause = ServiceFailure::" + e.getDetail_code() + ": " +
-			 				e.getDescription());
-		} catch (NotImplemented e) {
-			 // TODO: any secondary decisions to make regarding cache refresh frequency?
-			 logger.warn("Failed to get current ObjectFormatList from the CN, using fallback" +
-				 		"list provided with libclient. Cause = NotImplemented::" + e.getDetail_code() + ": " +
-				 				e.getDescription());
-		}
+			 logger.error("Failed to get a ObjectFormatList from the CN or the default one" +
+			 		" shipped with d1_libclient_java package. Cause = ServiceFailure::" + 
+			         e.getDetail_code() + ": " + e.getDescription(), e);
+			 RuntimeException re = new RuntimeException("Serious problem populating the ObjectFormatCache. Halting.");
+			 re.initCause(e);
+			 throw re;
+		} 
+	}
+
+
+	private static class ObjectFormatCacheSingleton {	    
+	    public final static ObjectFormatCache instance = new ObjectFormatCache();
 	}
 
 	/**
 	 * Create the object format cache instance if it hasn't already been created.
-	 * 
-	 * @throws ServiceFailure - upon problems creating the cache
 	 */
-	public synchronized static ObjectFormatCache getInstance() throws ServiceFailure {
-
-		if ( objectFormatCache == null ) {
-			objectFormatCache = new ObjectFormatCache();
-
-		}
-		return objectFormatCache;
+	public static ObjectFormatCache getInstance() {
+	    return ObjectFormatCacheSingleton.instance;
 	}
 
 	
@@ -139,8 +129,6 @@ public class ObjectFormatCache extends ObjectFormatServiceImpl {
 			try {
 				refreshCache();
 			} catch (ServiceFailure e) {
-				// do nothing
-			} catch (NotImplemented e) {
 				// do nothing
 			}
 		}
@@ -158,7 +146,7 @@ public class ObjectFormatCache extends ObjectFormatServiceImpl {
 	
 	/**
 	 * Returns the date of the last refresh from the CN.
-	 * If null, no successful refresh has occurred. 
+	 * Returns "Date zero" (Jan 1, 1970) if never refreshed from the CN
 	 */
 	public Date getLastRefreshDate() {
 		return lastRefreshDate;
@@ -174,46 +162,78 @@ public class ObjectFormatCache extends ObjectFormatServiceImpl {
 	}
 	
 	/**
-	 * refreshes the cache from the CN, provided that the minimal interval
-	 * has been reached or there has never been a successful refresh from 
-	 * the CN.  Refresh is by addition and replacements to the existing map, 
-	 * rather than instantiating a new map.
-	 * @return objectFormatList - the list of object formats
+	 * refreshes the cache from the CN or if a CN copy cannot be obtains, temporarily
+	 * uses a static ObjectFormatList included in the libclient_java jar, accessed via
+	 * org.dataone.service.types.v2.util.ObjectFormatServiceImpl.  Once there has been
+	 * a successful load from the CN, the cache expires after a configurable number
+	 * of seconds.
+	 * 
+	 * The refresh clears and replaces the previous cached ObjectFormatList.
 	 * @throws ServiceFailure
-	 * @throws NotImplemented
 	 */
-    protected synchronized void refreshCache() 
-    throws ServiceFailure, NotImplemented 
-    {
+    protected synchronized void refreshCache() throws ServiceFailure {
+        // synchronizing avoids double/triple-refreshing and potential resource
+        // contention.  The second caller piggybacks on the refresh work initiated
+        // by the first, waiting for the refresh to happen, then simply doing a 
+        // date comparison and returning.
         Date now = new Date();
-        ObjectFormatList objectFormatList = null;
+        ObjectFormatList newObjectFormatList = null;
 
-        if ( usingFallbackFormatList  || lastRefreshDate == null ||
-                now.getTime() - lastRefreshDate.getTime() > throttleIntervalSec * 1000)
+        logger.info("entering refreshCache()...");
+        
+        if ( usingFallbackFormatList  /* we should try to get the CN list */
+               || now.getTime() - lastRefreshDate.getTime() > throttleIntervalSec * 1000)
         {
             CNode cn = null;
             String cnUrl = Settings.getConfiguration().getString("ObjectFormatCache.overriding.CN_URL");
             if (StringUtils.isBlank(cnUrl))
                 cnUrl = Settings.getConfiguration().getString("D1Client.CN_URL");
 
-            if (StringUtils.isNotBlank(cnUrl)) {
-                cn = D1Client.getCN(cnUrl);
-
-                logger.info("refreshing objectFormatCache from cn: " + cn.getNodeId());
-                // TODO: do we need/wish to make sure the returned list is longer, or "more complete"
-                // than the existing one before replacing?  (specifically the one on file in the jar)
-                // what would be the criteria? 
-
-                objectFormatList = cn.listFormats();
-                lastRefreshDate = new Date();
-                // index the object format list by the format identifier
-                for (ObjectFormat objectFormat : objectFormatList.getObjectFormatList())
-                {
-                    getObjectFormatMap().put(objectFormat.getFormatId(), objectFormat);
+            try {  // try to get an ObjectFormatList
+                if (StringUtils.isBlank(cnUrl)) {
+                    throw new ServiceFailure("0-client-side","Null D1Client.CN_URL: " + cnUrl);
                 }
+                cn = D1Client.getCN(cnUrl);
+                logger.info("refreshing objectFormatCache from cn: " + cn.getNodeId());
+
+                newObjectFormatList = cn.listFormats();
                 usingFallbackFormatList = false;
-                logger.info("successful cache refresh from cn.listFormats()");
+                lastRefreshDate = new Date();
+
+            } catch (ServiceFailure | NotImplemented e) {
+                logger.warn("Could not refresh ObjectFormat cache from CN: " + cnUrl);
+                
+                if (usingFallbackFormatList) {
+                    logger.warn("Will temporarily use the locally cached list.");
+                    try {
+//  For testing:                        throw new ServiceFailure("","");
+                        newObjectFormatList = ObjectFormatServiceImpl.getInstance().listFormats();
+                    } catch (ServiceFailure e1) {
+                        logger.error("Could not get the local ObjectFormatList file shipped with the jar!!");
+                        throw e1;
+                    }
+                } else {
+                    // already tried to refresh, and don't want to go back to
+                    // the local list.
+                    logger.warn("Using stale objectFormatList...");
+                }
             }
+
+            if (newObjectFormatList != null) {
+                if (getObjectFormatMap() != null) getObjectFormatMap().clear();
+                for (ObjectFormat objectFormat : newObjectFormatList.getObjectFormatList())
+                    getObjectFormatMap().put(objectFormat.getFormatId(), objectFormat);
+                
+                this.objectFormatList = newObjectFormatList;
+
+                if (usingFallbackFormatList) 
+                    logger.info("refreshed cache from format list shipped with libclient_java.");
+                else 
+                    logger.info("successfully refreshed cache from cn.listFormats()");
+            }
+
+        } else {
+            logger.info("cache is still fresh. exiting without refresh.");
         }
     }
 
@@ -253,7 +273,6 @@ public class ObjectFormatCache extends ObjectFormatServiceImpl {
 	 * @throws NotFound 
 	 * @throws NotImplemented 
 	 */
-	@Override
 	public ObjectFormat getFormat(ObjectFormatIdentifier formatId)
 	throws NotFound
 	{ 	
@@ -264,8 +283,6 @@ public class ObjectFormatCache extends ObjectFormatServiceImpl {
 			try {
 				refreshCache();
 			} catch (ServiceFailure e) {
-				// let it fail, so it can use the fallback
-			} catch (NotImplemented e) {
 				// let it fail, so it can use the fallback
 			}
 			objectFormat = getObjectFormatMap().get(formatId);
@@ -279,10 +296,10 @@ public class ObjectFormatCache extends ObjectFormatServiceImpl {
 		return objectFormat;
 	}
 
-	@Override
-	protected HashMap<ObjectFormatIdentifier, ObjectFormat> getObjectFormatMap() {
+	
+	protected ConcurrentHashMap<ObjectFormatIdentifier, ObjectFormat> getObjectFormatMap() {
 	    
-	    return objectFormatMap;     
+	    return objectFormatMap;
 	  }
 
 }
