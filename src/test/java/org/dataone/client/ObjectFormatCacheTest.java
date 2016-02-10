@@ -84,14 +84,9 @@ public class ObjectFormatCacheTest {
   	int formatsCount = 59;
   	ObjectFormatList objectFormatList;
 
-    try {
-	    objectFormatList = ObjectFormatCache.getInstance().listFormats();
-	  	assertTrue(objectFormatList.getTotal() >= formatsCount);
+  	objectFormatList = ObjectFormatCache.getInstance().listFormats();
+  	assertTrue(objectFormatList.getTotal() >= formatsCount);
 
-    } catch (ServiceFailure e) {
-      fail("The service failed: " + e.getMessage());
- 
-    }
   }
   
   /**

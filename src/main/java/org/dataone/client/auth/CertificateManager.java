@@ -132,7 +132,7 @@ import org.jibx.runtime.JiBXException;
  * @author Matt Jones, Ben Leinfelder
  */
 public class CertificateManager extends Observable {
-
+    
     static Log log = LogFactory.getLog(CertificateManager.class);
 //	private static Log trustManLog = LogFactory.getLog(X509TrustManager.class);
 
@@ -199,15 +199,26 @@ public class CertificateManager extends Observable {
 
     }
 
+    /*
+     * This is a thread-safe, lazy-loading design for initializing singletons.
+     * all static initialization of this classes members are complete before 
+     * releasing the object CertificateMAnagerSingleton.instance to the caller.
+     * 
+     * @link http://stackoverflow.com/questions/7048198/thread-safe-singletons-in-java
+     */
+    private static class CertificateManagerSingleton {
+        
+        public static final CertificateManager instance = new CertificateManager();
+        
+    }
+    
+    
     /**
      * Return the singleton instance of this CertificateManager, creating it if needed.
      * @return an instance of CertificateManager
      */
     public static CertificateManager getInstance() {
-        if (cm == null) {
-            cm = new CertificateManager();
-        }
-        return cm;
+        return CertificateManagerSingleton.instance;
     }
 
     public String getCertificateLocation() {
