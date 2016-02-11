@@ -23,21 +23,31 @@ package org.dataone.client.v1.itk;
 import static org.junit.Assert.*;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
-import org.dataone.client.v2.CNode;
-import org.dataone.client.v2.itk.D1Client;
+import org.dataone.client.v1.CNode;
+import org.dataone.client.v1.itk.D1Client;
 import org.dataone.client.v1.itk.D1Object;
 import org.dataone.client.v1.types.D1TypeBuilder;
 import org.dataone.configuration.Settings;
+import org.dataone.service.exceptions.IdentifierNotUnique;
 import org.dataone.service.exceptions.InvalidRequest;
+import org.dataone.service.exceptions.InvalidToken;
+import org.dataone.service.exceptions.NotAuthorized;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.exceptions.SynchronizationFailed;
 import org.dataone.service.types.v1.Identifier;
+import org.dataone.service.types.v1.NodeReference;
+import org.dataone.service.types.v1.NodeType;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1.Subject;
 import org.dataone.service.types.v1.SubjectInfo;
+import org.dataone.service.types.v1.TypeFactory;
+import org.dataone.service.types.v1.Node;
+import org.dataone.service.util.D1Url;
+import org.dataone.service.util.EncodingUtilities;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -161,6 +171,91 @@ public class D1ClientUnitTest  {
         } catch (InvalidRequest e) {
             // This is ok; object was null, and we should have caught an InvalidRequest
         }
+    }
+    
+    
+//    @Test
+    public void testNodeListRefresh() throws ServiceFailure, NotImplemented, InterruptedException, NotAuthorized, InvalidRequest, InvalidToken, IdentifierNotUnique {
+        
+        String cnBaseUrl = "java:org.dataone.client.v1.itk.CNRegisterSkeleton";
+//        String args = EncodingUtilities.encodeUrlFragment("NodeReference=urn:node:bippityBop&String="+cnBaseUrl+"#NodeReference=urn:node:bippityBop&String="+cnBaseUrl);
+        Settings.getResetConfiguration().setProperty("D1Client.cnClassName", cnBaseUrl);
+
+        System.out.println(new Date());
+        CNode cn = D1Client.getCN();
+
+        System.out.println("Creating MN Node doc...");
+        Node mn1 = new Node();
+        NodeReference newMN = TypeFactory.buildNodeReference("urn:node:testMN1");
+
+        System.out.println("Registering MN...");
+        mn1.setIdentifier(newMN);
+        mn1.setBaseURL("http://google.com");
+        mn1.setType(NodeType.MN);
+        cn.register(null, mn1);
+        
+//        D1Client.getMN(TypeFactory.buildNodeReference("urn:node:LTER"));
+        try {
+            System.out.println("getting MN...");
+            D1Client.getMN(newMN);
+            fail("Should not be able to locate the registered node yet");
+        } catch (ServiceFailure e) {
+            System.out.println("Still couldn't find mnTestKNB, will sleep for a bit");
+            Thread.sleep(5005);
+            ;// 
+        }
+        D1Client.getMN(newMN);
+        
+//        Settings.getResetConfiguration().setProperty("D1Client.CN_URL", "https://cn-dev.test.dataone.org/cn");
+//        try {
+//            System.out.println(new Date());
+//            D1Client.getMN(TypeFactory.buildNodeReference("urn:node:mnTestKNB"));
+//        } catch (ServiceFailure e) {
+//            System.out.println("Still couldn't find mnTestKNB, will sleep for a bit");
+//            Thread.sleep(2005);
+//        }
+//        System.out.println(new Date());
+//        D1Client.getMN(TypeFactory.buildNodeReference("urn:node:mnTestKNB"));
+        
+        
+    }
+    
+ 
+    @Ignore
+    @Test
+    public void testNodeListRefreshIT() throws ServiceFailure, NotImplemented, InterruptedException, NotAuthorized, InvalidRequest, InvalidToken, IdentifierNotUnique {
+        
+        String cnBaseUrl = "https://cn.dataone.org/cn";
+        Settings.getResetConfiguration().setProperty("D1Client.CN_URL", cnBaseUrl);
+
+        System.out.println(new Date());
+        CNode cn = D1Client.getCN();
+        
+        D1Client.getMN(TypeFactory.buildNodeReference("urn:node:LTER"));
+
+        // test that the node we will want is not already there...
+        try {
+            D1Client.getMN(TypeFactory.buildNodeReference("urn:node:mnTestKNB"));
+            fail("Should not be able to locate the registered node yet");
+        } catch (ServiceFailure e) {
+            ; 
+        }
+
+        // changing the environment is like modifying the NodeList
+        // since we trying to test when the client is aware of what's at the other end
+        // of the URL.
+        Settings.getResetConfiguration().setProperty("D1Client.CN_URL", "https://cn-dev.test.dataone.org/cn");
+        try {
+            System.out.println(new Date());
+            D1Client.getMN(TypeFactory.buildNodeReference("urn:node:mnTestKNB"));
+        } catch (ServiceFailure e) {
+            System.out.println("Still couldn't find mnTestKNB, will sleep for a bit");
+            Thread.sleep(5005);
+        }
+        System.out.println(new Date());
+        D1Client.getMN(TypeFactory.buildNodeReference("urn:node:mnTestKNB"));
+        
+        
     }
     
     /**

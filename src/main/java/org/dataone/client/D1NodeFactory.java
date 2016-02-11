@@ -1,5 +1,6 @@
 package org.dataone.client;
 
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
@@ -16,6 +17,7 @@ import org.dataone.client.v1.types.D1TypeBuilder;
 import org.dataone.service.types.v1.Identifier;
 import org.dataone.service.types.v1.NodeReference;
 import org.dataone.service.types.v1.Subject;
+import org.dataone.service.util.EncodingUtilities;
 
 /**
  * D1NodeFactory contains a method for building CNode and MNode instances from
@@ -255,47 +257,47 @@ public class D1NodeFactory {
     private static <T> T buildJavaD1Node(Class<T> domainClass, URI uri) throws ClientSideException
     {
         try {
-            String frag = uri.getFragment();
+            String frag = EncodingUtilities.decodeString(uri.getFragment());
             String[] kvPairs = StringUtils.split(frag,"&");
-            Class[] constructorParamTypes = new Class[kvPairs.length];
-            Object[] initargs = new Object[kvPairs.length];
-            for (int i=0;i<kvPairs.length; i++) {
-                String[] pair = StringUtils.split(kvPairs[i], "=");
-                if (pair[0].equals("Identifier")) {
-                    constructorParamTypes[i] = Identifier.class;
-                    initargs[i] = D1TypeBuilder.buildIdentifier(pair[1]);
-                } else if (pair[0].equals("Subject")) {
-                    constructorParamTypes[i] = Subject.class;
-                    initargs[i] = D1TypeBuilder.buildSubject(pair[1]);
-                } else if (pair[0].equals("NodeReference")) {
-                    constructorParamTypes[i] = NodeReference.class;
-                    initargs[i] = D1TypeBuilder.buildNodeReference(pair[1]);
-                } else if (pair[0].equals("String")) {
-                    constructorParamTypes[i] = String.class;
-                    initargs[i] = pair[1];
-                } else if (pair[0].equals("Integer")) {
-                    constructorParamTypes[i] = Integer.class;
-                    initargs[i] = new Integer(pair[1]);
-                } else {
-                    throw new ClientSideException("Malformed fragment in nodeBaseUrl to form constructor arguments");
+            if (kvPairs != null) {
+                Class[] constructorParamTypes = new Class[kvPairs.length];
+                Object[] initargs = new Object[kvPairs.length];
+                for (int i=0;i<kvPairs.length; i++) {
+                    String[] pair = StringUtils.split(kvPairs[i], "=");
+                    if (pair[0].equals("Identifier")) {
+                        constructorParamTypes[i] = Identifier.class;
+                        initargs[i] = D1TypeBuilder.buildIdentifier(pair[1]);
+                    } else if (pair[0].equals("Subject")) {
+                        constructorParamTypes[i] = Subject.class;
+                        initargs[i] = D1TypeBuilder.buildSubject(pair[1]);
+                    } else if (pair[0].equals("NodeReference")) {
+                        constructorParamTypes[i] = NodeReference.class;
+                        initargs[i] = D1TypeBuilder.buildNodeReference(pair[1]);
+                    } else if (pair[0].equals("String")) {
+                        constructorParamTypes[i] = String.class;
+                        initargs[i] = pair[1];
+                    } else if (pair[0].equals("Integer")) {
+                        constructorParamTypes[i] = Integer.class;
+                        initargs[i] = new Integer(pair[1]);
+                    } else {
+                        throw new ClientSideException("Malformed fragment in nodeBaseUrl to form constructor arguments");
+                    }
                 }
+                Constructor c = Class.forName(uri.getSchemeSpecificPart()).getConstructor(constructorParamTypes);
+                return (T) c.newInstance(initargs);
+            } else {
+                Constructor c = Class.forName(uri.getSchemeSpecificPart()).getConstructor(null);
+                return (T) c.newInstance();
             }
-            Constructor c = Class.forName(uri.getSchemeSpecificPart()).getConstructor(constructorParamTypes);
-            return (T) c.newInstance(initargs);
-        } catch (SecurityException e) {
-            throw new ClientSideException("Error in buildJavaMNodeFromURI",e);
-        } catch (NoSuchMethodException e) {
-            throw new ClientSideException("Error in buildJavaMNodeFromURI",e);
-        } catch (ClassNotFoundException e) {
-            throw new ClientSideException("Error in buildJavaMNodeFromURI",e);
-        } catch (IllegalArgumentException e) {
-            throw new ClientSideException("Error in buildJavaMNodeFromURI",e);
-        } catch (InstantiationException e) {
-            throw new ClientSideException("Error in buildJavaMNodeFromURI",e);
-        } catch (IllegalAccessException e) {
-            throw new ClientSideException("Error in buildJavaMNodeFromURI",e);
-        } catch (InvocationTargetException e) {
-            throw new ClientSideException("Error in buildJavaMNodeFromURI",e);
+        } catch (SecurityException | NoSuchMethodException | ClassNotFoundException |
+                IllegalArgumentException | InstantiationException | IllegalAccessException |
+                InvocationTargetException | UnsupportedEncodingException e) {
+            String cause = null;
+            if (e.getCause() != null) {
+                cause = e.getCause().getClass().getCanonicalName();
+            }
+            throw new ClientSideException("Error in buildJavaD1Node: " + e.getClass().getCanonicalName() 
+                    + ":" +  cause);
         }
     }
 
