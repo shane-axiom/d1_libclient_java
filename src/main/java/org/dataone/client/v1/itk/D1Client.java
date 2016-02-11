@@ -24,6 +24,7 @@ package org.dataone.client.v1.itk;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Date;
 
 import org.dataone.client.D1NodeFactory;
 import org.dataone.client.NodeLocator;
@@ -62,7 +63,10 @@ import org.dataone.service.types.v1.SystemMetadata;
 public class D1Client {
 
     private static NodeLocator nodeLocator;
+    private static long lastRefresh;
+    private static long EXPIRATION_MILLIS = 5000;
     protected static MultipartRestClient multipartRestClient;
+    
 
     
     protected static MultipartRestClient getMultipartRestClient()
@@ -112,11 +116,13 @@ public class D1Client {
         try {
             if (nodeLocator == null) {
                 nodeLocator = new SettingsContextNodeLocator(getMultipartRestClient());
+                lastRefresh = (new Date()).getTime();
             }
             return (CNode) nodeLocator.getCNode();
         } catch (ClientSideException | IOException e) {
             try {
                 // create an empty NodeListNodeLocator
+                // XXX to avoid NPEs?  this seems to lock in 
                 nodeLocator = new NodeListNodeLocator(null,getMultipartRestClient());
             } catch (ClientSideException | IOException e1) {
                 throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
@@ -129,8 +135,9 @@ public class D1Client {
     /**
      * Use this method to set the environment via the baseUrl to the environment's
      * Coordinating Node.  Doing so affects future calls using the NodeReferences -
-     * only nodes registered in the context of the current CN will be findable.
-     *
+     * only nodes registered in the context of the current CN will be findable
+     * by NodeReference.
+     * 
      * @param cnUrl
      * @throws NotImplemented
      * @throws ServiceFailure
@@ -234,8 +241,20 @@ public class D1Client {
             D1Client.getCN();
             mn = (MNode) nodeLocator.getNode(nodeRef);
         } catch (ClientSideException e) {
-            throw new ServiceFailure("0000", "Node is not an MNode: "
-                    + nodeRef.getValue());
+            // lazy refresh - only if problem
+            try {
+                if ((new Date()).getTime() - lastRefresh > EXPIRATION_MILLIS) {
+                    nodeLocator = new SettingsContextNodeLocator(getMultipartRestClient());
+                }
+            } catch (NotImplemented | ClientSideException | IOException e1) {
+                ; // do nothing, keep at least the old nodeLocator
+            }
+            try {
+                mn = (MNode) nodeLocator.getNode(nodeRef);
+            } catch (ClientSideException e1) {
+                throw new ServiceFailure("0000", "Node is not an MNode: "
+                        + nodeRef.getValue());
+            }
         } catch (NotImplemented e) {
             throw new ServiceFailure("0000", "Got 'NotImplemented' from getCN(): " + e.getDescription());
         }

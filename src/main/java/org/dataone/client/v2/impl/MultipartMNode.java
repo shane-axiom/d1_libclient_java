@@ -327,8 +327,8 @@ public class MultipartMNode extends MultipartD1Node implements MNode
      * Because SystemMetadata is mutable, caching can lead to currency issues.  In specific
      * cases where a client wants to utilize the same system metadata in rapid succession,
      * it may make sense to temporarily use the local cache by setting useSystemMetadadataCache to true.
-     * @see https://jenkins-ucsb-1.dataone.org/job/API%20Documentation%20-%20trunk/ws/api-documentation/build/htmlapis/MN_APIs.html#MNRead.getSystemMetadata"> DataONE API Reference (MemberNode API)</a>
-     * @see https://jenkins-ucsb-1.dataone.org/job/API%20Documentation%20-%20trunk/ws/api-documentation/build/htmlapis/CN_APIs.html#CNRead.getSystemMetadata"> DataONE API Reference (CoordinatingNode API)</a>
+     * @see https://purl.dataone.org/architecturev2/apis/MN_APIs.html#MNRead.getSystemMetadata"> DataONE API Reference (MemberNode API)</a>
+     * @see https://purl.dataone.org/architecturev2/apis/CN_APIs.html#CNRead.getSystemMetadata"> DataONE API Reference (CoordinatingNode API)</a>
      */
     @Override
     public SystemMetadata getSystemMetadata(Session session, Identifier id)

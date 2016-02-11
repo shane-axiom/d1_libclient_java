@@ -24,6 +24,7 @@ package org.dataone.client.v2.itk;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Date;
 
 import org.dataone.client.D1NodeFactory;
 import org.dataone.client.NodeLocator;
@@ -51,8 +52,11 @@ import org.dataone.service.types.v1.Session;
 public class D1Client {
 
     private static NodeLocator nodeLocator;
+    private static long lastRefresh;
+    private static long EXPIRATION_MILLIS = 5000;
+    protected static MultipartRestClient multipartRestClient;
     
-	protected static MultipartRestClient multipartRestClient;
+
     
 	protected static MultipartRestClient getMultipartRestClient() throws IOException, ClientSideException {
 	    if (multipartRestClient == null) {
@@ -235,23 +239,35 @@ public class D1Client {
      * @return
      * @throws ServiceFailure
      */
-    public static MNode getMN(NodeReference nodeRef) throws ServiceFailure 
-    {  		
-		MNode mn = null;
-    	try {
-			// initialize the environment or lack-thereof
-			D1Client.getCN(); 
-			mn = (MNode) nodeLocator.getNode(nodeRef);
-		} catch (ClientSideException e) {
-			throw new ServiceFailure("0000", "Node is not an MNode: "
-   				 + nodeRef.getValue());
-		} catch (NotImplemented e) {
-			throw new ServiceFailure("0000", "Got 'NotImplemented' from getCN(): " + e.getDescription());
-		}
-    	if (mn == null) {
-    		throw new ServiceFailure("0000", "Failed to find baseUrl for node "
-    				 + nodeRef.getValue() + " in the NodeList");
-    	}
+    public static MNode getMN(NodeReference nodeRef) throws ServiceFailure
+    {
+        MNode mn = null;
+        try {
+            // initialize the environment or lack-thereof
+            D1Client.getCN();
+            mn = (MNode) nodeLocator.getNode(nodeRef);
+        } catch (ClientSideException e) {
+            // lazy refresh - only if problem
+            try {
+                if ((new Date()).getTime() - lastRefresh > EXPIRATION_MILLIS) {
+                    nodeLocator = new SettingsContextNodeLocator(getMultipartRestClient());
+                }
+            } catch (NotImplemented | ClientSideException | IOException e1) {
+                ; // do nothing, keep at least the old nodeLocator
+            }
+            try {
+                mn = (MNode) nodeLocator.getNode(nodeRef);
+            } catch (ClientSideException e1) {
+                throw new ServiceFailure("0000", "Node is not an MNode: "
+                        + nodeRef.getValue());
+            }
+        } catch (NotImplemented e) {
+            throw new ServiceFailure("0000", "Got 'NotImplemented' from getCN(): " + e.getDescription());
+        }
+        if (mn == null) {
+            throw new ServiceFailure("0000", "Failed to find baseUrl for node "
+                     + nodeRef.getValue() + " in the NodeList");
+        }
         return mn;
     }
     
