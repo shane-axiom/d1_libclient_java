@@ -108,12 +108,15 @@ public class D1Client {
 	 * requires overriding or changing this property name, or calling the setCN
 	 * method  
 	 * See org.dataone.configuration.Settings class for details.
+	 *
+	 * @deprecated broken functionality, and unused.  use getCN() or getCN(baseUrl) instead
 	 * 
 	 * @param session - the client session to be used in connections, null uses default behavior. 
      * @return the cn
 	 * @throws ServiceFailure 
 	 * @throws NotImplemented 
      */
+    @Deprecated
     public static CNode getCN(Session session) 
     throws ServiceFailure, NotImplemented {
         
