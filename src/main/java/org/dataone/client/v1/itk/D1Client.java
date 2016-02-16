@@ -67,14 +67,44 @@ public class D1Client {
     private static long EXPIRATION_MILLIS = 5000;
     protected static MultipartRestClient multipartRestClient;
     
+    /*
+     * A class for thread safety, to allow static initialization of the
+     * MultipartRestClient instance. If multipartRestClient didn't throw
+     * exceptions, we could have simplified construct to a static initializer.
+     * (We're getting lazy-loading for free here, too.)
+     */
+    private static class MultipartRestClientHelper {
+        public static MultipartRestClient instance;
+        
+        // burying the static initialization in the class se we have a fancy
+        // way to handle exceptions. (convert to RuntimeException, then catch
+        // the Runtime exception in the getter.
+        static {
+            try {
+                instance = new DefaultHttpMultipartRestClient();
+            } catch (IOException | ClientSideException e) {
+                RuntimeException re = new RuntimeException();
+                re.initCause(e);
+            }
+        }
+    }
 
-    
+    /*
+     * Part of the thread-safe way to initialize the static MRC 
+     */
     protected static MultipartRestClient getMultipartRestClient()
     throws IOException, ClientSideException {
-        if (multipartRestClient == null) {
-           multipartRestClient = new DefaultHttpMultipartRestClient();
+        try {
+            return MultipartRestClientHelper.instance;
+        } catch (RuntimeException re) {
+           if (re.getCause() instanceof IOException)
+               throw (IOException)re.getCause();
+           if (re.getCause() instanceof ClientSideException) 
+               throw (ClientSideException)re.getCause();
+           ClientSideException cse = new ClientSideException("UnexpectedException thrown!");
+           cse.initCause(re.getCause());
+           throw cse;
         }
-        return multipartRestClient;
     }
 
     /**
@@ -105,11 +135,14 @@ public class D1Client {
      * method
      * See org.dataone.configuration.Settings class for details.
      *
+     * @deprecated broken functionality, and unused.  use getCN() or getCN(baseUrl) instead
+     *
      * @param session - the client session to be used in connections, null uses default behavior.
      * @return the cn
      * @throws ServiceFailure
      * @throws NotImplemented
      */
+    @Deprecated
     public static CNode getCN(Session session)
     throws ServiceFailure, NotImplemented {
 
