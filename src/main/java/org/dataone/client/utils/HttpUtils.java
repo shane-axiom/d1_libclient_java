@@ -25,6 +25,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.http.HttpException;
 import org.apache.http.HttpHeaders;
@@ -51,6 +52,7 @@ import org.apache.log4j.Logger;
 import org.dataone.client.auth.CertificateManager;
 import org.dataone.client.auth.X509Session;
 import org.dataone.client.rest.HttpMultipartRestClient;
+import org.dataone.configuration.Settings;
 import org.jibx.runtime.JiBXException;
 
 /**
@@ -69,21 +71,29 @@ import org.jibx.runtime.JiBXException;
 public class HttpUtils {
 
 	/* The instance of the logging class */
-	private static Logger logger = Logger.getLogger(HttpUtils.class.getName());
+	static final Logger logger = Logger.getLogger(HttpUtils.class.getName());
 
 	/* The name of the scheme used for SSL */
 	public final static String SCHEME_NAME = "https";
 	
+	
+
+	public final static boolean MONITOR_IDLE_THREADS = Settings.getConfiguration()
+	        .getBoolean("D1Client.http.monitorIdleConnections",false);
+
+	/**
+	 * The maximum number of connections allowed in total by the HttpClient
+	 */
+	public final static int MAX_CONNECTIONS = 160;
+
 	/** 
-	 * The number of parallel connections allowed per server 
+	 * The number of parallel connections allowed per route / server 
+	 * Use caution resetting this one: more is not better:
+	 * @see https://redmine.dataone.org/issues/7463#note-1
 	 */
     public final static int MAX_CONNECTIONS_PER_ROUTE = 8;
     
-    /**
-     * The maximum number of connections allowed in total by the HttpClient
-     */
-    public final static int MAX_CONNECTIONS = 160;
-	
+    
 	/**
 	 * Provided to assist with backwards compatibility with v4.1.x era DefaultHttpClient
 	 * (now deprecated).
@@ -175,9 +185,14 @@ public class HttpUtils {
 	            .setSoTimeout(HttpMultipartRestClient.DEFAULT_TIMEOUT_VALUE)
 	            .build();
 	    connMan.setDefaultSocketConfig(sc);
+	    connMan.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_ROUTE);
+	    connMan.setMaxTotal(MAX_CONNECTIONS);
 	    
-	    return HttpClients.custom().setConnectionManager(connMan)
-	            .setMaxConnPerRoute(MAX_CONNECTIONS_PER_ROUTE).setMaxConnTotal(MAX_CONNECTIONS);
+	    if (MONITOR_IDLE_THREADS) 
+            (new IdleConnectionsMonitorThread(connMan)).start();
+	    
+	    return HttpClients.custom()
+	            .setConnectionManager(connMan);
 	}
 	
 	
@@ -206,9 +221,13 @@ public class HttpUtils {
                 .setSoTimeout(HttpMultipartRestClient.DEFAULT_TIMEOUT_VALUE)
                 .build();
         connMan.setDefaultSocketConfig(sc); 
-	    
+        connMan.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_ROUTE);
+        connMan.setMaxTotal(MAX_CONNECTIONS);
+        
+        if (MONITOR_IDLE_THREADS) 
+            (new IdleConnectionsMonitorThread(connMan)).start();
+        
 	    return HttpClients.custom().setConnectionManager(connMan)
-	            .setMaxConnPerRoute(MAX_CONNECTIONS_PER_ROUTE).setMaxConnTotal(MAX_CONNECTIONS)
 	            .addInterceptorLast(new HttpRequestInterceptor() {
 
 	        @Override
@@ -308,6 +327,5 @@ public class HttpUtils {
 //        }
 //        return previous;
 //	}
-    
     
 }
