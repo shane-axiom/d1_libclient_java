@@ -25,13 +25,11 @@ import org.jibx.runtime.JiBXException;
  * <p>
  * Update is triggered by the CertificateManager.setCertificateLocation method,
  * so that this MultipartRestClient is always in sync with CertificateManager.
- * <p>
- * Note that calling 
+ * <p> 
  * @author rnahf
  *
  */
 public class DefaultHttpMultipartRestClient extends HttpMultipartRestClient implements Observer {
-
 
     /**
      * This MultipartRestClient implementation only uses the default or the set 

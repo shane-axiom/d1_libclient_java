@@ -11,6 +11,7 @@ import java.util.concurrent.Executor;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.http.config.SocketConfig;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.service.exceptions.BaseException;
 import org.junit.Before;
@@ -71,6 +72,26 @@ public class ConnectionPoolTest {
         
     }
 
+    @Test
+    public void reportSocketConfig() {
+        SocketConfig sc = SocketConfig.custom()
+                .setSoTimeout(HttpMultipartRestClient.DEFAULT_TIMEOUT_VALUE)
+                .build();
+        System.out.println("Custom");
+        System.out.println(sc.getSoLinger());
+        System.out.println(sc.getSoTimeout());
+        System.out.println(sc.isSoKeepAlive());
+        System.out.println(sc.isSoReuseAddress());
+        System.out.println(sc.isTcpNoDelay());
+        System.out.println("Default");
+        SocketConfig dsc = SocketConfig.DEFAULT;
+        System.out.println(dsc.getSoLinger());
+        System.out.println(dsc.getSoTimeout());
+        System.out.println(dsc.isSoKeepAlive());
+        System.out.println(dsc.isSoReuseAddress());
+        System.out.println(dsc.isTcpNoDelay());
+        
+    }
     
     @Ignore("no asserts, and there are dependencies on network resources...")
     @Test

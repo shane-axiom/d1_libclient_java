@@ -151,7 +151,6 @@ public class HttpUtils {
     public static HttpClient createHttpClient(X509Session x509session) throws UnrecoverableKeyException, 
     KeyManagementException, NoSuchAlgorithmException, KeyStoreException, CertificateException, 
     InstantiationException, IllegalAccessException, IOException, JiBXException {
-
         return getHttpClientBuilder(x509session).build();
     }
 
@@ -188,8 +187,8 @@ public class HttpUtils {
 	    connMan.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_ROUTE);
 	    connMan.setMaxTotal(MAX_CONNECTIONS);
 	    
-	    if (MONITOR_IDLE_THREADS) 
-            (new IdleConnectionsMonitorThread(connMan)).start();
+//	    if (MONITOR_IDLE_THREADS) 
+//            (new IdleConnectionsMonitorThread(connMan)).start();
 	    
 	    return HttpClients.custom()
 	            .setConnectionManager(connMan);
@@ -217,6 +216,7 @@ public class HttpUtils {
 	    // set timeout for hangs during connection initialization (handshakes)
         // (these aren't handled by the RequestConfig, because happens before the request)
         // see https://redmine.dataone.org/issues/7634
+	    
         SocketConfig sc = SocketConfig.custom()
                 .setSoTimeout(HttpMultipartRestClient.DEFAULT_TIMEOUT_VALUE)
                 .build();
@@ -224,8 +224,8 @@ public class HttpUtils {
         connMan.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_ROUTE);
         connMan.setMaxTotal(MAX_CONNECTIONS);
         
-        if (MONITOR_IDLE_THREADS) 
-            (new IdleConnectionsMonitorThread(connMan)).start();
+//        if (MONITOR_IDLE_THREADS) 
+//            (new IdleConnectionsMonitorThread(connMan)).start();
         
 	    return HttpClients.custom().setConnectionManager(connMan)
 	            .addInterceptorLast(new HttpRequestInterceptor() {
