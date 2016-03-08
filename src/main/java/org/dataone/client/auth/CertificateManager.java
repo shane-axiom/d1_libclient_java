@@ -257,7 +257,7 @@ public class CertificateManager extends Observable {
      * 
      * Triggers CertificateManager to call Observer.update() method on registered
      * observers unless the file is the same file as the previous set location 
-     * (as determined by the file-test lastModified operation).
+     * (as determined by comparing the checksums of the current one with the new one).
      * 
      * @param certificateFilePath
      */
