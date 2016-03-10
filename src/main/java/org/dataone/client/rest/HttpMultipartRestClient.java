@@ -75,7 +75,7 @@ public class HttpMultipartRestClient implements MultipartRestClient {
 
     protected X509Session x509Session;
     
-    public static final String DEFAULT_TIMEOUT_PARAM = "D1Client.default.timeout";
+    public static final String DEFAULT_TIMEOUT_PARAM = "D1Client.http.default.timeouts.ms";
     
     public static final Integer DEFAULT_TIMEOUT_VALUE = 30000;
     
@@ -514,7 +514,7 @@ public class HttpMultipartRestClient implements MultipartRestClient {
      * one built from scratch. All timeouts are set to the 
      * <code>timeoutMillis</code> parameter (unless it's null, 
      * in which case it tries to use the default timeout value: 
-     * "D1Client.default.timeout" using {@link Settings#getConfiguration()}). 
+     * "D1Client.http.default.timeouts.ms" using {@link Settings#getConfiguration()}). 
      * Enabling redirects is set by the <code>followRedirect</code> 
      * parameter (unless it's null, in which case the default is true).
      * 
@@ -538,7 +538,7 @@ public class HttpMultipartRestClient implements MultipartRestClient {
             rcBuilder = RequestConfig.custom();
         
         if (timeoutMillis == null)
-            timeoutMillis = Settings.getConfiguration().getInteger("D1Client.default.timeout", null);
+            timeoutMillis = Settings.getConfiguration().getInteger(DEFAULT_TIMEOUT_PARAM, null);
         
         if (timeoutMillis != null)
             rcBuilder.setConnectTimeout(timeoutMillis)
@@ -576,7 +576,7 @@ public class HttpMultipartRestClient implements MultipartRestClient {
     //	}
     
     /**
-     * Sets the default timeout parameter: <b>"D1Client.default.timeout"</b>
+     * Sets the default timeout parameter: <b>"D1Client.http.default.timeouts.ms"</b>
      * to the given Integer. This parameter is applied to the {@link RequestConfig}
      * if no timeout value is provided when making the API calls.
      * 
@@ -589,7 +589,7 @@ public class HttpMultipartRestClient implements MultipartRestClient {
     }
     
     /**
-     * Clears the default timeout parameter: <b>"D1Client.default.timeout"</b>.
+     * Clears the default timeout parameter: <b>"D1Client.http.default.timeouts.ms"</b>.
      * This parameter is usually applied to the {@link RequestConfig}
      * if no timeout value is provided when making the API calls.
      * The default timeout value determines connect timeout, 

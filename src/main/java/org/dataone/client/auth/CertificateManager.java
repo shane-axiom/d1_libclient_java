@@ -273,8 +273,8 @@ public class CertificateManager extends Observable {
             log.debug(e.getMessage(),e);
         }
         
-        log.info(oldChecksum);
-        log.info(this.certificateMD5Checksum);
+        log.debug(oldChecksum);
+        log.debug(this.certificateMD5Checksum);
         if (oldChecksum.equals(this.certificateMD5Checksum)
                 && Objects.equals(oldLocation, this.certificateLocation)) {
             // no notification, it's the same file

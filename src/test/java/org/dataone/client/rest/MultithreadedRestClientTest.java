@@ -11,8 +11,10 @@ import java.util.concurrent.Executor;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.service.exceptions.BaseException;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -68,6 +70,13 @@ public class MultithreadedRestClientTest {
         singleRestClient = new DefaultHttpMultipartRestClient();
         
     }
+    
+//    @After
+//    public void tearDown() throws Exception {
+//        if (singleRestClient.getSession().getHttpClient() instanceof CloseableHttpClient) {
+//            ((CloseableHttpClient)singleRestClient.getSession().getHttpClient()).close();
+//        }
+//    }
 
     
     @Ignore("no asserts, and there are dependencies on network resources...")
@@ -106,5 +115,8 @@ public class MultithreadedRestClientTest {
             else
                 liveThreads++;
         }
+        singleRestClient = null;
+        Thread.sleep(30000);
+        
     }
 }
