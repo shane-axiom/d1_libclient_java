@@ -44,11 +44,12 @@ public class CertificateManagerObserverTest {
 
 
         CertificateManager cm = CertificateManager.getInstance();
+        cm.setCertificateLocation(null);
         cm.addObserver(obs);
-        // Certificate Manager is a singleton and the location was already set by a
+        //Certificate Manager is a singleton and the location was already set by a
         // previous Test
-//        cm.setCertificateLocation(null);
-//        assertTrue("1. Should not have received a notification when changing from null to null", observations.size()==0);
+        cm.setCertificateLocation(null);
+        assertTrue("1. Should not have received a notification when changing from null to null", observations.size()==0);
         cm.setCertificateLocation("/usr/local/fake");
         assertTrue("2. Should have received a notification when changing from null to some fake location", observations.size()==1);
         cm.setCertificateLocation("/usr/local/fake");
@@ -71,18 +72,14 @@ public class CertificateManagerObserverTest {
             os.flush();
             os.close();
         }
-
-        
         String testFilePath = outputFile.getCanonicalPath();
-        Thread.sleep(30);
+        
         cm.setCertificateLocation(testFilePath);
         assertTrue("6. Should receive a notification when changing from null to a real file", observations.size()==4);
         
-        Thread.sleep(30);
         cm.setCertificateLocation(testFilePath);
         assertTrue("7. Should NOT receive a notification when changing a real file to the same real file", observations.size()==4);
         
-        Thread.sleep(30);
         FileOutputStream fos = null;
         try {
             fos = new FileOutputStream(outputFile);
@@ -94,7 +91,7 @@ public class CertificateManagerObserverTest {
             fos.flush();
             fos.close();
         } 
-        Thread.sleep(30);
+
         cm.setCertificateLocation(testFilePath);
         assertTrue("8. Should receive a notification when changing a real file to the same real file with new content", observations.size()==5);
 

@@ -143,7 +143,7 @@ public class HttpMultipartRestClientTest {
         assertEquals("Socket timeout should be 0", requestConfig.getSocketTimeout(), -1000);
     
         // both params are null, check default timeout setting
-        Settings.getConfiguration().setProperty("D1Client.default.timeout", 2000);
+        Settings.getConfiguration().setProperty(HttpMultipartRestClient.DEFAULT_TIMEOUT_PARAM, 2000);
         Integer defaultTimeout = Settings.getConfiguration().getInteger(HttpMultipartRestClient.DEFAULT_TIMEOUT_PARAM, null);
         assertEquals("Default timeout should've been set correctly", defaultTimeout.intValue(), 2000);
         requestConfig = (RequestConfig) method.invoke(restClient, null, null);

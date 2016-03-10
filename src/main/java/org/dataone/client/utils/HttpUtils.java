@@ -84,14 +84,16 @@ public class HttpUtils {
 	/**
 	 * The maximum number of connections allowed in total by the HttpClient
 	 */
-	public final static int MAX_CONNECTIONS = 160;
+	public final static int MAX_CONNECTIONS = Settings.getConfiguration()
+            .getInteger("D1Client.http.maxConnectionsTotal",80);
 
 	/** 
 	 * The number of parallel connections allowed per route / server 
 	 * Use caution resetting this one: more is not better:
 	 * @see https://redmine.dataone.org/issues/7463#note-1
 	 */
-    public final static int MAX_CONNECTIONS_PER_ROUTE = 8;
+    public final static int MAX_CONNECTIONS_PER_ROUTE = Settings.getConfiguration()
+            .getInteger("D1Client.http.maxConnectionsPerServer",4);
     
     
 	/**
@@ -183,12 +185,13 @@ public class HttpUtils {
 	    SocketConfig sc = SocketConfig.custom()
 	            .setSoTimeout(HttpMultipartRestClient.DEFAULT_TIMEOUT_VALUE)
 	            .build();
+
 	    connMan.setDefaultSocketConfig(sc);
 	    connMan.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_ROUTE);
 	    connMan.setMaxTotal(MAX_CONNECTIONS);
 	    
-//	    if (MONITOR_IDLE_THREADS) 
-//            (new IdleConnectionsMonitorThread(connMan)).start();
+	    if (MONITOR_IDLE_THREADS) 
+            (new IdleConnectionsMonitorThread(connMan)).start();
 	    
 	    return HttpClients.custom()
 	            .setConnectionManager(connMan);
@@ -224,8 +227,8 @@ public class HttpUtils {
         connMan.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_ROUTE);
         connMan.setMaxTotal(MAX_CONNECTIONS);
         
-//        if (MONITOR_IDLE_THREADS) 
-//            (new IdleConnectionsMonitorThread(connMan)).start();
+        if (MONITOR_IDLE_THREADS) 
+            (new IdleConnectionsMonitorThread(connMan)).start();
         
 	    return HttpClients.custom().setConnectionManager(connMan)
 	            .addInterceptorLast(new HttpRequestInterceptor() {
