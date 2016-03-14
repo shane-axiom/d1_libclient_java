@@ -25,6 +25,7 @@ package org.dataone.client.auth;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -57,6 +58,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Set;
@@ -97,6 +99,7 @@ import org.dataone.service.types.v1.Person;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1.Subject;
 import org.dataone.service.types.v1.SubjectInfo;
+import org.dataone.service.types.v1.util.ChecksumUtil;
 import org.dataone.service.util.TypeMarshaller;
 import org.jibx.runtime.JiBXException;
 
@@ -138,6 +141,7 @@ public class CertificateManager extends Observable {
 
     // this can be set by caller if the default discovery mechanism is not applicable
     private String certificateLocation = null;
+    private String certificateMD5Checksum = "";
     
     // other variables
     private String keyStorePassword = null;
@@ -193,9 +197,30 @@ public class CertificateManager extends Observable {
 	    	keys = new HashMap<String, PrivateKey>();
 	    	CILOGON_OID_SUBJECT_INFO = Settings.getConfiguration().getString("cilogon.oid.subjectinfo", "1.3.6.1.4.1.34998.2.1");
 
+	    	certificateMD5Checksum = getChecksum(getCertificateFile());
     	} catch (Exception e) {
             log.error(e.getMessage(), e);
         }
+    }
+    
+    /*
+     * A helper routine to calculate checksums of the certificate files.
+     */
+    private String getChecksum(File file) throws IOException, NoSuchAlgorithmException {
+        String checksumValue = "";
+        FileInputStream currentCertFileInputStream = null;
+        try {
+            File currentCertFile = getCertificateFile();
+            currentCertFileInputStream = new FileInputStream(currentCertFile);
+            checksumValue = ChecksumUtil.checksum(currentCertFileInputStream, "MD5").getValue();
+        } catch (FileNotFoundException e) {
+            log.debug(e.getMessage(),e);
+        } finally {
+            if (currentCertFileInputStream != null) {
+                IOUtils.closeQuietly(currentCertFileInputStream);
+            }
+        } 
+        return checksumValue;
 
     }
 
@@ -231,14 +256,33 @@ public class CertificateManager extends Observable {
      * or getSSLSocketFactory().
      * 
      * Triggers CertificateManager to call Observer.update() method on registered
-     * observers.
+     * observers unless the file is the same file as the previous set location 
+     * (as determined by comparing the checksums of the current one with the new one).
      * 
-     * @param certificate
+     * @param certificateFilePath
      */
-    public void setCertificateLocation(String certificate) {
-        this.certificateLocation = certificate;
-        setChanged();
-        notifyObservers();
+    public void setCertificateLocation(String certificateFilePath) {
+        String oldLocation = this.certificateLocation;
+        String oldChecksum = this.certificateMD5Checksum;
+ 
+        this.certificateLocation = certificateFilePath;
+        try {
+            this.certificateMD5Checksum = getChecksum(getCertificateFile());
+        } catch (IOException | NoSuchAlgorithmException e) {
+            this.certificateMD5Checksum = "";
+            log.debug(e.getMessage(),e);
+        }
+        
+        log.debug(oldChecksum);
+        log.debug(this.certificateMD5Checksum);
+        if (oldChecksum.equals(this.certificateMD5Checksum)
+                && Objects.equals(oldLocation, this.certificateLocation)) {
+            // no notification, it's the same file
+        } else {
+            // different files
+            setChanged();
+            notifyObservers();
+        }
     }
 
 
@@ -253,15 +297,7 @@ public class CertificateManager extends Observable {
      */
     public void registerDefaultCertificate() throws IOException {
         // TODO: characterize the types of exceptions returned, especially private key issues
-        File certFile = null;
-        if (certificateLocation == null) {
-            log.info("registerDefaultCertificate: using the default certificate location");
-            certFile = locateDefaultCertificate();
-            log.debug("registerDefaultCertificate: certificate location = " + certFile);
-        } else {
-            log.info("registerDefaultCertificate: Using client certificate location: " + certificateLocation);
-            certFile = new File(certificateLocation);
-        }
+        File certFile = getCertificateFile();
         X509Session session = this.getX509Session(certFile);
         String subjectDN = this.getSubjectDN(session.getCertificate());
         this.registerCertificate(subjectDN, session.getCertificate(), session.getPrivateKey());
@@ -1085,16 +1121,7 @@ public class CertificateManager extends Observable {
         }
         else {
             try {
-                // if the location has been set, use it
-                File certFile = null;
-                if (certificateLocation == null) {
-                    log.info("selectSession: using the default certificate location");
-                    certFile = locateDefaultCertificate();
-                    log.debug("selectSession: certificate location = " + certFile);
-                } else {
-                    log.info("selectSession: Using client certificate location: " + certificateLocation);
-                    certFile = new File(certificateLocation);
-                }
+                File certFile = getCertificateFile();
                 x509Session = getX509Session(certFile);
 
             } catch (FileNotFoundException e) {
@@ -1103,6 +1130,23 @@ public class CertificateManager extends Observable {
             }
         }
         return x509Session;
+    }
+    
+    private File getCertificateFile() throws FileNotFoundException {
+        // if the location has been set, use it
+        File certFile = null;
+        if (certificateLocation == null) {
+            log.info("selectSession: using the default certificate location");
+            certFile = locateDefaultCertificate();
+            log.debug("selectSession: certificate location = " + certFile);
+        } else {
+            log.info("selectSession: Using client certificate location: " + certificateLocation);
+            certFile = new File(certificateLocation);
+            if (!certFile.exists()) {
+                throw new FileNotFoundException("No certificate located in expected set location: " + certificateLocation);
+            }
+        }
+        return certFile;
     }
 
 
@@ -1164,19 +1208,19 @@ public class CertificateManager extends Observable {
             JcaPEMKeyConverter converter = new JcaPEMKeyConverter();
             while ((pemObject = pemReader.readObject()) != null) {
                 if (pemObject instanceof PrivateKeyInfo) {
-                	PrivateKeyInfo pki = (PrivateKeyInfo) pemObject;
+                    PrivateKeyInfo pki = (PrivateKeyInfo) pemObject;
                     privateKey = converter.getPrivateKey(pki);
                 }
                 else if (pemObject instanceof PEMKeyPair) {
                     PEMKeyPair pkp = (PEMKeyPair) pemObject;
                     privateKey = converter.getPrivateKey(pkp.getPrivateKeyInfo());
                 } else if (pemObject instanceof X509CertificateHolder) {
-                	X509CertificateHolder holder = (X509CertificateHolder) pemObject;
-    				try {
-						certificate = new X509CertificateObject(holder.toASN1Structure());
-					} catch (CertificateParsingException e) {
-						log.warn("Could not parse x509 certificate", e);
-					}
+                    X509CertificateHolder holder = (X509CertificateHolder) pemObject;
+                    try {
+                        certificate = new X509CertificateObject(holder.toASN1Structure());
+                    } catch (CertificateParsingException e) {
+                        log.warn("Could not parse x509 certificate", e);
+                    }
                 }
             }
         } finally {
