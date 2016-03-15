@@ -27,14 +27,20 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.http.HeaderElement;
+import org.apache.http.HeaderElementIterator;
 import org.apache.http.HttpException;
 import org.apache.http.HttpHeaders;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpRequestInterceptor;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.config.SocketConfig;
+import org.apache.http.conn.ConnectionKeepAliveStrategy;
 import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
@@ -47,6 +53,8 @@ import org.apache.http.impl.client.AbstractHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.message.BasicHeaderElementIterator;
+import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
 import org.apache.log4j.Logger;
 import org.dataone.client.auth.CertificateManager;
@@ -94,6 +102,9 @@ public class HttpUtils {
 	 */
     public final static int MAX_CONNECTIONS_PER_ROUTE = Settings.getConfiguration()
             .getInteger("D1Client.http.maxConnectionsPerServer",4);
+    
+    public final static long DEFAULT_KEEP_ALIVE_SECONDS = Settings.getConfiguration()
+            .getLong("D1Client.http.keepAliveDuration.sec", 5);
     
     
 	/**
@@ -191,9 +202,11 @@ public class HttpUtils {
 	    connMan.setMaxTotal(MAX_CONNECTIONS);
 	    
 	    if (MONITOR_IDLE_THREADS) 
-            (new IdleConnectionsMonitorThread(connMan)).start();
+	        HttpConnectionMonitorService.getInstance().addMonitor(connMan);
+//            (new IdleConnectionsMonitorThread(connMan)).start();
 	    
 	    return HttpClients.custom()
+	            .setKeepAliveStrategy(buildD1KeepAliveStrategy(DEFAULT_KEEP_ALIVE_SECONDS))
 	            .setConnectionManager(connMan);
 	}
 	
@@ -228,9 +241,11 @@ public class HttpUtils {
         connMan.setMaxTotal(MAX_CONNECTIONS);
         
         if (MONITOR_IDLE_THREADS) 
-            (new IdleConnectionsMonitorThread(connMan)).start();
+            HttpConnectionMonitorService.getInstance().addMonitor(connMan);
+//            (new IdleConnectionsMonitorThread(connMan)).start();
         
 	    return HttpClients.custom().setConnectionManager(connMan)
+	            .setKeepAliveStrategy(buildD1KeepAliveStrategy(DEFAULT_KEEP_ALIVE_SECONDS))
 	            .addInterceptorLast(new HttpRequestInterceptor() {
 
 	        @Override
@@ -330,5 +345,37 @@ public class HttpUtils {
 //        }
 //        return previous;
 //	}
-    
+	/**
+	 * Builds a custom keep-alive strategy that uses the defaultKeepAliveTimeout
+	 * value if one not returned in the response headers.  (This allows us to
+	 * expire idle connections).
+	 * 
+	 * @param defaultKeepAliveTimeout - number of seconds (to match units of the keep-alive timeout header) 
+	 * @return
+	 */
+	public static ConnectionKeepAliveStrategy buildD1KeepAliveStrategy(final long defaultKeepAliveTimeout) {
+	    return new ConnectionKeepAliveStrategy() {
+
+	        @Override
+	        public long getKeepAliveDuration(HttpResponse response, HttpContext context) {
+	            // Honor 'keep-alive' header
+	            HeaderElementIterator it = new BasicHeaderElementIterator(
+	                    response.headerIterator(HTTP.CONN_KEEP_ALIVE));
+	            while (it.hasNext()) {
+	                HeaderElement he = it.nextElement();
+	                String param = he.getName();
+	                String value = he.getValue();
+	                if (value != null && param.equalsIgnoreCase("timeout")) {
+	                    try {
+	                        return Long.parseLong(value) * 1000;
+	                    } catch(NumberFormatException ignore) {
+	                    }
+	                }
+	            }
+	            // no keep-alive returned from the response
+	            return defaultKeepAliveTimeout * 1000;
+	        }
+	    };
+	    }
+
 }
