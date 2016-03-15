@@ -9,11 +9,7 @@ import java.security.cert.CertificateException;
 import java.util.Observable;
 import java.util.Observer;
 
-import org.apache.http.client.HttpClient;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.dataone.client.auth.CertificateManager;
-import org.dataone.client.auth.X509Session;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.utils.HttpUtils;
 import org.jibx.runtime.JiBXException;
@@ -52,22 +48,21 @@ public class DefaultHttpMultipartRestClient extends HttpMultipartRestClient impl
     /**
      * Updates the RestClient with new Session and certificate information from 
      * the CertificateManager.  Problems with replacing the HttpClient are logged
-     * as errors, and 
+     * as errors.
      */
     @Override
-    public void update(Observable observable, Object arg) {
+    public void update(Observable observable, Object changeTypeString) {
         
         if (observable instanceof CertificateManager) {
             try {
+                // TODO:  examine the changeTypeString parameter to see what 
+                // type of change it is, and how to respond.
+                
                 // using null for the selectSession parameter ensures we use the 
                 // new default session configured into CertificateManager.
                 this.x509Session = ((CertificateManager)observable).selectSession((String)null);
-                HttpClient hc = this.rc.getHttpClient();
                 this.rc.setHttpClient(HttpUtils.createHttpClient(x509Session));
-//                if (hc instanceof CloseableHttpClient) {
-//                    // TODO: is this ok to do?  could it cause interruption of stream reading?
-//                    ((CloseableHttpClient)hc).close();
-//                }
+               
             } catch (UnrecoverableKeyException | KeyManagementException
                     | NoSuchAlgorithmException | KeyStoreException
                     | CertificateException | InstantiationException
