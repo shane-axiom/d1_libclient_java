@@ -52,6 +52,9 @@ import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.impl.client.AbstractHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.cache.CacheConfig;
+import org.apache.http.impl.client.cache.CachingHttpClientBuilder;
+import org.apache.http.impl.client.cache.CachingHttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.message.BasicHeaderElementIterator;
 import org.apache.http.protocol.HTTP;
@@ -105,6 +108,16 @@ public class HttpUtils {
     
     public final static long DEFAULT_KEEP_ALIVE_SECONDS = Settings.getConfiguration()
             .getLong("D1Client.http.keepAliveDuration.sec", 5);
+    
+    
+    public final static boolean USE_CACHING_CLIENT = Settings.getConfiguration()
+            .getBoolean("D1Client.http.useCachingClient", false);
+    
+    public final static int CACHE_MAX_ENTRIES = Settings.getConfiguration()
+            .getInt("D1Client.http.cacheMaxEntries", 50);
+    
+    public final static int CACHE_MAX_OBJECT_SIZE = Settings.getConfiguration()
+            .getInt("D1Client.http.cacheMaxObjectSize", 102400);
     
     
 	/**
@@ -204,8 +217,8 @@ public class HttpUtils {
 	    if (MONITOR_IDLE_THREADS) 
 	        HttpConnectionMonitorService.getInstance().addMonitor(connMan);
 //            (new IdleConnectionsMonitorThread(connMan)).start();
-	    
-	    return HttpClients.custom()
+
+	    return HttpUtils.selectHttpClientBuilder()
 	            .setKeepAliveStrategy(buildD1KeepAliveStrategy(DEFAULT_KEEP_ALIVE_SECONDS))
 	            .setConnectionManager(connMan);
 	}
@@ -243,18 +256,35 @@ public class HttpUtils {
         if (MONITOR_IDLE_THREADS) 
             HttpConnectionMonitorService.getInstance().addMonitor(connMan);
 //            (new IdleConnectionsMonitorThread(connMan)).start();
-        
-	    return HttpClients.custom().setConnectionManager(connMan)
-	            .setKeepAliveStrategy(buildD1KeepAliveStrategy(DEFAULT_KEEP_ALIVE_SECONDS))
-	            .addInterceptorLast(new HttpRequestInterceptor() {
 
-	        @Override
-            public void process(final HttpRequest request, final HttpContext context) 
-                    throws HttpException, IOException 
-            {
-                request.addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + authToken);
-            }
-        });
+        return HttpUtils.selectHttpClientBuilder()
+                .setConnectionManager(connMan)
+                .setKeepAliveStrategy(buildD1KeepAliveStrategy(DEFAULT_KEEP_ALIVE_SECONDS))
+                .addInterceptorLast(new HttpRequestInterceptor() {
+
+                    @Override
+                    public void process(final HttpRequest request, final HttpContext context) 
+                            throws HttpException, IOException 
+                            {
+                        request.addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + authToken);
+                            }
+                });
+	}
+	
+	
+	private static HttpClientBuilder selectHttpClientBuilder() {
+	    if (USE_CACHING_CLIENT) {
+	        CachingHttpClientBuilder b = CachingHttpClients.custom();
+	        // tilt the Cache to 
+	        CacheConfig cacheConfig = CacheConfig.custom()
+	                .setMaxCacheEntries(CACHE_MAX_ENTRIES)
+	                .setMaxObjectSize(CACHE_MAX_OBJECT_SIZE)
+	                .build();
+            b.setCacheConfig(cacheConfig);
+            return b;
+	    }
+	    else 
+	        return HttpClients.custom();
 	}
 	
 //    public static Registry<ConnectionSocketFactory> buildConnectionRegistry(String subjectString) 
