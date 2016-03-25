@@ -6,14 +6,25 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.dataone.client.auth.CertificateManager;
+import org.dataone.client.exception.ClientSideException;
+import org.dataone.client.rest.DefaultHttpMultipartRestClient;
 import org.dataone.client.rest.RestClient;
+import org.dataone.client.utils.HttpUtils;
+import org.jibx.runtime.JiBXException;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -38,17 +49,28 @@ public class AutoCloseHttpClientInputStreamTest {
      * @throws ClientProtocolException
      * @throws IOException
      * @throws InterruptedException
+     * @throws ClientSideException 
      */
     @Ignore("this is a manual teset containing external resources.")
     @Test
-    public void test() throws ClientProtocolException, IOException, InterruptedException {
+    public void test() throws ClientProtocolException, IOException, InterruptedException, ClientSideException {
         
         System.out.println("====================== BEFORE ================");
         int beforeGC = runNetstat();
         Thread.sleep(200);
+//        new DefaultHttpMultipartRestClient();
         
-        
-        RestClient rc = new RestClient(HttpClients.createMinimal());
+        HttpClient client = null;
+        try {
+            client = HttpUtils.getHttpClientBuilder(HttpUtils.selectSession(null), false).build();
+        } catch (UnrecoverableKeyException | KeyManagementException
+                | NoSuchAlgorithmException | KeyStoreException
+                | CertificateException | InstantiationException
+                | IllegalAccessException | JiBXException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+        RestClient rc = new RestClient(client);
         HttpResponse resp = rc.doGetRequest("https://cn-dev-orc-1.test.dataone.org/cn/v1/node", null);
         HttpEntity n = resp.getEntity();
         
@@ -67,6 +89,15 @@ public class AutoCloseHttpClientInputStreamTest {
         
 
 
+        try {
+            resp = rc.doGetRequest("https://cn-dev-orc-1.test.dataone.org/cn/v2/node", null);
+            EntityUtils.consume(resp.getEntity());
+            fail("Should not be able to do a second request from the RestClient");
+            
+        } catch (IllegalStateException e) {
+            ;
+        }
+        
         try {
             resp = rc.doGetRequest("https://cn-dev-orc-1.test.dataone.org/cn/v2/node", null);
             EntityUtils.consume(resp.getEntity());

@@ -30,7 +30,7 @@ public class AutoCloseHttpClientInputStream extends AutoCloseInputStream {
          * @param is - the InputStream being proxied
          * @param hc - the disposable HttpClient from where the InpuStream came from
          */
-        AutoCloseHttpClientInputStream(InputStream is, HttpClient hc) {
+        public AutoCloseHttpClientInputStream(InputStream is, HttpClient hc) {
             super(is);
             this.hc = hc;
         }

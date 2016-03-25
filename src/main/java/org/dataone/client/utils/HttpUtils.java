@@ -89,14 +89,14 @@ public class HttpUtils {
 	
 	
 
-	public final static boolean MONITOR_IDLE_THREADS = Settings.getConfiguration()
-	        .getBoolean("D1Client.http.monitorIdleConnections",false);
+	public final static boolean MONITOR_STALE_CONNECTIONS = Settings.getConfiguration()
+	        .getBoolean("D1Client.http.monitorStaleConnections",true);
 
 	/**
 	 * The maximum number of connections allowed in total by the HttpClient
 	 */
 	public final static int MAX_CONNECTIONS = Settings.getConfiguration()
-            .getInteger("D1Client.http.maxConnectionsTotal",80);
+            .getInteger("D1Client.http.maxConnectionsTotal",200);
 
 	/** 
 	 * The number of parallel connections allowed per route / server 
@@ -104,14 +104,14 @@ public class HttpUtils {
 	 * @see https://redmine.dataone.org/issues/7463#note-1
 	 */
     public final static int MAX_CONNECTIONS_PER_ROUTE = Settings.getConfiguration()
-            .getInteger("D1Client.http.maxConnectionsPerServer",4);
+            .getInteger("D1Client.http.maxConnectionsPerServer",5);
     
     public final static long DEFAULT_KEEP_ALIVE_SECONDS = Settings.getConfiguration()
             .getLong("D1Client.http.keepAliveDuration.sec", 5);
     
     
     public final static boolean USE_CACHING_CLIENT = Settings.getConfiguration()
-            .getBoolean("D1Client.http.useCachingClient", false);
+            .getBoolean("D1Client.http.useCachingClient", true);
     
     public final static int CACHE_MAX_ENTRIES = Settings.getConfiguration()
             .getInt("D1Client.http.cacheMaxEntries", 50);
@@ -196,7 +196,31 @@ public class HttpUtils {
      * @throws IOException
      * @throws JiBXException
      */
-	public static HttpClientBuilder getHttpClientBuilder(X509Session x509session) throws UnrecoverableKeyException, 
+    public static HttpClientBuilder getHttpClientBuilder(X509Session x509session) throws UnrecoverableKeyException, 
+    KeyManagementException, NoSuchAlgorithmException, KeyStoreException, CertificateException, 
+    InstantiationException, IllegalAccessException, IOException, JiBXException {
+        return getHttpClientBuilder(x509session, null);
+    }
+    
+    
+    /**
+     * Returns an HttpClientBuilder with the DataONE-standard ConnectionManager configuration
+     * specified.  Users would further customize with additional builder methods.
+     * @param x509session - the configuration object containing the X509 client certificate used for the connections
+     * @param monitorStaleConnections - if not null chooses whether or not to monitorStaleConnections, otherwise uses
+     * the default setting determined from D1Client.http.monitorStaleConnections
+     * @return - a session-configured HttpClientBuilder
+     * @throws UnrecoverableKeyException
+     * @throws KeyManagementException
+     * @throws NoSuchAlgorithmException
+     * @throws KeyStoreException
+     * @throws CertificateException
+     * @throws InstantiationException
+     * @throws IllegalAccessException
+     * @throws IOException
+     * @throws JiBXException
+     */
+	public static HttpClientBuilder getHttpClientBuilder(X509Session x509session, Boolean monitorStaleConnections) throws UnrecoverableKeyException, 
 	KeyManagementException, NoSuchAlgorithmException, KeyStoreException, CertificateException, 
 	InstantiationException, IllegalAccessException, IOException, JiBXException {
 
@@ -214,10 +238,14 @@ public class HttpUtils {
 	    connMan.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_ROUTE);
 	    connMan.setMaxTotal(MAX_CONNECTIONS);
 	    
-	    if (MONITOR_IDLE_THREADS) 
+	    if (monitorStaleConnections != null) { 
+	        if (monitorStaleConnections)
+	            HttpConnectionMonitorService.getInstance().addMonitor(connMan);
+	    }
+	    else if (MONITOR_STALE_CONNECTIONS) {
 	        HttpConnectionMonitorService.getInstance().addMonitor(connMan);
-//            (new IdleConnectionsMonitorThread(connMan)).start();
-
+	    }
+	    
 	    return HttpUtils.selectHttpClientBuilder()
 	            .setKeepAliveStrategy(buildD1KeepAliveStrategy(DEFAULT_KEEP_ALIVE_SECONDS))
 	            .setConnectionManager(connMan);
@@ -240,6 +268,18 @@ public class HttpUtils {
 	 * @return
 	 */
 	public static HttpClientBuilder getHttpClientBuilder(final String authToken) {
+	    return  getHttpClientBuilder(authToken, null);
+	}
+	
+	/**
+     * Returns an HttpClientBuilder with the DataONE-standard ConnectionManager configuration specified.
+     * Users would further customize with additional builder methods.
+     * @param authToken - the configuration object containing the authorization token string used for the connections
+     * @param monitorStaleConnections - if not null, choose whether to monitor stale connections, otherwise
+     *        use the configured default in D1Client.http.monitorStaleConnections
+     * @return
+     */
+	public static HttpClientBuilder getHttpClientBuilder(final String authToken, Boolean monitorStaleConnections) {
 	    PoolingHttpClientConnectionManager connMan = new PoolingHttpClientConnectionManager(buildConnectionRegistry());
 	    
 	    // set timeout for hangs during connection initialization (handshakes)
@@ -253,9 +293,13 @@ public class HttpUtils {
         connMan.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_ROUTE);
         connMan.setMaxTotal(MAX_CONNECTIONS);
         
-        if (MONITOR_IDLE_THREADS) 
+        if (monitorStaleConnections != null) { 
+            if (monitorStaleConnections)
+                HttpConnectionMonitorService.getInstance().addMonitor(connMan);
+        }
+        else if (MONITOR_STALE_CONNECTIONS) {
             HttpConnectionMonitorService.getInstance().addMonitor(connMan);
-//            (new IdleConnectionsMonitorThread(connMan)).start();
+        }
 
         return HttpUtils.selectHttpClientBuilder()
                 .setConnectionManager(connMan)
