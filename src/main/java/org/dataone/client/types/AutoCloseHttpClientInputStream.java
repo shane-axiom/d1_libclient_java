@@ -53,7 +53,7 @@ public class AutoCloseHttpClientInputStream extends AutoCloseInputStream {
             } catch (IOException e) {
                 ;
             } finally {
-                if (this.hc instanceof Closeable) {
+                if (this.hc != null && (this.hc instanceof Closeable)) {
                     ((Closeable)this.hc).close();
                 }
                 this.hc = null;
