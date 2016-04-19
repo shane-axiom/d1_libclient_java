@@ -28,12 +28,10 @@ import java.util.Set;
 
 import org.apache.commons.logging.LogFactory;
 import org.dataone.client.exception.ClientSideException;
-import org.dataone.client.exception.NotCached;
 import org.dataone.client.rest.MultipartD1Node;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.client.utils.ExceptionUtils;
 import org.dataone.client.v1.CNode;
-import org.dataone.client.v1.cache.LocalCache;
 import org.dataone.client.v2.formats.ObjectFormatCache;
 import org.dataone.configuration.Settings;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
@@ -894,32 +892,17 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 	protected SystemMetadata getSystemMetadata(Session session, Identifier pid, boolean useSystemMetadataCache)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented 
 	{
-        boolean cacheMissed = false;
-
-	    if (useSystemMetadataCache) {
-            try {
-                SystemMetadata sysmeta = LocalCache.instance().getSystemMetadata(pid);
-                return sysmeta;
-            } catch (NotCached e) {
-                cacheMissed = true;
-            }
-        }
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(),Constants.RESOURCE_META);
 		if (pid != null)
 			url.addNextPathElement(pid.getValue());
 
-
-		InputStream is = null;
 		SystemMetadata sysmeta = null;
 		
 		try {
-			is = getRestClient(session).doGetRequest(url.getUrl(),
+			InputStream is = getRestClient(session).doGetRequest(url.getUrl(),
 					Settings.getConfiguration().getInteger("D1Client.D1Node.getSystemMetadata.timeout", null));
 			sysmeta = deserializeServiceType(SystemMetadata.class,is);
-			if (cacheMissed) {
-                // Cache the result in the system metadata cache
-                LocalCache.instance().putSystemMetadata(pid, sysmeta);
-            }
+			
 		} catch (BaseException be) {
             if (be instanceof InvalidToken)      throw (InvalidToken) be;
             if (be instanceof NotAuthorized)     throw (NotAuthorized) be;

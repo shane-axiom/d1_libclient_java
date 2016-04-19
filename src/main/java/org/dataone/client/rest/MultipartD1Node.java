@@ -22,7 +22,6 @@
 
 package org.dataone.client.rest;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
@@ -32,18 +31,15 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.AutoCloseInputStream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.Header;
 import org.dataone.client.D1Node;
-import org.dataone.client.auth.X509Session;
 import org.dataone.client.auth.AuthTokenSession;
+import org.dataone.client.auth.X509Session;
 import org.dataone.client.exception.ClientSideException;
-import org.dataone.client.exception.NotCached;
 import org.dataone.client.utils.ExceptionUtils;
-import org.dataone.client.v1.cache.LocalCache;
 import org.dataone.configuration.Settings;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.exceptions.BaseException;
@@ -106,9 +102,6 @@ public abstract class MultipartD1Node implements D1Node {
 
     /** this represents the defaultSession to be used for establishing the SSL connection */
     protected Session defaultSession;
-
-    /** flag that controls whether or not a local cache is used */
-    private boolean useLocalCache = false;
 
     protected NodeType nodeType;
 
@@ -181,7 +174,6 @@ public abstract class MultipartD1Node implements D1Node {
         this.defaultRestClient = client;
         this.defaultSession = session;
         this.latestSession = session; // setting the value here to avoid NPEs in getLatestRequestUrl() 
-        this.useLocalCache = Settings.getConfiguration().getBoolean("D1Client.useLocalCache",useLocalCache);
     }
 
     /**
@@ -223,7 +215,6 @@ public abstract class MultipartD1Node implements D1Node {
         setNodeBaseServiceUrl(nodeBaseServiceUrl);
         this.defaultRestClient = new DefaultHttpMultipartRestClient();
         this.defaultSession = null;
-        this.useLocalCache = Settings.getConfiguration().getBoolean("D1Client.useLocalCache",useLocalCache);
     }
 
     // TODO: this constructor should not exist
@@ -335,9 +326,7 @@ public abstract class MultipartD1Node implements D1Node {
 
     /**
      * Get the resource with the specified pid.  Used by both the CNode and
-     * MultipartMNode subclasses. A LocalCache is used to cache objects in memory and in
-     * a local disk cache if the "D1Client.useLocalCache" configuration property
-     * was set to true when the MultipartD1Node was created. Otherwise
+     * MultipartMNode subclasses.
      * InputStream is the Java native version of D1's OctetStream
      *
      * @see <a href=" https://purl.dataone.org/architecturev2/apis/MN_APIs.html#MNRead.get">see DataONE API Reference (MemberNode API)</a>
@@ -352,9 +341,7 @@ public abstract class MultipartD1Node implements D1Node {
 
     /**
      * Get the resource with the specified pid.  Used by both the CNode and
-     * MultipartMNode subclasses. A LocalCache is used to cache objects in memory and in
-     * a local disk cache if the "D1Client.useLocalCache" configuration property
-     * was set to true when the MultipartD1Node was created. Otherwise
+     * MultipartMNode subclasses.
      * InputStream is the Java native version of D1's OctetStream
      *
      * @see <a href=" https://purl.dataone.org/architecturev2/apis/MN_APIs.html#MNRead.get">see DataONE API Reference (MemberNode API)</a>
@@ -363,68 +350,35 @@ public abstract class MultipartD1Node implements D1Node {
     public InputStream get(Session session, Identifier pid)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound,
             NotImplemented, InsufficientResources {
+    
+
         AutoCloseInputStream is = null;
-
-        // if we have it, stay local
-        boolean cacheMissed = false;
-        if (useLocalCache) {
-            try {
-                byte[] data = LocalCache.instance().getData(pid);
-                is = new AutoCloseInputStream(new ByteArrayInputStream(data));
-                return is;
-
-            } catch (NotCached e) {
-                cacheMissed = true;
-            }
+        D1Url url = new D1Url(this.getNodeBaseServiceUrl(),Constants.RESOURCE_OBJECTS);
+        try {
+            url.addNextPathElement(pid.getValue());
+        } catch (IllegalArgumentException e) {
+            // can't throw InvalidRequest, so use NotFound (technically not invalid, but listObjects call)
+            throw new NotFound("0000", "'pid' cannot be null nor empty");
         }
+        InputStream remoteStream = null;
+        try {
+            remoteStream = getRestClient(session).doGetRequest(url.getUrl(),
+                    Settings.getConfiguration().getInteger("D1Client.D1Node.get.timeout", null));
+            is = new AutoCloseInputStream(remoteStream);
 
-        if (cacheMissed || !useLocalCache)
-        {
-            D1Url url = new D1Url(this.getNodeBaseServiceUrl(),Constants.RESOURCE_OBJECTS);
-            try {
-                url.addNextPathElement(pid.getValue());
-            } catch (IllegalArgumentException e) {
-                // can't throw InvalidRequest, so use NotFound (technically not invalid, but listObjects call)
-                throw new NotFound("0000", "'pid' cannot be null nor empty");
-            }
-            InputStream remoteStream = null;
-            try {
-                remoteStream = getRestClient(session).doGetRequest(url.getUrl(),
-                        Settings.getConfiguration().getInteger("D1Client.D1Node.get.timeout", null));
+        } catch (BaseException be) {
+            if (be instanceof InvalidToken)      throw (InvalidToken) be;
+            if (be instanceof NotAuthorized)     throw (NotAuthorized) be;
+            if (be instanceof NotImplemented)    throw (NotImplemented) be;
+            if (be instanceof ServiceFailure)    throw (ServiceFailure) be;
+            if (be instanceof NotFound)                throw (NotFound) be;
+            if (be instanceof InsufficientResources)   throw (InsufficientResources) be;
 
-
-                if (cacheMissed) {
-                    // only get here if we useLocalCache is true
-                    // (we want to add it to the cache)
-                    byte[] bytes = null;
-                    try {
-                        bytes = IOUtils.toByteArray(remoteStream);
-                        LocalCache.instance().putData(pid, bytes);
-                    } finally {
-                        IOUtils.closeQuietly(remoteStream);
-                    }
-                    is = new AutoCloseInputStream(new ByteArrayInputStream(bytes));
-                } else {
-                    is = new AutoCloseInputStream(remoteStream);
-                }
-            } catch (BaseException be) {
-                if (be instanceof InvalidToken)      throw (InvalidToken) be;
-                if (be instanceof NotAuthorized)     throw (NotAuthorized) be;
-                if (be instanceof NotImplemented)    throw (NotImplemented) be;
-                if (be instanceof ServiceFailure)    throw (ServiceFailure) be;
-                if (be instanceof NotFound)                throw (NotFound) be;
-                if (be instanceof InsufficientResources)   throw (InsufficientResources) be;
-
-                throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
-            }
-            catch (ClientSideException e) {
-                throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
-            }
-            catch (IOException e) {
-                throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
-            }
+            throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
         }
-
+        catch (ClientSideException e) {
+            throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
+        }
         return is;
     }
 

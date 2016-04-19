@@ -23,12 +23,10 @@
 package org.dataone.client.v2.formats;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.apache.oro.util.Cache;
 import org.dataone.client.v2.CNode;
 import org.dataone.client.v2.itk.D1Client;
 import org.dataone.configuration.Settings;
@@ -39,6 +37,7 @@ import org.dataone.service.types.v1.ObjectFormatIdentifier;
 import org.dataone.service.types.v2.ObjectFormat;
 import org.dataone.service.types.v2.ObjectFormatList;
 import org.dataone.service.types.v2.util.ObjectFormatServiceImpl;
+//import org.apache.oro.util.Cache;
 
 /**
  * The ObjectFormatCache is a wrapper class for the DataONE ObjectFormatList

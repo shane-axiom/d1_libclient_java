@@ -27,12 +27,10 @@ import java.util.Date;
 import org.apache.commons.io.input.AutoCloseInputStream;
 import org.apache.commons.logging.LogFactory;
 import org.dataone.client.exception.ClientSideException;
-import org.dataone.client.exception.NotCached;
 import org.dataone.client.rest.MultipartD1Node;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.client.utils.ExceptionUtils;
 import org.dataone.client.v1.MNode;
-import org.dataone.client.v1.cache.LocalCache;
 import org.dataone.configuration.Settings;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.exceptions.BaseException;
@@ -350,32 +348,18 @@ public class MultipartMNode extends MultipartD1Node implements MNode
 	protected SystemMetadata getSystemMetadata(Session session, Identifier pid, boolean useSystemMetadataCache)
 	throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented 
 	{
-        boolean cacheMissed = false;
 
-	    if (useSystemMetadataCache) {
-            try {
-                SystemMetadata sysmeta = LocalCache.instance().getSystemMetadata(pid);
-                return sysmeta;
-            } catch (NotCached e) {
-                cacheMissed = true;
-            }
-        }
 		D1Url url = new D1Url(this.getNodeBaseServiceUrl(),Constants.RESOURCE_META);
 		if (pid != null)
 			url.addNextPathElement(pid.getValue());
 
-
-		InputStream is = null;
 		SystemMetadata sysmeta = null;
 		
 		try {
-			is = getRestClient(session).doGetRequest(url.getUrl(),
+		    InputStream is = getRestClient(session).doGetRequest(url.getUrl(),
 					Settings.getConfiguration().getInteger("D1Client.D1Node.getSystemMetadata.timeout", null));
 			sysmeta = deserializeServiceType(SystemMetadata.class,is);
-			if (cacheMissed) {
-                // Cache the result in the system metadata cache
-                LocalCache.instance().putSystemMetadata(pid, sysmeta);
-            }
+			
 		} catch (BaseException be) {
             if (be instanceof InvalidToken)      throw (InvalidToken) be;
             if (be instanceof NotAuthorized)     throw (NotAuthorized) be;
