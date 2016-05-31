@@ -37,7 +37,7 @@ public class HttpMultipartRestClientTest {
         
         // testing a private method, so ... reflection!
         restClient = new HttpMultipartRestClient();
-        method = HttpMultipartRestClient.class.getDeclaredMethod("determineRequestConfig", Integer.class, Boolean.class);
+        method = HttpMultipartRestClient.class.getDeclaredMethod("determineRequestConfig", Integer.class, Boolean.class, Boolean.class);
         method.setAccessible(true);
     }
     
@@ -102,55 +102,62 @@ public class HttpMultipartRestClientTest {
         RequestConfig requestConfig = null;
         
         // both params are null
-        requestConfig = (RequestConfig) method.invoke(restClient, null, null);
+        requestConfig = (RequestConfig) method.invoke(restClient, null, null, null);
         assertNotNull("RequestConfig should not be null if input parameters are null", requestConfig);
         
         // timeouts are null, redirect is valid
         Settings.getConfiguration().clearProperty(HttpMultipartRestClient.DEFAULT_TIMEOUT_PARAM);
-        requestConfig = (RequestConfig) method.invoke(restClient, null, true);
+        requestConfig = (RequestConfig) method.invoke(restClient, null, true, null);
         assertEquals("Unspecified connect timeout should default to -1", requestConfig.getConnectTimeout(), -1);
         assertEquals("Unspecified connection request timeout should default to -1", requestConfig.getConnectionRequestTimeout(), -1);
         assertEquals("Unspecified socket timeout should default to -1", requestConfig.getSocketTimeout(), -1);
         assertNotNull("RequestConfig shouldn't be null if followRedirect parameter is valid", requestConfig);
         assertTrue("Redirect should be enabled", requestConfig.isRedirectsEnabled());
+        assertFalse("ExpectContinueEnabled should be false", requestConfig.isExpectContinueEnabled());
         
         // timeouts are valid, redirect is null
-        requestConfig = (RequestConfig) method.invoke(restClient, 1000, null);
+        requestConfig = (RequestConfig) method.invoke(restClient, 1000, null, null);
         assertNotNull("RequestConfig shouldn't be null if timeoutMillis parameter is valid", requestConfig);
         assertEquals("Connect timeout should be 1000", requestConfig.getConnectTimeout(), 1000);
         assertEquals("Connection request timeout should be 1000", requestConfig.getConnectionRequestTimeout(), 1000);
         assertEquals("Socket timeout should be 1000", requestConfig.getSocketTimeout(), 1000);
         assertTrue("When not explicitly set, redirect defaults to true", requestConfig.isRedirectsEnabled());
+        assertFalse("ExpectContinueEnabled should be false", requestConfig.isExpectContinueEnabled());
         
         // redirect enabled
-        requestConfig = (RequestConfig) method.invoke(restClient, 1000, true);
+        requestConfig = (RequestConfig) method.invoke(restClient, 1000, true, false);
         assertTrue("Redirect should be enabled", requestConfig.isRedirectsEnabled());
+        assertFalse("ExpectContinueEnabled should be false", requestConfig.isExpectContinueEnabled());
         
         // redirect disabled
-        requestConfig = (RequestConfig) method.invoke(restClient, 1000, false);
+        requestConfig = (RequestConfig) method.invoke(restClient, 1000, false, false);
         assertFalse("Redirect should be disabled", requestConfig.isRedirectsEnabled());
+        assertFalse("ExpectContinueEnabled should be false", requestConfig.isExpectContinueEnabled());
         
         // timeouts are zero
-        requestConfig = (RequestConfig) method.invoke(restClient, 0, true);
+        requestConfig = (RequestConfig) method.invoke(restClient, 0, true, true);
         assertEquals("Connect timeout should be 0", requestConfig.getConnectTimeout(), 0);
         assertEquals("Connection request timeout should be 0", requestConfig.getConnectionRequestTimeout(), 0);
         assertEquals("Socket timeout should be 0", requestConfig.getSocketTimeout(), 0);
+        assertTrue("ExpectContinueEnabled should be true", requestConfig.isExpectContinueEnabled());
         
         // timeouts are negative
-        requestConfig = (RequestConfig) method.invoke(restClient, -1000, true);
+        requestConfig = (RequestConfig) method.invoke(restClient, -1000, true, true);
         assertEquals("Connect timeout should be 0", requestConfig.getConnectTimeout(), -1000);
         assertEquals("Connection request timeout should be 0", requestConfig.getConnectionRequestTimeout(), -1000);
         assertEquals("Socket timeout should be 0", requestConfig.getSocketTimeout(), -1000);
-    
+        assertTrue("ExpectContinueEnabled should be true", requestConfig.isExpectContinueEnabled());
+        
         // both params are null, check default timeout setting
         Settings.getConfiguration().setProperty(HttpMultipartRestClient.DEFAULT_TIMEOUT_PARAM, 2000);
         Integer defaultTimeout = Settings.getConfiguration().getInteger(HttpMultipartRestClient.DEFAULT_TIMEOUT_PARAM, null);
         assertEquals("Default timeout should've been set correctly", defaultTimeout.intValue(), 2000);
-        requestConfig = (RequestConfig) method.invoke(restClient, null, null);
+        requestConfig = (RequestConfig) method.invoke(restClient, null, null, null);
         assertNotNull("RequestConfig should not be null if input parameters are null", requestConfig);
         assertEquals("Default connect timeout should be 2000", requestConfig.getConnectTimeout(), 2000);
         assertEquals("Default connection request timeout should be 2000", requestConfig.getConnectionRequestTimeout(), 2000);
         assertEquals("Default socket timeout should be 2000", requestConfig.getSocketTimeout(), 2000);
+        assertFalse("ExpectContinueEnabled should be false", requestConfig.isExpectContinueEnabled());
     
 //      
     

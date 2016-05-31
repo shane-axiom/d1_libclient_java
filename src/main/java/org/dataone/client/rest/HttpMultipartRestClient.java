@@ -336,7 +336,7 @@ public class HttpMultipartRestClient implements MultipartRestClient {
             throws BaseException, ClientSideException {
         
         try {
-            HttpResponse response = rc.doGetRequest(url,determineRequestConfig(timeoutMillisecs, followRedirect));
+            HttpResponse response = rc.doGetRequest(url,determineRequestConfig(timeoutMillisecs, followRedirect, false));
             // if we're NOT following a redirect, we'll get an HTTP_SEE_OTHER (303)
             // and then we want filterErrors() to ALLOW that status code 
             // without throwing an exception, and vice-versa 
@@ -439,7 +439,7 @@ public class HttpMultipartRestClient implements MultipartRestClient {
         determineTimeoutConfig(timeoutMillisecs);
         try {
             return ExceptionHandler.filterErrors(
-                    rc.doPutRequest(url,entity,determineTimeoutConfig(timeoutMillisecs)) );
+                    rc.doPutRequest(url,entity,determinePostPutTimeoutConfig(timeoutMillisecs)) );
         } catch (IllegalStateException e) {
             throw new ClientSideException("", e);
         } catch (ClientProtocolException e) {
@@ -461,7 +461,7 @@ public class HttpMultipartRestClient implements MultipartRestClient {
         determineTimeoutConfig(timeoutMillisecs);
         try {
             return ExceptionHandler.filterErrors(
-                    rc.doPostRequest(url,entity,determineTimeoutConfig(timeoutMillisecs)) );
+                    rc.doPostRequest(url,entity,determinePostPutTimeoutConfig(timeoutMillisecs)) );
         } catch (IllegalStateException e) {
             throw new ClientSideException("", e);
         } catch (ClientProtocolException e) {
@@ -505,9 +505,17 @@ public class HttpMultipartRestClient implements MultipartRestClient {
      */
     private RequestConfig determineTimeoutConfig(Integer milliseconds)
     {
-        return determineRequestConfig(milliseconds, true);
+        return determineRequestConfig(milliseconds, true, false);
     }
     
+    /*
+     * function to either build a RequestConfig based on a base RequestConfig
+     * passed in on the constructor, or one from scratch.
+     */
+    private RequestConfig determinePostPutTimeoutConfig(Integer milliseconds)
+    {
+        return determineRequestConfig(milliseconds, true, true);
+    }    
     /**
      * Returns a {@link RequestConfig} that is either based on the
      * existing base RequestConfig passed into the constructor, or
@@ -525,11 +533,14 @@ public class HttpMultipartRestClient implements MultipartRestClient {
      * @param followRedirect
      *      a boolean that determines if redirects should be followed.
      *      The default value for this is true.
-     *      
+     * @param expectContinueEnabled
+     *      a boolean that activates the Expect: 100-Continue handshake for the entity enclosing methods.
+     *      The default value for this is false.
+     * 
      * @return the RequestConfig based on the given <code>timeoutMillis</code>
      *      and <code>followRedirect</code> parameters. 
      */
-    private RequestConfig determineRequestConfig(Integer timeoutMillis, Boolean followRedirect)
+    private RequestConfig determineRequestConfig(Integer timeoutMillis, Boolean followRedirect, Boolean expectContinueEnabled)
     {
         RequestConfig.Builder rcBuilder = null;
         if (this.baseRequestConfig != null)
@@ -547,6 +558,28 @@ public class HttpMultipartRestClient implements MultipartRestClient {
 
         if(followRedirect != null)
             rcBuilder.setRedirectsEnabled(followRedirect);
+        
+        /*
+        To help resolve 'Error -1205 "Client Certificate Rejected" by Safari'
+        https://redmine.dataone.org/issues/2693
+        
+        setExpectContinueEnabled only for PUT or POST requests
+        http://stackoverflow.com/questions/14281628/ssl-renegotiation-with-client-certificate-causes-server-buffer-overflow
+        
+        the Expect: 100-Continue handshake for the entity enclosing methods. 
+        The purpose of the Expect: 100-Continue handshake is to allow the client 
+        that is sending a request message with a request body to determine if 
+        the origin server is willing to accept the request (based on the request 
+        headers) before the client sends the request body. The use of the 
+        Expect: 100-continue handshake can result in a noticeable performance 
+        improvement for entity enclosing requests (such as POST and PUT) that 
+        require the target server's authentication. 
+        This parameter expects a value of type java.lang.Boolean. If this parameter 
+        is not set, HttpClient will not attempt to use the handshake.
+        https://hc.apache.org/httpcomponents-client-4.2.x/tutorial/html/fundamentals.html
+        */
+        if (expectContinueEnabled != null)
+            rcBuilder.setExpectContinueEnabled(expectContinueEnabled);
         
         return rcBuilder.build();
     }
