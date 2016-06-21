@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Date;
 
+import org.apache.log4j.Logger;
 import org.dataone.client.D1NodeFactory;
 import org.dataone.client.NodeLocator;
 import org.dataone.client.exception.ClientSideException;
@@ -56,7 +57,7 @@ public class D1Client {
     private static long EXPIRATION_MILLIS = 5000;
     protected static MultipartRestClient multipartRestClient;
     
-
+    final static Logger logger = Logger.getLogger(D1Client.class);
     
 	protected static MultipartRestClient getMultipartRestClient() throws IOException, ClientSideException {
 	    if (multipartRestClient == null) {
@@ -128,6 +129,8 @@ public class D1Client {
         	}
         	cn = (CNode) nodeLocator.getCNode();
         } catch (Exception e) {
+            logger.warn("problem getting nodelist from SettingsContextNL: " 
+                    + e.getClass().getCanonicalName() + " : " + e.getMessage());
         	try {
         		// create an empty NodeListNodeLocator to leverage the getCNode() 
 				nodeLocator = new NodeListNodeLocator(null,getMultipartRestClient());
@@ -153,7 +156,10 @@ public class D1Client {
     public static void setCN(String cnUrl) 
     throws NotImplemented, ServiceFailure 
     {         	
-    	try {
+    	if (cnUrl == null) 
+    	    cnUrl = "";
+    	
+        try {
             CNCore cn = D1NodeFactory.buildNode(CNCore.class, getMultipartRestClient(), URI.create(cnUrl));
     		nodeLocator = new NodeListNodeLocator(cn.listNodes(), getMultipartRestClient());
     	} catch (ClientSideException | IOException e) {
