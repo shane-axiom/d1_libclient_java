@@ -25,6 +25,7 @@ package org.dataone.client.v1.itk;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Date;
+import org.apache.log4j.Logger;
 
 import org.dataone.client.D1NodeFactory;
 import org.dataone.client.NodeLocator;
@@ -33,6 +34,7 @@ import org.dataone.client.rest.DefaultHttpMultipartRestClient;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.client.types.ObsoletesChain;
 import org.dataone.client.utils.ExceptionUtils;
+import org.dataone.client.utils.HttpConnectionMonitorService;
 import org.dataone.client.v1.CNode;
 import org.dataone.client.v1.MNode;
 import org.dataone.client.v1.impl.MultipartCNode;
@@ -66,6 +68,8 @@ public class D1Client {
     private static long lastRefresh;
     private static long EXPIRATION_MILLIS = 5000;
     protected static MultipartRestClient multipartRestClient;
+    
+    final static Logger logger = Logger.getLogger(D1Client.class);
     
     /*
      * A class for thread safety, to allow static initialization of the
@@ -153,6 +157,8 @@ public class D1Client {
             }
             return (CNode) nodeLocator.getCNode();
         } catch (ClientSideException | IOException e) {
+            logger.warn("problem getting nodelist from SettingsContextNL: " 
+                    + e.getClass().getCanonicalName() + " : " + e.getMessage());            
             try {
                 // create an empty NodeListNodeLocator
                 // XXX to avoid NPEs?  this seems to lock in 
@@ -178,6 +184,7 @@ public class D1Client {
     public static void setCN(String cnUrl)
     throws NotImplemented, ServiceFailure
     {
+        if (cnUrl == null)  cnUrl = "";
         try {
             CNCore cn = D1NodeFactory.buildNode(CNCore.class, getMultipartRestClient(), URI.create(cnUrl));
             nodeLocator = new NodeListNodeLocator(cn.listNodes(), getMultipartRestClient());

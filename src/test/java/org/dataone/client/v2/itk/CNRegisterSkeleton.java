@@ -67,6 +67,10 @@ public class CNRegisterSkeleton implements CNode {
     public String getNodeBaseServiceUrl() {
         return baseUrl;
     }
+    
+    public void setNodeBaseServiceUrl(String baseUrl) {
+        this.baseUrl = baseUrl;
+    }
 
     @Override
     public NodeReference getNodeId() {
