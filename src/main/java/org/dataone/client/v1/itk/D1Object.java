@@ -378,11 +378,14 @@ public class D1Object {
                 MNode mn = D1Client.getMN(ol.getNodeIdentifier());
                 InputStream inputStream = null;
                 OutputStream outputStream = null;
-                String tempDirStr = "";
+               
                 File tempFile = null;
-                File tempDir = null;
                 try {
                     inputStream = mn.get(id);
+                    
+                    
+                    String tempDirStr = "";
+                    File tempDir = null;
                     tempDirStr = Settings.getConfiguration().getString(
                             "D1Client.io.tmpdir", System.getProperty("java.io.tmpdir"));
                     if ( tempDirStr != null ) {
@@ -395,8 +398,8 @@ public class D1Object {
                     for (int len; (len = inputStream.read(bytes)) > 0; ) {
                         outputStream.write(bytes, 0, len);
                     }
+                    outputStream.flush();
                     o.setDataSource(dataSource);
-                    //o.setData(IOUtils.toByteArray(inputStream));
                     gotData = true;
                     break;
  
@@ -412,8 +415,6 @@ public class D1Object {
                     if (tempFile.exists()) {
                         tempFile.deleteOnExit();
                     }
-                    
-                    
                 }
             } 
         }

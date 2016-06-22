@@ -379,46 +379,54 @@ public class D1Object {
                         + ol.getNodeIdentifier().getValue() + " ("
                         + ol.getUrl() + ")");
                 
-                
+// NOTE: this seems to be redundant to getting versions from ol.getVersionList()
                 // Determine the service version for MNRead on the source MN
-                org.dataone.client.v1.MNode v1mn = null;
-                MNode v2mn = null;
-                v1mn = org.dataone.client.v1.itk.D1Client.getMN(ol.getNodeIdentifier());
-                List<Service> services = v1mn.getCapabilities().getServices().getServiceList();
-                boolean v2GetIsAvailable = false;
-                for (Service service : services ) {
-                    String serviceName = service.getName();
-                    String serviceVersion = service.getVersion();
-                    Boolean isAvailable = service.getAvailable();
-                    if ( serviceName == "MNRead" && 
-                         serviceVersion.toLowerCase() == "v2" && 
-                         isAvailable == true ) {
-                        v2GetIsAvailable = true;
-                        break;
-                    }
-                        
-                }
+//                org.dataone.client.v1.MNode v1mn = null;
+//                MNode v2mn = null;
+//                v1mn = org.dataone.client.v1.itk.D1Client.getMN(ol.getNodeIdentifier());
+//                List<Service> services = v1mn.getCapabilities().getServices().getServiceList();
+//                boolean v2GetIsAvailable = false;
+//                for (Service service : services ) {
+//                    String serviceName = service.getName();
+//                    String serviceVersion = service.getVersion();
+//                    Boolean isAvailable = service.getAvailable();
+//                    if ( serviceName == "MNRead" && 
+//                         serviceVersion.toLowerCase() == "v2" && 
+//                         isAvailable == true ) {
+//                        v2GetIsAvailable = true;
+//                        break;
+//                    }
+//                        
+//                }
                 
                 // Get the contents of the object itself
                 InputStream inputStream = null;
                 OutputStream outputStream = null;
-                String tempDirStr = "";
+                
                 File tempFile = null;
-                File tempDir = null;
                 try {
-                    if ( v2GetIsAvailable ) {
-                        v2mn = D1Client.getMN(ol.getNodeIdentifier());
-                        inputStream = v2mn.get(null, id);
+                    // if v2 is available, use it, otherwise, use v1 if available
+                    if (ol.getVersionList().contains("v2") || ol.getVersionList().contains("V2")) {
+
+                        inputStream = D1Client.getMN(ol.getNodeIdentifier()).get(null, id);
+
+                    } else if (ol.getVersionList().contains("v1") || ol.getVersionList().contains("V1"))  {
                         
+                        inputStream = org.dataone.client.v1.itk.D1Client.getMN(ol.getNodeIdentifier()).get(id);
                     } else {
-                        inputStream = v1mn.get(id);
-                        
+                        ; // maybe a log debug statement would be good here...
                     }
+                    
+                    // XXX this next bit is a bit complicated... necessarily so?
+                    String tempDirStr = "";
+                    File tempDir = null;
                     tempDirStr = Settings.getConfiguration().getString(
                             "D1Client.io.tmpdir", System.getProperty("java.io.tmpdir"));
                     if ( tempDirStr != null ) {
                         tempDir = new File(tempDirStr);
                     }
+                    
+                    
                     tempFile = File.createTempFile("d1_libclient_java.", ".tmp", tempDir);
                     DataSource dataSource = new FileDataSource(tempFile);
                     outputStream = dataSource.getOutputStream();
@@ -426,8 +434,8 @@ public class D1Object {
                     for (int len; (len = inputStream.read(bytes)) > 0; ) {
                         outputStream.write(bytes, 0, len);
                     }
+                    outputStream.flush();
                     o.setDataSource(dataSource);
-                    //o.setData(IOUtils.toByteArray(inputStream));
                     gotData = true;
                     break;
  
@@ -443,8 +451,8 @@ public class D1Object {
                     if ( tempFile != null ) {
                         if (tempFile.exists()) {
                             tempFile.deleteOnExit();
-                        }                        
-                    }                   
+                        }
+                    }
                 }
             } 
         }
