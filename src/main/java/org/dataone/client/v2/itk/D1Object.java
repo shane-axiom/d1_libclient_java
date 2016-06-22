@@ -379,6 +379,7 @@ public class D1Object {
                         + ol.getNodeIdentifier().getValue() + " ("
                         + ol.getUrl() + ")");
                 
+                
                 // Determine the service version for MNRead on the source MN
                 org.dataone.client.v1.MNode v1mn = null;
                 MNode v2mn = null;
@@ -406,6 +407,7 @@ public class D1Object {
                 File tempDir = null;
                 try {
                     if ( v2GetIsAvailable ) {
+                        v2mn = D1Client.getMN(ol.getNodeIdentifier());
                         inputStream = v2mn.get(null, id);
                         
                     } else {
