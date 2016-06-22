@@ -370,6 +370,11 @@ public class D1Object {
             // Try each of the locations until we find the object
             
             for (ObjectLocation ol : oll.getObjectLocationList()) {
+            	// do NOT use a CN location
+            	if (ol.getNodeIdentifier().getValue().toLowerCase().contains(":cn")) {
+            		continue;
+            	}
+            	
                 System.out.println("   === Trying Location: "
                         + ol.getNodeIdentifier().getValue() + " ("
                         + ol.getUrl() + ")");
