@@ -54,7 +54,7 @@ import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.exceptions.BaseException;
 import org.dataone.service.util.Constants;
 import org.dataone.service.util.ExceptionHandler;
-import org.jibx.runtime.JiBXException;
+import org.dataone.exceptions.MarshallingException;
 
 /**
  * This class wraps the RestClient, adding uniform exception deserialization and
@@ -99,7 +99,7 @@ public class HttpMultipartRestClient implements MultipartRestClient {
 //            } catch (UnrecoverableKeyException | KeyManagementException
 //                    | NoSuchAlgorithmException | KeyStoreException
 //                    | CertificateException | InstantiationException
-//                    | IllegalAccessException | IOException | JiBXException e) {
+//                    | IllegalAccessException | IOException | MarshallingException e) {
 //                
 //                throw new ClientSideException("Error building HttpClient", e);
 //            } 
@@ -214,7 +214,7 @@ public class HttpMultipartRestClient implements MultipartRestClient {
         } catch (UnrecoverableKeyException | KeyManagementException
                 | NoSuchAlgorithmException | KeyStoreException
                 | CertificateException | InstantiationException
-                | IllegalAccessException | JiBXException e) {
+                | IllegalAccessException | MarshallingException e) {
             e.printStackTrace();
             throw new ClientSideException("Could not create HttpClient.", e);
         }

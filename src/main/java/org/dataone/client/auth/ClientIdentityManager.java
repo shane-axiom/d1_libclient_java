@@ -26,12 +26,14 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Date;
 
+import org.dataone.exceptions.MarshallingException;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1.Subject;
 import org.dataone.service.util.Constants;
-import org.jibx.runtime.JiBXException;
+import org.dataone.exceptions.MarshallingException;
 
 
 /**
@@ -71,12 +73,12 @@ public class ClientIdentityManager {
 	 * CertificateManager
 	 * 
 	 * @return
-	 * @throws JiBXException 
+	 * @throws MarshallingException 
 	 * @throws IllegalAccessException 
 	 * @throws InstantiationException 
 	 * @throws IOException 
 	 */
-	public static Session getCurrentSession() throws IOException, InstantiationException, IllegalAccessException, JiBXException 
+	public static Session getCurrentSession() throws IOException, InstantiationException, IllegalAccessException, MarshallingException 
 	{
 		CertificateManager cm = CertificateManager.getInstance();
 		java.security.cert.X509Certificate x509cert = cm.loadCertificate();

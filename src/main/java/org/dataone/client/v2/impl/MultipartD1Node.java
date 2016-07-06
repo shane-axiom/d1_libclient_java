@@ -22,7 +22,7 @@ import org.dataone.service.types.v2.Node;
 import org.dataone.service.types.v2.SystemMetadata;
 import org.dataone.service.util.Constants;
 import org.dataone.service.util.D1Url;
-import org.jibx.runtime.JiBXException;
+import org.dataone.exceptions.MarshallingException;
 
 /**
  * A v2-specific abstract subclass for new (non-v1) common methods.
@@ -126,7 +126,7 @@ public abstract class MultipartD1Node extends org.dataone.client.rest.MultipartD
             mpe.addFilePart("sysmeta", sysmeta);
         } catch (IOException e1) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
-        } catch (JiBXException e1) {
+        } catch (MarshallingException e1) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
         }
 

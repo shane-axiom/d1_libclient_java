@@ -8,10 +8,12 @@ import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
 import java.util.Date;
 
+import org.dataone.exceptions.MarshallingException;
+
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v2.TypeFactory;
-import org.jibx.runtime.JiBXException;
+import org.dataone.exceptions.MarshallingException;
 
 /**
  * A subclass of Session to hide the complexities of certificate and connection
@@ -56,7 +58,7 @@ public class X509Session extends Session {
 
     public static X509Session create(X509Certificate certificate, PrivateKey key, 
             Session session) throws InstantiationException, IllegalAccessException, 
-            InvocationTargetException, JiBXException, IOException, NoSuchMethodException {
+            InvocationTargetException, MarshallingException, IOException, NoSuchMethodException {
         
         X509Session xs = TypeFactory.convertTypeFromType(TypeFactory.clone(session), X509Session.class);
         xs.cert = certificate;

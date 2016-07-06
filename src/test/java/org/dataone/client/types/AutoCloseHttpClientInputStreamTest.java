@@ -24,7 +24,7 @@ import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.rest.DefaultHttpMultipartRestClient;
 import org.dataone.client.rest.RestClient;
 import org.dataone.client.utils.HttpUtils;
-import org.jibx.runtime.JiBXException;
+import org.dataone.exceptions.MarshallingException;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -66,7 +66,7 @@ public class AutoCloseHttpClientInputStreamTest {
         } catch (UnrecoverableKeyException | KeyManagementException
                 | NoSuchAlgorithmException | KeyStoreException
                 | CertificateException | InstantiationException
-                | IllegalAccessException | JiBXException e1) {
+                | IllegalAccessException | MarshallingException e1) {
             // TODO Auto-generated catch block
             e1.printStackTrace();
         }

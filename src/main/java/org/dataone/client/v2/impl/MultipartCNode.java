@@ -73,7 +73,7 @@ import org.dataone.service.types.v2.OptionList;
 import org.dataone.service.types.v2.SystemMetadata;
 import org.dataone.service.util.Constants;
 import org.dataone.service.util.D1Url;
-import org.jibx.runtime.JiBXException;
+import org.dataone.exceptions.MarshallingException;
 
 /**
  * CNode represents a DataONE Coordinating Node, and allows calling classes to
@@ -242,7 +242,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
 
             throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 
-        } catch (JiBXException e) {
+        } catch (MarshallingException e) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
         } catch (IOException e) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
@@ -601,7 +601,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
             mpe.addFilePart("sysmeta", sysmeta);
         } catch (IOException e) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
-        } catch (JiBXException e) {
+        } catch (MarshallingException e) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
         }
 
@@ -659,7 +659,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
             mpe.addFilePart("sysmeta", sysmeta);
         } catch (IOException e1) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
-        } catch (JiBXException e1) {
+        } catch (MarshallingException e1) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
         }
 
@@ -1035,7 +1035,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
             mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
         } catch (IOException e1) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
-        } catch (JiBXException e1) {
+        } catch (MarshallingException e1) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
         }
 
@@ -1083,7 +1083,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
             mpe.addFilePart("person", person);
         } catch (IOException e1) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
-        } catch (JiBXException e1) {
+        } catch (MarshallingException e1) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
         }
 
@@ -1130,7 +1130,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
             mpe.addFilePart("person", person);
         } catch (IOException e1) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
-        } catch (JiBXException e1) {
+        } catch (MarshallingException e1) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
         }
 
@@ -1488,7 +1488,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
             mpe.addFilePart("group", group);
         } catch (IOException e1) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
-        } catch (JiBXException e1) {
+        } catch (MarshallingException e1) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
         }
 
@@ -1529,7 +1529,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
             mpe.addFilePart("group", group);
         } catch (IOException e1) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
-        } catch (JiBXException e1) {
+        } catch (MarshallingException e1) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
         }
 
@@ -1576,7 +1576,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
             mpe.addFilePart("node", node);
         } catch (IOException e1) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
-        } catch (JiBXException e1) {
+        } catch (MarshallingException e1) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
         }
 
@@ -1621,7 +1621,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
             mpe.addFilePart("node", node);
         } catch (IOException e1) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
-        } catch (JiBXException e1) {
+        } catch (MarshallingException e1) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
         }
 
@@ -1719,7 +1719,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
             mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
         } catch (IOException e1) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
-        } catch (JiBXException e1) {
+        } catch (MarshallingException e1) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
         }
 
@@ -1810,7 +1810,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
             mpe.addParamPart("serialVersion", String.valueOf(serialVersion));
         } catch (IOException e1) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
-        } catch (JiBXException e1) {
+        } catch (MarshallingException e1) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
         }
 
@@ -1946,7 +1946,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
             if (be instanceof InvalidSystemMetadata)  throw (InvalidSystemMetadata) be;
             throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 
-        } catch (JiBXException e) {
+        } catch (MarshallingException e) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
         } catch (IOException e) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
@@ -1990,7 +1990,7 @@ public class MultipartCNode extends MultipartD1Node implements CNode
             if (be instanceof InsufficientResources)  throw (InsufficientResources) be;
             throw ExceptionUtils.recastDataONEExceptionToServiceFailure(be);
 
-        } catch (JiBXException e) {
+        } catch (MarshallingException e) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
         } catch (IOException e) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);

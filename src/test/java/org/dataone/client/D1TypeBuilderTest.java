@@ -23,7 +23,7 @@ import org.dataone.service.types.v1.SystemMetadata;
 import org.dataone.service.types.v1.util.AccessUtil;
 import org.dataone.service.types.v1.util.ChecksumUtil;
 import org.dataone.service.types.v2.TypeFactory;
-import org.jibx.runtime.JiBXException;
+import org.dataone.exceptions.MarshallingException;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -67,7 +67,7 @@ public class D1TypeBuilderTest {
 
 	@Test
 //	@Ignore
-	public void testCloneSystemMetadata() throws NoSuchAlgorithmException, InstantiationException, IllegalAccessException, JiBXException, IOException 
+	public void testCloneSystemMetadata() throws NoSuchAlgorithmException, InstantiationException, IllegalAccessException, MarshallingException, IOException 
 	{
 		SystemMetadata orig = new SystemMetadata();
 		orig.setAccessPolicy(AccessUtil.createSingleRuleAccessPolicy(
@@ -187,7 +187,7 @@ public class D1TypeBuilderTest {
 	}
 
 	@Test
-	public void testCloneChecksum() throws InstantiationException, IllegalAccessException, JiBXException, IOException {
+	public void testCloneChecksum() throws InstantiationException, IllegalAccessException, MarshallingException, IOException {
 		Checksum orig = new Checksum();
 		orig.setAlgorithm("xxx");
 		orig.setValue("foo");

@@ -18,6 +18,7 @@ import java.util.TreeMap;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.dataone.exceptions.MarshallingException;
 import org.dataone.client.v1.types.D1TypeBuilder;
 import org.dataone.client.v2.MNode;
 import org.dataone.client.v2.formats.ObjectFormatCache;
@@ -58,7 +59,7 @@ import org.dataone.service.types.v2.ObjectFormat;
 import org.dataone.service.types.v2.OptionList;
 import org.dataone.service.types.v2.SystemMetadata;
 import org.dataone.service.util.TypeMarshaller;
-import org.jibx.runtime.JiBXException;
+import org.dataone.exceptions.MarshallingException;
 
 /**
  * Built primarily for testing, this class is an MNode implementation that 
@@ -241,7 +242,7 @@ public class InMemoryMNode implements MNode {
 			// maybe we don't need to reconstitute to validate...
 			TypeMarshaller.unmarshalTypeFromStream(SystemMetadata.class, 
 					new ByteArrayInputStream(os.toByteArray()) );
-		} catch (JiBXException e) {
+		} catch (MarshallingException e) {
 			caught = e;
 		} catch (IOException e) {
 			caught = e;

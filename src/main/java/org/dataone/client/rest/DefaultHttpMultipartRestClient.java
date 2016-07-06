@@ -12,7 +12,7 @@ import java.util.Observer;
 import org.dataone.client.auth.CertificateManager;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.utils.HttpUtils;
-import org.jibx.runtime.JiBXException;
+import org.dataone.exceptions.MarshallingException;
 
 /**
  * This subclass of HttpMultiparRestClient registers itself as an Observer of
@@ -66,7 +66,7 @@ public class DefaultHttpMultipartRestClient extends HttpMultipartRestClient impl
             } catch (UnrecoverableKeyException | KeyManagementException
                     | NoSuchAlgorithmException | KeyStoreException
                     | CertificateException | InstantiationException
-                    | IllegalAccessException | JiBXException | IOException e) {
+                    | IllegalAccessException | MarshallingException | IOException e) {
 
                 log.error("Could not update the HttpClient with new default information from CertificateManager!", e);
             }
