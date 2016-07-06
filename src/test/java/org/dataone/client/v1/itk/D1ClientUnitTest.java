@@ -70,7 +70,34 @@ public class D1ClientUnitTest  {
     }
     
     @Test
-    public void testNullCNUrlBehavior() throws ServiceFailure, NotImplemented {
+    public void getCN_shouldThrowExceptionWhenBaseurlEmpty() throws ServiceFailure, NotImplemented {
+        D1Client.setCN("");
+        System.out.println("got a CN by url");
+        try {
+            D1Client.getCN();
+            fail("A null CN baseUrl should throw an exception when calling getCN()");
+        } 
+        catch (ServiceFailure e) {
+            ; // expected
+        }
+    }
+    
+    @Test
+    public void getCN_shouldThrowExceptionWhenBaseurlNull() throws ServiceFailure, NotImplemented {
+        D1Client.setCN(null);
+        System.out.println("got a CN by url");
+        try {
+            D1Client.getCN();
+            fail("A null CN baseUrl should throw an exception when calling getCN()");
+        } 
+        catch (ServiceFailure e) {
+            ; // expected
+        }  
+    }
+    
+    
+    @Test
+    public void getCvvvN_shouldThrowExceptionWhenBaseurlEmpty() throws ServiceFailure, NotImplemented {
     	
 //    	Settings.getConfiguration().setProperty("D1Client.CN_URL","");
     	D1Client.setCN("");
@@ -80,6 +107,7 @@ public class D1ClientUnitTest  {
     	System.out.println("got a CN by url");
     	try {
     		D1Client.getCN();
+    		fail("A null CN baseUrl should throw an exception when calling getCN()");
     		System.out.println("got a CN by default");
     	} 
     	catch (ServiceFailure e) {

@@ -64,7 +64,7 @@ import org.dataone.client.auth.CertificateManager;
 import org.dataone.client.auth.X509Session;
 import org.dataone.client.rest.HttpMultipartRestClient;
 import org.dataone.configuration.Settings;
-import org.jibx.runtime.JiBXException;
+import org.dataone.exceptions.MarshallingException;
 
 /**
  * A utility class to simplify creation and configuration of HttpClients. In an
@@ -172,11 +172,11 @@ public class HttpUtils {
 	 * @throws InstantiationException
 	 * @throws IllegalAccessException
 	 * @throws IOException
-	 * @throws JiBXException
+	 * @throws MarshallingException
 	 */
     public static HttpClient createHttpClient(X509Session x509session) throws UnrecoverableKeyException, 
     KeyManagementException, NoSuchAlgorithmException, KeyStoreException, CertificateException, 
-    InstantiationException, IllegalAccessException, IOException, JiBXException {
+    InstantiationException, IllegalAccessException, IOException, MarshallingException {
         return getHttpClientBuilder(x509session).build();
     }
 
@@ -194,11 +194,11 @@ public class HttpUtils {
      * @throws InstantiationException
      * @throws IllegalAccessException
      * @throws IOException
-     * @throws JiBXException
+     * @throws MarshallingException
      */
     public static HttpClientBuilder getHttpClientBuilder(X509Session x509session) throws UnrecoverableKeyException, 
     KeyManagementException, NoSuchAlgorithmException, KeyStoreException, CertificateException, 
-    InstantiationException, IllegalAccessException, IOException, JiBXException {
+    InstantiationException, IllegalAccessException, IOException, MarshallingException {
         return getHttpClientBuilder(x509session, null);
     }
     
@@ -218,11 +218,11 @@ public class HttpUtils {
      * @throws InstantiationException
      * @throws IllegalAccessException
      * @throws IOException
-     * @throws JiBXException
+     * @throws MarshallingException
      */
 	public static HttpClientBuilder getHttpClientBuilder(X509Session x509session, Boolean monitorStaleConnections) throws UnrecoverableKeyException, 
 	KeyManagementException, NoSuchAlgorithmException, KeyStoreException, CertificateException, 
-	InstantiationException, IllegalAccessException, IOException, JiBXException {
+	InstantiationException, IllegalAccessException, IOException, MarshallingException {
 
 	    PoolingHttpClientConnectionManager connMan = new PoolingHttpClientConnectionManager(
 	            buildConnectionRegistry(x509session));
@@ -334,7 +334,7 @@ public class HttpUtils {
 //    public static Registry<ConnectionSocketFactory> buildConnectionRegistry(String subjectString) 
 //    throws UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, 
 //    KeyStoreException, CertificateException, IOException, InstantiationException,
-//    IllegalAccessException, JiBXException {
+//    IllegalAccessException, MarshallingException {
 //
 //        X509Session x = CertificateManager.getInstance().selectSession(subjectString);
 //        return buildConnectionRegistry(x);

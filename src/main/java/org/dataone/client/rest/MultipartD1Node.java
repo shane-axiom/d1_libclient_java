@@ -33,6 +33,7 @@ import java.util.Map;
 
 import org.apache.commons.io.input.AutoCloseInputStream;
 import org.apache.commons.lang.StringUtils;
+import org.dataone.exceptions.MarshallingException;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.Header;
 import org.dataone.client.D1Node;
@@ -66,7 +67,7 @@ import org.dataone.service.util.Constants;
 import org.dataone.service.util.D1Url;
 import org.dataone.service.util.DateTimeMarshaller;
 import org.dataone.service.util.TypeMarshaller;
-import org.jibx.runtime.JiBXException;
+import org.dataone.exceptions.MarshallingException;
 
 /**
  * An abstract node class that contains base functionality shared between
@@ -473,7 +474,7 @@ public abstract class MultipartD1Node implements D1Node {
         BigInteger content_length;
         try {
             content_length = BigIntegerMarshaller.deserializeBigInteger(content_lengthStr);
-        } catch (JiBXException e) {
+        } catch (MarshallingException e) {
             throw new ServiceFailure("0", "Could not convert the returned content_length string (" +
                     content_lengthStr + ") to a BigInteger: " + e.getMessage());
         }
@@ -515,7 +516,7 @@ public abstract class MultipartD1Node implements D1Node {
         BigInteger serialVersion = null;
         try {
             serialVersion = BigIntegerMarshaller.deserializeBigInteger(serialVersionStr);
-        } catch (JiBXException e) {
+        } catch (MarshallingException e) {
             throw new ServiceFailure("0", "Could not convert the returned serialVersion string (" +
                     serialVersionStr + ") to a BigInteger: " + e.getMessage());
         }
@@ -867,7 +868,7 @@ public abstract class MultipartD1Node implements D1Node {
             throws ServiceFailure {
         try {
             return TypeMarshaller.unmarshalTypeFromStream(domainClass, is);
-        } catch (JiBXException e) {
+        } catch (MarshallingException e) {
             throw new ServiceFailure("0",
                     "Could not deserialize the " + domainClass.getCanonicalName() + ": " + e.getMessage());
         } catch (IOException e) {

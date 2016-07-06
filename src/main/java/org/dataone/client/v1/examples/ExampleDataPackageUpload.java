@@ -60,7 +60,7 @@ import org.dataone.service.types.v1.Permission;
 import org.dataone.service.types.v1.Subject;
 import org.dataone.service.types.v1.SystemMetadata;
 import org.dataone.service.util.TypeMarshaller;
-import org.jibx.runtime.JiBXException;
+import org.dataone.exceptions.MarshallingException;
 
 /**
  * Utility for uploading data packages to a MN.  
@@ -293,7 +293,7 @@ public class ExampleDataPackageUpload {
 
     private void writeSystemMetadataToDir(CNode cn, Identifier pid, String docFilePath)
             throws InvalidToken, ServiceFailure, NotAuthorized, NotFound, NotImplemented,
-            JiBXException, FileNotFoundException, IOException {
+            MarshallingException, FileNotFoundException, IOException {
         SystemMetadata smd = cn.getSystemMetadata(pid);
         TypeMarshaller.marshalTypeToFile(smd, docFilePath + SYSMETA_SUFFIX);
     }

@@ -71,6 +71,7 @@ import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 import javax.security.auth.x500.X500Principal;
 import javax.servlet.http.HttpServletRequest;
+import org.dataone.exceptions.MarshallingException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ObjectUtils;
@@ -101,7 +102,7 @@ import org.dataone.service.types.v1.Subject;
 import org.dataone.service.types.v1.SubjectInfo;
 import org.dataone.service.types.v1.util.ChecksumUtil;
 import org.dataone.service.util.TypeMarshaller;
-import org.jibx.runtime.JiBXException;
+import org.dataone.exceptions.MarshallingException;
 
 /**
  * Import and manage certificates to be used for authentication against DataONE
@@ -576,10 +577,10 @@ public class CertificateManager extends Observable {
      * @throws IOException
      * @throws InstantiationException
      * @throws IllegalAccessException
-     * @throws JiBXException
+     * @throws MarshallingException
      */
     public SubjectInfo getSubjectInfo(X509Certificate certificate)
-    throws IOException, InstantiationException, IllegalAccessException, JiBXException
+    throws IOException, InstantiationException, IllegalAccessException, MarshallingException
     {
         String subjectInfoValue = this.getExtensionValue(certificate, CILOGON_OID_SUBJECT_INFO);
         if (log.isDebugEnabled())

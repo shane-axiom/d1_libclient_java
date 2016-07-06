@@ -4,7 +4,7 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 
-import org.jibx.runtime.JiBXException;
+import org.dataone.exceptions.MarshallingException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -26,7 +26,7 @@ public class ClientIdentityManagerTest {
 	}
 
 	@Test
-	public final void testGetCurrentSession() throws IOException, InstantiationException, IllegalAccessException, JiBXException {
+	public final void testGetCurrentSession() throws IOException, InstantiationException, IllegalAccessException, MarshallingException {
 		ClientIdentityManager.getCurrentSession();
 	}
 

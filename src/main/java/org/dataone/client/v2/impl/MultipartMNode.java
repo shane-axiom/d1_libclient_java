@@ -63,7 +63,7 @@ import org.dataone.service.types.v2.OptionList;
 import org.dataone.service.types.v2.SystemMetadata;
 import org.dataone.service.util.Constants;
 import org.dataone.service.util.D1Url;
-import org.jibx.runtime.JiBXException;
+import org.dataone.exceptions.MarshallingException;
 
 /**
  * MultipartMNode represents a MemberNode, and exposes the services associated with a
@@ -485,7 +485,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
             mpe.addFilePart("sysmeta", sysmeta);
         } catch (IOException e) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
-        } catch (JiBXException e) {
+        } catch (MarshallingException e) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
         }
 
@@ -543,7 +543,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
             mpe.addFilePart("sysmeta", sysmeta);
         } catch (IOException e) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
-        } catch (JiBXException e) {
+        } catch (MarshallingException e) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
         }
 
@@ -639,7 +639,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
             smpe.addFilePart("sysmeta", sysmeta);
         } catch (IOException e) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
-        } catch (JiBXException e) {
+        } catch (MarshallingException e) {
             throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
         }
 
