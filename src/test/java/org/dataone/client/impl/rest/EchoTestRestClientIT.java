@@ -35,6 +35,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.dataone.client.rest.RestClient;
 import org.dataone.mimemultipart.SimpleMultipartEntity;
 import org.dataone.service.util.D1Url;
+import org.junit.Ignore;
 import org.junit.Test;
 
 
@@ -43,6 +44,7 @@ public class EchoTestRestClientIT {
 	private static String echoResource = "echo";
 	private static String mmEchoResource = "echomm";
 	
+	@Ignore
 	@Test
 	public void testDoGetRequest() throws ClientProtocolException, IOException {
 		D1Url u = new D1Url(echoNode, echoResource);
@@ -58,6 +60,8 @@ public class EchoTestRestClientIT {
 		assertTrue("",contentString.contains("request.META[ QUERY_STRING ] = x=y"));
 	}
 
+
+	@Ignore
 	@Test
 	public void testdoDeleteRequest() throws ClientProtocolException, IOException {
 		D1Url u = new D1Url(echoNode, echoResource);
@@ -72,7 +76,8 @@ public class EchoTestRestClientIT {
 		assertTrue("",contentString.contains("request.META[ PATH_INFO ] = /echo/bizz"));
 		assertTrue("",contentString.contains("request.META[ QUERY_STRING ] = x=y"));
 	}
-	
+
+	@Ignore
 	@Test
 	public void testDoHeadRequest() throws ClientProtocolException, IOException {
 		D1Url u = new D1Url(echoNode, echoResource);
@@ -87,7 +92,8 @@ public class EchoTestRestClientIT {
 		}
 		assertTrue("",hString.contains("Content-Type : text/plain"));		
 	}
-	
+
+	@Ignore
 	@Test
 	public void testdoPutRequestNullBody() throws ClientProtocolException, IOException {
 		D1Url u = new D1Url(echoNode, echoResource);
@@ -102,7 +108,8 @@ public class EchoTestRestClientIT {
 		assertTrue("",contentString.contains("request.META[ PATH_INFO ] = /echo/bizz"));
 		assertTrue("",contentString.contains("request.META[ QUERY_STRING ] = x=y"));
 	}
-	
+
+	@Ignore
 	@Test
 	public void testdoPostRequestNullBody() throws ClientProtocolException, IOException {
 		D1Url u = new D1Url(echoNode, echoResource);
@@ -136,6 +143,8 @@ public class EchoTestRestClientIT {
 		assertTrue("",contentString.contains("request.FILES=<MultiValueDict: {u'Jabberwocky2': [<InMemoryUploadedFile: mmp.output."));
 	}
 	
+
+	@Ignore
 	@Test
 	public void testdoPostRequest() throws ClientProtocolException, IOException {
 		D1Url u = new D1Url(echoNode, mmEchoResource);
@@ -154,7 +163,8 @@ public class EchoTestRestClientIT {
 		assertTrue("",contentString.contains("request.FILES=<MultiValueDict: {u'Jabberwocky2': [<InMemoryUploadedFile: mmp.output"));
 	}
 	
-	
+
+	@Ignore
 	@Test
 	public void testDoGetRequest_setHeader() throws ClientProtocolException, IOException {
 		D1Url u = new D1Url(echoNode, echoResource);
