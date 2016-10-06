@@ -57,6 +57,7 @@ public class EchoTestMultipartRestClient_HttpClientV4_1_IT {
 	private static String echoResource = "echo";
 	private static String mmEchoResource = "echomm";
 	
+	@Ignore
 	@Test
 	public void testDoGetRequest() 
 	throws ClientProtocolException, IOException, BaseException, ClientSideException
@@ -78,6 +79,7 @@ public class EchoTestMultipartRestClient_HttpClientV4_1_IT {
 		assertTrue("",contentString.contains("request.META[ QUERY_STRING ] = x=y"));
 	}
 
+	@Ignore
 	@Test
 	public void testdoDeleteRequest() 
 	throws ClientProtocolException, IOException, BaseException, ClientSideException
@@ -122,6 +124,7 @@ public class EchoTestMultipartRestClient_HttpClientV4_1_IT {
 		assertTrue("",hString.contains("Content-Type : text/plain"));		
 	}
 	
+	@Ignore
 	@Test
 	public void testdoPutRequestNullBody() 
 	throws ClientProtocolException, IOException, BaseException, ClientSideException
@@ -143,6 +146,8 @@ public class EchoTestMultipartRestClient_HttpClientV4_1_IT {
 		assertTrue("",contentString.contains("request.META[ QUERY_STRING ] = x=y"));
 	}
 	
+	
+	@Ignore
 	@Test
 	public void testdoPostRequestNullBody() 
 	throws ClientProtocolException, IOException, BaseException, ClientSideException
@@ -189,6 +194,7 @@ public class EchoTestMultipartRestClient_HttpClientV4_1_IT {
 		assertTrue("",contentString.contains("request.FILES=<MultiValueDict: {u'Jabberwocky2': [<InMemoryUploadedFile: mmp.output."));
 	}
 	
+	@Ignore
 	@Test
 	public void testdoPostRequest() 
 	throws ClientProtocolException, IOException, BaseException, ClientSideException
@@ -213,6 +219,7 @@ public class EchoTestMultipartRestClient_HttpClientV4_1_IT {
 		assertTrue("",contentString.contains("request.FILES=<MultiValueDict: {u'Jabberwocky2': [<InMemoryUploadedFile: mmp.output"));
 	}
 	
+	@Ignore
 	@Test
 	public void testExceptionFiltering() 
 	throws ClientProtocolException, IOException, IllegalStateException, HttpException, ClientSideException 
