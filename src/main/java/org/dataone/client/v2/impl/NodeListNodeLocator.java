@@ -38,11 +38,13 @@ import org.dataone.service.types.v2.NodeList;
 /**
  * This implementation of NodeLocator uses a NodeList document to populate
  * the internal maps that have all of the registered MNodes and CNodes, instead
- * of relying on the put methods.  The MNode and CNode objects are 
- * instantiated the first time they are requested from the get methods.
+ * of relying on the put methods.  The MNodes and CNodes created provide API methods
+ * at the same version as the NodeListNodeLocator, regardless of whether the
+ * referenced nodes implement those methods or not. Clients should call the methods
+ * or use NodeListUtil to determine registered services for each node.
  * 
- * Use of the put methods will replace the current D1Node associated with the NodeReference,
- * so should be used with care.
+ * Use of the superclass's put methods will replace the current D1Node associated 
+ * with the NodeReference, so should be used with care.
  * 
  * While most applications require / desire to have only one instance of a NodeLocator,
  * with Singleton or Monostate behavior, this class does not do that, to support applications
@@ -57,17 +59,24 @@ public class NodeListNodeLocator extends NodeLocator {
 	protected MultipartRestClient client;
 	
 	/* the cnList is the list of CNodes that will be returned by getCN */
-	protected Deque<CNode> cnList;
+	protected Deque<CNode> cnList = new LinkedList<CNode>();  //LL implements Deque interface
 
-	
+	/**
+	 * The constructor populates the NodeLocator from MN and CN nodes from the
+	 * give Nodelist, building D1Node implementations using the MultipartRestClient.
+	 * It also initializes the cnList that is used by getCNode.
+	 * 
+	 * @param nl - the nodeList to build the NodeLocator map with
+	 * @param mrc - the MultipartRestClient to associate with the D1Nodes when building the map
+	 * @throws ClientSideException
+	 */
 	public NodeListNodeLocator(NodeList nl, MultipartRestClient mrc) 
 	throws ClientSideException 
 	{
 		this.nodeList = nl;
 		this.client = mrc;
 
-		// super.putNode() assigns the NodeId to the constructed D1Node, so we don't
-		// have to do it here.
+		// puts the nodes in the nodeList into the NodeLocator
 		if (this.nodeList != null) {
 			for (Node node: nl.getNodeList()) {
 				if (node.getType().equals(NodeType.MN)) {
@@ -91,15 +100,17 @@ public class NodeListNodeLocator extends NodeLocator {
     /**
      * Returns a CN if there is one in the NodeList.  Tries to determine the 
      * round-robin CN from the description field of the Node.  Otherwise, chooses
-     * one of the set of CNs.
+     * one of the set of CNs (rotating through each CNode with each successive call)
+     * 
+     * @throws ClientSideException - if no CNs were in the provided NodeList
      */
     public CNode getCNode() throws ClientSideException {
         
         if (cnList == null)
-            throw new ClientSideException("Error: The CnList has not been initialized!!!");
+            throw new ClientSideException("LibClient Error: The CnList has not been initialized!!!");
         
         if (cnList.size() == 1)
-            return cnList.getLast();//D1NodeFactory.buildNode(CNode.class,  client,  URI.create(cnList.getFirst().getBaseURL()));
+            return cnList.getLast();
             
         if (cnList.size() == 0) 
             throw new ClientSideException("No CNs are registered in the NodeLocator");
@@ -113,6 +124,7 @@ public class NodeListNodeLocator extends NodeLocator {
      * Determines which CNodes will be part of the cnList.  If there is a Round
      * Robin CN listed in the NodeList, it will be used, otherwise, all of the 
      * other CNs listed will be used (and rotated through the getCN call).
+     * 
      * @throws ClientSideException
      */
     public void initCnList() throws ClientSideException {
@@ -120,6 +132,7 @@ public class NodeListNodeLocator extends NodeLocator {
         // see if there's a round-robin cn to use
         if (this.nodeList != null) {
             Set<Node> cnSet = NodelistUtil.selectNodes(this.nodeList, NodeType.CN);
+            // (selectNodes above guarantees a Set is returned, never null)
             Node rrCN = null;
             for (Node cn : cnSet) {
                 if (cn.getDescription() != null) {

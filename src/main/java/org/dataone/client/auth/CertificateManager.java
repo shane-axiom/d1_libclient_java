@@ -199,6 +199,8 @@ public class CertificateManager extends Observable {
 	    	CILOGON_OID_SUBJECT_INFO = Settings.getConfiguration().getString("cilogon.oid.subjectinfo", "1.3.6.1.4.1.34998.2.1");
 
 	    	certificateMD5Checksum = getChecksum(getCertificateFile());
+    	} catch (FileNotFoundException e) {
+    	    log.warn(e.getMessage(),e);
     	} catch (Exception e) {
             log.error(e.getMessage(), e);
         }
@@ -386,8 +388,8 @@ public class CertificateManager extends Observable {
                 }
             } catch (KeyStoreException e) {
                 log.error(e.getMessage(), e);
-            } catch (FileNotFoundException e) {
-                log.error(e.getMessage(), e);
+//            } catch (FileNotFoundException e) {
+//                log.error(e.getMessage(), e);
             } catch (NoSuchAlgorithmException e) {
                 log.error(e.getMessage(), e);
             } catch (CertificateException e) {
@@ -499,6 +501,8 @@ public class CertificateManager extends Observable {
             KeyStore keyStore = getKeyStore((String)null);
             if (keyStore != null) 
                 cert = (X509Certificate) keyStore.getCertificate("cilogon");
+        } catch (FileNotFoundException e) {
+            log.warn(e.getMessage(),e);
         } catch (KeyStoreException | NoSuchAlgorithmException | 
                 CertificateException | IOException e) {
             log.error(e.getMessage(),e);

@@ -22,6 +22,7 @@ package org.dataone.client.v2.itk;
 
 import static org.junit.Assert.*;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -60,16 +61,17 @@ public class D1ClientUnitTest  {
     }
     
     @Test
-    public void testNullCNUrlBehavior() throws ServiceFailure, NotImplemented {
+    public void getCnOrMnByUrlShouldWorkWhenCnBaseUrlEmpty() throws ServiceFailure, NotImplemented {
     	
 //    	Settings.getConfiguration().setProperty("D1Client.CN_URL","");
     	D1Client.setCN("");
     	D1Client.getMN("http://someMN.org/mn");
-    	System.out.println("got an MN by url");
+    	System.out.println("got an MNode by url");
     	D1Client.getCN("http://someCN.org/cn");
-    	System.out.println("got a CN by url");
+    	System.out.println("got a CNode by url");
     	try {
     		D1Client.getCN();
+    		fail("A null CN baseUrl should throw an exception when calling getCN()");
     		System.out.println("got a CN by default");
     	} 
     	catch (ServiceFailure e) {
