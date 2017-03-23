@@ -10,7 +10,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <bouncycastle.version>1.52</bouncycastle.version>
     <d1_common_java.version>2.4.0-SNAPSHOT</d1_common_java.version>
-    <d1_test_resources.version>2.3.0-SNAPSHOT</d1_test_resources.version>
+    <d1_test_resources.version>2.4.0-SNAPSHOT</d1_test_resources.version>
     <compiler.target.version>1.7</compiler.target.version>
   </properties>
   <repositories>
