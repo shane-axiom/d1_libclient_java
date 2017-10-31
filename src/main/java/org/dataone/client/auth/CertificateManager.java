@@ -352,7 +352,7 @@ public class CertificateManager extends Observable {
 
 
                 String auxLocation = Settings.getConfiguration().getString("certificate.truststore.aux.location");
-                log.debug("certificate.truststore.aux.location=" + auxLocation);
+                log.info("certificate.truststore.aux.location=" + auxLocation);
                 
                 int count = 0;
                 if (auxLocation != null) {
@@ -369,7 +369,7 @@ public class CertificateManager extends Observable {
                     }
                 }
                 if (count == 0) {
-                    log.debug("shippedCAcerts=" + shippedCAcerts);
+                    log.info("shippedCAcerts=" + shippedCAcerts);
 
                     InputStream shippedCerts = this.getClass().getResourceAsStream(shippedCAcerts);
                     if (shippedCerts != null) {
