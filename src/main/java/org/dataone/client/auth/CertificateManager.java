@@ -200,7 +200,7 @@ public class CertificateManager extends Observable {
 
 	    	certificateMD5Checksum = getChecksum(getCertificateFile());
     	} catch (FileNotFoundException e) {
-    	    log.warn(e.getMessage(),e);
+    	    log.warn("FileNotFound: " + e.getMessage());
     	} catch (Exception e) {
             log.error(e.getMessage(), e);
         }
@@ -1361,7 +1361,7 @@ public class CertificateManager extends Observable {
             log.debug("Calculated certificate location: " + location.toString());
         File fileLocation = new File(location.toString());
         if (!fileLocation.exists()) {
-            throw new FileNotFoundException("No certificate installed in expected location: " + location.toString());
+            throw new FileNotFoundException("No certificate installed in the default location: " + location.toString());
         }
 
         return fileLocation;
