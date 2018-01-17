@@ -22,32 +22,33 @@ package org.dataone.client.v1.itk;
 
 import static org.junit.Assert.*;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
 import org.dataone.client.v1.CNode;
-import org.dataone.client.v1.itk.D1Client;
-import org.dataone.client.v1.itk.D1Object;
+import org.dataone.client.v1.MNode;
 import org.dataone.client.v1.types.D1TypeBuilder;
 import org.dataone.configuration.Settings;
+import org.dataone.exceptions.MarshallingException;
 import org.dataone.service.exceptions.IdentifierNotUnique;
 import org.dataone.service.exceptions.InvalidRequest;
 import org.dataone.service.exceptions.InvalidToken;
 import org.dataone.service.exceptions.NotAuthorized;
+import org.dataone.service.exceptions.NotFound;
 import org.dataone.service.exceptions.NotImplemented;
 import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.exceptions.SynchronizationFailed;
 import org.dataone.service.types.v1.Identifier;
+import org.dataone.service.types.v1.Node;
 import org.dataone.service.types.v1.NodeReference;
 import org.dataone.service.types.v1.NodeType;
 import org.dataone.service.types.v1.Session;
 import org.dataone.service.types.v1.Subject;
 import org.dataone.service.types.v1.SubjectInfo;
 import org.dataone.service.types.v1.TypeFactory;
-import org.dataone.service.types.v1.Node;
-import org.dataone.service.util.D1Url;
-import org.dataone.service.util.EncodingUtilities;
+import org.dataone.service.util.TypeMarshaller;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -67,6 +68,17 @@ public class D1ClientUnitTest  {
     @Before
     public void setUp() throws Exception 
     {
+    }
+    
+    @Test
+    public void testMarshalling() throws ServiceFailure, InvalidToken, NotAuthorized, NotImplemented, NotFound, MarshallingException, IOException {
+        
+        MNode mn = D1Client.getMN("https://knb.ecoinformatics.org/knb/d1/mn");
+        org.dataone.service.types.v1.SystemMetadata symeta = mn.getSystemMetadata(TypeFactory.buildIdentifier("doi:10.5063/AA/wolkovich.29.1"));
+        symeta.setReplicationPolicy(null);
+
+        TypeMarshaller.validateAgainstSchema(symeta);
+        
     }
     
     @Test
@@ -97,14 +109,14 @@ public class D1ClientUnitTest  {
     
     
     @Test
-    public void getCvvvN_shouldThrowExceptionWhenBaseurlEmpty() throws ServiceFailure, NotImplemented {
+    public void getCnOrMnByUrlShouldWorkWhenCnBaseUrlEmpty() throws ServiceFailure, NotImplemented {
     	
 //    	Settings.getConfiguration().setProperty("D1Client.CN_URL","");
     	D1Client.setCN("");
     	D1Client.getMN("http://someMN.org/mn");
-    	System.out.println("got an MN by url");
+    	System.out.println("got an MNode by url");
     	D1Client.getCN("http://someCN.org/cn");
-    	System.out.println("got a CN by url");
+    	System.out.println("got a CNode by url");
     	try {
     		D1Client.getCN();
     		fail("A null CN baseUrl should throw an exception when calling getCN()");

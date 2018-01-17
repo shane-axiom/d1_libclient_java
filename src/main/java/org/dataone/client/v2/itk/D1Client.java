@@ -24,14 +24,15 @@ package org.dataone.client.v2.itk;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Date;
+import java.security.cert.CertificateExpiredException;
+import java.security.cert.CertificateNotYetValidException;
 
 import org.apache.log4j.Logger;
 import org.dataone.client.D1NodeFactory;
 import org.dataone.client.NodeLocator;
+import org.dataone.client.auth.X509Session;
 import org.dataone.client.exception.ClientSideException;
 import org.dataone.client.rest.DefaultHttpMultipartRestClient;
-//import org.dataone.client.rest.HttpMultipartRestClient;
 import org.dataone.client.rest.MultipartRestClient;
 import org.dataone.client.utils.ExceptionUtils;
 import org.dataone.client.v2.CNode;
@@ -44,105 +45,159 @@ import org.dataone.service.exceptions.ServiceFailure;
 import org.dataone.service.types.v1.NodeReference;
 import org.dataone.service.types.v1.Session;
 
+
 /**
  * The D1Client class represents a client-side implementation of the DataONE
  * Service API. The class exposes the DataONE APIs as client methods, dispatches
  * the calls to the correct DataONE node, and then returns the results or throws
- * the appropriate exceptions.  
+ * the appropriate exceptions.
  */
 public class D1Client {
 
     private static NodeLocator nodeLocator;
-    private static long lastRefresh;
-    private static long EXPIRATION_MILLIS = 5000;
+    private static long lastNLRefresh = 0;
+    private static long lastNLRefreshAttempt = 0;
+    private static long NODELOCATOR_REFRESH_ATTEMPT_INTERVAL = 5000;
+    private static final long NODELOCATOR_STALE_INTERVAL = 5 * 60000; // min * millisec/min 
     protected static MultipartRestClient multipartRestClient;
     
     final static Logger logger = Logger.getLogger(D1Client.class);
     
-	protected static MultipartRestClient getMultipartRestClient() throws IOException, ClientSideException {
-	    if (multipartRestClient == null) {
-	        multipartRestClient = new DefaultHttpMultipartRestClient();
-	    }
-	    return multipartRestClient;
-	}
-	
-//	public static void setAuthToken(String authToken) {
-//		
-//		if (multipartRestClient != null && multipartRestClient instanceof HttpMultipartRestClient) {
-//			((HttpMultipartRestClient) multipartRestClient).setHeader("Authorization", "Bearer " + authToken);
-//		}
-//
-//	}
-		    
-	/**
-	 * For testing, we can override the nodeLocator
-	 * @param nodeLocator
-	 */
-	public static void setNodeLocator(NodeLocator nodeLocator) {
-		D1Client.nodeLocator = nodeLocator;
-	}
-	
-    /**
-	 * Get the cached CNode object for calling Coordinating Node services.
-	 * By default returns the production context CN, defined via the property 
-	 * "D1Client.CN_URL". Use of D1Client in other contexts (non-production) 
-	 * requires overriding or changing this property name, or calling the setCN
-	 * method.
-	 * See org.dataone.configuration.Settings class for details.
-	 * 
-	 * Connects using the default session / certificate 
-     * @return the cn
-	 * @throws ServiceFailure 
-     * @throws NotImplemented 
+    /*
+     * A class for thread safety, to allow static initialization of the
+     * MultipartRestClient instance. If multipartRestClient didn't throw
+     * exceptions, we could have simplified construct to a static initializer.
+     * (We're getting lazy-loading for free here, too.)
      */
-    public static CNode getCN() 
-    throws ServiceFailure, NotImplemented 
-    {
-        return getCN((Session)null);
+//    private static class MultipartRestClientHelper {
+//        public static MultipartRestClient instance;
+//        
+//        // burying the static initialization in the class se we have a fancy
+//        // way to handle exceptions. (convert to RuntimeException, then catch
+//        // the Runtime exception in the getter.
+//        static {
+//            try {
+//                instance = new DefaultHttpMultipartRestClient();
+//                
+//                // one time check for certificate issue
+//                X509Session s = instance.getSession();
+//                if (s != null) {
+//                    try {
+//                        s.checkValidity();
+//                    } catch (CertificateExpiredException
+//                            | CertificateNotYetValidException e) {
+//                        throw new ClientSideException("Certificate Problem", e);
+//                    }
+//                }
+//            } catch (IOException | ClientSideException e) {
+//                RuntimeException re = new RuntimeException();
+//                re.initCause(e);
+//            }
+//        }
+//    }
+
+    /*
+     * Part of the thread-safe way to initialize the static MRC 
+     */
+//    protected static MultipartRestClient getMultipartRestClient()
+//    throws IOException, ClientSideException {
+//        try {
+//            return MultipartRestClientHelper.instance;
+//        } catch (RuntimeException re) {
+//           if (re.getCause() instanceof IOException)
+//               throw (IOException)re.getCause();
+//           if (re.getCause() instanceof ClientSideException) 
+//               throw (ClientSideException)re.getCause();
+//           ClientSideException cse = new ClientSideException("UnexpectedException thrown!");
+//           cse.initCause(re.getCause());
+//           throw cse;
+//        }
+//    }
+    protected static synchronized MultipartRestClient getMultipartRestClient() throws IOException, ClientSideException {
+        if (multipartRestClient == null) {
+            multipartRestClient = new DefaultHttpMultipartRestClient();
+            // one time check for certificate issue
+            X509Session s = multipartRestClient.getSession();
+            if (s != null) {
+                try {
+                    s.checkValidity();
+                } catch (CertificateExpiredException
+                        | CertificateNotYetValidException e) {
+                    multipartRestClient = null;
+                    throw new ClientSideException("Certificate Problem", e);
+                }
+            }
+        }
+        return multipartRestClient;
     }
     
     
-	/**
-	 * Get the cached CNode object for calling Coordinating Node services.
-	 * By default returns the production context CN, defined via the property 
-	 * "D1Client.CN_URL".  Use of D1Client in other contexts (non-production) 
-	 * requires overriding or changing this property name, or calling the setCN
-	 * method  
-	 * See org.dataone.configuration.Settings class for details.
-	 *
-	 * @deprecated broken functionality, and unused.  use getCN() or getCN(baseUrl) instead
-	 * 
-	 * @param session - the client session to be used in connections, null uses default behavior. 
-     * @return the cn
-	 * @throws ServiceFailure 
-	 * @throws NotImplemented 
+    
+
+
+    /**
+     * For testing, we can override the nodeLocator
+     * @param nodeLocator
      */
-    @Deprecated
-    public static CNode getCN(Session session) 
-    throws ServiceFailure, NotImplemented {
-        
-    	CNode cn = null;
-    	
+    public static void setNodeLocator(NodeLocator nodeLocator) {
+        D1Client.nodeLocator = nodeLocator;
+    }
+    
+    
+    /**
+     * Get the cached CNode object for calling Coordinating Node services.
+     * By default returns the production context CN, defined via the property
+     * "D1Client.CN_URL". Use of D1Client in other contexts (non-production)
+     * requires overriding or changing this property name, or calling the setCN
+     * method.
+     * See org.dataone.configuration.Settings class for details.
+     *
+     * Connects using the default session / certificate
+     * @return the cn
+     * @throws ServiceFailure
+     * @throws NotImplemented
+     */
+    public static CNode getCN()
+    throws ServiceFailure, NotImplemented
+    {
         try { 
-        	if (nodeLocator == null) {
-        		nodeLocator = new SettingsContextNodeLocator(getMultipartRestClient());	
-        	}
-        	cn = (CNode) nodeLocator.getCNode();
-        } catch (Exception e) {
-            logger.warn("problem getting nodelist from SettingsContextNL: " 
-                    + e.getClass().getCanonicalName() + " : " + e.getMessage());
-        	try {
-        		// create an empty NodeListNodeLocator to leverage the getCNode() 
-				nodeLocator = new NodeListNodeLocator(null,getMultipartRestClient());
-				cn = (CNode) nodeLocator.getCNode();
-			} catch (ClientSideException | IOException e1) {
-				throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
-			}
+            bestAttemptRefreshNodeLocator();
+            if (nodeLocator != null) 
+                return (CNode) nodeLocator.getCNode();
+            else
+                throw new ServiceFailure("000","Could not get CNode from the underlying context (D1Client.CN_URL)");
+            
+        } catch (ClientSideException e1) {
+            throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e1);
         }
-        return cn;
+        
     }
 
-    
+
+    /**
+     * Get the cached CNode object for calling Coordinating Node services.
+     * By default returns the production context CN, defined via the property
+     * "D1Client.CN_URL".  Use of D1Client in other contexts (non-production)
+     * requires overriding or changing this property name, or calling the setCN
+     * method
+     * See org.dataone.configuration.Settings class for details.
+     *
+     * @deprecated broken functionality, and unused.  use getCN() or getCN(baseUrl) instead
+     *
+     * @param session - the client session to be used in connections, null uses default behavior.
+     * @return the cn
+     * @throws ServiceFailure
+     * @throws NotImplemented
+     */
+    @Deprecated
+    public static CNode getCN(Session session)
+    throws ServiceFailure, NotImplemented {
+        
+        // redirect to parameterless getCN method
+        return getCN();
+    }
+
+
     /**
      * Use this method to set the environment via the baseUrl to the environment's
      * Coordinating Node.  Doing so affects future calls using the NodeReferences -
@@ -153,30 +208,32 @@ public class D1Client {
      * @throws NotImplemented
      * @throws ServiceFailure
      */
-    public static void setCN(String cnUrl) 
-    throws NotImplemented, ServiceFailure 
-    {         	
-    	if (cnUrl == null) 
-    	    cnUrl = "";
-    	
+    public static void setCN(String cnUrl)
+    throws NotImplemented, ServiceFailure
+    {
+        if (cnUrl == null)  cnUrl = "";
         try {
             CNCore cn = D1NodeFactory.buildNode(CNCore.class, getMultipartRestClient(), URI.create(cnUrl));
+            // TODO: using a NodeListNodeLocator bypasses the designatedCN behavior of SettingsContextNodeLocator
+            // should we be overriding the SettingsContext setting instead?
     		nodeLocator = new NodeListNodeLocator(cn.listNodes(), getMultipartRestClient());
+    		lastNLRefresh = System.currentTimeMillis(); 
     	} catch (ClientSideException | IOException e) {
 			ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
 		}
     }
 
-
     /**
      * Returns a Member Node using the base service URL for the node.
      * @param mnBaseUrl the service URL for the Member Node
      * @return the mn at a particular URL
-     * @throws ServiceFailure 
+     * @throws ServiceFailure
      */
-    public static MNode getMN(String mnBaseUrl) throws ServiceFailure 
+    public static MNode getMN(String mnBaseUrl) throws ServiceFailure
     {
-    	MNode mn = null;	
+    	bestAttemptRefreshNodeLocator();
+    	
+    	MNode mn = null;
     	if (nodeLocator != null) {
     		try {		
     			mn = (MNode) nodeLocator.getNode(mnBaseUrl);	
@@ -188,10 +245,6 @@ public class D1Client {
     	if (mn == null) {
     		try {
                 mn = D1NodeFactory.buildNode(MNode.class, getMultipartRestClient(), URI.create(mnBaseUrl));
-//    			if (nodeLocator != null) {
-//    				// be opportunist, but don't be the first to call the CN (and initialize potentially wrong state.		
-//    				nodeLocator.putNode(mn.getNodeId(), mn);
-//    			}
     		}
 			catch (ClientSideException | IOException cse) {
 				throw ExceptionUtils.recastClientSideExceptionToServiceFailure(cse);
@@ -204,15 +257,17 @@ public class D1Client {
     /**
      * Returns a Coordinating Node using the base service URL to look up the node
      * in the existing environment.
-     *  
+     *
      * @param cnBaseUrl
      * @return
-     * @throws ServiceFailure 
+     * @throws ServiceFailure
      */
     //TODO: do we need this method?  When do we need to micro-manage which CN to connect to?
-    public static CNode getCN(String cnBaseUrl) throws ServiceFailure 
+    public static CNode getCN(String cnBaseUrl) throws ServiceFailure
     {
-    	CNode cn = null;	
+        bestAttemptRefreshNodeLocator();
+        
+        CNode cn = null;	
     	if (nodeLocator != null) {
     		try {		
     			cn = (CNode) nodeLocator.getNode(cnBaseUrl);	
@@ -223,11 +278,7 @@ public class D1Client {
     	}
     	if (cn == null) {
     		try {
-                cn = D1NodeFactory.buildNode(CNode.class, getMultipartRestClient(), URI.create(cnBaseUrl));
-//    			if (nodeLocator != null && cn != null) {
-//    				// be opportunist, but don't be the first to call the CN (and initialize potentially wrong state.		
-//    				nodeLocator.putNode(cn.getNodeId(), cn);
-//    			}
+                return D1NodeFactory.buildNode(CNode.class, getMultipartRestClient(), URI.create(cnBaseUrl));
     		}
 			catch (ClientSideException | IOException cse) {
 				throw ExceptionUtils.recastClientSideExceptionToServiceFailure(cse);
@@ -235,14 +286,11 @@ public class D1Client {
     	}
     	return cn;
     }
-    	
 
 
 
     /**
-     * Return an MNode using the nodeReference
-     * for the member node.  D1Client's cn instance will look up the
-     * member node's baseURL from the passed in nodeReference
+     * Return an MNode using the nodeReference for the member node.  
      * 
      * @param nodeRef
      * @return
@@ -250,62 +298,35 @@ public class D1Client {
      */
     public static MNode getMN(NodeReference nodeRef) throws ServiceFailure
     {
-        MNode mn = null;
+        bestAttemptRefreshNodeLocator();
         try {
-            // initialize the environment or lack-thereof
-            D1Client.getCN();
-            mn = (MNode) nodeLocator.getNode(nodeRef);
+            if (nodeLocator != null) {
+                return  (MNode) nodeLocator.getNode(nodeRef);
+            } else {
+                throw new ServiceFailure("000", "Could not initialize the NodeLocator!");
+            }
         } catch (ClientSideException e) {
-            // lazy refresh - only if problem
-            try {
-                if ((new Date()).getTime() - lastRefresh > EXPIRATION_MILLIS) {
-                    nodeLocator = new SettingsContextNodeLocator(getMultipartRestClient());
-                }
-            } catch (NotImplemented | ClientSideException | IOException e1) {
-                ; // do nothing, keep at least the old nodeLocator
-            }
-            try {
-                mn = (MNode) nodeLocator.getNode(nodeRef);
-            } catch (ClientSideException e1) {
-                throw new ServiceFailure("0000", "Node is not an MNode: "
-                        + nodeRef.getValue());
-            }
-        } catch (NotImplemented e) {
-            throw new ServiceFailure("0000", "Got 'NotImplemented' from getCN(): " + e.getDescription());
+            throw ExceptionUtils.recastClientSideExceptionToServiceFailure(e);
         }
-        if (mn == null) {
-            throw new ServiceFailure("0000", "Failed to find baseUrl for node "
-                     + nodeRef.getValue() + " in the NodeList");
-        }
-        return mn;
     }
     
-    
-    
-    
 
-    
-    /**
-     * Attempts to create the DataPackage.  First makes sure there is a D1Object
-     * representing the ORE resource map, then delegates D1Object creation to 
-     * D1Client.create(D1Object),
-     * 
-     * @since Not Implemented - need to determine correct assumptions and behavior
-     * 
-     * @param session
-     * @param dataPackage
-     * @return
-     * @throws NotImplemented 
-     */
-    
-    /* TODO: determine how to identify which objects are already created
-     * TODO: determine behavior under situations where exceptions thrown half-way 
-     * through.  Cannot package into a transaction.  
-     * data objects and science metadata objects that don't already exist on a MN and then
-     * create the ORE resource map on the MN
-     */   
-//    public static Identifier create(Session session, DataPackage dataPackage) throws NotImplemented {
-//    	throw new NotImplemented("Client Exception", "this method has not been implemented yet.");
-//    }
+    private static synchronized void bestAttemptRefreshNodeLocator() {
+        
+        long now = System.currentTimeMillis();
+        if (nodeLocator == null || now - lastNLRefresh > NODELOCATOR_STALE_INTERVAL) {
+            if (now - lastNLRefreshAttempt > NODELOCATOR_REFRESH_ATTEMPT_INTERVAL) 
+                // don't want to retry immediately after failure
+                try { 
+                    lastNLRefreshAttempt = System.currentTimeMillis();
+                    NodeLocator newLocator = new SettingsContextNodeLocator(getMultipartRestClient()); 
+                    nodeLocator = newLocator;
+                    lastNLRefresh = System.currentTimeMillis();
+                } catch (Throwable e1)  {
+                    // keep the old one, but maybe warn?
+                    logger.warn("Could not refresh D1Client's NodeLocator, using previous one.", e1);
+                }
+        }
+    }
 
 }

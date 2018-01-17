@@ -269,7 +269,7 @@ public class ProvResourceMapBuilderTest {
         Predicate predicate = new Predicate();
         predicate.setName(property.getLocalName());
         predicate.setNamespace(property.getNameSpace());
-        if ( prefix != null || ! prefix.isEmpty() ) {
+        if ( prefix != null && ! prefix.isEmpty() ) {
             predicate.setPrefix(prefix);
             
         }

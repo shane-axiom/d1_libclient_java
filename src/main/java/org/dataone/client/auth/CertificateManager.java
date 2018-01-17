@@ -199,6 +199,8 @@ public class CertificateManager extends Observable {
 	    	CILOGON_OID_SUBJECT_INFO = Settings.getConfiguration().getString("cilogon.oid.subjectinfo", "1.3.6.1.4.1.34998.2.1");
 
 	    	certificateMD5Checksum = getChecksum(getCertificateFile());
+    	} catch (FileNotFoundException e) {
+    	    log.warn("FileNotFound: " + e.getMessage());
     	} catch (Exception e) {
             log.error(e.getMessage(), e);
         }
@@ -350,7 +352,7 @@ public class CertificateManager extends Observable {
 
 
                 String auxLocation = Settings.getConfiguration().getString("certificate.truststore.aux.location");
-                log.debug("certificate.truststore.aux.location=" + auxLocation);
+                log.info("certificate.truststore.aux.location=" + auxLocation);
                 
                 int count = 0;
                 if (auxLocation != null) {
@@ -367,7 +369,7 @@ public class CertificateManager extends Observable {
                     }
                 }
                 if (count == 0) {
-                    log.debug("shippedCAcerts=" + shippedCAcerts);
+                    log.info("shippedCAcerts=" + shippedCAcerts);
 
                     InputStream shippedCerts = this.getClass().getResourceAsStream(shippedCAcerts);
                     if (shippedCerts != null) {
@@ -386,8 +388,8 @@ public class CertificateManager extends Observable {
                 }
             } catch (KeyStoreException e) {
                 log.error(e.getMessage(), e);
-            } catch (FileNotFoundException e) {
-                log.error(e.getMessage(), e);
+//            } catch (FileNotFoundException e) {
+//                log.error(e.getMessage(), e);
             } catch (NoSuchAlgorithmException e) {
                 log.error(e.getMessage(), e);
             } catch (CertificateException e) {
@@ -499,6 +501,8 @@ public class CertificateManager extends Observable {
             KeyStore keyStore = getKeyStore((String)null);
             if (keyStore != null) 
                 cert = (X509Certificate) keyStore.getCertificate("cilogon");
+        } catch (FileNotFoundException e) {
+            log.warn(e.getMessage());
         } catch (KeyStoreException | NoSuchAlgorithmException | 
                 CertificateException | IOException e) {
             log.error(e.getMessage(),e);
@@ -1357,7 +1361,7 @@ public class CertificateManager extends Observable {
             log.debug("Calculated certificate location: " + location.toString());
         File fileLocation = new File(location.toString());
         if (!fileLocation.exists()) {
-            throw new FileNotFoundException("No certificate installed in expected location: " + location.toString());
+            throw new FileNotFoundException("No certificate installed in the default location: " + location.toString());
         }
 
         return fileLocation;
