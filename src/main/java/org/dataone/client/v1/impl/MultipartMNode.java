@@ -302,7 +302,7 @@ public class MultipartMNode extends MultipartD1Node implements MNode
     	
     	url.addNonEmptyParamPair("start", start);  
     	url.addNonEmptyParamPair("count", count);
-    	url.addNonEmptyParamPair("idFilter", idFilter);
+    	url.addNonEmptyParamPair("pidFilter", idFilter);
     	
 		// send the request
 		Log log = null;
