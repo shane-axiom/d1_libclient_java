@@ -70,6 +70,17 @@ public class D1ClientUnitTest  {
     {
     }
     
+//    @Test
+//    public void testMarshalling() throws ServiceFailure, InvalidToken, NotAuthorized, NotImplemented, NotFound, MarshallingException, IOException {
+//        
+//        MNode mn = D1Client.getMN("https://knb.ecoinformatics.org/knb/d1/mn");
+//        org.dataone.service.types.v1.SystemMetadata symeta = mn.getSystemMetadata(TypeFactory.buildIdentifier("doi:10.5063/AA/wolkovich.29.1"));
+//        symeta.setReplicationPolicy(null);
+//
+//        TypeMarshaller.validateAgainstSchema(symeta);
+//        
+//    }
+    
     @Test
     public void testMarshalling() throws ServiceFailure, InvalidToken, NotAuthorized, NotImplemented, NotFound, MarshallingException, IOException {
         

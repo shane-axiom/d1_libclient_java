@@ -502,7 +502,7 @@ public class CertificateManager extends Observable {
             if (keyStore != null) 
                 cert = (X509Certificate) keyStore.getCertificate("cilogon");
         } catch (FileNotFoundException e) {
-            log.warn(e.getMessage(),e);
+            log.warn(e.getMessage());
         } catch (KeyStoreException | NoSuchAlgorithmException | 
                 CertificateException | IOException e) {
             log.error(e.getMessage(),e);
